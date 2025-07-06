@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var password = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
+    @State private var token: String?
 
     var body: some View {
         NavigationView {
@@ -32,6 +33,7 @@ struct ContentView: View {
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
                 }
 
                 Button(action: {
@@ -51,6 +53,12 @@ struct ContentView: View {
                 }
                 .disabled(isLoading)
 
+                if let token = token {
+                    Text("Logged in with token:\n\(token)")
+                        .font(.caption)
+                        .padding()
+                }
+
                 Spacer()
             }
             .padding()
@@ -61,6 +69,7 @@ struct ContentView: View {
     func login() {
         isLoading = true
         errorMessage = nil
+        token = nil
 
         guard let url = URL(string: "\(serverURL)/api/login") else {
             errorMessage = "Invalid URL"
@@ -68,7 +77,7 @@ struct ContentView: View {
             return
         }
 
-        let payload = [
+        let credentials = [
             "username": username,
             "password": password
         ]
@@ -76,7 +85,14 @@ struct ContentView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONEncoder().encode(payload)
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
+        } catch {
+            errorMessage = "Failed to encode credentials"
+            isLoading = false
+            return
+        }
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
@@ -88,13 +104,23 @@ struct ContentView: View {
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    errorMessage = "Invalid response"
+                    errorMessage = "No response from server"
+                    return
+                }
+
+                guard let data = data else {
+                    errorMessage = "No data received"
                     return
                 }
 
                 if httpResponse.statusCode == 200 {
-                    // Success - parse token or proceed
-                    print("Login successful")
+                    if let result = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                       let jwt = result["token"] as? String {
+                        token = jwt
+                        print("Login success. Token: \(jwt)")
+                    } else {
+                        errorMessage = "Unexpected response format"
+                    }
                 } else {
                     errorMessage = "Login failed: \(httpResponse.statusCode)"
                 }
