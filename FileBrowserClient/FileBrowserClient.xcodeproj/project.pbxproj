@@ -15,6 +15,8 @@
 		98823EEA2E1AFADD004CBB11 /* FileBrowserClientUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EE92E1AFADD004CBB11 /* FileBrowserClientUITests.swift */; };
 		98823EEC2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */; };
 		F85486182E1B19B000115F18 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85486172E1B19B000115F18 /* AuthManager.swift */; };
+		F854861A2E1B1C3E00115F18 /* FileItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85486192E1B1C3E00115F18 /* FileItem.swift */; };
+		F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F854861B2E1B1C5000115F18 /* FileListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +48,9 @@
 		98823EE92E1AFADD004CBB11 /* FileBrowserClientUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientUITests.swift; sourceTree = "<group>"; };
 		98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		F85486172E1B19B000115F18 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		F85486192E1B1C3E00115F18 /* FileItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileItem.swift; sourceTree = "<group>"; };
+		F854861B2E1B1C5000115F18 /* FileListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListView.swift; sourceTree = "<group>"; };
+		F854861D2E1B253E00115F18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +81,7 @@
 		98823EC22E1AFADA004CBB11 = {
 			isa = PBXGroup;
 			children = (
+				F854861D2E1B253E00115F18 /* Info.plist */,
 				98823ECD2E1AFADA004CBB11 /* FileBrowserClient */,
 				98823EDE2E1AFADC004CBB11 /* FileBrowserClientTests */,
 				98823EE82E1AFADD004CBB11 /* FileBrowserClientUITests */,
@@ -96,6 +102,8 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				F854861B2E1B1C5000115F18 /* FileListView.swift */,
+				F85486192E1B1C3E00115F18 /* FileItem.swift */,
 				F85486172E1B19B000115F18 /* AuthManager.swift */,
 				98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */,
 				98823ED02E1AFADA004CBB11 /* ContentView.swift */,
@@ -260,6 +268,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F854861A2E1B1C3E00115F18 /* FileItem.swift in Sources */,
+				F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */,
 				98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
 				98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */,

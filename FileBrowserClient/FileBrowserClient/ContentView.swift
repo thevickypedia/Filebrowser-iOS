@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var errorMessage: String?
     @State private var token: String?
     @EnvironmentObject var auth: AuthManager
+    @State private var shouldNavigate = false
 
     var body: some View {
         NavigationView {
@@ -36,7 +37,7 @@ struct ContentView: View {
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                 }
-                
+
                 Button(action: {
                     login()
                 }) {
@@ -53,13 +54,21 @@ struct ContentView: View {
                     }
                 }
                 .disabled(isLoading)
-                
+
                 if let token = token {
-                    Text("Logged in with token:\n\(token)")
+                    Text("✅ Login successful!")
                         .font(.caption)
                         .padding()
                 }
-                
+
+                // NavigationLink triggered by state
+                NavigationLink(
+                    destination: FileListView(),
+                    isActive: $shouldNavigate
+                ) {
+                    EmptyView()
+                }
+
                 Spacer()
             }
             .padding()
@@ -115,7 +124,7 @@ struct ContentView: View {
                         token = jwt
                         auth.token = jwt
                         auth.serverURL = serverURL
-                        print("✅ Logged in. Token: \(jwt)")
+                        shouldNavigate = true
                     } else {
                         errorMessage = "Failed to decode token"
                     }
