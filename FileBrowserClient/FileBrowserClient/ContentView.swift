@@ -14,7 +14,8 @@ struct ContentView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var token: String?
-    
+    @EnvironmentObject var auth: AuthManager
+
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
@@ -112,6 +113,8 @@ struct ContentView: View {
                 if httpResponse.statusCode == 200 {
                     if let jwt = String(data: data, encoding: .utf8) {
                         token = jwt
+                        auth.token = jwt
+                        auth.serverURL = serverURL
                         print("✅ Logged in. Token: \(jwt)")
                     } else {
                         errorMessage = "Failed to decode token"
