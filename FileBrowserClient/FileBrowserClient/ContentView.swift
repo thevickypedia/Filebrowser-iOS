@@ -14,7 +14,7 @@ struct ContentView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var token: String?
-
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
@@ -22,20 +22,20 @@ struct ContentView: View {
                     .keyboardType(.URL)
                     .autocapitalization(.none)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-
+                
                 TextField("Username", text: $username)
                     .autocapitalization(.none)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-
+                
                 SecureField("Password", text: $password)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-
+                
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
                 }
-
+                
                 Button(action: {
                     login()
                 }) {
@@ -52,13 +52,13 @@ struct ContentView: View {
                     }
                 }
                 .disabled(isLoading)
-
+                
                 if let token = token {
                     Text("Logged in with token:\n\(token)")
                         .font(.caption)
                         .padding()
                 }
-
+                
                 Spacer()
             }
             .padding()
@@ -103,23 +103,18 @@ struct ContentView: View {
                     return
                 }
 
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    errorMessage = "No response from server"
-                    return
-                }
-
-                guard let data = data else {
-                    errorMessage = "No data received"
+                guard let httpResponse = response as? HTTPURLResponse,
+                      let data = data else {
+                    errorMessage = "No response or data"
                     return
                 }
 
                 if httpResponse.statusCode == 200 {
-                    if let result = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                       let jwt = result["token"] as? String {
+                    if let jwt = String(data: data, encoding: .utf8) {
                         token = jwt
-                        print("Login success. Token: \(jwt)")
+                        print("✅ Logged in. Token: \(jwt)")
                     } else {
-                        errorMessage = "Unexpected response format"
+                        errorMessage = "Failed to decode token"
                     }
                 } else {
                     errorMessage = "Login failed: \(httpResponse.statusCode)"
