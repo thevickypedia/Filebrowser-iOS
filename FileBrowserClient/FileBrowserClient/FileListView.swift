@@ -6,59 +6,59 @@
 //
 
 import SwiftUI
+import SwiftUI
 
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
-    @State private var errorMessage: String?
-    @State private var lastLoadedPath: String?
-    @Binding var pathStack: [String]
 
-    var currentPath: String {
-        "/" + pathStack.joined(separator: "/")
-    }
+    let path: String
 
     var body: some View {
-        VStack {
-            List {
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if let error = errorMessage {
-                    Text("Error: \(error)")
-                        .foregroundColor(.red)
-                } else {
-                    ForEach(viewModel.files) { file in
-                        if file.isDir {
+        List {
+            if viewModel.isLoading {
+                ProgressView()
+            } else if let error = viewModel.errorMessage {
+                Text("Error: \(error)")
+                    .foregroundColor(.red)
+            } else {
+                ForEach(viewModel.files) { file in
+                    if file.isDir {
+                        NavigationLink(
+                            destination: FileListView(path: fullPath(for: file))
+                                .environmentObject(viewModel)
+                        ) {
                             HStack {
                                 Image(systemName: "folder")
                                 Text(file.name)
                             }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                pathStack.append(file.name)
-                            }
-                        } else {
-                            HStack {
-                                Image(systemName: "doc")
-                                Text(file.name)
-                            }
+                        }
+                    } else {
+                        HStack {
+                            Image(systemName: "doc")
+                            Text(file.name)
                         }
                     }
+                }
 
-                    if viewModel.files.isEmpty && !viewModel.isLoading {
-                        Text("No files found")
-                            .foregroundColor(.gray)
-                    }
+                if viewModel.files.isEmpty && !viewModel.isLoading {
+                    Text("No files found")
+                        .foregroundColor(.gray)
                 }
             }
         }
-        .navigationTitle("Files")
+        .navigationTitle(path == "/" ? "Files" : path.components(separatedBy: "/").last ?? "Folder")
         .onAppear {
-            print("📂 FileListView appeared for path: \(currentPath)")
-            if lastLoadedPath != currentPath {
-                lastLoadedPath = currentPath
-                viewModel.fetchFiles(at: currentPath)
-            }
+            print("📂 FileListView appeared for path: \(path)")
+            viewModel.fetchFiles(at: path)
+        }
+    }
+
+    private func fullPath(for file: FileItem) -> String {
+        if path == "/" {
+            return "/\(file.name)"
+        } else {
+            return "\(path)/\(file.name)"
         }
     }
 }

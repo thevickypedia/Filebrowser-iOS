@@ -15,22 +15,15 @@ struct ContentView: View {
     @State private var errorMessage: String?
     @State private var token: String?
     @EnvironmentObject var auth: AuthManager
-    @State private var pathStack: [String] = []
     @State private var isLoggedIn = false
-    @State private var folderStack: [Folder] = []
 
-    // ✅ Inject view model for file browsing
     @StateObject private var fileListViewModel = FileListViewModel()
 
     var body: some View {
         if isLoggedIn {
-            NavigationStack(path: $pathStack) {
-                FileListView(pathStack: $pathStack)
+            NavigationStack {
+                FileListView(path: "/")
                     .environmentObject(fileListViewModel)
-                    .navigationDestination(for: String.self) { nextPath in
-                        FileListView(pathStack: $pathStack)
-                            .environmentObject(fileListViewModel)
-                    }
             }
         } else {
             loginView
@@ -138,9 +131,6 @@ struct ContentView: View {
                         // ✅ Configure the view model
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
-
-                        // ✅ Trigger navigation
-                        pathStack = []
                     } else {
                         errorMessage = "Failed to decode token"
                     }
