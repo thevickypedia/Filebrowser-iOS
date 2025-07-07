@@ -16,66 +16,74 @@ struct ContentView: View {
     @State private var token: String?
     @EnvironmentObject var auth: AuthManager
     @State private var pathStack: [String] = []
+    @State private var isLoggedIn = false
+    @State private var folderStack: [Folder] = []
 
     // ✅ Inject view model for file browsing
     @StateObject private var fileListViewModel = FileListViewModel()
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                TextField("Server URL", text: $serverURL)
-                    .keyboardType(.URL)
-                    .autocapitalization(.none)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                TextField("Username", text: $username)
-                    .autocapitalization(.none)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                SecureField("Password", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                if let errorMessage = errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .multilineTextAlignment(.center)
-                }
-
-                Button(action: {
-                    login()
-                }) {
-                    if isLoading {
-                        ProgressView()
-                    } else {
-                        Text("Login")
-                            .bold()
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+        if isLoggedIn {
+            NavigationStack(path: $pathStack) {
+                FileListView(pathStack: $pathStack)
+                    .environmentObject(fileListViewModel)
+                    .navigationDestination(for: String.self) { nextPath in
+                        FileListView(pathStack: $pathStack)
+                            .environmentObject(fileListViewModel)
                     }
-                }
-                .disabled(isLoading)
-
-                if let token = token {
-                    Text("✅ Login successful!")
-                        .font(.caption)
-                        .padding()
-                }
-                NavigationStack(path: $pathStack) {
-                    FileListView(pathStack: $pathStack, currentPath: "/")
-                        .environmentObject(fileListViewModel)
-                        .navigationDestination(for: String.self) { nextPath in
-                            FileListView(pathStack: $pathStack, currentPath: nextPath)
-                                .environmentObject(fileListViewModel)
-                        }
-                }
-                Spacer()
             }
-            .padding()
-            .navigationTitle("FileBrowser Login")
+        } else {
+            loginView
         }
+    }
+
+    var loginView: some View {
+        VStack(spacing: 20) {
+            TextField("Server URL", text: $serverURL)
+                .keyboardType(.URL)
+                .autocapitalization(.none)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            TextField("Username", text: $username)
+                .autocapitalization(.none)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            SecureField("Password", text: $password)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            if let errorMessage = errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(action: {
+                login()
+            }) {
+                if isLoading {
+                    ProgressView()
+                } else {
+                    Text("Login")
+                        .bold()
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+            }
+            .disabled(isLoading)
+
+            if let token = token {
+                Text("✅ Login successful!")
+                    .font(.caption)
+                    .padding()
+            }
+
+            Spacer()
+        }
+        .padding()
+        .navigationTitle("FileBrowser Login")
     }
 
     func login() {
@@ -129,9 +137,10 @@ struct ContentView: View {
 
                         // ✅ Configure the view model
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
+                        isLoggedIn = true
 
                         // ✅ Trigger navigation
-                        pathStack.append("/")
+                        pathStack = []
                     } else {
                         errorMessage = "Failed to decode token"
                     }
@@ -141,4 +150,8 @@ struct ContentView: View {
             }
         }.resume()
     }
+}
+
+struct Folder: Hashable {
+    let name: String
 }

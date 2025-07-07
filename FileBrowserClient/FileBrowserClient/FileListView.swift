@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct FileListView: View {
-    @Binding var pathStack: [String]
-    let currentPath: String
-
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
     @State private var errorMessage: String?
     @State private var lastLoadedPath: String?
+    @Binding var pathStack: [String]
+
+    var currentPath: String {
+        "/" + pathStack.joined(separator: "/")
+    }
 
     var body: some View {
         VStack {
@@ -33,7 +35,7 @@ struct FileListView: View {
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                pathStack.append(file.path)
+                                pathStack.append(file.name)
                             }
                         } else {
                             HStack {
