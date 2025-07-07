@@ -14,8 +14,12 @@ struct ContentView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var token: String?
+
     @EnvironmentObject var auth: AuthManager
     @State private var shouldNavigate = false
+
+    // ✅ Inject view model for file browsing
+    @StateObject private var fileListViewModel = FileListViewModel()
 
     var body: some View {
         NavigationView {
@@ -24,14 +28,14 @@ struct ContentView: View {
                     .keyboardType(.URL)
                     .autocapitalization(.none)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                
+
                 TextField("Username", text: $username)
                     .autocapitalization(.none)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                
+
                 SecureField("Password", text: $password)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                
+
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
@@ -61,9 +65,10 @@ struct ContentView: View {
                         .padding()
                 }
 
-                // NavigationLink triggered by state
+                // ✅ NavigationLink to FileListView
                 NavigationLink(
-                    destination: FileListView(),
+                    destination: FileListView(path: "/")
+                        .environmentObject(fileListViewModel),
                     isActive: $shouldNavigate
                 ) {
                     EmptyView()
@@ -124,6 +129,11 @@ struct ContentView: View {
                         token = jwt
                         auth.token = jwt
                         auth.serverURL = serverURL
+
+                        // ✅ Configure the view model
+                        fileListViewModel.configure(token: jwt, serverURL: serverURL)
+
+                        // ✅ Trigger navigation
                         shouldNavigate = true
                     } else {
                         errorMessage = "Failed to decode token"

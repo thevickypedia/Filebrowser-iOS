@@ -10,7 +10,9 @@ import Foundation
 
 struct FileItem: Codable, Identifiable {
     var id: String { path }
+
     let name: String
     let path: String
-    let type: String
+    let isDir: Bool
+    // optional: add size, extension, modified later
 }
