@@ -23,13 +23,14 @@ class FileListViewModel: ObservableObject {
     }
 
     func fetchFiles(at path: String) {
+        // debugPrint("Fetching contents of path: \(path)")
         guard let token = token, let serverURL = serverURL else {
             errorMessage = "Missing auth"
             return
         }
 
         guard let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "\(serverURL)/api/resources?path=\(encodedPath)") else {
+              let url = URL(string: "\(serverURL)/api/resources/\(encodedPath)") else {
             errorMessage = "Invalid URL"
             return
         }
@@ -57,7 +58,7 @@ class FileListViewModel: ObservableObject {
 
                 do {
                     let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
-                    print("✅ Loaded \(result.items.count) items at path: \(path)")
+                    // debugPrint("Loaded \(result.items.count) items at path: \(path)")
                     for file in result.items {
                         print(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
                     }
