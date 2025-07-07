@@ -8,70 +8,54 @@
 import SwiftUI
 
 struct FileListView: View {
+    @Binding var pathStack: [String]
+    let currentPath: String
+
     @EnvironmentObject var auth: AuthManager
-    @State private var errorMessage: String?
     @EnvironmentObject var viewModel: FileListViewModel
-    @State private var selectedPath: String?
-    @State private var navigateToSubfolder = false
+    @State private var errorMessage: String?
     @State private var lastLoadedPath: String?
 
-    let path: String
-
     var body: some View {
-        NavigationView {
-            VStack {
-                List {
-                    if viewModel.isLoading {
-                        ProgressView()
-                    } else if let error = errorMessage {
-                        Text("Error: \(error)")
-                            .foregroundColor(.red)
-                    } else {
-                        ForEach(viewModel.files) { file in
-                            if file.isDir {
-                                HStack {
-                                    Image(systemName: "folder")
-                                    Text(file.name)
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    selectedPath = file.path
-                                    navigateToSubfolder = true
-                                }
-                            } else {
-                                HStack {
-                                    Image(systemName: "doc")
-                                    Text(file.name)
-                                }
+        VStack {
+            List {
+                if viewModel.isLoading {
+                    ProgressView()
+                } else if let error = errorMessage {
+                    Text("Error: \(error)")
+                        .foregroundColor(.red)
+                } else {
+                    ForEach(viewModel.files) { file in
+                        if file.isDir {
+                            HStack {
+                                Image(systemName: "folder")
+                                Text(file.name)
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                pathStack.append(file.path)
+                            }
+                        } else {
+                            HStack {
+                                Image(systemName: "doc")
+                                Text(file.name)
                             }
                         }
+                    }
 
-                        if viewModel.files.isEmpty && !viewModel.isLoading {
-                            Text("No files found")
-                                .foregroundColor(.gray)
-                        }
+                    if viewModel.files.isEmpty && !viewModel.isLoading {
+                        Text("No files found")
+                            .foregroundColor(.gray)
                     }
                 }
-                NavigationLink(
-                    destination: Group {
-                        if let path = selectedPath {
-                            FileListView(path: path)
-                                .environmentObject(viewModel)
-                        } else {
-                            EmptyView()
-                        }
-                    },
-                    isActive: $navigateToSubfolder
-                ) {
-                    EmptyView()
-                }
             }
-            .navigationTitle("Files")
-            .onAppear {
-                if lastLoadedPath != path {
-                    lastLoadedPath = path
-                    viewModel.fetchFiles(at: path)
-                }
+        }
+        .navigationTitle("Files")
+        .onAppear {
+            print("📂 FileListView appeared for path: \(currentPath)")
+            if lastLoadedPath != currentPath {
+                lastLoadedPath = currentPath
+                viewModel.fetchFiles(at: currentPath)
             }
         }
     }

@@ -14,15 +14,14 @@ struct ContentView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var token: String?
-
     @EnvironmentObject var auth: AuthManager
-    @State private var shouldNavigate = false
+    @State private var pathStack: [String] = []
 
     // ✅ Inject view model for file browsing
     @StateObject private var fileListViewModel = FileListViewModel()
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 20) {
                 TextField("Server URL", text: $serverURL)
                     .keyboardType(.URL)
@@ -64,16 +63,14 @@ struct ContentView: View {
                         .font(.caption)
                         .padding()
                 }
-
-                // ✅ NavigationLink to FileListView
-                NavigationLink(
-                    destination: FileListView(path: "/")
-                        .environmentObject(fileListViewModel),
-                    isActive: $shouldNavigate
-                ) {
-                    EmptyView()
+                NavigationStack(path: $pathStack) {
+                    FileListView(pathStack: $pathStack, currentPath: "/")
+                        .environmentObject(fileListViewModel)
+                        .navigationDestination(for: String.self) { nextPath in
+                            FileListView(pathStack: $pathStack, currentPath: nextPath)
+                                .environmentObject(fileListViewModel)
+                        }
                 }
-
                 Spacer()
             }
             .padding()
@@ -134,7 +131,7 @@ struct ContentView: View {
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
 
                         // ✅ Trigger navigation
-                        shouldNavigate = true
+                        pathStack.append("/")
                     } else {
                         errorMessage = "Failed to decode token"
                     }

@@ -23,7 +23,7 @@ class FileListViewModel: ObservableObject {
     }
 
     func fetchFiles(at path: String) {
-        // debugPrint("Fetching contents of path: \(path)")
+        print("📡 Fetching files at path: \(path)")
         guard let token = token, let serverURL = serverURL else {
             errorMessage = "Missing auth"
             return
