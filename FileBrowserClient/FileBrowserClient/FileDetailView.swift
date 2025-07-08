@@ -93,37 +93,17 @@ struct FileDetailView: View {
         .navigationTitle(file.name)
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Button("Info") {
-                    showInfo = true
+                Button(action: { showInfo = true }) {
+                    Image(systemName: "info.circle")
                 }
-                Button("Rename") {
-                    isRenaming = true
-                    newName = metadata?.name ?? file.name
+                Button(action: { isRenaming = true; newName = metadata?.name ?? file.name }) {
+                    Image(systemName: "pencil")
                 }
-                Button("Delete") {
-                    showingDeleteConfirm = true
+                Button(action: { showingDeleteConfirm = true }) {
+                    Image(systemName: "trash")
                 }
             }
         }
-//        Custom buttons
-//        .toolbar {
-//            ToolbarItemGroup(placement: .navigationBarTrailing) {
-//                Button(action: { showInfo = true }) {
-//                    Text("ℹ️")
-//                }
-//                Button(action: {
-//                    isRenaming = true
-//                    newName = metadata?.name ?? file.name
-//                }) {
-//                    Text("✏️")
-//                }
-//                Button(action: {
-//                    showingDeleteConfirm = true
-//                }) {
-//                    Text("🗑️")
-//                }
-//            }
-//        }
         .alert("Rename File", isPresented: $isRenaming, actions: {
             TextField("New name", text: $newName)
             Button("Rename", action: renameFile)

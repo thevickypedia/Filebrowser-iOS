@@ -62,25 +62,25 @@ struct FileListView: View {
         .toolbar {
             // Left: Refresh button
             ToolbarItem(placement: .navigationBarLeading) {
-                Button("Refresh") {
-                    viewModel.fetchFiles(at: path)
+                Button(action: { refreshFolder() }) {
+                    Image(systemName: "arrow.clockwise")
                 }
             }
 
             // Center: Home button
             ToolbarItem(placement: .principal) {
-                Button("Home") {
-                    dismissToRoot()
+                Button(action: { dismissToRoot() }) {
+                    Image(systemName: "house")
                 }
-                .font(.headline)
             }
 
             // Right: Logout button
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Logout") {
+                Button(action: {
                     auth.logout()
-                    isLoggedIn = false
                     logoutHandler()
+                }) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
                 }
             }
         }
