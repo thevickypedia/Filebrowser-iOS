@@ -13,6 +13,7 @@ struct FileListView: View {
     @EnvironmentObject var viewModel: FileListViewModel
 
     let path: String
+    @Binding var isLoggedIn: Bool
 
     var body: some View {
         List {
@@ -25,7 +26,7 @@ struct FileListView: View {
                 ForEach(viewModel.files) { file in
                     if file.isDir {
                         NavigationLink(
-                            destination: FileListView(path: fullPath(for: file))
+                            destination: FileListView(path: fullPath(for: file), isLoggedIn: $isLoggedIn)
                                 .environmentObject(viewModel)
                         ) {
                             HStack {
@@ -48,6 +49,14 @@ struct FileListView: View {
             }
         }
         .navigationTitle(path == "/" ? "Files" : path.components(separatedBy: "/").last ?? "Folder")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Logout") {
+                    auth.logout()
+                    isLoggedIn = false
+                }
+            }
+        }
         .onAppear {
             print("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)

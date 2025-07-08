@@ -22,7 +22,7 @@ struct ContentView: View {
     var body: some View {
         if isLoggedIn {
             NavigationStack {
-                FileListView(path: "/")
+                FileListView(path: "/", isLoggedIn: $isLoggedIn)
                     .environmentObject(fileListViewModel)
             }
         } else {
