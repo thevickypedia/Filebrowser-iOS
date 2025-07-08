@@ -16,14 +16,20 @@ struct ContentView: View {
     @State private var token: String?
     @EnvironmentObject var auth: AuthManager
     @State private var isLoggedIn = false
+    @State private var rememberMe = false
+    @State private var showLogoutMessage = false
 
     @StateObject private var fileListViewModel = FileListViewModel()
 
     var body: some View {
         if isLoggedIn {
             NavigationStack {
-                FileListView(path: "/", isLoggedIn: $isLoggedIn)
-                    .environmentObject(fileListViewModel)
+                FileListView(
+                    path: "/",
+                    isLoggedIn: $isLoggedIn,
+                    logoutHandler: handleLogout
+                )
+                .environmentObject(fileListViewModel)
             }
         } else {
             loginView
@@ -43,6 +49,8 @@ struct ContentView: View {
 
             SecureField("Password", text: $password)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            Toggle("Remember Me", isOn: $rememberMe)
 
             if let errorMessage = errorMessage {
                 Text(errorMessage)
@@ -67,7 +75,12 @@ struct ContentView: View {
             }
             .disabled(isLoading)
 
-            if let token = token {
+            if showLogoutMessage {
+                Text("⚠️ Logout successful!")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .padding()
+            } else if let token = token {
                 Text("✅ Login successful!")
                     .font(.caption)
                     .padding()
@@ -77,6 +90,15 @@ struct ContentView: View {
         }
         .padding()
         .navigationTitle("FileBrowser Login")
+    }
+
+    func handleLogout() {
+        isLoggedIn = false
+        showLogoutMessage = true
+        if !rememberMe {
+            username = ""
+            password = ""
+        }
     }
 
     func login() {

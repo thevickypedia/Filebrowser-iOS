@@ -14,6 +14,7 @@ struct FileListView: View {
 
     let path: String
     @Binding var isLoggedIn: Bool
+    let logoutHandler: () -> Void
 
     var body: some View {
         List {
@@ -26,7 +27,7 @@ struct FileListView: View {
                 ForEach(viewModel.files) { file in
                     if file.isDir {
                         NavigationLink(
-                            destination: FileListView(path: fullPath(for: file), isLoggedIn: $isLoggedIn)
+                            destination: FileListView(path: fullPath(for: file), isLoggedIn: $isLoggedIn, logoutHandler: logoutHandler)
                                 .environmentObject(viewModel)
                         ) {
                             HStack {
@@ -54,6 +55,7 @@ struct FileListView: View {
                 Button("Logout") {
                     auth.logout()
                     isLoggedIn = false
+                    logoutHandler()
                 }
             }
         }
