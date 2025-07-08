@@ -20,9 +20,15 @@ struct FileDetailView: View {
         Group {
             if let content = content {
                 let fileName = file.name.lowercased();
-                let imageExtensions: [String] = [".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic", ".pdf"]
-                // todo: not sure how all these file extensions will pan out for text - verify later
-                let textExtensions: [String] = [".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh", ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]
+                let imageExtensions: [String] = [
+                    ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic"
+                ]
+                let textExtensions: [String] = [
+                    ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
+                    ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
+                    ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
+                    ".java", ".css", ".rs", ".ts"
+                ]
                 if imageExtensions.contains(where: fileName.hasSuffix) {
                     if let image = UIImage(data: content) {
                         Image(uiImage: image)
