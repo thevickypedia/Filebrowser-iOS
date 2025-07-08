@@ -20,14 +20,10 @@ struct FileDetailView: View {
         Group {
             if let content = content {
                 let fileName = file.name.lowercased();
-                if fileName.hasSuffix(".png") ||
-                    fileName.hasSuffix(".jpg") ||
-                    fileName.hasSuffix(".jpeg") ||
-                    fileName.hasSuffix(".webp") ||
-                    fileName.hasSuffix(".avif") ||
-                    fileName.hasSuffix(".heif") ||
-                    fileName.hasSuffix(".heic") ||
-                    fileName.hasSuffix(".pdf") {
+                let imageExtensions: [String] = [".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic", ".pdf"]
+                // todo: not sure how all these file extensions will pan out for text - verify later
+                let textExtensions: [String] = [".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh", ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx"]
+                if imageExtensions.contains(where: fileName.hasSuffix) {
                     if let image = UIImage(data: content) {
                         Image(uiImage: image)
                             .resizable()
@@ -36,7 +32,7 @@ struct FileDetailView: View {
                     } else {
                         Text("Failed to load image")
                     }
-                } else if fileName.hasSuffix(".txt") || fileName.hasSuffix(".log") {
+                } else if textExtensions.contains(where: fileName.hasSuffix) {
                     if let text = String(data: content, encoding: .utf8) {
                         ScrollView {
                             Text(text)
