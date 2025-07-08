@@ -11,6 +11,7 @@ import SwiftUI
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
+    @Environment(\.dismiss) private var dismiss
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -59,6 +60,22 @@ struct FileListView: View {
         }
         .navigationTitle(path == "/" ? "Files" : path.components(separatedBy: "/").last ?? "Folder")
         .toolbar {
+            // Left: Refresh button
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Refresh") {
+                    viewModel.fetchFiles(at: path)
+                }
+            }
+
+            // Center: Home button
+            ToolbarItem(placement: .principal) {
+                Button("Home") {
+                    dismissToRoot()
+                }
+                .font(.headline)
+            }
+
+            // Right: Logout button
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Logout") {
                     auth.logout()
@@ -71,6 +88,14 @@ struct FileListView: View {
             print("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
         }
+    }
+
+    func dismissToRoot() {
+        dismiss() // Pops one level; we can extend this if needed later
+    }
+
+    func refreshFolder() {
+        viewModel.fetchFiles(at: path)
     }
 
     private func fullPath(for file: FileItem) -> String {

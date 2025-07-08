@@ -191,6 +191,7 @@ struct FileDetailView: View {
                 if httpResponse.statusCode == 200 {
                     // Optional: Dismiss or reload
                     print("✅ Rename successful")
+                    dismiss() // ✅ Auto-go back to list
                 } else {
                     self.error = "Rename failed: \(httpResponse.statusCode)"
                 }
