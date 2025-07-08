@@ -8,6 +8,10 @@
 
 import SwiftUI
 
+struct ResourceMetadata: Codable {
+    let type: String
+}
+
 struct FileDetailView: View {
     let file: FileItem
     let serverURL: String
@@ -65,26 +69,65 @@ struct FileDetailView: View {
     }
 
     func downloadFile() {
-        guard let url = URL(string: "\(serverURL)/api/raw/\(file.path)") else {
-            error = "Invalid file URL"
+        let metadataURL = URL(string: "\(serverURL)/api/resources/\(file.path)")!
+        var metadataRequest = URLRequest(url: metadataURL)
+        metadataRequest.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: metadataRequest) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.error = "Metadata error: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let data = data,
+                      let resource = try? JSONDecoder().decode(ResourceMetadata.self, from: data) else {
+                    self.error = "Failed to decode metadata"
+                    return
+                }
+
+                if resource.type == "image" {
+                    downloadPreview()
+                } else {
+                    downloadRaw()
+                }
+            }
+        }.resume()
+    }
+
+    func downloadPreview() {
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let previewURL = URL(string: "\(serverURL)/api/preview/big/\(encodedPath)?auth=\(token)") else {
+            self.error = "Invalid preview URL"
             return
         }
 
-        var request = URLRequest(url: url)
+        URLSession.shared.dataTask(with: previewURL) { data, _, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.error = "Preview error: \(error.localizedDescription)"
+                    return
+                }
+                self.content = data
+            }
+        }.resume()
+    }
+
+    func downloadRaw() {
+        guard let rawURL = URL(string: "\(serverURL)/api/raw/\(file.path)") else {
+            self.error = "Invalid raw URL"
+            return
+        }
+
+        var request = URLRequest(url: rawURL)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { data, response, err in
+        URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
-                if let err = err {
-                    error = err.localizedDescription
+                if let error = error {
+                    self.error = "Download error: \(error.localizedDescription)"
                     return
                 }
-
-                guard let data = data else {
-                    error = "No data received"
-                    return
-                }
-
                 self.content = data
             }
         }.resume()
