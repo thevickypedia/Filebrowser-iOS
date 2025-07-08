@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var isLoggedIn = false
     @State private var rememberMe = false
     @State private var showLogoutMessage = false
+    @State private var statusMessage: String? = nil
 
     @StateObject private var fileListViewModel = FileListViewModel()
 
@@ -75,15 +76,12 @@ struct ContentView: View {
             }
             .disabled(isLoading)
 
-            if showLogoutMessage {
-                Text("⚠️ Logout successful!")
+            if let statusMessage = statusMessage {
+                Text(statusMessage)
                     .font(.caption)
-                    .foregroundColor(.orange)
+                    .foregroundColor(statusMessage.contains("Logout") ? .orange : .green)
                     .padding()
-            } else if let token = token {
-                Text("✅ Login successful!")
-                    .font(.caption)
-                    .padding()
+                    .transition(.opacity)
             }
 
             Spacer()
@@ -94,10 +92,14 @@ struct ContentView: View {
 
     func handleLogout() {
         isLoggedIn = false
-        showLogoutMessage = true
         if !rememberMe {
             username = ""
             password = ""
+        }
+
+        statusMessage = "⚠️ Logout successful!"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            statusMessage = nil
         }
     }
 
@@ -149,10 +151,14 @@ struct ContentView: View {
                         token = jwt
                         auth.token = jwt
                         auth.serverURL = serverURL
-
-                        // ✅ Configure the view model
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
+
+                        // ✅ Show success message
+                        statusMessage = "✅ Login successful!"
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                            statusMessage = nil
+                        }
                     } else {
                         errorMessage = "Failed to decode token"
                     }
