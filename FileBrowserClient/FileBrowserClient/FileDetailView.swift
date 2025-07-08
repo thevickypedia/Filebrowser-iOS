@@ -9,7 +9,24 @@
 import SwiftUI
 
 struct ResourceMetadata: Codable {
+    let name: String
+    let path: String
+    let size: Int
+    let modified: String
     let type: String
+    let extension_: String?
+    let resolution: Resolution?
+
+    enum CodingKeys: String, CodingKey {
+        case name, path, size, modified, type
+        case extension_ = "extension"
+        case resolution
+    }
+}
+
+struct Resolution: Codable {
+    let width: Int
+    let height: Int
 }
 
 struct FileDetailView: View {
@@ -19,6 +36,12 @@ struct FileDetailView: View {
 
     @State private var content: Data? = nil
     @State private var error: String? = nil
+    @State private var metadata: ResourceMetadata? = nil
+    @State private var showInfo = false
+    @State private var isRenaming = false
+    @State private var newName = ""
+    @State private var showingDeleteConfirm = false
+    @State private var downloadMessage: String? = nil
 
     var body: some View {
         Group {
@@ -51,6 +74,10 @@ struct FileDetailView: View {
                     } else {
                         Text("Failed to decode text")
                     }
+                } else if fileName.hasSuffix(".pdf") {
+                    PDFKitView(data: content)
+                        .padding()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     Text("File preview not supported for this type.")
                         .foregroundColor(.gray)

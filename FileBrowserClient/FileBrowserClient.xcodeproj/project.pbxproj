@@ -19,6 +19,7 @@
 		F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F854861B2E1B1C5000115F18 /* FileListView.swift */; };
 		F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F854862A2E1BA3F900115F18 /* FileListViewModel.swift */; };
 		F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87456272E1CABD70041EDDF /* FileDetailView.swift */; };
+		F874562A2E1CDF400041EDDF /* PDFKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87456292E1CDF400041EDDF /* PDFKitView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +56,7 @@
 		F854861D2E1B253E00115F18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F854862A2E1BA3F900115F18 /* FileListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListViewModel.swift; sourceTree = "<group>"; };
 		F87456272E1CABD70041EDDF /* FileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDetailView.swift; sourceTree = "<group>"; };
+		F87456292E1CDF400041EDDF /* PDFKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFKitView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +108,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				F87456292E1CDF400041EDDF /* PDFKitView.swift */,
 				F87456272E1CABD70041EDDF /* FileDetailView.swift */,
 				F854862A2E1BA3F900115F18 /* FileListViewModel.swift */,
 				F854861B2E1B1C5000115F18 /* FileListView.swift */,
@@ -274,6 +277,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F874562A2E1CDF400041EDDF /* PDFKitView.swift in Sources */,
 				F854861A2E1B1C3E00115F18 /* FileItem.swift in Sources */,
 				F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */,
 				98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */,
