@@ -42,6 +42,7 @@ struct FileDetailView: View {
     @State private var newName = ""
     @State private var showingDeleteConfirm = false
     @State private var downloadMessage: String? = nil
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         Group {
@@ -90,8 +91,138 @@ struct FileDetailView: View {
             }
         }
         .navigationTitle(file.name)
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Button("Info") {
+                    showInfo = true
+                }
+                Button("Rename") {
+                    isRenaming = true
+                    newName = metadata?.name ?? file.name
+                }
+                Button("Delete") {
+                    showingDeleteConfirm = true
+                }
+            }
+        }
+//        Custom buttons
+//        .toolbar {
+//            ToolbarItemGroup(placement: .navigationBarTrailing) {
+//                Button(action: { showInfo = true }) {
+//                    Text("ℹ️")
+//                }
+//                Button(action: {
+//                    isRenaming = true
+//                    newName = metadata?.name ?? file.name
+//                }) {
+//                    Text("✏️")
+//                }
+//                Button(action: {
+//                    showingDeleteConfirm = true
+//                }) {
+//                    Text("🗑️")
+//                }
+//            }
+//        }
+        .alert("Rename File", isPresented: $isRenaming, actions: {
+            TextField("New name", text: $newName)
+            Button("Rename", action: renameFile)
+            Button("Cancel", role: .cancel) { }
+        })
+
+        .alert("Delete File?", isPresented: $showingDeleteConfirm) {
+            Button("Delete", role: .destructive, action: deleteFile)
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Are you sure you want to delete \(file.name)?")
+        }
+
+        .sheet(isPresented: $showInfo) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("📄 Name: \(metadata?.name ?? "-")")
+                Text("📁 Path: \(metadata?.path ?? "-")")
+                Text("🕒 Modified: \(metadata?.modified ?? "-")")
+                Text("📦 Size: \(metadata?.size ?? 0) bytes")
+                if let res = metadata?.resolution {
+                    Text("📐 Resolution: \(res.width)x\(res.height)")
+                }
+                Spacer()
+            }
+            .padding()
+        }
         .onAppear {
             downloadFile()
+        }
+    }
+
+    func renameFile() {
+        let fromPath = file.path
+        let toPath = (file.path as NSString).deletingLastPathComponent + "/" + newName
+
+        guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            error = "Failed to encode rename paths"
+            return
+        }
+
+        let urlString = "\(serverURL)/api/resources\(encodedFrom.hasPrefix("/") ? "" : "/")\(encodedFrom)?action=rename&destination=\(encodedTo)&override=false&rename=false"
+
+        guard let url = URL(string: urlString) else {
+            error = "Invalid rename URL"
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"  // ✅ Required by server
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.error = "Rename failed: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    self.error = "No response"
+                    return
+                }
+
+                if httpResponse.statusCode == 200 {
+                    // Optional: Dismiss or reload
+                    print("✅ Rename successful")
+                } else {
+                    self.error = "Rename failed: \(httpResponse.statusCode)"
+                }
+            }
+        }.resume()
+    }
+
+    func deleteFile() {
+        guard let serverURL = URL(string: "\(serverURL)/api/resources/\(file.path)") else { return }
+
+        var request = URLRequest(url: serverURL)
+        request.httpMethod = "DELETE"
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { _, _, _ in
+            DispatchQueue.main.async {
+                dismiss()
+            }
+        }.resume()
+    }
+
+    func saveFile() {
+        guard let content = content else { return }
+
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
+        try? content.write(to: tempURL)
+
+        // Present share sheet
+        let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = scene.windows.first?.rootViewController {
+            rootVC.present(activityVC, animated: true, completion: nil)
         }
     }
 
