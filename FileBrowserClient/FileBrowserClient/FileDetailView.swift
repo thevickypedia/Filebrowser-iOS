@@ -157,7 +157,7 @@ struct FileDetailView: View {
 
     func renameFile() {
         let fromPath = file.path
-        let toPath = (file.path as NSString).deletingLastPathComponent + "/" + newName
+        let toPath = URL(fileURLWithPath: file.path).deletingLastPathComponent().appendingPathComponent(newName).path
 
         guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
