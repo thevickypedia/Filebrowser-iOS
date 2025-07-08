@@ -62,4 +62,25 @@ fastlane/screenshots/**/*.png
 fastlane/test_output
 
 .idea/
+
+# Xcode
+*.xcuserstate
+*.xcscmblueprint
+*.xcworkspace/xcshareddata/
+*.xcuserdata/
+
+# Build artifacts
+build/
+DerivedData/
+*.xcarchive
+
+# SwiftPM
+.swiftpm/
+Package.resolved
+
+# macOS metadata
 .DS_Store
+
+# User-specific
+*.swp
+*.orig
