@@ -36,9 +36,17 @@ struct FileListView: View {
                             }
                         }
                     } else {
-                        HStack {
-                            Image(systemName: "doc")
-                            Text(file.name)
+                        NavigationLink(
+                            destination: FileDetailView(
+                                file: file,
+                                serverURL: auth.serverURL ?? "",
+                                token: auth.token ?? ""
+                            )
+                        ) {
+                            HStack {
+                                Image(systemName: "doc")
+                                Text(file.name)
+                            }
                         }
                     }
                 }

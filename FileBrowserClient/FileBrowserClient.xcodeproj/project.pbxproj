@@ -18,6 +18,7 @@
 		F854861A2E1B1C3E00115F18 /* FileItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85486192E1B1C3E00115F18 /* FileItem.swift */; };
 		F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F854861B2E1B1C5000115F18 /* FileListView.swift */; };
 		F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F854862A2E1BA3F900115F18 /* FileListViewModel.swift */; };
+		F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87456272E1CABD70041EDDF /* FileDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +54,7 @@
 		F854861B2E1B1C5000115F18 /* FileListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListView.swift; sourceTree = "<group>"; };
 		F854861D2E1B253E00115F18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F854862A2E1BA3F900115F18 /* FileListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListViewModel.swift; sourceTree = "<group>"; };
+		F87456272E1CABD70041EDDF /* FileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +106,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				F87456272E1CABD70041EDDF /* FileDetailView.swift */,
 				F854862A2E1BA3F900115F18 /* FileListViewModel.swift */,
 				F854861B2E1B1C5000115F18 /* FileListView.swift */,
 				F85486192E1B1C3E00115F18 /* FileItem.swift */,
@@ -274,6 +277,7 @@
 				F854861A2E1B1C3E00115F18 /* FileItem.swift in Sources */,
 				F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */,
 				98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */,
+				F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
 				F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */,
 				98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */,
