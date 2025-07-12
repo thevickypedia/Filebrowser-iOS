@@ -57,7 +57,17 @@ struct FileDetailView: View {
                     ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
                     ".java", ".css", ".rs", ".ts"
                 ]
-                if imageExtensions.contains(where: fileName.hasSuffix) {
+                let videoExtensions: [String] = [".mp4", ".mov", ".avi", ".webm"]
+                if videoExtensions.contains(where: fileName.hasSuffix) {
+                    NavigationLink(
+                        destination: VideoPlayerView(file: file, serverURL: serverURL, token: token)
+                    ) {
+                        HStack {
+                            Image(systemName: "play.rectangle")
+                            Text(file.name)
+                        }
+                    }
+                } else if imageExtensions.contains(where: fileName.hasSuffix) {
                     if let image = UIImage(data: content) {
                         Image(uiImage: image)
                             .resizable()
