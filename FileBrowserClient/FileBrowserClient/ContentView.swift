@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var rememberMe = false
     @State private var showLogoutMessage = false
     @State private var statusMessage: String? = nil
+    @State private var transitProtection = false
 
     @StateObject private var fileListViewModel = FileListViewModel()
 
@@ -52,6 +53,7 @@ struct ContentView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
             Toggle("Remember Me", isOn: $rememberMe)
+            Toggle("Transit Protection", isOn: $transitProtection)
 
             if let errorMessage = errorMessage {
                 Text(errorMessage)
@@ -103,6 +105,13 @@ struct ContentView: View {
         }
     }
 
+    func convertStringToHex(_ str: String) -> String {
+        return str.unicodeScalars.map {
+            let hex = String($0.value, radix: 16)
+            return String(repeating: "0", count: 4 - hex.count) + hex
+        }.joined(separator: "\\u")
+    }
+
     func login() {
         isLoading = true
         errorMessage = nil
@@ -114,21 +123,38 @@ struct ContentView: View {
             return
         }
 
-        let credentials = [
-            "username": username,
-            "password": password
-        ]
-
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
-        } catch {
-            errorMessage = "Failed to encode credentials"
-            isLoading = false
-            return
+        if transitProtection {
+            let hexUsername = convertStringToHex(username)
+            let hexPassword = convertStringToHex(password)
+            let hexRecaptcha = convertStringToHex("") // assuming no recaptcha for iOS
+
+            let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
+
+            guard let payload = combined.data(using: .utf8)?.base64EncodedString() else {
+                errorMessage = "Encoding failed"
+                isLoading = false
+                return
+            }
+
+            request.setValue(payload, forHTTPHeaderField: "Authorization")
+            request.httpBody = nil // no body needed
+        } else {
+            let credentials = [
+                "username": username,
+                "password": password
+            ]
+
+            do {
+                request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
+            } catch {
+                errorMessage = "Failed to encode credentials"
+                isLoading = false
+                return
+            }
         }
 
         URLSession.shared.dataTask(with: request) { data, response, error in
