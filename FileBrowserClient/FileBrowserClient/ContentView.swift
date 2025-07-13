@@ -117,6 +117,9 @@ struct ContentView: View {
         errorMessage = nil
         token = nil
 
+        if serverURL.hasSuffix("/") {
+            serverURL.removeLast()
+        }
         guard let url = URL(string: "\(serverURL)/api/login") else {
             errorMessage = "Invalid URL"
             isLoading = false

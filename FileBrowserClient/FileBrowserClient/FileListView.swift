@@ -58,7 +58,7 @@ struct FileListView: View {
                 }
             }
         }
-        .navigationTitle(path == "/" ? "Files" : path.components(separatedBy: "/").last ?? "Folder")
+        .navigationTitle(path == "/" ? "Home" : path.components(separatedBy: "/").last ?? "Folder")
         .toolbar {
             // Left: Refresh button
             ToolbarItem(placement: .navigationBarLeading) {
