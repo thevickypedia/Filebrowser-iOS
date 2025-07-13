@@ -57,8 +57,22 @@ struct FileDetailView: View {
                     ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
                     ".java", ".css", ".rs", ".ts"
                 ]
-                let videoExtensions: [String] = [".mp4", ".mov", ".avi", ".webm"]
-                if videoExtensions.contains(where: fileName.hasSuffix) {
+                let videoExtensions: [String] = [
+                    ".mp4", ".mov", ".avi", ".webm", ".mkv"
+                ]
+                let audioExtensions: [String] = [
+                    ".mp3", ".wav", ".aac", ".ogg"
+                ]
+                if audioExtensions.contains(where: fileName.hasSuffix) {
+                    NavigationLink(
+                        destination: AudioPlayerView(file: file, serverURL: serverURL, token: token)
+                    ) {
+                        HStack {
+                            Image(systemName: "music.note")
+                            Text(file.name)
+                        }
+                    }
+                } else if videoExtensions.contains(where: fileName.hasSuffix) {
                     NavigationLink(
                         destination: VideoPlayerView(file: file, serverURL: serverURL, token: token)
                     ) {
