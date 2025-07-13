@@ -1,5 +1,5 @@
 //
-//  VideoPlayerView.swift
+//  MediaPlayerView.swift
 //  FileBrowserClient
 //
 //  Created by Vignesh Rao on 7/12/25.
@@ -9,7 +9,7 @@
 import SwiftUI
 import AVKit
 
-struct VideoPlayerView: View {
+struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
     let token: String

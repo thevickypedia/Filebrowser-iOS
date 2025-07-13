@@ -65,7 +65,7 @@ struct FileDetailView: View {
                 ]
                 if audioExtensions.contains(where: fileName.hasSuffix) {
                     NavigationLink(
-                        destination: AudioPlayerView(file: file, serverURL: serverURL, token: token)
+                        destination: MediaPlayerView(file: file, serverURL: serverURL, token: token)
                     ) {
                         HStack {
                             Image(systemName: "music.note")
@@ -74,7 +74,7 @@ struct FileDetailView: View {
                     }
                 } else if videoExtensions.contains(where: fileName.hasSuffix) {
                     NavigationLink(
-                        destination: VideoPlayerView(file: file, serverURL: serverURL, token: token)
+                        destination: MediaPlayerView(file: file, serverURL: serverURL, token: token)
                     ) {
                         HStack {
                             Image(systemName: "play.rectangle")
