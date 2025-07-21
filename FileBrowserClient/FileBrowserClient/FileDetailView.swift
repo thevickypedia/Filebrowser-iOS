@@ -131,12 +131,41 @@ struct FileDetailView: View {
 
         .sheet(isPresented: $showInfo) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("📄 Name: \(metadata?.name ?? "-")")
-                Text("📁 Path: \(metadata?.path ?? "-")")
-                Text("🕒 Modified: \(metadata?.modified ?? "-")")
-                Text("📦 Size: \(metadata?.size ?? 0) bytes")
+                // Text("📄 Name: \(metadata?.name ?? file.name)")
+                // Text("📁 Path: \(metadata?.path ?? file.path)")
+                // Text("🕒 Modified: \(metadata?.modified ?? file.modified ?? "Unknown")")
+                // Text("📦 Size: \((metadata?.size ?? file.size).map { "\($0) bytes" } ?? "Unknown")")
+                HStack {
+                    Image(systemName: "doc.text")
+                        .imageScale(.medium)
+                    Text("Name: \(metadata?.name ?? file.name)")
+                    // Text(metadata?.name ?? file.name)
+                }
+
+                HStack {
+                    Image(systemName: "folder")
+                        .imageScale(.medium)
+                    Text("Path: \(metadata?.path ?? file.path)")
+                    // Text(metadata?.path ?? file.path)
+                }
+                HStack {
+                    Image(systemName: "clock")
+                    Text("Modified: \(metadata?.modified ?? file.modified ?? "Unknown")")
+                    // Text(metadata?.modified ?? file.modified ?? "Unknown")
+                }
+                HStack {
+                    Image(systemName: "shippingbox")
+                    Text("Size: \((metadata?.size ?? file.size).map { "\($0) bytes" } ?? "Unknown")")
+                    // Text((metadata?.size ?? file.size).map { "\($0) bytes" } ?? "Unknown")
+                }
                 if let res = metadata?.resolution {
-                    Text("📐 Resolution: \(res.width)x\(res.height)")
+                    // Text("📐 Resolution: \(res.width)x\(res.height)")
+                    HStack {
+                        Image(systemName: "ruler")
+                            .imageScale(.medium)
+                        Text("Resolution: \(res.width)x\(res.height)")
+                        // Text("\(res.width)x\(res.height)")
+                    }
                 }
                 Spacer()
             }
