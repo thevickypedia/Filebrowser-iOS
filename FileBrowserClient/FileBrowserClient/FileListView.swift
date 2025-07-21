@@ -19,45 +19,62 @@ struct FileListView: View {
     let logoutHandler: () -> Void
 
     var body: some View {
-        List {
-            if viewModel.isLoading {
-                ProgressView()
-            } else if let error = viewModel.errorMessage {
-                Text("Error: \(error)")
-                    .foregroundColor(.red)
-            } else {
-                ForEach(viewModel.files) { file in
-                    if file.isDir {
-                        NavigationLink(
-                            destination: FileListView(path: fullPath(for: file), isLoggedIn: $isLoggedIn, logoutHandler: logoutHandler)
-                                .environmentObject(viewModel)
-                        ) {
-                            HStack {
-                                Image(systemName: "folder")
-                                Text(file.name)
+        ZStack(alignment: .bottomTrailing) {
+            List {
+                if viewModel.isLoading {
+                    ProgressView()
+                } else if let error = viewModel.errorMessage {
+                    Text("Error: \(error)")
+                        .foregroundColor(.red)
+                } else {
+                    ForEach(viewModel.files) { file in
+                        if file.isDir {
+                            NavigationLink(
+                                destination: FileListView(path: fullPath(for: file), isLoggedIn: $isLoggedIn, logoutHandler: logoutHandler)
+                                    .environmentObject(viewModel)
+                            ) {
+                                HStack {
+                                    Image(systemName: "folder")
+                                    Text(file.name)
+                                }
                             }
-                        }
-                    } else {
-                        NavigationLink(
-                            destination: FileDetailView(
-                                file: file,
-                                serverURL: auth.serverURL ?? "",
-                                token: auth.token ?? ""
-                            )
-                        ) {
-                            HStack {
-                                Image(systemName: "doc")
-                                Text(file.name)
+                        } else {
+                            NavigationLink(
+                                destination: FileDetailView(
+                                    file: file,
+                                    serverURL: auth.serverURL ?? "",
+                                    token: auth.token ?? ""
+                                )
+                            ) {
+                                HStack {
+                                    Image(systemName: "doc")
+                                    Text(file.name)
+                                }
                             }
                         }
                     }
-                }
 
-                if viewModel.files.isEmpty && !viewModel.isLoading {
-                    Text("No files found")
-                        .foregroundColor(.gray)
+                    if viewModel.files.isEmpty && !viewModel.isLoading {
+                        Text("No files found")
+                            .foregroundColor(.gray)
+                    }
                 }
             }
+
+            // 🌗 Floating Theme Toggle
+            Button(action: {
+                themeManager.colorScheme = themeManager.colorScheme == .dark ? .light : .dark
+            }) {
+                Image(systemName: themeManager.colorScheme == .dark ? "sun.max.fill" : "moon.fill")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.accentColor)
+                    .clipShape(Circle())
+                    .shadow(radius: 4)
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 30)
         }
         .navigationTitle(path == "/" ? "Home" : path.components(separatedBy: "/").last ?? "Folder")
         .toolbar {
@@ -82,14 +99,6 @@ struct FileListView: View {
                     logoutHandler()
                 }) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
-                }
-            }
-
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    themeManager.colorScheme = themeManager.colorScheme == .dark ? .light : .dark
-                }) {
-                    Image(systemName: themeManager.colorScheme == .dark ? "sun.max.fill" : "moon.fill")
                 }
             }
         }
