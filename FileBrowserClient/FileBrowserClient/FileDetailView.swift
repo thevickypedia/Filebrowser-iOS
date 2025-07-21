@@ -61,13 +61,12 @@ struct FileDetailView: View {
         let audioExtensions: [String] = [
             ".mp3", ".wav", ".aac", ".ogg"
         ]
+        let mediaExtensions = videoExtensions + audioExtensions
         Group {
             if let error = error {
                 Text("Error: \(error)")
                     .foregroundColor(.red)
-            } else if videoExtensions.contains(where: file.name.lowercased().hasSuffix) {
-                MediaPlayerView(file: file, serverURL: serverURL, token: token)
-            } else if audioExtensions.contains(where: file.name.lowercased().hasSuffix) {
+            } else if mediaExtensions.contains(where: fileName.hasSuffix) {
                 MediaPlayerView(file: file, serverURL: serverURL, token: token)
             } else if let content = content {
                 if imageExtensions.contains(where: fileName.hasSuffix) {
@@ -144,8 +143,7 @@ struct FileDetailView: View {
             .padding()
         }
         .onAppear {
-            if !videoExtensions.contains(where: file.name.lowercased().hasSuffix)
-                && !audioExtensions.contains(where: file.name.lowercased().hasSuffix) {
+            if !mediaExtensions.contains(where: fileName.hasSuffix) {
                 downloadFile()
             }
         }
