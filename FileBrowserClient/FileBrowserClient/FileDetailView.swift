@@ -45,43 +45,32 @@ struct FileDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        let fileName = file.name.lowercased();
+        let imageExtensions: [String] = [
+            ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic"
+        ]
+        let textExtensions: [String] = [
+            ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
+            ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
+            ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
+            ".java", ".css", ".rs", ".ts"
+        ]
+        let videoExtensions: [String] = [
+            ".mp4", ".mov", ".avi", ".webm", ".mkv"
+        ]
+        let audioExtensions: [String] = [
+            ".mp3", ".wav", ".aac", ".ogg"
+        ]
         Group {
-            if let content = content {
-                let fileName = file.name.lowercased();
-                let imageExtensions: [String] = [
-                    ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic"
-                ]
-                let textExtensions: [String] = [
-                    ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
-                    ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
-                    ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
-                    ".java", ".css", ".rs", ".ts"
-                ]
-                let videoExtensions: [String] = [
-                    ".mp4", ".mov", ".avi", ".webm", ".mkv"
-                ]
-                let audioExtensions: [String] = [
-                    ".mp3", ".wav", ".aac", ".ogg"
-                ]
-                if audioExtensions.contains(where: fileName.hasSuffix) {
-                    NavigationLink(
-                        destination: MediaPlayerView(file: file, serverURL: serverURL, token: token)
-                    ) {
-                        HStack {
-                            Image(systemName: "music.note")
-                            Text(file.name)
-                        }
-                    }
-                } else if videoExtensions.contains(where: fileName.hasSuffix) {
-                    NavigationLink(
-                        destination: MediaPlayerView(file: file, serverURL: serverURL, token: token)
-                    ) {
-                        HStack {
-                            Image(systemName: "play.rectangle")
-                            Text(file.name)
-                        }
-                    }
-                } else if imageExtensions.contains(where: fileName.hasSuffix) {
+            if let error = error {
+                Text("Error: \(error)")
+                    .foregroundColor(.red)
+            } else if videoExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                MediaPlayerView(file: file, serverURL: serverURL, token: token)
+            } else if audioExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                MediaPlayerView(file: file, serverURL: serverURL, token: token)
+            } else if let content = content {
+                if imageExtensions.contains(where: fileName.hasSuffix) {
                     if let image = UIImage(data: content) {
                         Image(uiImage: image)
                             .resizable()
@@ -155,7 +144,10 @@ struct FileDetailView: View {
             .padding()
         }
         .onAppear {
-            downloadFile()
+            if !videoExtensions.contains(where: file.name.lowercased().hasSuffix)
+                && !audioExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                downloadFile()
+            }
         }
     }
 
@@ -277,7 +269,8 @@ struct FileDetailView: View {
     }
 
     func downloadRaw() {
-        guard let rawURL = URL(string: "\(serverURL)/api/raw/\(file.path)") else {
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let rawURL = URL(string: "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)") else {
             self.error = "Invalid raw URL"
             return
         }
