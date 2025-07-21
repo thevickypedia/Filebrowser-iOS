@@ -149,19 +149,29 @@ struct FileDetailView: View {
         }
     }
 
+    func makeEncodedURL(base: String, path: String, query: String? = nil) -> URL? {
+        guard !base.isEmpty, !path.isEmpty else { return nil }
+
+        let trimmedBase = base.hasSuffix("/") ? String(base.dropLast()) : base
+        let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+        let urlString = "\(trimmedBase)/\(encodedPath)" + (query.map { "?\($0)" } ?? "")
+        return URL(string: urlString)
+    }
+
     func renameFile() {
         let fromPath = file.path
         let toPath = URL(fileURLWithPath: file.path).deletingLastPathComponent().appendingPathComponent(newName).path
 
-        guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+        guard let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             error = "Failed to encode rename paths"
             return
         }
 
-        let urlString = "\(serverURL)/api/resources\(encodedFrom.hasPrefix("/") ? "" : "/")\(encodedFrom)?action=rename&destination=\(encodedTo)&override=false&rename=false"
-
-        guard let url = URL(string: urlString) else {
+        guard let url = makeEncodedURL(
+            base: serverURL,
+            path: fromPath,
+            query: "action=rename&destination=\(encodedTo)&override=false&rename=false"
+        ) else {
             error = "Invalid rename URL"
             return
         }
@@ -194,9 +204,9 @@ struct FileDetailView: View {
     }
 
     func deleteFile() {
-        guard let serverURL = URL(string: "\(serverURL)/api/resources/\(file.path)") else { return }
+        guard let url = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else { return }
 
-        var request = URLRequest(url: serverURL)
+        var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
@@ -222,7 +232,10 @@ struct FileDetailView: View {
     }
 
     func downloadFile() {
-        let metadataURL = URL(string: "\(serverURL)/api/resources/\(file.path)")!
+        guard let metadataURL = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else {
+            error = "Invalid metadata URL"
+            return
+        }
         var metadataRequest = URLRequest(url: metadataURL)
         metadataRequest.setValue(token, forHTTPHeaderField: "X-Auth")
 
@@ -249,8 +262,11 @@ struct FileDetailView: View {
     }
 
     func downloadPreview() {
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let previewURL = URL(string: "\(serverURL)/api/preview/big/\(encodedPath)?auth=\(token)") else {
+        guard let previewURL = makeEncodedURL(
+            base: serverURL,
+            path: "api/preview/big/\(file.path)",
+            query: "auth=\(token)"
+        ) else {
             self.error = "Invalid preview URL"
             return
         }
@@ -267,8 +283,11 @@ struct FileDetailView: View {
     }
 
     func downloadRaw() {
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let rawURL = URL(string: "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)") else {
+        guard let rawURL = makeEncodedURL(
+            base: serverURL,
+            path: "api/raw/\(file.path)",
+            query: "auth=\(token)"
+        ) else {
             self.error = "Invalid raw URL"
             return
         }
