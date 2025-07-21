@@ -11,6 +11,7 @@ import SwiftUI
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.dismiss) private var dismiss
 
     let path: String
@@ -81,6 +82,14 @@ struct FileListView: View {
                     logoutHandler()
                 }) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
+                }
+            }
+
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    themeManager.colorScheme = themeManager.colorScheme == .dark ? .light : .dark
+                }) {
+                    Image(systemName: themeManager.colorScheme == .dark ? "sun.max.fill" : "moon.fill")
                 }
             }
         }
