@@ -150,7 +150,9 @@ struct FileDetailView: View {
                 }
                 HStack {
                     Image(systemName: "clock")
-                    Text("Modified: \(metadata?.modified ?? file.modified ?? "Unknown")")
+                    let modified = metadata?.modified ?? file.modified
+                    let diff = calculateTimeDifference(dateString: modified)
+                    Text("Modified: \(timeAgoString(from: diff))")
                     // Text(metadata?.modified ?? file.modified ?? "Unknown")
                 }
                 HStack {
@@ -176,6 +178,76 @@ struct FileDetailView: View {
                 downloadFile()
             }
         }
+    }
+
+    func timeAgoString(from diff: [String: Double]) -> String {
+        let seconds = Int(diff["seconds"] ?? 0)
+        let minutes = Int(diff["minutes"] ?? 0)
+        let hours = Int(diff["hours"] ?? 0)
+        let days = Int(diff["days"] ?? 0)
+        let weeks = Int(diff["weeks"] ?? 0)
+        //let months = Int(diff["months"] ?? 0)
+        //let years = Int(diff["years"] ?? 0)
+
+        switch true {
+        //case years >= 1:
+        //    return "\(years) year\(years == 1 ? "" : "s") ago"
+        //case months >= 1:
+        //    return "\(months) month\(months == 1 ? "" : "s") ago"
+        case weeks >= 1:
+            return "\(weeks) week\(weeks == 1 ? "" : "s") ago"
+        case days >= 1:
+            return "\(days) day\(days == 1 ? "" : "s") ago"
+        case hours >= 1:
+            return "\(hours) hour\(hours == 1 ? "" : "s") ago"
+        case minutes >= 1:
+            return "\(minutes) minute\(minutes == 1 ? "" : "s") ago"
+        case seconds >= 10:
+            return "\(seconds) seconds ago"
+        case seconds >= 1:
+            return "Just now"
+        default:
+            return "Unknown"
+        }
+    }
+
+    func calculateTimeDifference(dateString: String?) -> [String: Double] {
+        let defaultResult: [String: Double] = [
+            "seconds": 0.0,
+            "minutes": 0.0,
+            "hours": 0.0,
+            "days": 0.0,
+            "weeks": 0.0,
+            "months": 0.0,
+            "years": 0.0
+        ]
+
+        guard let dateString = dateString else {
+            print("Input is nil.")
+            return defaultResult
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ" // Update if your date format is different
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+
+        guard let date = formatter.date(from: dateString) else {
+            print("Invalid date format.")
+            return defaultResult
+        }
+
+        let now = Date()
+        let timeInterval = abs(now.timeIntervalSince(date)) // in seconds
+
+        return [
+            "seconds": timeInterval,
+            "minutes": timeInterval / 60,
+            "hours": timeInterval / 3600,
+            "days": timeInterval / (24 * 3600),
+            "weeks": timeInterval / (7 * 24 * 3600),
+            "months": timeInterval / (30 * 24 * 3600), // Approximate
+            "years": timeInterval / (365 * 24 * 3600) // Approximate
+        ]
     }
 
     func makeEncodedURL(base: String, path: String, query: String? = nil) -> URL? {
