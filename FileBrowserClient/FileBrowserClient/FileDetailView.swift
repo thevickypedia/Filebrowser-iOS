@@ -42,6 +42,7 @@ struct FileDetailView: View {
     @State private var newName = ""
     @State private var showingDeleteConfirm = false
     @State private var downloadMessage: String? = nil
+    @State private var isDownloading = false
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var auth: AuthManager
 
@@ -65,7 +66,16 @@ struct FileDetailView: View {
         let mediaExtensions = videoExtensions + audioExtensions
         let previewExtensions = textExtensions + imageExtensions + [".pdf"]
         Group {
-            if let error = error {
+            if isDownloading {
+                VStack {
+                    ProgressView("Downloading...")
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(12)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black.opacity(0.2))
+            } else if let error = error {
                 Text("Error: \(error)")
                     .foregroundColor(.red)
             } else if mediaExtensions.contains(where: fileName.hasSuffix) {
@@ -386,6 +396,7 @@ struct FileDetailView: View {
     func downloadAndSave() {
         if content?.isEmpty ?? true {
             Log.info("Content wasn't downloaded already, downloading now...")
+            isDownloading = true
             downloadRaw(showSave: true)
         } else {
             saveFile()
@@ -451,12 +462,14 @@ struct FileDetailView: View {
     func downloadRaw(showSave: Bool = false) {
         guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             self.error = "Failed to encode path for raw download"
+            isDownloading = false
             return
         }
 
         let urlString = "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)"
         guard let url = URL(string: urlString) else {
             self.error = "Invalid raw URL"
+            isDownloading = false
             return
         }
 
@@ -467,14 +480,15 @@ struct FileDetailView: View {
 
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
+                self.isDownloading = false
                 if let error = error {
                     self.error = "Raw download failed: \(error.localizedDescription)"
                     return
                 }
                 Log.debug("Fetch raw content complete")
                 self.content = data
-                if showSave == true {
-                    saveFile()
+                if showSave {
+                    self.saveFile()
                 }
             }
         }.resume()
