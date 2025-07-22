@@ -43,6 +43,7 @@ struct FileDetailView: View {
     @State private var showingDeleteConfirm = false
     @State private var downloadMessage: String? = nil
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var auth: AuthManager
 
     var body: some View {
         let fileName = file.name.lowercased();
@@ -108,11 +109,18 @@ struct FileDetailView: View {
                 Button(action: { showInfo = true }) {
                     Image(systemName: "info.circle")
                 }
-                Button(action: { isRenaming = true; newName = metadata?.name ?? file.name }) {
-                    Image(systemName: "pencil")
+                if auth.permissions?.rename == true {
+                    Button(action: {
+                        isRenaming = true
+                        newName = metadata?.name ?? file.name
+                    }) {
+                        Image(systemName: "pencil")
+                    }
                 }
-                Button(action: { showingDeleteConfirm = true }) {
-                    Image(systemName: "trash")
+                if auth.permissions?.delete == true {
+                    Button(action: { showingDeleteConfirm = true }) {
+                        Image(systemName: "trash")
+                    }
                 }
             }
         }
@@ -223,7 +231,7 @@ struct FileDetailView: View {
         ]
 
         guard let dateString = dateString else {
-            print("Input is nil.")
+            print("Input dateString is nil.")
             return defaultResult
         }
 
@@ -232,7 +240,7 @@ struct FileDetailView: View {
         formatter.locale = Locale(identifier: "en_US_POSIX")
 
         guard let date = formatter.date(from: dateString) else {
-            print("Invalid date format.")
+            print("Invalid date format: \(dateString)")
             return defaultResult
         }
 
