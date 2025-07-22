@@ -23,7 +23,7 @@ class FileListViewModel: ObservableObject {
     }
 
     func fetchFiles(at path: String) {
-        print("📡 Fetching files at path: \(path)")
+        Log.debug("📡 Fetching files at path: \(path)")
         guard let token = token, let serverURL = serverURL else {
             errorMessage = "Missing auth"
             return
@@ -58,15 +58,15 @@ class FileListViewModel: ObservableObject {
 
                 do {
                     let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
-                    // debugPrint("Loaded \(result.items.count) items at path: \(path)")
+                    Log.info("Loaded \(result.items.count) items at path: \(path)")
                     for file in result.items {
-                        print(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
+                        Log.debug(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
                     }
                     self.files = result.items
                     self.isLoading = false
                 } catch {
                     self.errorMessage = "Failed to parse files"
-                    print("Raw response:", String(data: data, encoding: .utf8) ?? "nil")
+                    Log.error("Raw response: \(String(data: data, encoding: .utf8) ?? "nil")")
                 }
             }
         }.resume()

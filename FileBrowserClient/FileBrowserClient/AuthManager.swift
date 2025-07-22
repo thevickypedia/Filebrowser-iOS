@@ -58,7 +58,7 @@ extension AuthManager {
 
         URLSession.shared.dataTask(with: request) { data, _, error in
             guard let data = data, error == nil else {
-                print("❌ Failed to fetch permissions: \(error?.localizedDescription ?? "Unknown error")")
+                Log.error("❌ Failed to fetch permissions: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
 
@@ -67,13 +67,13 @@ extension AuthManager {
                 if let current = users.first(where: { $0.username == username }) {
                     DispatchQueue.main.async {
                         self.permissions = current.perm
-                        print("✅ Permissions loaded for user \(username): \(current.perm)")
+                        Log.debug("✅ Permissions loaded for user \(username): \(current.perm)")
                     }
                 } else {
-                    print("❌ User not found in /api/users")
+                    Log.error("❌ User not found in /api/users")
                 }
             } catch {
-                print("❌ JSON decode failed: \(error)")
+                Log.error("❌ JSON decode failed: \(error)")
             }
         }.resume()
     }

@@ -151,7 +151,7 @@ struct FileDetailView: View {
                             Button("Create File", systemImage: "doc.badge.plus", action: {
                                 // reminder: Implement file creation
                                 // todo: File creation option should be in FileListView
-                                print("Create tapped")
+                                Log.info("Create tapped")
                             })
                         }
                     } label: {
@@ -230,7 +230,7 @@ struct FileDetailView: View {
                     textExtensions: textExtensions
                 )
             } else {
-                print("🚫 Skipping auto-download — no preview for this type")
+                Log.info("🚫 Skipping auto-download — no preview for this type")
             }
         }
     }
@@ -278,7 +278,7 @@ struct FileDetailView: View {
         ]
 
         guard let dateString = dateString else {
-            print("Input dateString is nil.")
+            Log.warn("Input dateString is nil.")
             return defaultResult
         }
 
@@ -287,7 +287,7 @@ struct FileDetailView: View {
         formatter.locale = Locale(identifier: "en_US_POSIX")
 
         guard let date = formatter.date(from: dateString) else {
-            print("Invalid date format: \(dateString)")
+            Log.error("Invalid date format: \(dateString)")
             return defaultResult
         }
 
@@ -358,7 +358,7 @@ struct FileDetailView: View {
 
                 if httpResponse.statusCode == 200 {
                     // Optional: Dismiss or reload
-                    print("✅ Rename successful")
+                    Log.info("✅ Rename successful")
                     dismiss() // ✅ Auto-go back to list
                 } else {
                     self.error = "Rename failed: \(httpResponse.statusCode)"
@@ -385,7 +385,7 @@ struct FileDetailView: View {
 
     func downloadAndSave() {
         if content?.isEmpty ?? true {
-            print("Content wasn't downloaded already, downloading now...")
+            Log.info("Content wasn't downloaded already, downloading now...")
             downloadRaw(showSave: true)
         } else {
             saveFile()
@@ -408,16 +408,16 @@ struct FileDetailView: View {
 
     func downloadFile(fileName: String, imageExtensions: [String], textExtensions: [String]) {
         if imageExtensions.contains(where: fileName.hasSuffix) {
-            print("🖼️ Detected image file. Using preview API")
+            Log.debug("🖼️ Detected image file. Using preview API")
             downloadPreview()
         } else if textExtensions.contains(where: fileName.hasSuffix) {
-            print("📄 Detected text file. Using raw API")
+            Log.debug("📄 Detected text file. Using raw API")
             downloadRaw()
         } else if fileName.hasSuffix(".pdf") {
-            print("📄 Detected PDF file. Using raw API")
+            Log.debug("📄 Detected PDF file. Using raw API")
             downloadRaw()
         } else {
-            print("📥 Defaulting to raw download for: \(fileName)")
+            Log.debug("📥 Defaulting to raw download for: \(fileName)")
             downloadRaw()
         }
     }
@@ -434,7 +434,7 @@ struct FileDetailView: View {
             return
         }
 
-        print("🔗 Fetching preview from: \(url.absoluteString)")
+        Log.debug("🔗 Fetching preview from: \(url.absoluteString)")
 
         URLSession.shared.dataTask(with: url) { data, _, error in
             DispatchQueue.main.async {
@@ -442,7 +442,7 @@ struct FileDetailView: View {
                     self.error = "Preview download failed: \(error.localizedDescription)"
                     return
                 }
-                print("Fetch preview complete")
+                Log.debug("Fetch preview complete")
                 self.content = data
             }
         }.resume()
@@ -463,7 +463,7 @@ struct FileDetailView: View {
         var request = URLRequest(url: url)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        print("🔗 Fetching raw content from: \(url.absoluteString)")
+        Log.debug("🔗 Fetching raw content from: \(url.absoluteString)")
 
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
@@ -471,7 +471,7 @@ struct FileDetailView: View {
                     self.error = "Raw download failed: \(error.localizedDescription)"
                     return
                 }
-                print("Fetch raw content complete")
+                Log.debug("Fetch raw content complete")
                 self.content = data
                 if showSave == true {
                     saveFile()

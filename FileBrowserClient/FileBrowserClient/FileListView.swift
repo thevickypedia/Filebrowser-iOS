@@ -95,6 +95,7 @@ struct FileListView: View {
             // Right: Logout button
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
+                    Log.info("Logged out!")
                     auth.logout()
                     logoutHandler()
                 }) {
@@ -103,7 +104,7 @@ struct FileListView: View {
             }
         }
         .onAppear {
-            print("📂 FileListView appeared for path: \(path)")
+            Log.debug("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
         }
     }
