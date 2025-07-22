@@ -69,7 +69,7 @@ struct FileListView: View {
                     .font(.title2)
                     .foregroundColor(.white)
                     .padding()
-                    .background(Color.accentColor)
+                    .background(Color.blue)
                     .clipShape(Circle())
                     .shadow(radius: 4)
             }

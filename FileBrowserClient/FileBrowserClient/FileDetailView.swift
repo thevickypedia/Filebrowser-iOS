@@ -167,7 +167,7 @@ struct FileDetailView: View {
                     } label: {
                         Label("Actions", systemImage: "person.circle")
                             .padding()
-                            .background(Color.accentColor.opacity(0.1))
+                            .background(Color.blue.opacity(0.1))
                             .cornerRadius(8)
                     }
                 }
