@@ -112,39 +112,6 @@ struct ContentView: View {
         }.joined(separator: "\\u")
     }
 
-    func fetchUserPermissions() {
-        guard let token = auth.token,
-              let serverURL = auth.serverURL,
-              let url = URL(string: "\(serverURL)/api/users") else {
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                guard let data = data, error == nil else {
-                    print("❌ Failed to fetch permissions: \(error?.localizedDescription ?? "Unknown error")")
-                    return
-                }
-
-                struct User: Codable {
-                    let username: String
-                    let perm: UserPermission
-                }
-
-                if let users = try? JSONDecoder().decode([User].self, from: data),
-                   let currentUser = users.first(where: { $0.username == auth.currentUsername }) {
-                    auth.permissions = currentUser.perm
-                    print("✅ Permissions fetched: \(currentUser.perm)")
-                } else {
-                    print("❌ Failed to parse permissions")
-                }
-            }
-        }.resume()
-    }
-
     func login() {
         isLoading = true
         errorMessage = nil
@@ -213,11 +180,10 @@ struct ContentView: View {
                         token = jwt
                         auth.token = jwt
                         auth.serverURL = serverURL
+                        auth.permissions = nil // clear any stale value
+                        auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL)
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
-
-                        // 🔥 Load user permissions
-                        fetchUserPermissions()
 
                         // ✅ Show success message
                         statusMessage = "✅ Login successful!"

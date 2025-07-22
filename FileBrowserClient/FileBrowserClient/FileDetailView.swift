@@ -70,6 +70,7 @@ struct FileDetailView: View {
             } else if mediaExtensions.contains(where: fileName.hasSuffix) {
                 MediaPlayerView(file: file, serverURL: serverURL, token: token)
             } else if let content = content {
+                // ⚠️ fixme: Takes a lot of time to render content
                 if imageExtensions.contains(where: fileName.hasSuffix) {
                     if let image = UIImage(data: content) {
                         Image(uiImage: image)
@@ -109,19 +110,50 @@ struct FileDetailView: View {
                 Button(action: { showInfo = true }) {
                     Image(systemName: "info.circle")
                 }
-                // 📓 Display rename and delete button only if user has permissions
-                // Retrieved from GET /api/users - Assumes no access if request fails
-                if auth.permissions?.rename == true {
-                    Button(action: {
-                        isRenaming = true
-                        newName = metadata?.name ?? file.name
-                    }) {
-                        Image(systemName: "pencil")
-                    }
+                var hasAnyActionPermission: Bool {
+                    let p = auth.permissions
+                    return p?.rename == true || p?.delete == true || p?.download == true || p?.share == true || p?.create == true
                 }
-                if auth.permissions?.delete == true {
-                    Button(action: { showingDeleteConfirm = true }) {
-                        Image(systemName: "trash")
+                // Actions menu (only if any permission is true)
+                if hasAnyActionPermission {
+                    Menu {
+                        if auth.permissions?.rename == true {
+                            Button("Rename", systemImage: "pencil", action: {
+                                isRenaming = true
+                                newName = metadata?.name ?? file.name
+                            })
+                        }
+
+                        if auth.permissions?.delete == true {
+                            Button("Delete", systemImage: "trash", role: .destructive, action: {
+                                showingDeleteConfirm = true
+                            })
+                        }
+
+                        if auth.permissions?.download == true {
+                            Button("Download", systemImage: "arrow.down.circle", action: {
+                                downloadFile()
+                            })
+                        }
+
+                        if auth.permissions?.share == true {
+                            Button("Share", systemImage: "square.and.arrow.up", action: {
+                                saveFile()
+                            })
+                        }
+
+                        if auth.permissions?.create == true {
+                            Button("Create File", systemImage: "doc.badge.plus", action: {
+                                // reminder: Implement file creation
+                                // todo: File creation option should be in FileListView
+                                print("Create tapped")
+                            })
+                        }
+                    } label: {
+                        Label("Actions", systemImage: "person.circle")
+                            .padding()
+                            .background(Color.accentColor.opacity(0.1))
+                            .cornerRadius(8)
                     }
                 }
             }
