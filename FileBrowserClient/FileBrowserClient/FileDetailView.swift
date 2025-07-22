@@ -109,6 +109,8 @@ struct FileDetailView: View {
                 Button(action: { showInfo = true }) {
                     Image(systemName: "info.circle")
                 }
+                // 📓 Display rename and delete button only if user has permissions
+                // Retrieved from GET /api/users - Assumes no access if request fails
                 if auth.permissions?.rename == true {
                     Button(action: {
                         isRenaming = true
