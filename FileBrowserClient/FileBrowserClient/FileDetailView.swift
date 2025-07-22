@@ -80,7 +80,7 @@ struct FileDetailView: View {
                     } else {
                         Text("Failed to load image")
                     }
-                } else if textExtensions.contains(where: fileName.hasSuffix) {
+                } else if textExtensions.contains(where: fileName.hasSuffix) || fileName.hasSuffix("") {
                     if let text = String(data: content, encoding: .utf8) {
                         ScrollView {
                             Text(text)
@@ -132,7 +132,7 @@ struct FileDetailView: View {
 
                         if auth.permissions?.download == true {
                             Button("Download", systemImage: "arrow.down.circle", action: {
-                                downloadFile()
+                                downloadFile(fileName: fileName, imageExtensions: imageExtensions, textExtensions: textExtensions)
                             })
                         }
 
@@ -217,7 +217,7 @@ struct FileDetailView: View {
         }
         .onAppear {
             if !mediaExtensions.contains(where: fileName.hasSuffix) {
-                downloadFile()
+                downloadFile(fileName: fileName, imageExtensions: imageExtensions, textExtensions: textExtensions)
             }
         }
     }
@@ -384,83 +384,74 @@ struct FileDetailView: View {
         }
     }
 
-    func downloadFile() {
-        // todo: download button doesn't work - check what's going on
-        let metadataURL = URL(string: "\(serverURL)/api/resources/\(file.path)")!
-
-//        guard let metadataURL = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else {
-//            error = "Invalid metadata URL"
-//            return
-//        }
-        var metadataRequest = URLRequest(url: metadataURL)
-        metadataRequest.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: metadataRequest) { data, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    self.error = "Metadata error: \(error.localizedDescription)"
-                    return
-                }
-
-                guard let data = data,
-                      let resource = try? JSONDecoder().decode(ResourceMetadata.self, from: data) else {
-                    self.error = "Failed to decode metadata"
-                    return
-                }
-
-                if resource.type == "image" {
-                    downloadPreview()
-                } else {
-                    downloadRaw()
-                }
-            }
-        }.resume()
+    func downloadFile(fileName: String, imageExtensions: [String], textExtensions: [String]) {
+        if imageExtensions.contains(where: fileName.hasSuffix) {
+            print("🖼️ Detected image file. Using preview API")
+            downloadPreview()
+        } else if textExtensions.contains(where: fileName.hasSuffix) {
+            print("📄 Detected text file. Using raw API")
+            downloadRaw()
+        } else if fileName.hasSuffix(".pdf") {
+            print("📄 Detected PDF file. Using raw API")
+            downloadRaw()
+        } else {
+            print("📥 Defaulting to raw download for: \(fileName)")
+            downloadRaw()
+        }
+        // fixme: Raw files (specifically large files) shouldn't be awaited
+        self.saveFile() // 👈 Automatically present share/save UI
     }
 
     func downloadPreview() {
-//        guard let previewURL = makeEncodedURL(
-//            base: serverURL,
-//            path: "api/preview/big/\(file.path)",
-//            query: "auth=\(token)"
-//        ) else {
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let previewURL = URL(string: "\(serverURL)/api/preview/big/\(encodedPath)?auth=\(token)") else {
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
+            self.error = "Failed to encode path for preview"
+            return
+        }
+
+        let urlString = "\(serverURL)/api/preview/big/\(encodedPath)?auth=\(token)"
+        guard let url = URL(string: urlString) else {
             self.error = "Invalid preview URL"
             return
         }
 
-        URLSession.shared.dataTask(with: previewURL) { data, _, error in
+        print("🔗 Fetching preview from: \(url.absoluteString)")
+
+        URLSession.shared.dataTask(with: url) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.error = "Preview error: \(error.localizedDescription)"
+                    self.error = "Preview download failed: \(error.localizedDescription)"
                     return
                 }
+                print("Fetch preview complete")
                 self.content = data
             }
         }.resume()
     }
 
     func downloadRaw() {
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let rawURL = URL(string: "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)") else {
-//        guard let rawURL = makeEncodedURL(
-//            base: serverURL,
-//            path: "api/raw/\(file.path)",
-//            query: "auth=\(token)"
-//        ) else {
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
+            self.error = "Failed to encode path for raw download"
+            return
+        }
+
+        let urlString = "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)"
+        guard let url = URL(string: urlString) else {
             self.error = "Invalid raw URL"
             return
         }
 
-        var request = URLRequest(url: rawURL)
+        var request = URLRequest(url: url)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        print("🔗 Fetching raw content from: \(url.absoluteString)")
 
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.error = "Download error: \(error.localizedDescription)"
+                    self.error = "Raw download failed: \(error.localizedDescription)"
                     return
                 }
+                print("Fetch raw content complete")
                 self.content = data
             }
         }.resume()
