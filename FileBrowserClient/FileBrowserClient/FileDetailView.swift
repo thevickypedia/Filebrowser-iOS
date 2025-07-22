@@ -119,8 +119,8 @@ struct FileDetailView: View {
                     Menu {
                         if auth.permissions?.rename == true {
                             Button("Rename", systemImage: "pencil", action: {
-                                isRenaming = true
                                 newName = metadata?.name ?? file.name
+                                isRenaming = true
                             })
                         }
 
@@ -305,16 +305,24 @@ struct FileDetailView: View {
         let fromPath = file.path
         let toPath = URL(fileURLWithPath: file.path).deletingLastPathComponent().appendingPathComponent(newName).path
 
-        guard let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+        guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+
+        // guard let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+
             error = "Failed to encode rename paths"
             return
         }
 
-        guard let url = makeEncodedURL(
-            base: serverURL,
-            path: fromPath,
-            query: "action=rename&destination=\(encodedTo)&override=false&rename=false"
-        ) else {
+        let urlString = "\(serverURL)/api/resources\(encodedFrom.hasPrefix("/") ? "" : "/")\(encodedFrom)?action=rename&destination=\(encodedTo)&override=false&rename=false"
+        guard let url = URL(string: urlString) else {
+
+        // guard let url = makeEncodedURL(
+        //    base: serverURL,
+        //    path: fromPath,
+        //    query: "action=rename&destination=\(encodedTo)&override=false&rename=false"
+        // ) else {
+
             error = "Invalid rename URL"
             return
         }
@@ -348,6 +356,8 @@ struct FileDetailView: View {
 
     func deleteFile() {
         guard let url = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else { return }
+        // guard let serverURL = URL(string: "\(serverURL)/api/resources/\(file.path)") else { return }
+        // var request = URLRequest(url: serverURL)
 
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
@@ -375,10 +385,13 @@ struct FileDetailView: View {
     }
 
     func downloadFile() {
-        guard let metadataURL = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else {
-            error = "Invalid metadata URL"
-            return
-        }
+        // todo: download button doesn't work - check what's going on
+        let metadataURL = URL(string: "\(serverURL)/api/resources/\(file.path)")!
+
+//        guard let metadataURL = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else {
+//            error = "Invalid metadata URL"
+//            return
+//        }
         var metadataRequest = URLRequest(url: metadataURL)
         metadataRequest.setValue(token, forHTTPHeaderField: "X-Auth")
 
@@ -405,11 +418,13 @@ struct FileDetailView: View {
     }
 
     func downloadPreview() {
-        guard let previewURL = makeEncodedURL(
-            base: serverURL,
-            path: "api/preview/big/\(file.path)",
-            query: "auth=\(token)"
-        ) else {
+//        guard let previewURL = makeEncodedURL(
+//            base: serverURL,
+//            path: "api/preview/big/\(file.path)",
+//            query: "auth=\(token)"
+//        ) else {
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let previewURL = URL(string: "\(serverURL)/api/preview/big/\(encodedPath)?auth=\(token)") else {
             self.error = "Invalid preview URL"
             return
         }
@@ -426,11 +441,13 @@ struct FileDetailView: View {
     }
 
     func downloadRaw() {
-        guard let rawURL = makeEncodedURL(
-            base: serverURL,
-            path: "api/raw/\(file.path)",
-            query: "auth=\(token)"
-        ) else {
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let rawURL = URL(string: "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)") else {
+//        guard let rawURL = makeEncodedURL(
+//            base: serverURL,
+//            path: "api/raw/\(file.path)",
+//            query: "auth=\(token)"
+//        ) else {
             self.error = "Invalid raw URL"
             return
         }
