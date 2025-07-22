@@ -63,6 +63,7 @@ struct FileDetailView: View {
             ".mp3", ".wav", ".aac", ".ogg"
         ]
         let mediaExtensions = videoExtensions + audioExtensions
+        let previewExtensions = textExtensions + imageExtensions + [".pdf"]
         Group {
             if let error = error {
                 Text("Error: \(error)")
@@ -70,7 +71,6 @@ struct FileDetailView: View {
             } else if mediaExtensions.contains(where: fileName.hasSuffix) {
                 MediaPlayerView(file: file, serverURL: serverURL, token: token)
             } else if let content = content {
-                // ⚠️ fixme: Takes a lot of time to render content
                 if imageExtensions.contains(where: fileName.hasSuffix) {
                     if let image = UIImage(data: content) {
                         Image(uiImage: image)
@@ -80,7 +80,7 @@ struct FileDetailView: View {
                     } else {
                         Text("Failed to load image")
                     }
-                } else if textExtensions.contains(where: fileName.hasSuffix) || fileName.hasSuffix("") {
+                } else if textExtensions.contains(where: fileName.hasSuffix) {
                     if let text = String(data: content, encoding: .utf8) {
                         ScrollView {
                             Text(text)
@@ -101,7 +101,12 @@ struct FileDetailView: View {
                 Text("Error: \(error)")
                     .foregroundColor(.red)
             } else {
-                ProgressView("Loading file...")
+                if previewExtensions.contains(where: fileName.hasSuffix) {
+                    ProgressView("Loading file...")
+                } else {
+                    Text("File preview not supported for this type.")
+                        .foregroundColor(.gray)
+                }
             }
         }
         .navigationTitle(file.name)
@@ -132,13 +137,13 @@ struct FileDetailView: View {
 
                         if auth.permissions?.download == true {
                             Button("Download", systemImage: "arrow.down.circle", action: {
-                                downloadFile(fileName: fileName, imageExtensions: imageExtensions, textExtensions: textExtensions)
+                                downloadAndSave()
                             })
                         }
 
                         if auth.permissions?.share == true {
                             Button("Share", systemImage: "square.and.arrow.up", action: {
-                                saveFile()
+                                downloadAndSave()
                             })
                         }
 
@@ -216,8 +221,16 @@ struct FileDetailView: View {
             .padding()
         }
         .onAppear {
-            if !mediaExtensions.contains(where: fileName.hasSuffix) {
-                downloadFile(fileName: fileName, imageExtensions: imageExtensions, textExtensions: textExtensions)
+            if !mediaExtensions.contains(where: fileName.hasSuffix)
+                && (previewExtensions.contains(where: fileName.hasSuffix)) {
+                // ✅ Only load if preview is supported
+                downloadFile(
+                    fileName: fileName,
+                    imageExtensions: imageExtensions,
+                    textExtensions: textExtensions
+                )
+            } else {
+                print("🚫 Skipping auto-download — no preview for this type")
             }
         }
     }
@@ -370,6 +383,15 @@ struct FileDetailView: View {
         }.resume()
     }
 
+    func downloadAndSave() {
+        if content?.isEmpty ?? true {
+            print("Content wasn't downloaded already, downloading now...")
+            downloadRaw(showSave: true)
+        } else {
+            saveFile()
+        }
+    }
+
     func saveFile() {
         guard let content = content else { return }
 
@@ -398,8 +420,6 @@ struct FileDetailView: View {
             print("📥 Defaulting to raw download for: \(fileName)")
             downloadRaw()
         }
-        // fixme: Raw files (specifically large files) shouldn't be awaited
-        self.saveFile() // 👈 Automatically present share/save UI
     }
 
     func downloadPreview() {
@@ -428,7 +448,7 @@ struct FileDetailView: View {
         }.resume()
     }
 
-    func downloadRaw() {
+    func downloadRaw(showSave: Bool = false) {
         guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             self.error = "Failed to encode path for raw download"
             return
@@ -453,6 +473,9 @@ struct FileDetailView: View {
                 }
                 print("Fetch raw content complete")
                 self.content = data
+                if showSave == true {
+                    saveFile()
+                }
             }
         }.resume()
     }
