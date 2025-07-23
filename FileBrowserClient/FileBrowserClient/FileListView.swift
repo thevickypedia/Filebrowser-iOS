@@ -86,7 +86,11 @@ struct FileListView: View {
 
             // Center: Home button
             ToolbarItem(placement: .principal) {
-                Button(action: { dismissToRoot() }) {
+                Button(action: { 
+                    pathStack = []
+                    viewModel.fetchFiles(at: "/")
+                    Log.info("🔙 Dismissing to root directory")
+                 }) {
                     Image(systemName: "house")
                 }
             }
@@ -165,10 +169,6 @@ struct FileListView: View {
                 }
             }
         }.resume()
-    }
-
-    func dismissToRoot() {
-        pathStack = ["/"]
     }
 
     func refreshFolder() {
