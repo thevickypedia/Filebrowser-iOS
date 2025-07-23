@@ -24,6 +24,10 @@ struct ResourceMetadata: Codable {
     }
 }
 
+enum ValidationError: Error {
+    case invalidDateFormat
+}
+
 struct Resolution: Codable {
     let width: Int
     let height: Int
@@ -268,7 +272,37 @@ struct FileDetailView: View {
         }
     }
 
-    func calculateTimeDifference(dateString: String?) -> [String: Double] {
+    func parseDate(from dateString: String, defaultResult: Date? = nil) throws -> Date {
+        let formats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX",  // SSSSSS → 6 digits of fractional seconds
+            "yyyy-MM-dd'T'HH:mm:ssXXXXX",         // ISO 8601 with timezone
+            "yyyy-MM-dd'T'HH:mm:ssZ",             // ISO 8601 with Z
+            "yyyy-MM-dd HH:mm:ss",                // Common DB format
+            "yyyy/MM/dd HH:mm:ss",
+            "MM/dd/yyyy HH:mm:ss",
+            "dd-MM-yyyy HH:mm:ss",
+            "yyyy-MM-dd",
+            "MM/dd/yyyy",
+            "dd-MM-yyyy"
+        ]
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+
+        for format in formats {
+            formatter.dateFormat = format
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+        }
+
+        guard let date = defaultResult else {
+            throw ValidationError.invalidDateFormat
+        }
+        return date
+    }
+
+     func calculateTimeDifference(dateString: String?) -> [String: Double] {
         let defaultResult: [String: Double] = [
             "seconds": 0.0,
             "minutes": 0.0,
@@ -284,27 +318,24 @@ struct FileDetailView: View {
             return defaultResult
         }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ" // Update if your date format is different
-        formatter.locale = Locale(identifier: "en_US_POSIX")
+        do {
+            let date = try parseDate(from: dateString)
+            let now = Date()
+            let timeInterval = abs(now.timeIntervalSince(date)) // in seconds
 
-        guard let date = formatter.date(from: dateString) else {
+            return [
+                "seconds": timeInterval,
+                "minutes": timeInterval / 60,
+                "hours": timeInterval / 3600,
+                "days": timeInterval / (24 * 3600),
+                "weeks": timeInterval / (7 * 24 * 3600),
+                "months": timeInterval / (30 * 24 * 3600), // Approximate
+                "years": timeInterval / (365 * 24 * 3600) // Approximate
+            ]
+        } catch {
             Log.error("Invalid date format: \(dateString)")
             return defaultResult
         }
-
-        let now = Date()
-        let timeInterval = abs(now.timeIntervalSince(date)) // in seconds
-
-        return [
-            "seconds": timeInterval,
-            "minutes": timeInterval / 60,
-            "hours": timeInterval / 3600,
-            "days": timeInterval / (24 * 3600),
-            "weeks": timeInterval / (7 * 24 * 3600),
-            "months": timeInterval / (30 * 24 * 3600), // Approximate
-            "years": timeInterval / (365 * 24 * 3600) // Approximate
-        ]
     }
 
     func makeEncodedURL(base: String, path: String, query: String? = nil) -> URL? {
