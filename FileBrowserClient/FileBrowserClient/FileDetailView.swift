@@ -127,7 +127,7 @@ struct FileDetailView: View {
                 }
                 var hasAnyActionPermission: Bool {
                     let p = auth.permissions
-                    return p?.rename == true || p?.delete == true || p?.download == true || p?.share == true || p?.create == true
+                    return p?.rename == true || p?.delete == true || p?.download == true || p?.share == true
                 }
                 // Actions menu (only if any permission is true)
                 if hasAnyActionPermission {
@@ -154,14 +154,6 @@ struct FileDetailView: View {
                         if auth.permissions?.share == true {
                             Button("Share", systemImage: "square.and.arrow.up", action: {
                                 downloadAndSave()
-                            })
-                        }
-
-                        if auth.permissions?.create == true {
-                            Button("Create File", systemImage: "doc.badge.plus", action: {
-                                // reminder: Implement file creation
-                                // todo: File creation option should be in FileListView
-                                Log.info("Create tapped")
                             })
                         }
                     } label: {
