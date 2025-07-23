@@ -1,0 +1,58 @@
+Release Notes
+=============
+
+v1.0.0 (07/23/2025)
+-------------------
+- 578284b ci: Add a new GH workflow to auto-update release notes
+- 6b1241d fix: Reset navigation title when home button is pressed
+- d0bc98a feat: Add the ability for home button to navigate to root directory
+- 737a572 fix: Handle different timestamp formats from the server
+- b6072cf feat: Add a feature to create new files and remove create button from detail page
+- c195fe1 chore: Replace accent colors for buttons with static blue
+- e7ffc0d feat: Display a progress window in the UI while downloading
+- d52e91c feat: Onboard a custom logging framework
+- 8963ef2 fix: Inconsistencies in pop up menu for extra options
+- 2fcccf9 fix: Fix redundant downloads and lazy previews
+- 84fe8b6 revert: Rollback helper function (from: ad2ab32) for complex URL encoding
+- 98717c7 feat: Add a custom drop down for special permissions
+- c03c18c docs: Add todo notes in the form of internal reminders
+- 610394f feat: Display delete and rename buttons based on user's permission level
+- a2764c1 feat: Add modified timestamp as time ago
+- 13b16e1 feat: Use FileItem object as backup for file metadata
+- ad2ab32 refactor: Create a helper function for URL encoding
+- 84b0286 refactor: Unify conditions for media extensions
+- 06bc5a8 fix: Avoid waiting for .content before showing a video/audio view
+- f50c3c2 style: Make dark/light mode button float on-screen
+- e55133b feat: Add light/dark mode option
+- 9d993e0 refactor: Unify media player and remove redundant code for audio/video
+- 2d07ea5 fix: Strip / from server URLs when processing user input
+- 0da1178 feat: Add support for streaming audio files
+- dcb0c3c feat: Add support for streaming video files
+- df773a1 feat: Add a new toggle button for transit protection
+- f597b85 style: Replace text buttons with material-icon-style shorthand
+- 6516beb feat: Add home and refresh buttons
+- c0ac1c8 fix: Include a safety net to avoid URL malform for rename function
+- 8391113 feat: Add functionalities to get info, rename and delete files
+- 888407b feat: Add support for PDF files
+- 104006d perf: Use preview endpoint for faster response and less bandwidth
+- 6c872ac feat: Add more text and image formats as supported types
+- f197024 refactor: Simplify conditions for file extension check
+- 4864359 feat: Open images and text files in Simulator
+- 292725b fix: Make login and logout messages disappearing
+- 3b392c8 feat: Add a 'remember me' toggle to keep/clear credentials
+- 65390aa feat: Add a logout button in simulator
+- bf12ba4 chore: Update .gitignore
+- 6546e9e fix: Fix nested directory's navigation issue and previous buttons
+- 55fe716 chore: Remove .DS_Store
+- 069b05a fix: Avoid printing item list in the login page in simulator
+- ad3e964 fix: Remove stacking back buttons in the simulator
+- 1033c20 feat: Navigate within dirs and sub-dirs
+- 1c7d8a6 feat: Distinguish files and folders in the simulator
+- a68e9a9 feat: Add a listing screen after successful auth
+- 4a1f4d5 feat: Create an auth manager to store JWT securely
+- 356b4c2 fix: Fix JWT parsing and print the token on screen
+- 422f088 feat: Process API login and display response
+- bcdd71f Add login screen, username and password input fields
+- 301c7f0 refactor: Restructure code base
+- 864e955 feat: Setup a base hello world project
+- 35266fa Initial commit
