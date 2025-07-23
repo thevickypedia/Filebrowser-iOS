@@ -51,6 +51,12 @@ struct ContentView: View {
 
     var loginView: some View {
         VStack(spacing: 20) {
+            Image("logo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 120, height: 120)
+                .padding(.bottom, 10)
+
             TextField("Server URL", text: $serverURL)
                 .keyboardType(.URL)
                 .autocapitalization(.none)
