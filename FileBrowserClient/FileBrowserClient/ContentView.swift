@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var pathStack: [String] = []
     @State private var serverURL = ""
     @State private var username = ""
     @State private var password = ""
@@ -25,13 +26,23 @@ struct ContentView: View {
 
     var body: some View {
         if isLoggedIn {
-            NavigationStack {
+            NavigationStack(path: $pathStack) {
                 FileListView(
-                    path: "/",
+                    path: pathStack.last ?? "/",
                     isLoggedIn: $isLoggedIn,
+                    pathStack: $pathStack, // ✅ pass it down
                     logoutHandler: handleLogout
                 )
                 .environmentObject(fileListViewModel)
+                .navigationDestination(for: String.self) { newPath in
+                    FileListView(
+                        path: newPath,
+                        isLoggedIn: $isLoggedIn,
+                        pathStack: $pathStack,
+                        logoutHandler: handleLogout
+                    )
+                    .environmentObject(fileListViewModel)
+                }
             }
         } else {
             loginView

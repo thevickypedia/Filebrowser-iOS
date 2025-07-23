@@ -17,6 +17,7 @@ struct FileListView: View {
 
     let path: String
     @Binding var isLoggedIn: Bool
+    @Binding var pathStack: [String]
     let logoutHandler: () -> Void
 
     var body: some View {
@@ -30,10 +31,7 @@ struct FileListView: View {
                 } else {
                     ForEach(viewModel.files) { file in
                         if file.isDir {
-                            NavigationLink(
-                                destination: FileListView(path: fullPath(for: file), isLoggedIn: $isLoggedIn, logoutHandler: logoutHandler)
-                                    .environmentObject(viewModel)
-                            ) {
+                            NavigationLink(value: fullPath(for: file)) {
                                 HStack {
                                     Image(systemName: "folder")
                                     Text(file.name)
@@ -170,7 +168,7 @@ struct FileListView: View {
     }
 
     func dismissToRoot() {
-        dismiss() // reminder: Pops one level; we can extend this if needed later
+        pathStack = ["/"]
     }
 
     func refreshFolder() {
