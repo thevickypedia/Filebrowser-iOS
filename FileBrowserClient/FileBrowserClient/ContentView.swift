@@ -107,16 +107,17 @@ struct ContentView: View {
 
             // Footer
             VStack(spacing: 2) {
-                Text("Server Version: \(fileListViewModel.serverVersion ?? "unknown")")
+                Link(("Server Version: \(fileListViewModel.serverVersion)"),
+                     destination: URL(string: "https://github.com/filebrowser/filebrowser/releases/tag/\(fileListViewModel.serverVersion)")!)
                     .font(.footnote)
-                    .foregroundColor(.secondary)
-                Text("Client Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown")")
+                    .foregroundColor(.blue)
+                Link(("Client Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown")"),
+                     destination: URL(string: "https://github.com/thevickypedia/Filebrowser-iOS")!)
                     .font(.footnote)
-                    .foregroundColor(.secondary)
-                // Text("© \(Calendar.current.component(.year, from: Date())) Vignesh Rao")
-                Text("© 2025 Vignesh Rao")
+                    .foregroundColor(.blue)
+                Link("© 2025 Vignesh Rao", destination: URL(string: "https://vigneshrao.com")!)
                     .font(.footnote)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.blue)
             }
             .padding(.bottom, 8)
         }
