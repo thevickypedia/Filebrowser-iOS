@@ -32,4 +32,32 @@ jobs:
           BUILD_VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" Info.plist)
           echo "Client Version: $SHORT_VERSION" >> $GITHUB_STEP_SUMMARY
           echo "Build Version: $BUILD_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "project_version=$SHORT_VERSION" >> $GITHUB_ENV
         working-directory: FileBrowserClient
+
+      - name: Check GH Tag
+        run: |
+          url="https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ env.project_version }}"
+          response=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+          if [ "$response" -eq 200 ]; then
+            echo "Release tag v${{ env.project_version }} already exists."
+            echo "release_exists=true" >> $GITHUB_ENV
+          else
+            echo "Release tag v${{ env.project_version }} does not exist."
+            echo "release_exists=false" >> $GITHUB_ENV
+          fi
+
+      - name: Get Release Notes
+        if: env.release_exists == 'false'
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git fetch --prune --unshallow
+          git fetch --tags
+          git log --pretty=format:"- %h %s" --no-merges > release_notes.txt
+
+      - name: Create Release
+        if: env.release_exists == 'false'
+        run: |
+          git tag -a "v${{ env.project_version }}" -m "v${{ env.project_version }}"
+          git push origin "v${{ env.project_version }}"
