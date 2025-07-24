@@ -104,6 +104,21 @@ struct ContentView: View {
             }
 
             Spacer()
+
+            // Footer
+            VStack(spacing: 2) {
+                Text("Server Version: \(fileListViewModel.serverVersion ?? "unknown")")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                Text("Client Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown")")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                // Text("© \(Calendar.current.component(.year, from: Date())) Vignesh Rao")
+                Text("© 2025 Vignesh Rao")
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.bottom, 8)
         }
         .padding()
         .navigationTitle("FileBrowser Login")
