@@ -38,7 +38,7 @@ jobs:
       - name: Check GH Tag
         run: |
           url="https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ env.project_version }}"
-          response=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+          response=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" "$url")
           if [ "$response" -eq 200 ]; then
             echo "Release tag v${{ env.project_version }} already exists."
             echo "release_exists=true" >> $GITHUB_ENV
