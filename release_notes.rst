@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+v1.0.1 (07/24/2025)
+-------------------
+- 63ef787 chore: Release v1.0.1
+- c0e2e18 ci: Update GHA to pull release notes since previous tag and create new tag & release
+- ce31a82 fix: NavigationRequestObserver trying to update multiple times per frame
+- 3db694a fix: Inconsistent navigation title in sub-directories
+- eea3f7e docs: Update documentation
+- c074b1a ci: Update GHA to make authenticated requests
+- 38f6243 ci: Extend build GHA to automatically create a release
+- cf2726d chore: Make footer notes in login page hyperlinks
+- 612a853 chore: Add project information at the footer of login page
+- 7f8ec83 ci: Add a new GHA workflow to build and print project version
+- 867ab99 feat: Add appicon and login page logo
+- a8a71d8 Update release notes
+
 v1.0.0 (07/23/2025)
 -------------------
 - 578284b ci: Add a new GH workflow to auto-update release notes
