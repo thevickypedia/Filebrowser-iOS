@@ -3,6 +3,8 @@ name: iOS Build
 on:
   push:
     branches: [ main ]
+    paths:
+      - "FileBrowserClient/Info.plist"
 
 jobs:
   build:
