@@ -75,8 +75,7 @@ struct FileListView: View {
             .padding(.trailing, 20)
             .padding(.bottom, 30)
         }
-        // todo: investigate `Update NavigationRequestObserver tried to update multiple times per frame.`
-        .navigationTitle(path == "/" ? "Home" : pathStack.last?.components(separatedBy: "/").last ?? "Folder")
+        .navigationTitle(pathStack.last?.components(separatedBy: "/").last ?? "Home")
         .toolbar {
             // Left: Refresh button
             ToolbarItem(placement: .navigationBarLeading) {

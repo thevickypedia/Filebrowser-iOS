@@ -217,6 +217,10 @@ struct ContentView: View {
                         auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL)
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
+                        // Ensure navigation stack is set after login
+                        DispatchQueue.main.async {
+                            pathStack = ["/"]
+                        }
 
                         // ✅ Show success message
                         statusMessage = "✅ Login successful!"
