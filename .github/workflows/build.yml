@@ -56,10 +56,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git fetch --prune --unshallow
           git fetch --tags
-          git log --pretty=format:"- %h %s" --no-merges > release_notes.txt
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          echo "::notice title=Previous Release::${PREV_TAG}"
+          echo "::notice title=Current Release::v${{ env.project_version }}"
+          git log "${PREV_TAG}..HEAD" --pretty=format:"- %h %s" --no-merges > release_notes.txt
+          cat release_notes.txt
 
       - name: Create Release
         if: env.release_exists == 'false'
         run: |
-          git tag -a "v${{ env.project_version }}" -m "v${{ env.project_version }}"
-          git push origin "v${{ env.project_version }}"
+          gh release create "v${{ env.project_version }}" \
+            --title "v${{ env.project_version }}" \
+            --notes-file release_notes.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
