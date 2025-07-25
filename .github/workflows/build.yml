@@ -70,3 +70,10 @@ jobs:
             --notes-file release_notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+
+      - name: Update Release Notes
+        if: env.release_exists == 'false'
+        uses: thevickypedia/update-release-notes@v2
+        env:
+          git_token: ${{ secrets.GIT_TOKEN }}
+          commit_message: "chore: Update release notes for v${{ env.project_version }}"
