@@ -219,6 +219,8 @@ struct ContentView: View {
                         auth.token = jwt
                         auth.serverURL = serverURL
                         auth.permissions = nil // clear any stale value
+                        auth.username = username // ✅ Store username
+                        auth.fetchUserAccount(for: username, token: jwt, serverURL: serverURL)
                         auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL)
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true

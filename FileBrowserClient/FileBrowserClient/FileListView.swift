@@ -11,15 +11,22 @@ struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
     @EnvironmentObject var themeManager: ThemeManager
+
     @Environment(\.dismiss) private var dismiss
+
     @State private var showingCreateFileAlert = false
     @State private var showingCreateFolderAlert = false
     @State private var newResourceName = ""
+
     @State private var selectionMode = false
     @State private var selectedItems: Set<FileItem> = []
     @State private var showingDeleteConfirm = false
+
     @State private var isRenaming = false
     @State private var renameInput = ""
+
+    @State private var showingSettings = false
+    @State private var hideDotfiles = false
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -124,6 +131,10 @@ struct FileListView: View {
                             showingCreateFolderAlert = true
                         })
                     }
+                    // ⚙️ Gear icon to open Settings
+                    Button("Settings", systemImage: "gearshape", action: {
+                        showingSettings = true
+                    })
                 } label: {
                     Label("Actions", systemImage: "person.circle")
                         .padding()
@@ -217,6 +228,56 @@ struct FileListView: View {
             Log.debug("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
         }
+        .sheet(isPresented: $showingSettings) {
+            Form {
+                Toggle("Hide dotfiles", isOn: $hideDotfiles)
+                Button("Save", action: saveHideDotfiles)
+            }
+            .onAppear {
+                hideDotfiles = auth.userAccount?.hideDotfiles ?? false
+            }
+        }
+    }
+
+    func saveHideDotfiles() {
+        guard let user = auth.userAccount,
+              let token = auth.token,
+              let serverURL = auth.serverURL else {
+            Log.error("❌ Missing auth or user")
+            return
+        }
+
+        let url = URL(string: "\(serverURL)/api/users/\(user.id)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        // Update settings
+        var updatedUser = user
+        updatedUser.hideDotfiles = hideDotfiles
+
+        let payload: [String: Any] = [
+            "what": "user",
+            "which": ["locale", "hideDotfiles", "dateFormat"],
+            "data": try! JSONSerialization.jsonObject(with: JSONEncoder().encode(updatedUser))
+        ]
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
+                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                    Log.info("✅ Hide dotfiles saved")
+                    auth.userAccount?.hideDotfiles = hideDotfiles
+                    showingSettings = false
+                    viewModel.fetchFiles(at: path)
+                } else {
+                    Log.error("❌ Failed to save: \(bodyString)")
+                }
+            }
+        }.resume()
     }
 
     func toggleSelectAll() {
