@@ -236,7 +236,7 @@ struct FileDetailView: View {
                     textExtensions: textExtensions
                 )
             } else {
-                Log.info("🚫 Skipping auto-download — no preview for this type")
+                Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
             }
         }
     }

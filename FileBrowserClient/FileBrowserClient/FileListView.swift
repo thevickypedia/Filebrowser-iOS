@@ -239,45 +239,105 @@ struct FileListView: View {
         }
     }
 
+    @discardableResult
+    func makeRequest(
+        endpoint: String,
+        method: String = "GET",
+        queryItems: [URLQueryItem]? = nil,
+        body: Data? = nil,
+        contentType: String = "application/json",
+        completion: @escaping (Data?, URLResponse?, Error?) -> Void
+    ) -> URLSessionDataTask? {
+        // todo: Ensure user is aware of failed requests to the server and the reason for failure
+        guard let token = auth.token,
+              let serverURL = auth.serverURL,
+              var components = URLComponents(string: serverURL + endpoint) else {
+            Log.error("❌ Invalid auth or URL for request")
+            return nil
+        }
+
+        components.queryItems = queryItems
+        guard let url = components.url else {
+            Log.error("❌ Failed to build URL with query parameters")
+            return nil
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        if method != "GET" && method != "DELETE" {
+            request.setValue(contentType, forHTTPHeaderField: "Content-Type")
+        }
+        request.httpBody = body
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            let responseCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            if let error = error {
+                Log.error("❌ Request failed: \(error.localizedDescription)")
+            } else if responseCode != 200 {
+                let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
+                Log.error("❌ Request failed with status \(responseCode): \(bodyString)")
+            } else {
+                Log.info("✅ Request successful: \(responseCode)")
+            }
+            completion(data, response, error)
+        }
+        
+        task.resume()
+        return task
+    }
+
+    func makePayload<T: Encodable>(
+        what: String,
+        which: [String],
+        data: T
+    ) -> Data? {
+        do {
+            let encodedData = try JSONEncoder().encode(data)
+            let jsonData = try JSONSerialization.jsonObject(with: encodedData, options: [])
+            let payload: [String: Any] = [
+                "what": what,
+                "which": which,
+                "data": jsonData
+            ]
+            return try JSONSerialization.data(withJSONObject: payload)
+        } catch {
+            Log.error("❌ Failed to encode payload: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
     func saveHideDotfiles() {
-        guard let user = auth.userAccount,
-              let token = auth.token,
-              let serverURL = auth.serverURL else {
-            Log.error("❌ Missing auth or user")
+        guard let user = auth.userAccount else {
+            Log.error("❌ Missing user")
             return
         }
 
-        let url = URL(string: "\(serverURL)/api/users/\(user.id)")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        // Update settings
         var updatedUser = user
         updatedUser.hideDotfiles = hideDotfiles
 
-        let payload: [String: Any] = [
-            "what": "user",
-            "which": ["locale", "hideDotfiles", "dateFormat"],
-            "data": try! JSONSerialization.jsonObject(with: JSONEncoder().encode(updatedUser))
-        ]
+        guard let body = makePayload(
+            what: "user",
+            which: ["locale", "hideDotfiles", "dateFormat"],
+            data: updatedUser
+        ) else {
+            return
+        }
 
-        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        makeRequest(
+            endpoint: "/api/users/\(user.id)",
+            method: "PUT",
+            body: body
+        ) { _, response, _ in
             DispatchQueue.main.async {
-                let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                     Log.info("✅ Hide dotfiles saved")
                     auth.userAccount?.hideDotfiles = hideDotfiles
                     showingSettings = false
                     viewModel.fetchFiles(at: path)
-                } else {
-                    Log.error("❌ Failed to save: \(bodyString)")
                 }
             }
-        }.resume()
+        }
     }
 
     func toggleSelectAll() {
@@ -317,13 +377,12 @@ struct FileListView: View {
         }
     }
 
-    func renameSelectedItem() {
-        guard let item = selectedItems.first,
-            let serverURL = auth.serverURL,
-            let token = auth.token else {
-            return
-        }
+    func encodedPath(_ path: String, allowed: CharacterSet = .urlPathAllowed) -> String? {
+        return path.addingPercentEncoding(withAllowedCharacters: allowed)
+    }
 
+    func renameSelectedItem() {
+        guard let item = selectedItems.first else { return }
         let fromPath = item.path
         let toPath = URL(fileURLWithPath: item.path)
             .deletingLastPathComponent()
@@ -331,35 +390,30 @@ struct FileListView: View {
             .path
 
         guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-            let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-            let url = URL(string: "\(serverURL)/api/resources/\(encodedFrom)?action=rename&destination=\(encodedTo)&override=false&rename=false")
-        else {
-            Log.error("❌ Failed to build rename URL")
+              let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            Log.error("❌ Failed to encode paths")
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        let endpoint = "/api/resources/\(encodedFrom)"
+        let query: [URLQueryItem] = [
+            URLQueryItem(name: "action", value: "rename"),
+            URLQueryItem(name: "destination", value: encodedTo),
+            URLQueryItem(name: "override", value: "false"),
+            URLQueryItem(name: "rename", value: "false")
+        ]
 
-        URLSession.shared.dataTask(with: request) { _, response, error in
+        makeRequest(endpoint: endpoint, method: "PATCH", queryItems: query) { _, response, _ in
             DispatchQueue.main.async {
-                if let error = error {
-                    Log.error("❌ Rename failed: \(error.localizedDescription)")
-                    return
-                }
-
-                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                     Log.info("✅ Rename successful")
                     selectedItems.removeAll()
                     isRenaming = false
                     selectionMode = false
                     viewModel.fetchFiles(at: path)
-                } else {
-                    Log.error("❌ Rename failed with status code")
                 }
             }
-        }.resume()
+        }
     }
 
     func toggleSelection(for item: FileItem) {
@@ -371,54 +425,55 @@ struct FileListView: View {
     }
 
     func createResource(isDirectory: Bool) {
-        guard let serverURL = auth.serverURL,
-              let token = auth.token else { return }
+        guard let _ = auth.serverURL, let _ = auth.token else { return }
 
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withColonSeparatorInTimeZone]
-
         let isoString = formatter.string(from: Date())
-        let fullPath = self.fullPath(for: FileItem(
+
+        let fileItem = FileItem(
             name: newResourceName,
             path: newResourceName,
             isDir: isDirectory,
             modified: isoString,
-            size: 0  // New file/folder start with 0 bytes
-        ))
+            size: 0
+        )
+        let fullPath = self.fullPath(for: fileItem)
 
-        let separator = isDirectory ? "/?" : "?"
-        guard let encodedPath = fullPath.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed),
-              let url = URL(string: "\(serverURL)/api/resources\(encodedPath)\(separator)override=false") else {
-            Log.error("❌ Failed to construct create file URL")
+        guard let encodedPath = encodedPath(fullPath) else {
+            Log.error("❌ Failed to encode path")
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        let separator = isDirectory ? "/?" : "?"
+        let endpoint = "/api/resources\(encodedPath)\(separator)"
+        let query: [URLQueryItem] = [
+            URLQueryItem(name: "override", value: "false")
+        ]
 
         let resourceType = isDirectory ? "Folder" : "File"
         Log.info("🔄 Creating \(resourceType) at path: \(fullPath)")
-        URLSession.shared.dataTask(with: request) { _, response, error in
+
+        makeRequest(endpoint: endpoint, method: "POST", queryItems: query) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ \(resourceType) creation failed: \(error.localizedDescription)")
                     return
                 }
 
-                guard let httpResponse = response as? HTTPURLResponse else {
+                guard let http = response as? HTTPURLResponse else {
                     Log.error("❌ No HTTP response received")
                     return
                 }
 
-                if httpResponse.statusCode == 200 {
+                if http.statusCode == 200 {
                     Log.info("✅ \(resourceType) created successfully")
                     viewModel.fetchFiles(at: path)
                 } else {
-                    Log.error("❌ \(resourceType) creation failed with status code: \(httpResponse.statusCode)")
+                    Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")
                 }
             }
-        }.resume()
+        }
     }
 
     func refreshFolder() {
