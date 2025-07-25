@@ -15,6 +15,9 @@ struct FileListView: View {
     @State private var showingCreateFileAlert = false
     @State private var showingCreateFolderAlert = false
     @State private var newResourceName = ""
+    @State private var selectionMode = false
+    @State private var selectedItems: Set<FileItem> = []
+    @State private var showingDeleteConfirm = false
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -27,36 +30,48 @@ struct FileListView: View {
                 if viewModel.isLoading {
                     ProgressView()
                 } else if let error = viewModel.errorMessage {
-                    Text("Error: \(error)")
-                        .foregroundColor(.red)
+                    Text("Error: \(error)").foregroundColor(.red)
                 } else {
                     ForEach(viewModel.files) { file in
-                        if file.isDir {
-                            NavigationLink(value: fullPath(for: file)) {
-                                HStack {
-                                    Image(systemName: "folder")
-                                    Text(file.name)
-                                }
+                        if selectionMode {
+                            HStack {
+                                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                                Image(systemName: file.isDir ? "folder" : "doc")
+                                Text(file.name)
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                toggleSelection(for: file)
                             }
                         } else {
-                            NavigationLink(
-                                destination: FileDetailView(
-                                    file: file,
-                                    serverURL: auth.serverURL ?? "",
-                                    token: auth.token ?? ""
-                                )
-                            ) {
-                                HStack {
-                                    Image(systemName: "doc")
-                                    Text(file.name)
+                            if file.isDir {
+                                NavigationLink(value: fullPath(for: file)) {
+                                    HStack {
+                                        Image(systemName: "folder")
+                                        Text(file.name)
+                                    }
+                                }
+                            } else {
+                                NavigationLink(
+                                    destination: FileDetailView(
+                                        file: file,
+                                        serverURL: auth.serverURL ?? "",
+                                        token: auth.token ?? ""
+                                    )
+                                ) {
+                                    HStack {
+                                        Image(systemName: "doc")
+                                        Text(file.name)
+                                    }
                                 }
                             }
                         }
                     }
 
                     if viewModel.files.isEmpty && !viewModel.isLoading {
-                        Text("No files found")
-                            .foregroundColor(.gray)
+                        Text("No files found").foregroundColor(.gray)
                     }
                 }
             }
@@ -122,6 +137,29 @@ struct FileListView: View {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                 }
             }
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                if selectionMode {
+                    Button(action: {
+                        if selectedItems.isEmpty { return }
+                        showingDeleteConfirm = true
+                    }) {
+                        Image(systemName: "trash")
+                    }
+
+                    Button(action: {
+                        selectedItems.removeAll()
+                        selectionMode = false
+                    }) {
+                        Text("Cancel")
+                    }
+                } else {
+                    Button(action: {
+                        selectionMode = true
+                    }) {
+                        Text("Select")
+                    }
+                }
+            }
         }
         .alert("Create New File", isPresented: $showingCreateFileAlert) {
             TextField("Filename", text: $newResourceName)
@@ -136,10 +174,55 @@ struct FileListView: View {
                 createResource(isDirectory: true)
             })
             Button("Cancel", role: .cancel) { }
-        }        
+        }
+        .alert("Delete Selected?", isPresented: $showingDeleteConfirm) {
+            Button("Delete", role: .destructive) {
+                deleteSelectedItems()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to delete \(selectedItems.count) items?")
+        }
         .onAppear {
             Log.debug("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
+        }
+    }
+
+    func deleteSelectedItems() {
+        guard let token = auth.token, let baseURL = auth.serverURL else { return }
+
+        let group = DispatchGroup()
+        for item in selectedItems {
+            guard let encodedPath = item.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+                let url = URL(string: "\(baseURL)/api/resources/\(encodedPath)") else {
+                Log.error("❌ Invalid path for \(item.name)")
+                continue
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "DELETE"
+            request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+            group.enter()
+            URLSession.shared.dataTask(with: request) { _, _, _ in
+                group.leave()
+            }.resume()
+        }
+
+        group.notify(queue: .main) {
+            Log.info("✅ Deleted \(selectedItems.count) items")
+            selectedItems.removeAll()
+            selectionMode = false
+            viewModel.fetchFiles(at: path)
+        }
+    }
+
+    func toggleSelection(for item: FileItem) {
+        if selectedItems.contains(item) {
+            selectedItems.remove(item)
+        } else {
+            selectedItems.insert(item)
         }
     }
 

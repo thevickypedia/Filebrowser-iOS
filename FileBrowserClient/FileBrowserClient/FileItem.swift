@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct FileItem: Codable, Identifiable {
+struct FileItem: Codable, Identifiable, Hashable {
     var id: String { path }
 
     let name: String
