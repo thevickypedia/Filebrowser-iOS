@@ -12,8 +12,9 @@ struct FileListView: View {
     @EnvironmentObject var viewModel: FileListViewModel
     @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.dismiss) private var dismiss
-    @State private var showingCreateAlert = false
-    @State private var newFileName = ""
+    @State private var showingCreateFileAlert = false
+    @State private var showingCreateFolderAlert = false
+    @State private var newResourceName = ""
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -97,10 +98,20 @@ struct FileListView: View {
 
             // Right: Create and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                if auth.permissions?.create == true {
-                    Button(action: { showingCreateAlert = true }) {
-                        Image(systemName: "doc.badge.plus")
+                Menu {
+                    if auth.permissions?.create == true {
+                        Button("Create File", systemImage: "doc.badge.plus", action: {
+                            showingCreateFileAlert = true
+                        })
+                        Button("Create Folder", systemImage: "folder.badge.plus", action: {
+                            showingCreateFolderAlert = true
+                        })
                     }
+                } label: {
+                    Label("Actions", systemImage: "person.circle")
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
                 }
 
                 Button(action: {
@@ -112,18 +123,27 @@ struct FileListView: View {
                 }
             }
         }
-        .alert("Create New File", isPresented: $showingCreateAlert) {
-            TextField("Filename", text: $newFileName)
-            Button("Create", action: createFile)
+        .alert("Create New File", isPresented: $showingCreateFileAlert) {
+            TextField("Filename", text: $newResourceName)
+            Button("Create", action: {
+                createResource(isDirectory: false)
+            })
             Button("Cancel", role: .cancel) { }
         }
+        .alert("Create New Folder", isPresented: $showingCreateFolderAlert) {
+            TextField("Folder Name", text: $newResourceName)
+            Button("Create", action: {
+                createResource(isDirectory: true)
+            })
+            Button("Cancel", role: .cancel) { }
+        }        
         .onAppear {
             Log.debug("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
         }
     }
 
-    func createFile() {
+    func createResource(isDirectory: Bool) {
         guard let serverURL = auth.serverURL,
               let token = auth.token else { return }
 
@@ -132,15 +152,16 @@ struct FileListView: View {
 
         let isoString = formatter.string(from: Date())
         let fullPath = self.fullPath(for: FileItem(
-            name: newFileName,
-            path: newFileName,
-            isDir: false,
+            name: newResourceName,
+            path: newResourceName,
+            isDir: isDirectory,
             modified: isoString,
-            size:0  // New files start with 0 bytes
+            size: 0  // New file/folder start with 0 bytes
         ))
 
+        let separator = isDirectory ? "/?" : "?"
         guard let encodedPath = fullPath.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed),
-              let url = URL(string: "\(serverURL)/api/resources/\(encodedPath)?action=create") else {
+              let url = URL(string: "\(serverURL)/api/resources\(encodedPath)\(separator)override=false") else {
             Log.error("❌ Failed to construct create file URL")
             return
         }
@@ -149,10 +170,12 @@ struct FileListView: View {
         request.httpMethod = "POST"
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
+        let resourceType = isDirectory ? "Folder" : "File"
+        Log.info("🔄 Creating \(resourceType) at path: \(fullPath)")
         URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    Log.error("❌ File creation failed: \(error.localizedDescription)")
+                    Log.error("❌ \(resourceType) creation failed: \(error.localizedDescription)")
                     return
                 }
 
@@ -162,10 +185,10 @@ struct FileListView: View {
                 }
 
                 if httpResponse.statusCode == 200 {
-                    Log.info("✅ File created successfully")
+                    Log.info("✅ \(resourceType) created successfully")
                     viewModel.fetchFiles(at: path)
                 } else {
-                    Log.error("❌ File creation failed with status code: \(httpResponse.statusCode)")
+                    Log.error("❌ \(resourceType) creation failed with status code: \(httpResponse.statusCode)")
                 }
             }
         }.resume()
