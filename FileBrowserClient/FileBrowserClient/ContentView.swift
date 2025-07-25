@@ -57,6 +57,11 @@ struct ContentView: View {
                 .frame(width: 120, height: 120)
                 .padding(.bottom, 10)
 
+            Text("Filebrowser")
+                .font(.largeTitle)
+                .bold()
+                .padding(.top, 1)
+
             TextField("Server URL", text: $serverURL)
                 .keyboardType(.URL)
                 .autocapitalization(.none)
