@@ -131,6 +131,7 @@ struct FileListView: View {
             }
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if selectionMode {
+                    // 🗑️ Delete
                     Button(action: {
                         if selectedItems.isEmpty { return }
                         showingDeleteConfirm = true
@@ -138,11 +139,21 @@ struct FileListView: View {
                         Image(systemName: "trash")
                     }
 
+                    // ✅ Select All / Deselect All
+                    Button(action: toggleSelectAll) {
+                        Image(systemName:
+                            selectedItems.count == viewModel.files.count
+                            ? "square.dashed"         // Deselect All icon
+                            : "checkmark.square"      // Select All icon
+                        )
+                    }
+
+                    // ❌ Cancel
                     Button(action: {
                         selectedItems.removeAll()
                         selectionMode = false
                     }) {
-                        Image(systemName: "xmark.circle") // Cancel icon
+                        Image(systemName: "xmark.circle")
                     }
                 } else {
                     Button(action: {
@@ -185,6 +196,14 @@ struct FileListView: View {
         .onAppear {
             Log.debug("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
+        }
+    }
+
+    func toggleSelectAll() {
+        if selectedItems.count == viewModel.files.count {
+            selectedItems.removeAll()
+        } else {
+            selectedItems = Set(viewModel.files)
         }
     }
 
