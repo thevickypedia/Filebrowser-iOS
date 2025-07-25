@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+v1.2.0 (07/25/2025)
+-------------------
+- 732540c chore: Release v1.2.0
+- e76e55b feat: New settings icon to toggle hide dotfiles option
+
+v1.1.0 (07/25/2025)
+-------------------
+- 7f670aa chore: Release v1.1.0
+- 5209ddf ci: Merge release notes to build workflow and add a custom commit message
+- 2e5816a feat: Add a feature to rename files/folders with selection
+- cbaeb18 feat: Add a button to select/deselect all
+- 1b25d48 style: Include the app title on top of logo
+- e8fb636 style: Position logout button on far right
+- c4d537a feat: Add a feature to select and delete files/folders
+- 3da9da0 feat: Add a new feature to create directories
+- 215e7ec Update release notes
+
 v1.0.1 (07/24/2025)
 -------------------
 - 63ef787 chore: Release v1.0.1
