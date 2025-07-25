@@ -18,6 +18,8 @@ struct FileListView: View {
     @State private var selectionMode = false
     @State private var selectedItems: Set<FileItem> = []
     @State private var showingDeleteConfirm = false
+    @State private var isRenaming = false
+    @State private var renameInput = ""
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -139,12 +141,24 @@ struct FileListView: View {
                         Image(systemName: "trash")
                     }
 
+                    // 📝 Rename — only when exactly 1 item is selected
+                    if selectedItems.count == 1 {
+                        Button(action: {
+                            if let item = selectedItems.first {
+                                renameInput = item.name
+                                isRenaming = true
+                            }
+                        }) {
+                            Image(systemName: "pencil")
+                        }
+                    }
+
                     // ✅ Select All / Deselect All
                     Button(action: toggleSelectAll) {
                         Image(systemName:
                             selectedItems.count == viewModel.files.count
-                            ? "square.dashed"         // Deselect All icon
-                            : "checkmark.square"      // Select All icon
+                            ? "square.dashed"
+                            : "checkmark.square"
                         )
                     }
 
@@ -155,6 +169,7 @@ struct FileListView: View {
                     }) {
                         Image(systemName: "xmark.circle")
                     }
+
                 } else {
                     Button(action: {
                         selectionMode = true
@@ -192,6 +207,11 @@ struct FileListView: View {
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Are you sure you want to delete \(selectedItems.count) items?")
+        }
+        .alert("Rename", isPresented: $isRenaming) {
+            TextField("New name", text: $renameInput)
+            Button("Rename", action: renameSelectedItem)
+            Button("Cancel", role: .cancel) {}
         }
         .onAppear {
             Log.debug("📂 FileListView appeared for path: \(path)")
@@ -234,6 +254,51 @@ struct FileListView: View {
             selectionMode = false
             viewModel.fetchFiles(at: path)
         }
+    }
+
+    func renameSelectedItem() {
+        guard let item = selectedItems.first,
+            let serverURL = auth.serverURL,
+            let token = auth.token else {
+            return
+        }
+
+        let fromPath = item.path
+        let toPath = URL(fileURLWithPath: item.path)
+            .deletingLastPathComponent()
+            .appendingPathComponent(renameInput)
+            .path
+
+        guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+            let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            let url = URL(string: "\(serverURL)/api/resources/\(encodedFrom)?action=rename&destination=\(encodedTo)&override=false&rename=false")
+        else {
+            Log.error("❌ Failed to build rename URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    Log.error("❌ Rename failed: \(error.localizedDescription)")
+                    return
+                }
+
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    Log.info("✅ Rename successful")
+                    selectedItems.removeAll()
+                    isRenaming = false
+                    selectionMode = false
+                    viewModel.fetchFiles(at: path)
+                } else {
+                    Log.error("❌ Rename failed with status code")
+                }
+            }
+        }.resume()
     }
 
     func toggleSelection(for item: FileItem) {
