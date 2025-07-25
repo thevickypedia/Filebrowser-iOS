@@ -128,14 +128,6 @@ struct FileListView: View {
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(8)
                 }
-
-                Button(action: {
-                    Log.info("Logged out!")
-                    auth.logout()
-                    logoutHandler()
-                }) {
-                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                }
             }
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if selectionMode {
@@ -150,14 +142,21 @@ struct FileListView: View {
                         selectedItems.removeAll()
                         selectionMode = false
                     }) {
-                        Text("Cancel")
+                        Image(systemName: "xmark.circle") // Cancel icon
                     }
                 } else {
                     Button(action: {
                         selectionMode = true
                     }) {
-                        Text("Select")
+                        Image(systemName: "checkmark.circle")
                     }
+                }
+                Button(action: {
+                    Log.info("Logged out!")
+                    auth.logout()
+                    logoutHandler()
+                }) {
+                    Image(systemName: "rectangle.portrait.and.arrow.right")
                 }
             }
         }
