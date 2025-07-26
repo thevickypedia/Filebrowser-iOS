@@ -204,9 +204,13 @@ struct FileDetailView: View {
                 HStack {
                     Image(systemName: "clock")
                     let modified = metadata?.modified ?? file.modified
-                    let diff = calculateTimeDifference(dateString: modified)
-                    Text("Modified: \(timeAgoString(from: diff))")
-                    // Text(metadata?.modified ?? file.modified ?? "Unknown")
+                    let dateFormatExact = auth.userAccount?.dateFormat ?? false
+                    if dateFormatExact {
+                        Text("Modified: \(modified ?? "Unknown")")
+                    } else {
+                        let diff = calculateTimeDifference(dateString: modified)
+                        Text("Modified: \(timeAgoString(from: diff))")
+                    }
                 }
                 HStack {
                     Image(systemName: "shippingbox")
