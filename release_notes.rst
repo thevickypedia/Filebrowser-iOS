@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.2.1 (07/26/2025)
+-------------------
+- 44ae4ce chore: Release v1.2.1
+- 1730d06 ci: Reinstate GitHub workflows for build and release
+- dd3675b refactor: Increase code reusability and log error response from the server
+- 15c91d6 Update release notes
+
 v1.2.0 (07/25/2025)
 -------------------
 - 732540c chore: Release v1.2.0
