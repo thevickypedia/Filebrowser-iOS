@@ -184,22 +184,15 @@ struct FileDetailView: View {
 
         .sheet(isPresented: $showInfo) {
             VStack(alignment: .leading, spacing: 12) {
-                // Text("📄 Name: \(metadata?.name ?? file.name)")
-                // Text("📁 Path: \(metadata?.path ?? file.path)")
-                // Text("🕒 Modified: \(metadata?.modified ?? file.modified ?? "Unknown")")
-                // Text("📦 Size: \((metadata?.size ?? file.size).map { "\($0) bytes" } ?? "Unknown")")
                 HStack {
                     Image(systemName: "doc.text")
                         .imageScale(.medium)
                     Text("Name: \(metadata?.name ?? file.name)")
-                    // Text(metadata?.name ?? file.name)
                 }
-
                 HStack {
                     Image(systemName: "folder")
                         .imageScale(.medium)
                     Text("Path: \(metadata?.path ?? file.path)")
-                    // Text(metadata?.path ?? file.path)
                 }
                 HStack {
                     Image(systemName: "clock")
@@ -215,15 +208,12 @@ struct FileDetailView: View {
                 HStack {
                     Image(systemName: "shippingbox")
                     Text("Size: \(sizeConverter(metadata?.size ?? file.size))")
-                    // Text((metadata?.size ?? file.size).map { "\($0) bytes" } ?? "Unknown")
                 }
                 if let res = metadata?.resolution {
-                    // Text("📐 Resolution: \(res.width)x\(res.height)")
                     HStack {
                         Image(systemName: "ruler")
                             .imageScale(.medium)
                         Text("Resolution: \(res.width)x\(res.height)")
-                        // Text("\(res.width)x\(res.height)")
                     }
                 }
                 Spacer()
@@ -242,6 +232,7 @@ struct FileDetailView: View {
             } else {
                 Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
             }
+            fetchMetadata()
         }
     }
 
@@ -323,7 +314,7 @@ struct FileDetailView: View {
         return date
     }
 
-     func calculateTimeDifference(dateString: String?) -> [String: Double] {
+    func calculateTimeDifference(dateString: String?) -> [String: Double] {
         let defaultResult: [String: Double] = [
             "seconds": 0.0,
             "minutes": 0.0,
@@ -374,22 +365,12 @@ struct FileDetailView: View {
 
         guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-
-        // guard let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-
             error = "Failed to encode rename paths"
             return
         }
 
         let urlString = "\(serverURL)/api/resources\(encodedFrom.hasPrefix("/") ? "" : "/")\(encodedFrom)?action=rename&destination=\(encodedTo)&override=false&rename=false"
         guard let url = URL(string: urlString) else {
-
-        // guard let url = makeEncodedURL(
-        //    base: serverURL,
-        //    path: fromPath,
-        //    query: "action=rename&destination=\(encodedTo)&override=false&rename=false"
-        // ) else {
-
             error = "Invalid rename URL"
             return
         }
@@ -423,8 +404,6 @@ struct FileDetailView: View {
 
     func deleteFile() {
         guard let url = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else { return }
-        // guard let serverURL = URL(string: "\(serverURL)/api/resources/\(file.path)") else { return }
-        // var request = URLRequest(url: serverURL)
 
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
@@ -499,6 +478,44 @@ struct FileDetailView: View {
                 }
                 Log.debug("Fetch preview complete")
                 self.content = data
+            }
+        }.resume()
+    }
+
+    func fetchMetadata() {
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
+            self.error = "Failed to encode path for metadata"
+            return
+        }
+
+        let urlString = "\(serverURL)/api/resources/\(encodedPath)?view=info"
+        guard let url = URL(string: urlString) else {
+            self.error = "Invalid metadata URL"
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.error = "Metadata fetch failed: \(error.localizedDescription)"
+                    return
+                }
+
+                guard let data = data else {
+                    self.error = "No metadata received"
+                    return
+                }
+
+                do {
+                    self.metadata = try JSONDecoder().decode(ResourceMetadata.self, from: data)
+                    Log.info("✅ Metadata loaded for \(file.name)")
+                } catch {
+                    self.error = "Failed to parse metadata"
+                    Log.error("❌ Metadata decode error: \(error.localizedDescription)")
+                }
             }
         }.resume()
     }
