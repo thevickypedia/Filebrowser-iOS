@@ -42,47 +42,10 @@ struct UserAccount: Codable {
     var locale: String
     var viewMode: String
     var hideDotfiles: Bool
-    var dateFormat: StringOrBool?
+    var dateFormat: Bool?
     var lockPassword: Bool
     var perm: UserPermission
     var commands: [String]?
-}
-
-enum StringOrBool: Codable {
-    case string(String)
-    case bool(Bool)
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let str = try? container.decode(String.self) {
-            self = .string(str)
-        } else if let bool = try? container.decode(Bool.self) {
-            self = .bool(bool)
-        } else {
-            throw DecodingError.typeMismatch(
-                StringOrBool.self,
-                DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected String or Bool")
-            )
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .string(let str): try container.encode(str)
-        case .bool(let bool): try container.encode(bool)
-        }
-    }
-}
-
-struct Sorting: Codable {
-    var by: String
-    var asc: Bool
-}
-
-struct Terminal: Codable {
-    var command: String
-    var enabled: Bool
 }
 
 extension AuthManager {

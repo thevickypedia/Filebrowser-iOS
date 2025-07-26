@@ -25,8 +25,9 @@ struct FileListView: View {
     @State private var isRenaming = false
     @State private var renameInput = ""
 
-    @State private var showingSettings = false
     @State private var hideDotfiles = false
+    @State private var showingSettings = false
+    @State private var dateFormatExact = false
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -231,10 +232,12 @@ struct FileListView: View {
         .sheet(isPresented: $showingSettings) {
             Form {
                 Toggle("Hide dotfiles", isOn: $hideDotfiles)
-                Button("Save", action: saveHideDotfiles)
+                Toggle("Set exact date format", isOn: $dateFormatExact)
+                Button("Save", action: saveSettings)
             }
             .onAppear {
                 hideDotfiles = auth.userAccount?.hideDotfiles ?? false
+                dateFormatExact = auth.userAccount?.dateFormat ?? false
             }
         }
     }
@@ -307,37 +310,48 @@ struct FileListView: View {
         }
     }
 
-    func saveHideDotfiles() {
-        guard let user = auth.userAccount else {
-            Log.error("❌ Missing user")
+    func saveSettings() {
+        guard let user = auth.userAccount,
+            let token = auth.token,
+            let serverURL = auth.serverURL else {
+            Log.error("❌ Missing auth or user info")
             return
         }
 
-        var updatedUser = user
-        updatedUser.hideDotfiles = hideDotfiles
+        let url = URL(string: "\(serverURL)/api/users/\(user.id)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        guard let body = makePayload(
-            what: "user",
-            which: ["locale", "hideDotfiles", "dateFormat"],
-            data: updatedUser
-        ) else {
-            return
-        }
+        var updated = user
+        updated.hideDotfiles = hideDotfiles
+        updated.dateFormat = dateFormatExact
 
-        makeRequest(
-            endpoint: "/api/users/\(user.id)",
-            method: "PUT",
-            body: body
-        ) { _, response, _ in
+        let dataDict = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(updated))) ?? [:]
+
+        let payload: [String: Any] = [
+            "what": "user",
+            "which": ["locale", "hideDotfiles", "dateFormat"],
+            "data": dataDict
+        ]
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
+                let body = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                    Log.info("✅ Hide dotfiles saved")
+                    Log.info("✅ Settings saved")
                     auth.userAccount?.hideDotfiles = hideDotfiles
+                    auth.userAccount?.dateFormat = dateFormatExact
                     showingSettings = false
                     viewModel.fetchFiles(at: path)
+                } else {
+                    Log.error("❌ Settings save failed: \(body)")
                 }
             }
-        }
+        }.resume()
     }
 
     func toggleSelectAll() {
