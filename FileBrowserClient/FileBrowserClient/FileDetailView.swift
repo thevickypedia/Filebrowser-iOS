@@ -214,7 +214,7 @@ struct FileDetailView: View {
                 }
                 HStack {
                     Image(systemName: "shippingbox")
-                    Text("Size: \((metadata?.size ?? file.size).map { "\($0) bytes" } ?? "Unknown")")
+                    Text("Size: \(sizeConverter(metadata?.size ?? file.size))")
                     // Text((metadata?.size ?? file.size).map { "\($0) bytes" } ?? "Unknown")
                 }
                 if let res = metadata?.resolution {
@@ -243,6 +243,23 @@ struct FileDetailView: View {
                 Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
             }
         }
+    }
+
+    func sizeConverter(_ byteSize: Int?) -> String {
+        guard let byteSize = byteSize, byteSize >= 0 else {
+            return "Unknown"
+        }
+
+        let sizeNames = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+        var index = 0
+        var size = Double(byteSize)
+
+        while size >= 1024.0 && index < sizeNames.count - 1 {
+            size /= 1024.0
+            index += 1
+        }
+
+        return String(format: "%.2f %@", size, sizeNames[index])
     }
 
     func timeAgoString(from diff: [String: Double]) -> String {
