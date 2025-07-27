@@ -29,6 +29,8 @@ struct FileListView: View {
     @State private var showingSettings = false
     @State private var dateFormatExact = false
 
+    @State private var showFileImporter = false
+
     let path: String
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
@@ -136,6 +138,9 @@ struct FileListView: View {
                     Button("Settings", systemImage: "gearshape", action: {
                         showingSettings = true
                     })
+                    Button("Upload File", systemImage: "square.and.arrow.up", action: {
+                        showFileImporter = true
+                    })
                 } label: {
                     Label("Actions", systemImage: "person.circle")
                         .padding()
@@ -240,6 +245,127 @@ struct FileListView: View {
                 dateFormatExact = auth.userAccount?.dateFormat ?? false
             }
         }
+        .fileImporter(
+            isPresented: $showFileImporter,
+            allowedContentTypes: [.item], // use more specific UTTypes if desired
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let fileURL = urls.first {
+                    initiateTusUpload(for: fileURL)
+                }
+            case .failure(let error):
+                Log.error("❌ File selection failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func initiateTusUpload(for fileURL: URL) {
+        guard let token = auth.token, let serverURL = auth.serverURL else {
+            Log.error("❌ Missing auth info")
+            return
+        }
+
+        let fileName = fileURL.lastPathComponent
+        guard let encodedName = fileName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let uploadURL = URL(string: "\(serverURL)/api/tus/\(encodedName)?override=false") else {
+            Log.error("❌ Invalid upload URL")
+            return
+        }
+
+        var request = URLRequest(url: uploadURL)
+        request.httpMethod = "POST"
+        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+        request.setValue("0", forHTTPHeaderField: "Content-Length")
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    Log.error("❌ POST failed: \(error.localizedDescription)")
+                    return
+                }
+
+                Log.info("✅ Upload session initiated at: \(uploadURL)")
+                getUploadOffset(fileURL: fileURL, uploadURL: uploadURL)
+            }
+        }.resume()
+    }
+
+    func getUploadOffset(fileURL: URL, uploadURL: URL) {
+        var request = URLRequest(url: uploadURL)
+        request.httpMethod = "HEAD"
+        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    Log.error("❌ HEAD failed: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let http = response as? HTTPURLResponse,
+                      let offsetStr = http.value(forHTTPHeaderField: "Upload-Offset"),
+                      let offset = Int(offsetStr) else {
+                    Log.error("❌ HEAD missing Upload-Offset")
+                    return
+                }
+
+                Log.info("📍 Upload starting from offset: \(offset)")
+                uploadFileInChunks(fileURL: fileURL, to: uploadURL, startingAt: offset)
+            }
+        }.resume()
+    }
+
+    func uploadFileInChunks(fileURL: URL, to uploadURL: URL, startingAt offset: Int) {
+        let chunkSize = 1 * 1024 * 1024 // 1MB
+        guard let fileHandle = try? FileHandle(forReadingFrom: fileURL) else {
+            Log.error("❌ Cannot open file for reading")
+            return
+        }
+
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
+        var currentOffset = offset
+
+        func uploadNext() {
+            guard currentOffset < fileSize else {
+                fileHandle.closeFile()
+                Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
+                viewModel.fetchFiles(at: path)
+                return
+            }
+
+            fileHandle.seek(toFileOffset: UInt64(currentOffset))
+            let data = fileHandle.readData(ofLength: chunkSize)
+
+            var request = URLRequest(url: uploadURL)
+            request.httpMethod = "PATCH"
+            request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+            request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
+            request.setValue("application/offset+octet-stream", forHTTPHeaderField: "Content-Type")
+            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+
+            URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        Log.error("❌ PATCH failed: \(error.localizedDescription)")
+                        return
+                    }
+
+                    guard let http = response as? HTTPURLResponse, http.statusCode == 204 else {
+                        Log.error("❌ Unexpected PATCH response: \(response.debugDescription)")
+                        return
+                    }
+
+                    currentOffset += data.count
+                    Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
+                    uploadNext()
+                }
+            }.resume()
+        }
+        uploadNext()
     }
 
     @discardableResult
