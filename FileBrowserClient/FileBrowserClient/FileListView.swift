@@ -34,6 +34,8 @@ struct FileListView: View {
     @State private var currentUploadIndex = 0
     @State private var uploadProgress: Double = 0.0
     @State private var isUploading = false
+    @State private var uploadTask: URLSessionUploadTask?
+    @State private var isUploadCancelled = false
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -56,6 +58,20 @@ struct FileListView: View {
                     .cornerRadius(12)
                     .padding(.bottom, 80)
                     .transition(.opacity)
+                    Button(action: {
+                        isUploadCancelled = true
+                        uploadTask?.cancel()
+                        uploadTask = nil
+                        uploadQueue = []
+                        currentUploadIndex = 0
+                        uploadProgress = 0.0
+                        isUploading = false
+                        Log.info("❌ Upload cancelled by user.")
+                }) {
+                        Label("Cancel Upload", systemImage: "xmark.circle.fill")
+                            .foregroundColor(.red)
+                    }
+                    .padding(.top, 8)
                 }
                 if viewModel.isLoading {
                     ProgressView()
@@ -347,7 +363,7 @@ struct FileListView: View {
     func uploadFileInChunks(fileURL: URL, to uploadURL: URL, startingAt offset: Int) {
         let chunkSize = 1 * 1024 * 1024 // 1MB
         guard let fileHandle = try? FileHandle(forReadingFrom: fileURL) else {
-            Log.error("❌ Cannot open file for reading")
+            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent)")
             return
         }
 
@@ -355,11 +371,23 @@ struct FileListView: View {
         var currentOffset = offset
 
         func uploadNext() {
+            // 🔁 Cancel check
+            if isUploadCancelled {
+                fileHandle.closeFile()
+                Log.info("⏹️ Upload cancelled by user.")
+                uploadTask?.cancel()
+                uploadTask = nil
+                isUploading = false
+                return
+            }
+
+            // ✅ Finished?
             guard currentOffset < fileSize else {
                 fileHandle.closeFile()
-                currentUploadIndex += 1
-                uploadNextInQueue()
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
+                currentUploadIndex += 1
+                uploadTask = nil
+                uploadNextInQueue()
                 viewModel.fetchFiles(at: path)
                 return
             }
@@ -374,8 +402,16 @@ struct FileListView: View {
             request.setValue("application/offset+octet-stream", forHTTPHeaderField: "Content-Type")
             request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
-            URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
+            uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
+                    if isUploadCancelled {
+                        fileHandle.closeFile()
+                        Log.info("⏹️ Upload cancelled mid-chunk.")
+                        uploadTask = nil
+                        isUploading = false
+                        return
+                    }
+
                     if let error = error {
                         Log.error("❌ PATCH failed: \(error.localizedDescription)")
                         return
@@ -391,7 +427,8 @@ struct FileListView: View {
                     Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
                 }
-            }.resume()
+            }
+            uploadTask?.resume()
         }
         uploadNext()
     }
@@ -403,6 +440,7 @@ struct FileListView: View {
         }
 
         isUploading = true
+        isUploadCancelled = false
         uploadProgress = 0.0
         let fileURL = uploadQueue[currentUploadIndex]
         initiateTusUpload(for: fileURL)
