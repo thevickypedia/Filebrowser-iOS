@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.3.1 (07/27/2025)
+-------------------
+- [badae1f](https://github.com/thevickypedia/Filebrowser-iOS/commit/badae1fc7c8d7ad7f198128674545635a25bcfb3) chore: Release v1.3.1
+- [f6afec8](https://github.com/thevickypedia/Filebrowser-iOS/commit/f6afec8a3927fad81f91abe36e8218134b354676) fix: Remove ambiguous server version on login screen
+- [d8b96c5](https://github.com/thevickypedia/Filebrowser-iOS/commit/d8b96c55d5e2b757714f522581802bb6e62a9738) feat: Add theme manager toggle button to login page
+- [8c3af7d](https://github.com/thevickypedia/Filebrowser-iOS/commit/8c3af7d30637aceefa961f28571a7dd4869513b5) chore: Update release notes for v1.3.0
+
 v1.3.0 (07/27/2025)
 -------------------
 - [ae9733b](https://github.com/thevickypedia/Filebrowser-iOS/commit/ae9733b281d2afe66970212e805e2d95d481e10b) chore: Release v1.3.0
