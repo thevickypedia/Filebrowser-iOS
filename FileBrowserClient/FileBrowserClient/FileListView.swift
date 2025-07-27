@@ -261,6 +261,13 @@ struct FileListView: View {
         }
     }
 
+    func getUploadURL(serverURL: String, encodedName: String) -> URL? {
+        if path == "/" {
+            return URL(string: "\(serverURL)/api/tus/\(encodedName)?override=false")
+        }
+        return URL(string: "\(serverURL)/api/tus\(path)/\(encodedName)?override=false")
+    }
+
     func initiateTusUpload(for fileURL: URL) {
         guard let token = auth.token, let serverURL = auth.serverURL else {
             Log.error("❌ Missing auth info")
@@ -269,7 +276,7 @@ struct FileListView: View {
 
         let fileName = fileURL.lastPathComponent
         guard let encodedName = fileName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let uploadURL = URL(string: "\(serverURL)/api/tus/\(encodedName)?override=false") else {
+              let uploadURL = getUploadURL(serverURL: serverURL, encodedName: encodedName) else {
             Log.error("❌ Invalid upload URL")
             return
         }
@@ -287,7 +294,7 @@ struct FileListView: View {
                     return
                 }
 
-                Log.info("✅ Upload session initiated at: \(uploadURL)")
+                Log.info("✅ Upload session initiated at: \(uploadURL.relativePath)")
                 getUploadOffset(fileURL: fileURL, uploadURL: uploadURL)
             }
         }.resume()
