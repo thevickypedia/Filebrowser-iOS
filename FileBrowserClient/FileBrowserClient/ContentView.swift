@@ -127,11 +127,7 @@ struct ContentView: View {
 
             // Footer
             VStack(spacing: 2) {
-                Link(("Server Version: \(fileListViewModel.serverVersion)"),
-                     destination: URL(string: "https://github.com/filebrowser/filebrowser/releases/tag/\(fileListViewModel.serverVersion)")!)
-                    .font(.footnote)
-                    .foregroundColor(.blue)
-                Link(("Client Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown")"),
+                Link(("Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown")"),
                      destination: URL(string: "https://github.com/thevickypedia/Filebrowser-iOS")!)
                     .font(.footnote)
                     .foregroundColor(.blue)

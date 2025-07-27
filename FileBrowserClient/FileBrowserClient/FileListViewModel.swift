@@ -16,7 +16,6 @@ class FileListViewModel: ObservableObject {
 
     var token: String?
     var serverURL: String?
-    var serverVersion: String = "v2.40.2"
 
     func configure(token: String, serverURL: String) {
         self.token = token
