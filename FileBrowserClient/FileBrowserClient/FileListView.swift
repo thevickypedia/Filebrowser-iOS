@@ -30,6 +30,10 @@ struct FileListView: View {
     @State private var dateFormatExact = false
 
     @State private var showFileImporter = false
+    @State private var uploadQueue: [URL] = []
+    @State private var currentUploadIndex = 0
+    @State private var uploadProgress: Double = 0.0
+    @State private var isUploading = false
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -39,6 +43,20 @@ struct FileListView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
+                if isUploading {
+                    VStack {
+                        Text("Uploading file \(currentUploadIndex + 1) of \(uploadQueue.count)...")
+                        ProgressView(value: uploadProgress)
+                            .progressViewStyle(LinearProgressViewStyle())
+                            .padding()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+                    .padding(.bottom, 80)
+                    .transition(.opacity)
+                }
                 if viewModel.isLoading {
                     ProgressView()
                 } else if let error = viewModel.errorMessage {
@@ -247,14 +265,14 @@ struct FileListView: View {
         }
         .fileImporter(
             isPresented: $showFileImporter,
-            allowedContentTypes: [.item], // use more specific UTTypes if desired
-            allowsMultipleSelection: false
+            allowedContentTypes: [.item],
+            allowsMultipleSelection: true
         ) { result in
             switch result {
             case .success(let urls):
-                if let fileURL = urls.first {
-                    initiateTusUpload(for: fileURL)
-                }
+                uploadQueue = urls
+                currentUploadIndex = 0
+                uploadNextInQueue()
             case .failure(let error):
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
             }
@@ -339,6 +357,8 @@ struct FileListView: View {
         func uploadNext() {
             guard currentOffset < fileSize else {
                 fileHandle.closeFile()
+                currentUploadIndex += 1
+                uploadNextInQueue()
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
                 viewModel.fetchFiles(at: path)
                 return
@@ -367,12 +387,25 @@ struct FileListView: View {
                     }
 
                     currentOffset += data.count
+                    uploadProgress = Double(currentOffset) / Double(fileSize)
                     Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
                 }
             }.resume()
         }
         uploadNext()
+    }
+
+    func uploadNextInQueue() {
+        guard currentUploadIndex < uploadQueue.count else {
+            isUploading = false
+            return
+        }
+
+        isUploading = true
+        uploadProgress = 0.0
+        let fileURL = uploadQueue[currentUploadIndex]
+        initiateTusUpload(for: fileURL)
     }
 
     @discardableResult
