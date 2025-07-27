@@ -62,7 +62,7 @@ struct FileDetailView: View {
             ".java", ".css", ".rs", ".ts"
         ]
         let videoExtensions: [String] = [
-            ".mp4", ".mov" //, ".avi", ".webm", ".mkv"
+            ".mp4", ".mov"
         ]
         let audioExtensions: [String] = [
             ".mp3", ".wav", ".aac", ".ogg"

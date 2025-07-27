@@ -21,6 +21,7 @@ struct ContentView: View {
     @State private var showLogoutMessage = false
     @State private var statusMessage: String? = nil
     @State private var transitProtection = false
+    @EnvironmentObject var themeManager: ThemeManager
 
     @StateObject private var fileListViewModel = FileListViewModel()
 
@@ -109,6 +110,20 @@ struct ContentView: View {
             }
 
             Spacer()
+
+            // 🌗 Theme toggle
+            Button(action: {
+                themeManager.colorScheme = themeManager.colorScheme == .dark ? .light : .dark
+            }) {
+                Image(systemName: themeManager.colorScheme == .dark ? "sun.max.fill" : "moon.fill")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .padding()
+                    .background(Color.blue)
+                    .clipShape(Circle())
+                    .shadow(radius: 4)
+            }
+            .padding(.bottom, 20)
 
             // Footer
             VStack(spacing: 2) {
