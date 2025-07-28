@@ -41,6 +41,7 @@ struct FileListView: View {
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
     let logoutHandler: () -> Void
+    let extensionTypes: ExtensionTypes = ExtensionTypes()
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -102,7 +103,12 @@ struct FileListView: View {
                             } else {
                                 NavigationLink(destination: detailView(for: file)) {
                                     HStack {
-                                        Image(systemName: "doc")
+                                        if extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                                            RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
+                                        } else {
+                                            Image(systemName: "doc")
+                                                .foregroundColor(.gray)
+                                        }
                                         Text(file.name)
                                     }
                                 }
