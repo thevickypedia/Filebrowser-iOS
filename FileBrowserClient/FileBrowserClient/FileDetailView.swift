@@ -33,6 +33,33 @@ struct Resolution: Codable {
     let height: Int
 }
 
+struct ExtensionTypes {
+    let imageExtensions: [String] = [
+        ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic"
+    ]
+    let textExtensions: [String] = [
+        ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
+        ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
+        ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
+        ".java", ".css", ".rs", ".ts"
+    ]
+    let videoExtensions: [String] = [
+        ".mp4", ".mov"
+    ]
+    let audioExtensions: [String] = [
+        ".mp3", ".wav", ".aac", ".ogg"
+    ]
+    
+    let mediaExtensions: [String]
+    let previewExtensions: [String]
+
+    // Custom initializer to safely combine properties
+    init() {
+        self.mediaExtensions = self.videoExtensions + self.audioExtensions
+        self.previewExtensions = self.textExtensions + self.imageExtensions + [".pdf"]
+    }
+}
+
 struct FileDetailView: View {
     @State var currentIndex: Int
     let files: [FileItem]
@@ -41,6 +68,7 @@ struct FileDetailView: View {
 
     var file: FileItem { files[currentIndex] }
 
+    let extensionTypes: ExtensionTypes = ExtensionTypes()
     @State private var content: Data? = nil
     @State private var error: String? = nil
     @State private var metadata: ResourceMetadata? = nil
@@ -55,23 +83,6 @@ struct FileDetailView: View {
 
     var body: some View {
         let fileName = file.name.lowercased();
-        let imageExtensions: [String] = [
-            ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic"
-        ]
-        let textExtensions: [String] = [
-            ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
-            ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
-            ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
-            ".java", ".css", ".rs", ".ts"
-        ]
-        let videoExtensions: [String] = [
-            ".mp4", ".mov"
-        ]
-        let audioExtensions: [String] = [
-            ".mp3", ".wav", ".aac", ".ogg"
-        ]
-        let mediaExtensions = videoExtensions + audioExtensions
-        let previewExtensions = textExtensions + imageExtensions + [".pdf"]
         Group {
             if isDownloading {
                 VStack {
@@ -85,10 +96,10 @@ struct FileDetailView: View {
             } else if let error = error {
                 Text("Error: \(error)")
                     .foregroundColor(.red)
-            } else if mediaExtensions.contains(where: fileName.hasSuffix) {
+            } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
                 MediaPlayerView(file: file, serverURL: serverURL, token: token)
             } else if let content = content {
-                if imageExtensions.contains(where: fileName.hasSuffix) {
+                if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
                     if let image = UIImage(data: content) {
                         Image(uiImage: image)
                             .resizable()
@@ -97,7 +108,7 @@ struct FileDetailView: View {
                     } else {
                         Text("Failed to load image")
                     }
-                } else if textExtensions.contains(where: fileName.hasSuffix) {
+                } else if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
                     if let text = String(data: content, encoding: .utf8) {
                         ScrollView {
                             Text(text)
@@ -118,7 +129,7 @@ struct FileDetailView: View {
                 Text("Error: \(error)")
                     .foregroundColor(.red)
             } else {
-                if previewExtensions.contains(where: fileName.hasSuffix) {
+                if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
                     ProgressView("Loading file...")
                 } else {
                     Text("File preview not supported for this type.")
@@ -226,19 +237,13 @@ struct FileDetailView: View {
         .onChange(of: currentIndex) { _ in
             reloadFile(
                 fileName: fileName,
-                imageExtensions: imageExtensions,
-                textExtensions: textExtensions,
-                mediaExtensions: mediaExtensions,
-                previewExtensions: previewExtensions
+                extensionTypes: extensionTypes
             )
         }
         .onAppear {
             reloadFile(
                 fileName: fileName,
-                imageExtensions: imageExtensions,
-                textExtensions: textExtensions,
-                mediaExtensions: mediaExtensions,
-                previewExtensions: previewExtensions
+                extensionTypes: extensionTypes,
             )
         }
         .gesture(
@@ -265,22 +270,18 @@ struct FileDetailView: View {
 
     func reloadFile(
         fileName: String,
-        imageExtensions: [String],
-        textExtensions: [String],
-        mediaExtensions: [String],
-        previewExtensions: [String]
+        extensionTypes: ExtensionTypes
     ) {
         content = nil
         error = nil
         // todo: Implement a hoverable arrow for navigation
         //       Wrap all extensions in a class/struct
-        if !mediaExtensions.contains(where: fileName.hasSuffix)
-            && (previewExtensions.contains(where: fileName.hasSuffix)) {
+        if !extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix)
+            && (extensionTypes.previewExtensions.contains(where: fileName.hasSuffix)) {
             // ✅ Only load if preview is supported
             downloadFile(
                 fileName: fileName,
-                imageExtensions: imageExtensions,
-                textExtensions: textExtensions
+                extensionTypes: extensionTypes
             )
         } else {
             Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
@@ -492,11 +493,11 @@ struct FileDetailView: View {
         }
     }
 
-    func downloadFile(fileName: String, imageExtensions: [String], textExtensions: [String]) {
-        if imageExtensions.contains(where: fileName.hasSuffix) {
+    func downloadFile(fileName: String, extensionTypes: ExtensionTypes) {
+        if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
             Log.debug("🖼️ Detected image file. Using preview API")
             downloadPreview()
-        } else if textExtensions.contains(where: fileName.hasSuffix) {
+        } else if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
             Log.debug("📄 Detected text file. Using raw API")
             downloadRaw()
         } else if fileName.hasSuffix(".pdf") {
