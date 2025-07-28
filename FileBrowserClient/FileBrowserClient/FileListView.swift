@@ -100,13 +100,7 @@ struct FileListView: View {
                                     }
                                 }
                             } else {
-                                NavigationLink(
-                                    destination: FileDetailView(
-                                        file: file,
-                                        serverURL: auth.serverURL ?? "",
-                                        token: auth.token ?? ""
-                                    )
-                                ) {
+                                NavigationLink(destination: detailView(for: file)) {
                                     HStack {
                                         Image(systemName: "doc")
                                         Text(file.name)
@@ -293,6 +287,16 @@ struct FileListView: View {
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
             }
         }
+    }
+
+    @ViewBuilder
+    func detailView(for file: FileItem) -> some View {
+        FileDetailView(
+            currentIndex: viewModel.files.firstIndex(of: file) ?? 0,
+            files: viewModel.files,
+            serverURL: auth.serverURL ?? "",
+            token: auth.token ?? ""
+        )
     }
 
     func getUploadURL(serverURL: String, encodedName: String) -> URL? {

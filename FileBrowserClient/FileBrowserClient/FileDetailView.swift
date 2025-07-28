@@ -34,9 +34,12 @@ struct Resolution: Codable {
 }
 
 struct FileDetailView: View {
-    let file: FileItem
+    @State var currentIndex: Int
+    let files: [FileItem]
     let serverURL: String
     let token: String
+
+    var file: FileItem { files[currentIndex] }
 
     @State private var content: Data? = nil
     @State private var error: String? = nil
@@ -220,20 +223,69 @@ struct FileDetailView: View {
             }
             .padding()
         }
-        .onAppear {
-            if !mediaExtensions.contains(where: fileName.hasSuffix)
-                && (previewExtensions.contains(where: fileName.hasSuffix)) {
-                // ✅ Only load if preview is supported
-                downloadFile(
-                    fileName: fileName,
-                    imageExtensions: imageExtensions,
-                    textExtensions: textExtensions
-                )
-            } else {
-                Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
-            }
-            fetchMetadata()
+        .onChange(of: currentIndex) { _ in
+            reloadFile(
+                fileName: fileName,
+                imageExtensions: imageExtensions,
+                textExtensions: textExtensions,
+                mediaExtensions: mediaExtensions,
+                previewExtensions: previewExtensions
+            )
         }
+        .onAppear {
+            reloadFile(
+                fileName: fileName,
+                imageExtensions: imageExtensions,
+                textExtensions: textExtensions,
+                mediaExtensions: mediaExtensions,
+                previewExtensions: previewExtensions
+            )
+        }
+        .gesture(
+            DragGesture()
+                .onEnded { value in
+                    if value.translation.width < -50 {
+                        goToNext()
+                    } else if value.translation.width > 50 {
+                        goToPrevious()
+                    }
+                }
+        )
+    }
+
+    func goToNext() {
+        guard currentIndex < files.count - 1 else { return }
+        currentIndex += 1
+    }
+
+    func goToPrevious() {
+        guard currentIndex > 0 else { return }
+        currentIndex -= 1
+    }
+
+    func reloadFile(
+        fileName: String,
+        imageExtensions: [String],
+        textExtensions: [String],
+        mediaExtensions: [String],
+        previewExtensions: [String]
+    ) {
+        content = nil
+        error = nil
+        // todo: Implement a hoverable arrow for navigation
+        //       Wrap all extensions in a class/struct
+        if !mediaExtensions.contains(where: fileName.hasSuffix)
+            && (previewExtensions.contains(where: fileName.hasSuffix)) {
+            // ✅ Only load if preview is supported
+            downloadFile(
+                fileName: fileName,
+                imageExtensions: imageExtensions,
+                textExtensions: textExtensions
+            )
+        } else {
+            Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
+        }
+        fetchMetadata()
     }
 
     func sizeConverter(_ byteSize: Int?) -> String {
