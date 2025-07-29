@@ -22,12 +22,14 @@ class ThumbnailCache {
         try? fileManager.createDirectory(at: diskCacheURL, withIntermediateDirectories: true)
     }
 
-    private func cacheKey(for path: String) -> String {
-        return path.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? UUID().uuidString
+    private func cacheKey(for path: String, modified: String?) -> String {
+        let safePath = path.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? UUID().uuidString
+        let safeModified = modified ?? "unknown"
+        return "thumb-\(safePath)-\(safeModified)"
     }
 
-    func image(for path: String) -> UIImage? {
-        let key = cacheKey(for: path) as NSString
+    func image(for path: String, modified: String?) -> UIImage? {
+        let key = cacheKey(for: path, modified: modified) as NSString
 
         if let image = memoryCache.object(forKey: key) {
             return image
@@ -43,8 +45,8 @@ class ThumbnailCache {
         return nil
     }
 
-    func store(image: UIImage, for path: String) {
-        let key = cacheKey(for: path) as NSString
+    func store(image: UIImage, for path: String, modified: String?) {
+        let key = cacheKey(for: path, modified: modified) as NSString
         memoryCache.setObject(image, forKey: key)
 
         let diskPath = diskCacheURL.appendingPathComponent(key as String)
