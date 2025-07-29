@@ -25,6 +25,8 @@ jobs:
             -scheme FileBrowserClient \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
+            -configuration Debug \
+            EXCLUDED_ARCHS=arm64 \
             clean build
         working-directory: FileBrowserClient
 
