@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.6.1 (07/29/2025)
+-------------------
+- [065cb03](https://github.com/thevickypedia/Filebrowser-iOS/commit/065cb03c537cdc687c1e4e2fd483bd8e843db08b) chore: Release v1.6.1
+- [9275575](https://github.com/thevickypedia/Filebrowser-iOS/commit/927557558fe452322d6a5c342ca6382850a32eb2) ci: Run iOS build when xcodeproj directory is updated
+- [ea402eb](https://github.com/thevickypedia/Filebrowser-iOS/commit/ea402ebd4b95e99907758f3ec0867ccf4a9380fc) perf: add memory and disk caching for faster thumbnail view
+- [b1ac4a6](https://github.com/thevickypedia/Filebrowser-iOS/commit/b1ac4a645c581026dcb323f722c2f517a958ebbf) chore: Update release notes for v1.6.0
+
 v1.6.0 (07/29/2025)
 -------------------
 - [4fd42a3](https://github.com/thevickypedia/Filebrowser-iOS/commit/4fd42a34a612380a7045670935423ded63972bdb) chore: Release v1.6.0
