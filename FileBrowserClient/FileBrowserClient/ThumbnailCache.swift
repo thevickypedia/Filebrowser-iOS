@@ -65,4 +65,16 @@ class ThumbnailCache {
             return total + Int64(size)
         }
     }
+
+    func clearDiskCache() {
+        guard let urls = try? fileManager.contentsOfDirectory(at: diskCacheURL, includingPropertiesForKeys: nil) else {
+            return
+        }
+
+        for url in urls {
+            try? fileManager.removeItem(at: url)
+        }
+
+        memoryCache.removeAllObjects()
+    }
 }

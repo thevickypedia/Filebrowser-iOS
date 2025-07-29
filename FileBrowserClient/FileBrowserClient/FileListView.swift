@@ -292,6 +292,14 @@ struct FileListView: View {
                 Section(header: Text("Client Storage")) {
                     Text("Thumbnails: \(formatBytes(thumbnailCacheSize))")
                 }
+                Section {
+                    Button(role: .destructive) {
+                        ThumbnailCache.shared.clearDiskCache()
+                        fetchClientStorageInfo()
+                    } label: {
+                        Label("Clear Thumbnail Cache", systemImage: "trash")
+                    }
+                }
             }
             .onAppear {
                 hideDotfiles = auth.userAccount?.hideDotfiles ?? false
