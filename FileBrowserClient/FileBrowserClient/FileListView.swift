@@ -171,12 +171,11 @@ struct FileListView: View {
                             showingCreateFolderAlert = true
                         })
                     }
-                    // ⚙️ Gear icon to open Settings
-                    Button("Settings", systemImage: "gearshape", action: {
-                        showingSettings = true
-                    })
                     Button("Upload File", systemImage: "square.and.arrow.up", action: {
                         showFileImporter = true
+                    })
+                    Button("Settings", systemImage: "gearshape", action: {
+                        showingSettings = true
                     })
                 } label: {
                     Label("Actions", systemImage: "person.circle")
@@ -277,7 +276,7 @@ struct FileListView: View {
                 Toggle("Set exact date format", isOn: $dateFormatExact)
                 Button("Save", action: saveSettings)
                 if let usage = usageInfo {
-                    Section(header: Text("Storage Usage")) {
+                    Section(header: Text("Server Capacity")) {
                         VStack(alignment: .leading) {
                             Text("Used: \(formatBytes(usage.used))")
                             Text("Total: \(formatBytes(usage.total))")
@@ -285,7 +284,7 @@ struct FileListView: View {
                         }
                     }
                 } else {
-                    Section(header: Text("Storage Usage")) {
+                    Section(header: Text("Server Capacity")) {
                         Text("Loading...")
                     }
                 }
