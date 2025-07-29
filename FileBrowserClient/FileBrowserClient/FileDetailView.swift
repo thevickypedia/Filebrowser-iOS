@@ -216,7 +216,7 @@ struct FileDetailView: View {
         .onAppear {
             reloadFile(
                 fileName: fileName,
-                extensionTypes: extensionTypes,
+                extensionTypes: extensionTypes
             )
         }
         .gesture(
