@@ -37,6 +37,8 @@ struct FileListView: View {
     @State private var uploadTask: URLSessionUploadTask?
     @State private var isUploadCancelled = false
 
+    @State private var usageInfo: (used: Int64, total: Int64)? = nil
+
     let path: String
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
@@ -274,10 +276,24 @@ struct FileListView: View {
                 Toggle("Hide dotfiles", isOn: $hideDotfiles)
                 Toggle("Set exact date format", isOn: $dateFormatExact)
                 Button("Save", action: saveSettings)
+                if let usage = usageInfo {
+                    Section(header: Text("Storage Usage")) {
+                        VStack(alignment: .leading) {
+                            Text("Used: \(formatBytes(usage.used))")
+                            Text("Total: \(formatBytes(usage.total))")
+                            ProgressView(value: Double(usage.used), total: Double(usage.total))
+                        }
+                    }
+                } else {
+                    Section(header: Text("Storage Usage")) {
+                        Text("Loading...")
+                    }
+                }
             }
             .onAppear {
                 hideDotfiles = auth.userAccount?.hideDotfiles ?? false
                 dateFormatExact = auth.userAccount?.dateFormat ?? false
+                fetchUsageInfo()
             }
         }
         .fileImporter(
@@ -304,6 +320,46 @@ struct FileListView: View {
             serverURL: auth.serverURL ?? "",
             token: auth.token ?? ""
         )
+    }
+
+    func formatBytes(_ bytes: Int64) -> String {
+        let formatter = ByteCountFormatter()
+        formatter.allowedUnits = [.useTB, .useGB, .useMB, .useKB]
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
+    }
+
+    func fetchUsageInfo() {
+        guard let serverURL = auth.serverURL, let token = auth.token,
+              let url = URL(string: "\(serverURL)/api/usage/") else {
+            Log.error("❌ Invalid URL or auth for /api/usage/")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            DispatchQueue.main.async {
+                guard error == nil, let data = data else {
+                    Log.error("❌ Failed to fetch usage: \(error?.localizedDescription ?? "Unknown error")")
+                    return
+                }
+
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                       let used = json["used"] as? Int64,
+                       let total = json["total"] as? Int64 {
+                        usageInfo = (used, total)
+                        Log.info("💽 Usage — Used: \(used), Total: \(total)")
+                    } else {
+                        Log.error("❌ Malformed /api/usage/ response")
+                    }
+                } catch {
+                    Log.error("❌ JSON parse error for usage: \(error.localizedDescription)")
+                }
+            }
+        }.resume()
     }
 
     func getUploadURL(serverURL: String, encodedName: String) -> URL? {
