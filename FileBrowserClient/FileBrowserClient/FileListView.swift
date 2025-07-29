@@ -38,6 +38,7 @@ struct FileListView: View {
     @State private var isUploadCancelled = false
 
     @State private var usageInfo: (used: Int64, total: Int64)? = nil
+    @State private var thumbnailCacheSize: Int64 = 0
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -288,11 +289,15 @@ struct FileListView: View {
                         Text("Loading...")
                     }
                 }
+                Section(header: Text("Client Storage")) {
+                    Text("Thumbnails: \(formatBytes(thumbnailCacheSize))")
+                }
             }
             .onAppear {
                 hideDotfiles = auth.userAccount?.hideDotfiles ?? false
                 dateFormatExact = auth.userAccount?.dateFormat ?? false
                 fetchUsageInfo()
+                fetchClientStorageInfo()
             }
         }
         .fileImporter(
@@ -319,6 +324,10 @@ struct FileListView: View {
             serverURL: auth.serverURL ?? "",
             token: auth.token ?? ""
         )
+    }
+
+    func fetchClientStorageInfo() {
+        thumbnailCacheSize = ThumbnailCache.shared.diskCacheSize()
     }
 
     func formatBytes(_ bytes: Int64) -> String {

@@ -54,4 +54,15 @@ class ThumbnailCache {
             try? data.write(to: diskPath)
         }
     }
+
+    func diskCacheSize() -> Int64 {
+        guard let urls = try? fileManager.contentsOfDirectory(at: diskCacheURL, includingPropertiesForKeys: [.fileSizeKey]) else {
+            return 0
+        }
+
+        return urls.reduce(0) { total, url in
+            let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+            return total + Int64(size)
+        }
+    }
 }
