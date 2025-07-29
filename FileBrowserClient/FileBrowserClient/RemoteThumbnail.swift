@@ -38,28 +38,27 @@ struct RemoteThumbnail: View {
     func loadThumbnail() {
         guard image == nil else { return }
 
-        let cacheKey = NSString(string: file.path)
-        if let cached = ImageCache.shared.object(forKey: cacheKey) {
+        // Step 1: Load from memory or disk
+        if let cached = ThumbnailCache.shared.image(for: file.path) {
             self.image = cached
             return
         }
 
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
-            return
-        }
-
-        guard let url = URL(string: "\(serverURL)/api/preview/thumb/\(encodedPath)?auth=\(token)&inline=true") else {
+        // Step 2: Build URL
+        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
+              let url = URL(string: "\(serverURL)/api/preview/thumb/\(encodedPath)?auth=\(token)&inline=true") else {
             return
         }
 
         isLoading = true
 
+        // Step 3: Fetch and store
         URLSession.shared.dataTask(with: url) { data, _, _ in
             DispatchQueue.main.async {
-                isLoading = false
-                guard let data = data, let image = UIImage(data: data) else { return }
-                ImageCache.shared.setObject(image, forKey: cacheKey)
-                self.image = image
+                self.isLoading = false
+                guard let data = data, let img = UIImage(data: data) else { return }
+                ThumbnailCache.shared.store(image: img, for: file.path)
+                self.image = img
             }
         }.resume()
     }

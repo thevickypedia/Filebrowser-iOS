@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		98067D462E38DA3A00808541 /* ThumbnailCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98067D452E38DA3A00808541 /* ThumbnailCache.swift */; };
 		98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */; };
 		98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ED02E1AFADA004CBB11 /* ContentView.swift */; };
 		98823ED32E1AFADC004CBB11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 98823ED22E1AFADC004CBB11 /* Assets.xcassets */; };
@@ -46,6 +47,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		98067D452E38DA3A00808541 /* ThumbnailCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailCache.swift; sourceTree = "<group>"; };
 		98823ECB2E1AFADA004CBB11 /* FileBrowserClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FileBrowserClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientApp.swift; sourceTree = "<group>"; };
 		98823ED02E1AFADA004CBB11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -120,6 +122,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				98067D452E38DA3A00808541 /* ThumbnailCache.swift */,
 				F8BE8BBB2E379CED00967D18 /* ExtensionTypes.swift */,
 				F8BE8BB92E379B8500967D18 /* RemoteThumbnail.swift */,
 				F8BE8BB72E379B6F00967D18 /* ImageCache.swift */,
@@ -303,6 +306,7 @@
 				9896F8292E2DF06700436B6D /* AppThemeManager.swift in Sources */,
 				98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */,
 				F8BE8BBC2E379CF300967D18 /* ExtensionTypes.swift in Sources */,
+				98067D462E38DA3A00808541 /* ThumbnailCache.swift in Sources */,
 				F8BE8BB82E379B6F00967D18 /* ImageCache.swift in Sources */,
 				F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
