@@ -105,6 +105,7 @@ struct FileListView: View {
                                     HStack {
                                         if extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
                                             RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
+                                                .id(file.modified ?? "")
                                         } else {
                                             Image(systemName: "doc")
                                                 .foregroundColor(.gray)
