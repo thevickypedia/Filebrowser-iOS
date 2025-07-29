@@ -3,9 +3,11 @@ name: iOS Build and Release
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
-      - "FileBrowserClient/Info.plist"
+      - "**/Info.plist"
+      - "**/*.xcodeproj/**"
 
 jobs:
   build:
