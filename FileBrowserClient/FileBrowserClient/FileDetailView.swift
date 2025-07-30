@@ -50,62 +50,64 @@ struct FileDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var auth: AuthManager
 
-    var body: some View {
-        let fileName = file.name.lowercased();
-        Group {
-            if isDownloading {
-                VStack {
-                    ProgressView("Downloading...")
+    @ViewBuilder
+    private var fileContentView: some View {
+        let fileName = file.name.lowercased()
+
+        if isDownloading {
+            VStack {
+                ProgressView("Downloading...")
+                    .padding()
+                    .background(.ultraThinMaterial)
+                    .cornerRadius(12)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(0.2))
+
+        } else if let error = error {
+            Text("Error: \(error)").foregroundColor(.red)
+
+        } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
+            MediaPlayerView(file: file, serverURL: serverURL, token: token)
+
+        } else if let content = content {
+            if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+                if let image = UIImage(data: content) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
                         .padding()
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(12)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black.opacity(0.2))
-            } else if let error = error {
-                Text("Error: \(error)")
-                    .foregroundColor(.red)
-            } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
-                MediaPlayerView(file: file, serverURL: serverURL, token: token)
-            } else if let content = content {
-                if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                    if let image = UIImage(data: content) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .padding()
-                    } else {
-                        Text("Failed to load image")
-                    }
-                } else if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
-                    if let text = String(data: content, encoding: .utf8) {
-                        ScrollView {
-                            Text(text)
-                                .padding()
-                        }
-                    } else {
-                        Text("Failed to decode text")
-                    }
-                } else if fileName.hasSuffix(".pdf") {
-                    PDFKitView(data: content)
-                        .padding()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    Text("File preview not supported for this type.")
-                        .foregroundColor(.gray)
+                    Text("Failed to load image")
                 }
-            } else if let error = error {
-                Text("Error: \(error)")
-                    .foregroundColor(.red)
+
+            } else if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
+                if let text = String(data: content, encoding: .utf8) {
+                    ScrollView {
+                        Text(text).padding()
+                    }
+                } else {
+                    Text("Failed to decode text")
+                }
+
+            } else if fileName.hasSuffix(".pdf") {
+                PDFKitView(data: content)
             } else {
-                if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
-                    ProgressView("Loading file...")
-                } else {
-                    Text("File preview not supported for this type.")
-                        .foregroundColor(.gray)
-                }
+                Text("File preview not supported for this type.").foregroundColor(.gray)
+            }
+
+        } else {
+            if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
+                ProgressView("Loading file...")
+            } else {
+                Text("File preview not supported for this type.").foregroundColor(.gray)
             }
         }
+    }
+
+    var body: some View {
+        let fileName = file.name.lowercased();
+        fileContentView
         .navigationTitle(file.name)
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -204,16 +206,10 @@ struct FileDetailView: View {
             .padding()
         }
         .onChange(of: currentIndex) { _ in
-            reloadFile(
-                fileName: fileName,
-                extensionTypes: extensionTypes
-            )
+            checkContentAndReload(fileName: fileName)
         }
         .onAppear {
-            reloadFile(
-                fileName: fileName,
-                extensionTypes: extensionTypes
-            )
+            checkContentAndReload(fileName: fileName)
         }
         .gesture(
             DragGesture()
@@ -225,6 +221,19 @@ struct FileDetailView: View {
                     }
                 }
         )
+    }
+
+    func checkContentAndReload(fileName: String) {
+        if content == nil,
+           extensionTypes.cacheExtensions.contains(where: fileName.hasSuffix),
+           let cached = FileCache.shared.data(for: file.path, modified: file.modified) {
+            self.content = cached
+        } else {
+            reloadFile(
+                fileName: fileName,
+                extensionTypes: extensionTypes
+            )
+        }
     }
 
     func goToNext() {
@@ -456,6 +465,13 @@ struct FileDetailView: View {
                 }
                 Log.debug("Fetch raw content complete")
                 self.content = data
+
+                // Store cache-able extensions in FileCache
+                if extensionTypes.cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
+                   let data = data {
+                    FileCache.shared.store(data: data, for: file.path, modified: file.modified)
+                }
+
                 if showSave {
                     self.saveFile()
                 }

@@ -38,7 +38,7 @@ struct FileListView: View {
     @State private var isUploadCancelled = false
 
     @State private var usageInfo: (used: Int64, total: Int64)? = nil
-    @State private var thumbnailCacheSize: Int64 = 0
+    @State private var fileCacheSize: Int64 = 0
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -290,14 +290,14 @@ struct FileListView: View {
                     }
                 }
                 Section(header: Text("Client Storage")) {
-                    Text("Thumbnails: \(formatBytes(thumbnailCacheSize))")
+                    Text("File Cache: \(formatBytes(fileCacheSize))")
                 }
                 Section {
                     Button(role: .destructive) {
-                        ThumbnailCache.shared.clearDiskCache()
+                        FileCache.shared.clearDiskCache()
                         fetchClientStorageInfo()
                     } label: {
-                        Label("Clear Thumbnail Cache", systemImage: "trash")
+                        Label("Clear Local Cache", systemImage: "trash")
                     }
                 }
             }
@@ -335,7 +335,7 @@ struct FileListView: View {
     }
 
     func fetchClientStorageInfo() {
-        thumbnailCacheSize = ThumbnailCache.shared.diskCacheSize()
+        fileCacheSize = FileCache.shared.diskCacheSize()
     }
 
     func formatBytes(_ bytes: Int64) -> String {

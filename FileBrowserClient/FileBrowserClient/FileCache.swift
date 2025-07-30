@@ -1,5 +1,5 @@
 //
-//  ThumbnailCache.swift
+//  FileCache.swift
 //  FileBrowserClient
 //
 //  Created by Vignesh Rao on 7/29/25.
@@ -8,58 +8,40 @@
 
 import UIKit
 
-class ThumbnailCache {
-    static let shared = ThumbnailCache()
+class FileCache {
+    static let shared = FileCache()
 
-    private let memoryCache = NSCache<NSString, UIImage>()
     private let fileManager = FileManager.default
     private let diskCacheURL: URL
 
     private init() {
         let cacheDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        diskCacheURL = cacheDir.appendingPathComponent("thumbnails", isDirectory: true)
-
+        diskCacheURL = cacheDir.appendingPathComponent("filecache", isDirectory: true)
         try? fileManager.createDirectory(at: diskCacheURL, withIntermediateDirectories: true)
     }
 
     private func cacheKey(for path: String, modified: String?) -> String {
         let safePath = path.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? UUID().uuidString
         let safeModified = modified ?? "unknown"
-        return "thumb-\(safePath)-\(safeModified)"
+        return "cache-\(safePath)-\(safeModified)"
     }
 
-    func image(for path: String, modified: String?) -> UIImage? {
-        let key = cacheKey(for: path, modified: modified) as NSString
-
-        if let image = memoryCache.object(forKey: key) {
-            return image
-        }
-
-        let diskPath = diskCacheURL.appendingPathComponent(key as String)
-        if let data = try? Data(contentsOf: diskPath),
-           let image = UIImage(data: data) {
-            memoryCache.setObject(image, forKey: key)
-            return image
-        }
-
-        return nil
+    func data(for path: String, modified: String?) -> Data? {
+        let key = cacheKey(for: path, modified: modified)
+        let diskPath = diskCacheURL.appendingPathComponent(key)
+        return try? Data(contentsOf: diskPath)
     }
 
-    func store(image: UIImage, for path: String, modified: String?) {
-        let key = cacheKey(for: path, modified: modified) as NSString
-        memoryCache.setObject(image, forKey: key)
-
-        let diskPath = diskCacheURL.appendingPathComponent(key as String)
-        if let data = image.pngData() {
-            try? data.write(to: diskPath)
-        }
+    func store(data: Data, for path: String, modified: String?) {
+        let key = cacheKey(for: path, modified: modified)
+        let diskPath = diskCacheURL.appendingPathComponent(key)
+        try? data.write(to: diskPath)
     }
 
     func diskCacheSize() -> Int64 {
         guard let urls = try? fileManager.contentsOfDirectory(at: diskCacheURL, includingPropertiesForKeys: [.fileSizeKey]) else {
             return 0
         }
-
         return urls.reduce(0) { total, url in
             let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
             return total + Int64(size)
@@ -70,11 +52,8 @@ class ThumbnailCache {
         guard let urls = try? fileManager.contentsOfDirectory(at: diskCacheURL, includingPropertiesForKeys: nil) else {
             return
         }
-
         for url in urls {
             try? fileManager.removeItem(at: url)
         }
-
-        memoryCache.removeAllObjects()
     }
 }
