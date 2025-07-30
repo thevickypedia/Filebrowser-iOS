@@ -1,9 +1,10 @@
 //
-//  AppThemeManager.swift
+//  ThemeManager.swift
 //  FileBrowserClient
 //
-//  Created by Vignesh Rao on 7/20/25.
+//  Created by Vignesh Rao on 7/30/25.
 //
+
 
 import SwiftUI
 

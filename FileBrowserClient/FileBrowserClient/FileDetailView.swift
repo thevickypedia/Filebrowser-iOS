@@ -252,8 +252,6 @@ struct FileDetailView: View {
     ) {
         content = nil
         error = nil
-        // todo: Implement a hoverable arrow for navigation
-        //       Wrap all extensions in a class/struct
         if !extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix)
             && (extensionTypes.previewExtensions.contains(where: fileName.hasSuffix)) {
             // ✅ Only load if preview is supported

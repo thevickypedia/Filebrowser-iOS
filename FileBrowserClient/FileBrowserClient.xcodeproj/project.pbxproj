@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		98067D4A2E38E6CF00808541 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98067D492E38E6CD00808541 /* Utils.swift */; };
 		986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A662E39A78A0058E2C4 /* FileCache.swift */; };
+		986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A682E3A237D0058E2C4 /* ThemeManager.swift */; };
 		98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */; };
 		98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ED02E1AFADA004CBB11 /* ContentView.swift */; };
 		98823ED32E1AFADC004CBB11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 98823ED22E1AFADC004CBB11 /* Assets.xcassets */; };
@@ -16,7 +17,6 @@
 		98823EE02E1AFADC004CBB11 /* FileBrowserClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EDF2E1AFADC004CBB11 /* FileBrowserClientTests.swift */; };
 		98823EEA2E1AFADD004CBB11 /* FileBrowserClientUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EE92E1AFADD004CBB11 /* FileBrowserClientUITests.swift */; };
 		98823EEC2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */; };
-		9896F8292E2DF06700436B6D /* AppThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9896F8282E2DF06700436B6D /* AppThemeManager.swift */; };
 		F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84264632E234B9A001A1BBC /* MediaPlayerView.swift */; };
 		F85295442E303AF900498675 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85295432E303AF800498675 /* Log.swift */; };
 		F85486182E1B19B000115F18 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85486172E1B19B000115F18 /* AuthManager.swift */; };
@@ -25,7 +25,6 @@
 		F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F854862A2E1BA3F900115F18 /* FileListViewModel.swift */; };
 		F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87456272E1CABD70041EDDF /* FileDetailView.swift */; };
 		F874562A2E1CDF400041EDDF /* PDFKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F87456292E1CDF400041EDDF /* PDFKitView.swift */; };
-		F8BE8BB82E379B6F00967D18 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BE8BB72E379B6F00967D18 /* ImageCache.swift */; };
 		F8BE8BBA2E379B8500967D18 /* RemoteThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BE8BB92E379B8500967D18 /* RemoteThumbnail.swift */; };
 		F8BE8BBC2E379CF300967D18 /* ExtensionTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8BE8BBB2E379CED00967D18 /* ExtensionTypes.swift */; };
 /* End PBXBuildFile section */
@@ -50,6 +49,7 @@
 /* Begin PBXFileReference section */
 		98067D492E38E6CD00808541 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		986F5A662E39A78A0058E2C4 /* FileCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCache.swift; sourceTree = "<group>"; };
+		986F5A682E3A237D0058E2C4 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		98823ECB2E1AFADA004CBB11 /* FileBrowserClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FileBrowserClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientApp.swift; sourceTree = "<group>"; };
 		98823ED02E1AFADA004CBB11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -60,7 +60,6 @@
 		98823EE52E1AFADD004CBB11 /* FileBrowserClientUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FileBrowserClientUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		98823EE92E1AFADD004CBB11 /* FileBrowserClientUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientUITests.swift; sourceTree = "<group>"; };
 		98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		9896F8282E2DF06700436B6D /* AppThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppThemeManager.swift; sourceTree = "<group>"; };
 		F84264632E234B9A001A1BBC /* MediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerView.swift; sourceTree = "<group>"; };
 		F85295432E303AF800498675 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		F85486172E1B19B000115F18 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
@@ -70,7 +69,6 @@
 		F854862A2E1BA3F900115F18 /* FileListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListViewModel.swift; sourceTree = "<group>"; };
 		F87456272E1CABD70041EDDF /* FileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDetailView.swift; sourceTree = "<group>"; };
 		F87456292E1CDF400041EDDF /* PDFKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFKitView.swift; sourceTree = "<group>"; };
-		F8BE8BB72E379B6F00967D18 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		F8BE8BB92E379B8500967D18 /* RemoteThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteThumbnail.swift; sourceTree = "<group>"; };
 		F8BE8BBB2E379CED00967D18 /* ExtensionTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionTypes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -124,13 +122,12 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				986F5A682E3A237D0058E2C4 /* ThemeManager.swift */,
 				986F5A662E39A78A0058E2C4 /* FileCache.swift */,
 				98067D492E38E6CD00808541 /* Utils.swift */,
 				F8BE8BBB2E379CED00967D18 /* ExtensionTypes.swift */,
 				F8BE8BB92E379B8500967D18 /* RemoteThumbnail.swift */,
-				F8BE8BB72E379B6F00967D18 /* ImageCache.swift */,
 				F85295432E303AF800498675 /* Log.swift */,
-				9896F8282E2DF06700436B6D /* AppThemeManager.swift */,
 				F84264632E234B9A001A1BBC /* MediaPlayerView.swift */,
 				F87456292E1CDF400041EDDF /* PDFKitView.swift */,
 				F87456272E1CABD70041EDDF /* FileDetailView.swift */,
@@ -303,14 +300,13 @@
 			files = (
 				F874562A2E1CDF400041EDDF /* PDFKitView.swift in Sources */,
 				F854861A2E1B1C3E00115F18 /* FileItem.swift in Sources */,
+				986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */,
 				F85295442E303AF900498675 /* Log.swift in Sources */,
 				F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */,
 				F8BE8BBA2E379B8500967D18 /* RemoteThumbnail.swift in Sources */,
-				9896F8292E2DF06700436B6D /* AppThemeManager.swift in Sources */,
 				98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */,
 				98067D4A2E38E6CF00808541 /* Utils.swift in Sources */,
 				F8BE8BBC2E379CF300967D18 /* ExtensionTypes.swift in Sources */,
-				F8BE8BB82E379B6F00967D18 /* ImageCache.swift in Sources */,
 				F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
 				F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */,
