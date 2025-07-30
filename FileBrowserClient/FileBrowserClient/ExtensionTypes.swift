@@ -7,7 +7,7 @@
 
 struct ExtensionTypes {
     let imageExtensions: [String] = [
-        ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic"
+        ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic", ".gif"
     ]
     let textExtensions: [String] = [
         ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
@@ -19,7 +19,7 @@ struct ExtensionTypes {
         ".mp4", ".mov"
     ]
     let audioExtensions: [String] = [
-        ".mp3", ".wav", ".aac", ".ogg"
+        ".mp3", ".wav", ".aac", ".ogg", ".m4a"
     ]
     
     let mediaExtensions: [String]
