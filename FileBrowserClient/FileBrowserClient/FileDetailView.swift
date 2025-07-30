@@ -37,6 +37,9 @@ struct FileDetailView: View {
 
     var file: FileItem { files[currentIndex] }
 
+    // Use a closure callback to pass as argument in FileListView
+    let onFileCached: (() -> Void)?
+
     let extensionTypes: ExtensionTypes = ExtensionTypes()
     @State private var content: Data? = nil
     @State private var error: String? = nil
@@ -468,6 +471,9 @@ struct FileDetailView: View {
                 if extensionTypes.cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
                     FileCache.shared.store(data: data, for: file.path, modified: file.modified)
+                    // Use callback passed to trigger a refresh since cached previews may change size after large uploads and deletions
+                    // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
+                    onFileCached?()
                 }
 
                 if showSave {

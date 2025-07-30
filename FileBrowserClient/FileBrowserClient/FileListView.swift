@@ -330,7 +330,9 @@ struct FileListView: View {
             currentIndex: viewModel.files.firstIndex(of: file) ?? 0,
             files: viewModel.files,
             serverURL: auth.serverURL ?? "",
-            token: auth.token ?? ""
+            token: auth.token ?? "",
+            // Pass a callback reference to fetchClientStorageInfo func
+            onFileCached: { fetchClientStorageInfo() }
         )
     }
 
