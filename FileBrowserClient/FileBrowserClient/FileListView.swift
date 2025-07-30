@@ -88,14 +88,21 @@ struct FileListView: View {
                 } else if let error = viewModel.errorMessage {
                     Text("Error: \(error)").foregroundColor(.red)
                 } else {
-                    let sortedFiles = viewModel.files.sorted {
+                    let sortedFiles = viewModel.files.sorted { a, b in
+                        if a.isDir && !b.isDir {
+                            return true
+                        } else if !a.isDir && b.isDir {
+                            return false
+                        }
+
+                        // Both are folders or both are files — apply sort option
                         switch sortOption {
-                        case .nameAsc: return $0.name.lowercased() < $1.name.lowercased()
-                        case .nameDesc: return $0.name.lowercased() > $1.name.lowercased()
-                        case .sizeAsc: return ($0.size ?? 0) < ($1.size ?? 0)
-                        case .sizeDesc: return ($0.size ?? 0) > ($1.size ?? 0)
-                        case .modifiedAsc: return ($0.modified ?? "") < ($1.modified ?? "")
-                        case .modifiedDesc: return ($0.modified ?? "") > ($1.modified ?? "")
+                        case .nameAsc: return a.name.lowercased() < b.name.lowercased()
+                        case .nameDesc: return a.name.lowercased() > b.name.lowercased()
+                        case .sizeAsc: return (a.size ?? 0) < (b.size ?? 0)
+                        case .sizeDesc: return (a.size ?? 0) > (b.size ?? 0)
+                        case .modifiedAsc: return (a.modified ?? "") < (b.modified ?? "")
+                        case .modifiedDesc: return (a.modified ?? "") > (b.modified ?? "")
                         }
                     }
                     ForEach(sortedFiles) { file in
