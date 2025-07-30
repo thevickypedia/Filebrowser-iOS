@@ -110,8 +110,7 @@ struct FileListView: View {
                                             RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
                                                 .id(file.modified ?? "")
                                         } else {
-                                            Image(systemName: "doc")
-                                                .foregroundColor(.gray)
+                                            Image(systemName: systemIcon(for: file.name) ?? "doc")
                                         }
                                         Text(file.name)
                                     }

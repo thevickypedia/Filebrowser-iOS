@@ -125,3 +125,16 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
         return defaultResult
     }
 }
+
+func systemIcon(for fileName: String) -> String? {
+    let lower = fileName.lowercased()
+    if lower.hasSuffix(".txt") { return "doc.text" }
+    if lower.hasSuffix(".md")  { return "text.alignleft" }
+    if lower.hasSuffix(".csv") { return "tablecells" }
+    if lower.hasSuffix(".json") { return "curlybraces" }
+    if lower.hasSuffix(".pdf") { return "doc.richtext" }
+    if lower.hasSuffix(".zip") || lower.hasSuffix(".tar") || lower.hasSuffix(".gz") {
+        return "archivebox"
+    }
+    return nil
+}
