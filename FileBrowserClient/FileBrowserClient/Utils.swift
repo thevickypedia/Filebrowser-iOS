@@ -127,14 +127,64 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
 }
 
 func systemIcon(for fileName: String) -> String? {
-    let lower = fileName.lowercased()
-    if lower.hasSuffix(".txt") { return "doc.text" }
-    if lower.hasSuffix(".md")  { return "text.alignleft" }
-    if lower.hasSuffix(".csv") { return "tablecells" }
-    if lower.hasSuffix(".json") { return "curlybraces" }
-    if lower.hasSuffix(".pdf") { return "doc.richtext" }
-    if lower.hasSuffix(".zip") || lower.hasSuffix(".tar") || lower.hasSuffix(".gz") {
+    // 📄 Text & Code
+    if fileName.hasSuffix(".txt")          { return "doc.text" }
+    if fileName.hasSuffix(".md")           { return "text.alignleft" }
+    if fileName.hasSuffix(".csv")          { return "tablecells" }
+    if fileName.hasSuffix(".json")         { return "curlybraces" }
+    if fileName.hasSuffix(".xml")          { return "chevron.left.slash.chevron.right" }
+    if fileName.hasSuffix(".html") || fileName.hasSuffix(".htm") {
+        return "globe"
+    }
+    if fileName.hasSuffix(".js") || fileName.hasSuffix(".ts") {
+        return "curlybraces.square"
+    }
+    if fileName.hasSuffix(".swift")        { return "swift" }
+    if fileName.hasSuffix(".py")           { return "chevron.left.slash.chevron.right" }
+    if fileName.hasSuffix(".sh")           { return "terminal" }
+
+    // 📚 Documents
+    if fileName.hasSuffix(".pdf")          { return "doc.richtext" }
+    if fileName.hasSuffix(".doc") || fileName.hasSuffix(".docx") {
+        return "doc.plaintext"
+    }
+    if fileName.hasSuffix(".ppt") || fileName.hasSuffix(".pptx") {
+        return "chart.bar.doc.horizontal"
+    }
+    if fileName.hasSuffix(".xls") || fileName.hasSuffix(".xlsx") {
+        return "tablecells.badge.ellipsis"
+    }
+
+    // 🗜 Archives
+    if fileName.hasSuffix(".zip") || fileName.hasSuffix(".tar") || fileName.hasSuffix(".gz") || fileName.hasSuffix(".rar") {
         return "archivebox"
     }
+
+    // 🎵 Audio
+    if fileName.hasSuffix(".mp3") || fileName.hasSuffix(".wav") || fileName.hasSuffix(".m4a") {
+        return "waveform"
+    }
+
+    // 🎬 Video
+    if fileName.hasSuffix(".mp4") || fileName.hasSuffix(".mov") || fileName.hasSuffix(".avi") || fileName.hasSuffix(".mkv") {
+        return "film"
+    }
+
+    // 🖼️ Images
+    if fileName.hasSuffix(".png") || fileName.hasSuffix(".jpg") || fileName.hasSuffix(".jpeg") || fileName.hasSuffix(".gif") {
+        return "photo"
+    }
+    if fileName.hasSuffix(".svg")          { return "scribble" }
+
+    // 🔐 Certs & Keys
+    if fileName.hasSuffix(".pem") || fileName.hasSuffix(".crt") || fileName.hasSuffix(".key") {
+        return "lock.shield"
+    }
+
+    // 🧪 Misc
+    if fileName.hasSuffix(".log")          { return "doc.append" }
+    if fileName.hasSuffix(".conf")         { return "gearshape" }
+    if fileName.hasSuffix(".env")          { return "leaf" }
+
     return nil
 }

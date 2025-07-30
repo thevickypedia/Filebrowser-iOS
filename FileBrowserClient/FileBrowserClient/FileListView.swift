@@ -105,12 +105,13 @@ struct FileListView: View {
                                 }
                             } else {
                                 NavigationLink(destination: detailView(for: file)) {
+                                    let fileName = file.name.lowercased()
                                     HStack {
-                                        if extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                                        if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
                                             RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
                                                 .id(file.modified ?? "")
                                         } else {
-                                            Image(systemName: systemIcon(for: file.name) ?? "doc")
+                                            Image(systemName: systemIcon(for: fileName) ?? "doc")
                                         }
                                         Text(file.name)
                                     }
