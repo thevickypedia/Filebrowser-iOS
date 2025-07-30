@@ -13,18 +13,23 @@ struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
     let token: String
+    @State private var player: AVPlayer
 
-    var body: some View {
-        VideoPlayer(player: AVPlayer(url: videoURL))
-            .navigationTitle(file.name)
-            .onAppear {
-                AVPlayer(url: videoURL).play()
-            }
+    init(file: FileItem, serverURL: String, token: String) {
+        self.file = file
+        self.token = token
+        self.serverURL = serverURL
+        let path = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        let url = URL(string: "\(serverURL)/api/raw/\(path)?auth=\(token)")!
+        self._player = State(initialValue: AVPlayer(url: url))
     }
 
-    private var videoURL: URL {
-        let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? file.path
-        let fullURL = "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)&inline=true"
-        return URL(string: fullURL)!
+    var body: some View {
+        VideoPlayer(player: player)
+            .navigationTitle(file.name)
+            .onAppear {
+                // Keep player paused until played manually
+                player.pause()
+            }
     }
 }
