@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+enum SortOption {
+    case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
+}
+
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
@@ -39,6 +43,8 @@ struct FileListView: View {
 
     @State private var usageInfo: (used: Int64, total: Int64)? = nil
     @State private var fileCacheSize: Int64 = 0
+
+    @State private var sortOption: SortOption = .nameAsc
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -82,7 +88,17 @@ struct FileListView: View {
                 } else if let error = viewModel.errorMessage {
                     Text("Error: \(error)").foregroundColor(.red)
                 } else {
-                    ForEach(viewModel.files) { file in
+                    let sortedFiles = viewModel.files.sorted {
+                        switch sortOption {
+                        case .nameAsc: return $0.name.lowercased() < $1.name.lowercased()
+                        case .nameDesc: return $0.name.lowercased() > $1.name.lowercased()
+                        case .sizeAsc: return ($0.size ?? 0) < ($1.size ?? 0)
+                        case .sizeDesc: return ($0.size ?? 0) > ($1.size ?? 0)
+                        case .modifiedAsc: return ($0.modified ?? "") < ($1.modified ?? "")
+                        case .modifiedDesc: return ($0.modified ?? "") > ($1.modified ?? "")
+                        }
+                    }
+                    ForEach(sortedFiles) { file in
                         if selectionMode {
                             HStack {
                                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
@@ -163,6 +179,18 @@ struct FileListView: View {
 
             // Right: Create and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Menu {
+                    Picker("Sort by", selection: $sortOption) {
+                        Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
+                        Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
+                        Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
+                        Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
+                        Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
+                        Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
+                    }
+                } label: {
+                    Image(systemName: "arrow.up.arrow.down.square")
+                }
                 Menu {
                     if auth.permissions?.create == true {
                         Button("Create File", systemImage: "doc.badge.plus", action: {
