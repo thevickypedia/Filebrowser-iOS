@@ -14,10 +14,14 @@ struct RemoteThumbnail: View {
 
     @State private var image: UIImage?
     @State private var isLoading = false
+    @State private var gifData: Data?
 
     var body: some View {
         Group {
-            if let image = image {
+            if let gifData = gifData {
+                AnimatedImageView(data: gifData)
+                    .frame(width: 32, height: 32)
+            } else if let image = image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
@@ -29,8 +33,8 @@ struct RemoteThumbnail: View {
                 Color.clear
                     .frame(width: 32, height: 32)
                     .onAppear {
-                        loadThumbnail()
-                    }
+                    loadThumbnail()
+                }
             }
         }
     }
@@ -39,10 +43,17 @@ struct RemoteThumbnail: View {
         guard image == nil else { return }
 
         // Step 1: Load from memory or disk
-        if let data = FileCache.shared.data(for: file.path, modified: file.modified),
-           let image = UIImage(data: data) {
-            self.image = image
-            return
+        if file.name.lowercased().hasSuffix(".gif") {
+            if let cached = FileCache.shared.data(for: file.path, modified: file.modified) {
+                self.gifData = cached
+                return
+            }
+        } else {
+            if let cached = FileCache.shared.data(for: file.path, modified: file.modified),
+               let image = UIImage(data: cached) {
+                self.image = image
+                return
+            }
         }
 
         // Step 2: Build URL
@@ -57,11 +68,13 @@ struct RemoteThumbnail: View {
         URLSession.shared.dataTask(with: url) { data, _, _ in
             DispatchQueue.main.async {
                 self.isLoading = false
-                guard let data = data, let img = UIImage(data: data) else { return }
-                if let data = img.pngData() {
-                    FileCache.shared.store(data: data, for: file.path, modified: file.modified)
+                guard let data = data else { return }
+                FileCache.shared.store(data: data, for: file.path, modified: file.modified)
+                if file.name.lowercased().hasSuffix(".gif") {
+                    self.gifData = data
+                } else if let image = UIImage(data: data) {
+                    self.image = image
                 }
-                self.image = img
             }
         }.resume()
     }

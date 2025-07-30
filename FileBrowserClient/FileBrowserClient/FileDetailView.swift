@@ -75,7 +75,10 @@ struct FileDetailView: View {
 
         } else if let content = content {
             if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                if let image = UIImage(data: content) {
+                if fileName.hasSuffix(".gif") {
+                    AnimatedImageView(data: content)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if let image = UIImage(data: content) {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFit()
