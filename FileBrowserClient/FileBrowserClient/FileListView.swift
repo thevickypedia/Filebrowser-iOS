@@ -11,10 +11,6 @@ enum SortOption {
     case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
 }
 
-enum ViewMode {
-    case list, grid
-}
-
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
@@ -49,7 +45,6 @@ struct FileListView: View {
     @State private var fileCacheSize: Int64 = 0
 
     @State private var sortOption: SortOption = .nameAsc
-    @State private var viewMode: ViewMode = .list
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -110,20 +105,44 @@ struct FileListView: View {
                         case .modifiedDesc: return (a.modified ?? "") > (b.modified ?? "")
                         }
                     }
-                    Group {
-                        if viewMode == .list {
-                            ForEach(sortedFiles) { file in
-                                fileRow(for: file)
+                    ForEach(sortedFiles) { file in
+                        if selectionMode {
+                            HStack {
+                                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                                Image(systemName: file.isDir ? "folder" : "doc")
+                                Text(file.name)
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                toggleSelection(for: file)
                             }
                         } else {
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                                ForEach(sortedFiles) { file in
-                                    fileGridItem(for: file)
+                            if file.isDir {
+                                NavigationLink(value: fullPath(for: file)) {
+                                    HStack {
+                                        Image(systemName: "folder")
+                                        Text(file.name)
+                                    }
+                                }
+                            } else {
+                                NavigationLink(destination: detailView(for: file)) {
+                                    let fileName = file.name.lowercased()
+                                    HStack {
+                                        if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+                                            RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
+                                                .id(file.modified ?? "")
+                                        } else {
+                                            Image(systemName: systemIcon(for: fileName) ?? "doc")
+                                        }
+                                        Text(file.name)
+                                    }
                                 }
                             }
-                            .padding()
                         }
                     }
+
                     if viewModel.files.isEmpty && !viewModel.isLoading {
                         Text("No files found").foregroundColor(.gray)
                     }
@@ -167,11 +186,6 @@ struct FileListView: View {
 
             // Right: Create and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Button(action: {
-                    viewMode = (viewMode == .list ? .grid : .list)
-                }) {
-                    Image(systemName: viewMode == .list ? "square.grid.2x2" : "list.bullet")
-                }
                 Menu {
                     Picker("Sort by", selection: $sortOption) {
                         Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
@@ -342,63 +356,6 @@ struct FileListView: View {
             case .failure(let error):
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
             }
-        }
-    }
-
-    @ViewBuilder
-    func fileRow(for file: FileItem) -> some View {
-        if selectionMode {
-            // same HStack from your selection mode
-        } else {
-            if file.isDir {
-                NavigationLink(value: fullPath(for: file)) {
-                    HStack {
-                        Image(systemName: "folder")
-                        Text(file.name)
-                    }
-                }
-            } else {
-                NavigationLink(destination: detailView(for: file)) {
-                    let fileName = file.name.lowercased()
-                    HStack {
-                        if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                            RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
-                                .id(file.modified ?? "")
-                        } else {
-                            Image(systemName: systemIcon(for: fileName) ?? "doc")
-                        }
-                        Text(file.name)
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    func fileGridItem(for file: FileItem) -> some View {
-        VStack {
-            if file.isDir {
-                Image(systemName: "folder")
-                    .resizable()
-                    .frame(width: 40, height: 40)
-                    .foregroundColor(.accentColor)
-            } else if extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
-                RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
-                    .frame(width: 60, height: 60)
-                    .id(file.modified ?? "")
-            } else {
-                Image(systemName: systemIcon(for: file.name.lowercased()) ?? "doc")
-                    .resizable()
-                    .frame(width: 40, height: 40)
-            }
-
-            Text(file.name)
-                .font(.caption)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity)
-        .onTapGesture {
-            pathStack.append(fullPath(for: file))
         }
     }
 
