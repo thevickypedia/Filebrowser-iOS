@@ -126,7 +126,7 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
     }
 }
 
-func systemIcon(for fileName: String) -> String? {
+func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String? {
     // 📄 Text & Code
     if fileName.hasSuffix(".txt")          { return "doc.text" }
     if fileName.hasSuffix(".md")           { return "text.alignleft" }
@@ -161,17 +161,17 @@ func systemIcon(for fileName: String) -> String? {
     }
 
     // 🎵 Audio
-    if fileName.hasSuffix(".mp3") || fileName.hasSuffix(".wav") || fileName.hasSuffix(".m4a") {
+    if extensionTypes.audioExtensions.contains(where: fileName.hasSuffix) {
         return "waveform"
     }
 
     // 🎬 Video
-    if fileName.hasSuffix(".mp4") || fileName.hasSuffix(".mov") || fileName.hasSuffix(".avi") || fileName.hasSuffix(".mkv") {
+    if extensionTypes.videoExtensions.contains(where: fileName.hasSuffix) {
         return "film"
     }
 
     // 🖼️ Images
-    if fileName.hasSuffix(".png") || fileName.hasSuffix(".jpg") || fileName.hasSuffix(".jpeg") || fileName.hasSuffix(".gif") {
+    if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
         return "photo"
     }
     if fileName.hasSuffix(".svg")          { return "scribble" }

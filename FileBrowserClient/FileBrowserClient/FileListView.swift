@@ -131,10 +131,20 @@ struct FileListView: View {
                                     let fileName = file.name.lowercased()
                                     HStack {
                                         if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                                            RemoteThumbnail(file: file, serverURL: auth.serverURL ?? "", token: auth.token ?? "")
-                                                .id(file.modified ?? "")
+                                            RemoteThumbnail(
+                                                file: file,
+                                                serverURL: auth.serverURL ?? "",
+                                                token: auth.token ?? ""
+                                            ).id(
+                                                file.modified ?? ""
+                                            )
                                         } else {
-                                            Image(systemName: systemIcon(for: fileName) ?? "doc")
+                                            Image(
+                                                systemName: systemIcon(
+                                                    for: fileName,
+                                                    extensionTypes: extensionTypes
+                                                ) ?? "doc"
+                                            )
                                         }
                                         Text(file.name)
                                     }
