@@ -29,13 +29,21 @@ class FileCache {
     func data(for path: String, modified: String?) -> Data? {
         let key = cacheKey(for: path, modified: modified)
         let diskPath = diskCacheURL.appendingPathComponent(key)
-        return try? Data(contentsOf: diskPath)
+        // return try? Data(contentsOf: diskPath)
+        if let data = try? Data(contentsOf: diskPath) {
+            Log.debug("Cache retrieved: {'path:' \(path), 'key': \(key)}")
+            return data
+        }
+        return nil
     }
 
     func store(data: Data, for path: String, modified: String?) {
         let key = cacheKey(for: path, modified: modified)
         let diskPath = diskCacheURL.appendingPathComponent(key)
-        try? data.write(to: diskPath)
+        // try? data.write(to: diskPath)
+        if let _ = try? data.write(to: diskPath) {
+            Log.debug("Cache stored: {'path:' \(path), 'key': \(key)}")
+        }
     }
 
     func diskCacheSize() -> Int64 {
