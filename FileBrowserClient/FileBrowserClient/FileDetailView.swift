@@ -383,13 +383,14 @@ struct FileDetailView: View {
             return
         }
 
+        // todo: URL path has multiple path sepearators "/api/preview/big//$PATH"
         let urlString = "\(serverURL)/api/preview/big/\(encodedPath)?auth=\(token)"
         guard let url = URL(string: urlString) else {
             self.error = "Invalid preview URL"
             return
         }
 
-        Log.debug("🔗 Fetching preview from: \(url.absoluteString)")
+        Log.debug("🔗 Fetching preview from: \(url.relativePath)")
 
         URLSession.shared.dataTask(with: url) { data, _, error in
             DispatchQueue.main.async {
@@ -458,7 +459,7 @@ struct FileDetailView: View {
         var request = URLRequest(url: url)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        Log.debug("🔗 Fetching raw content from: \(url.absoluteString)")
+        Log.debug("🔗 Fetching raw content from: \(url.relativePath)")
 
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {

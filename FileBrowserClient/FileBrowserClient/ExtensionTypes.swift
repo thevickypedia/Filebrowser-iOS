@@ -30,6 +30,6 @@ struct ExtensionTypes {
     init() {
         self.mediaExtensions = self.videoExtensions + self.audioExtensions
         self.previewExtensions = self.textExtensions + self.imageExtensions + [".pdf"]
-        self.cacheExtensions = [".pdf"]
+        self.cacheExtensions = [".pdf"] + self.imageExtensions
     }
 }
