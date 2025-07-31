@@ -58,11 +58,12 @@ class FileListViewModel: ObservableObject {
 
                 do {
                     let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
-                    Log.info("Loaded \(result.items.count) items at path: \(path)")
-                    for file in result.items {
-                        Log.debug(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
-                    }
-                    self.files = result.items
+                    let fileItems = result.items
+                    Log.info("Loaded \(fileItems.count) items at path: \(path)")
+                    // for file in fileItems {
+                    //    Log.debug(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
+                    // }
+                    self.files = fileItems
                     self.isLoading = false
                 } catch {
                     self.errorMessage = "Failed to parse files"
