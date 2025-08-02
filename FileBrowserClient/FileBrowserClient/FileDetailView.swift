@@ -113,6 +113,17 @@ struct FileDetailView: View {
 
     var body: some View {
         let fileName = file.name.lowercased();
+
+        let fileNameMeta = metadata?.name ?? file.name
+        let filePathMeta = metadata?.path ?? file.path
+        let modified = metadata?.modified ?? file.modified
+        let dateFormatExact = auth.userAccount?.dateFormat ?? false
+        let fileModifiedMeta = dateFormatExact
+            ? (modified ?? "Unknown")
+            : timeAgoString(from: calculateTimeDifference(dateString: modified))
+        let fileSizeMeta = sizeConverter(metadata?.size ?? file.size)
+        let fileExtnMeta = metadata?.extension_ ?? file.extension ?? "None"
+
         fileContentView
         .navigationTitle(file.name)
         .toolbar {
@@ -178,27 +189,24 @@ struct FileDetailView: View {
                 HStack {
                     Image(systemName: "doc.text")
                         .imageScale(.medium)
-                    Text("Name: \(metadata?.name ?? file.name)")
+                    Text("Name: \(fileNameMeta)")
                 }
                 HStack {
                     Image(systemName: "folder")
                         .imageScale(.medium)
-                    Text("Path: \(metadata?.path ?? file.path)")
+                    Text("Path: \(filePathMeta)")
                 }
                 HStack {
                     Image(systemName: "clock")
-                    let modified = metadata?.modified ?? file.modified
-                    let dateFormatExact = auth.userAccount?.dateFormat ?? false
-                    if dateFormatExact {
-                        Text("Modified: \(modified ?? "Unknown")")
-                    } else {
-                        let diff = calculateTimeDifference(dateString: modified)
-                        Text("Modified: \(timeAgoString(from: diff))")
-                    }
+                    Text("Modified: \(fileModifiedMeta)")
                 }
                 HStack {
                     Image(systemName: "shippingbox")
-                    Text("Size: \(sizeConverter(metadata?.size ?? file.size))")
+                    Text("Size: \(fileSizeMeta)")
+                }
+                HStack {
+                    Image(systemName: "shippingbox")
+                    Text("Extension: \(fileExtnMeta)")
                 }
                 if let res = metadata?.resolution {
                     HStack {
@@ -232,7 +240,7 @@ struct FileDetailView: View {
     func checkContentAndReload(fileName: String) {
         if content == nil,
            extensionTypes.cacheExtensions.contains(where: fileName.hasSuffix),
-           let cached = FileCache.shared.data(for: file.path, modified: file.modified) {
+           let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
             self.content = cached
         } else {
             reloadFile(
@@ -378,6 +386,12 @@ struct FileDetailView: View {
     }
 
     func downloadPreview() {
+        // Try to load preview from cache
+        if let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
+            self.content = cached
+            return
+        }
+
         guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             self.error = "Failed to encode path for preview"
             return
@@ -400,6 +414,14 @@ struct FileDetailView: View {
                 }
                 Log.debug("Fetch preview complete")
                 self.content = data
+                // Store cache-able extensions in FileCache
+                if extensionTypes.cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
+                   let data = data {
+                    FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)
+                    // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
+                    // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
+                    onFileCached?()
+                }
             }
         }.resume()
     }
@@ -443,6 +465,15 @@ struct FileDetailView: View {
     }
 
     func downloadRaw(showSave: Bool = false) {
+        // Try to load raw file from cache
+        if let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
+            self.content = cached
+            if showSave {
+                self.saveFile()
+            }
+            return
+        }
+
         guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             self.error = "Failed to encode path for raw download"
             isDownloading = false
@@ -474,7 +505,7 @@ struct FileDetailView: View {
                 // Store cache-able extensions in FileCache
                 if extensionTypes.cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
-                    FileCache.shared.store(data: data, for: file.path, modified: file.modified)
+                    FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)
                     // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
                     // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
                     onFileCached?()

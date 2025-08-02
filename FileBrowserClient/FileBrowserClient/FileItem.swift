@@ -16,5 +16,5 @@ struct FileItem: Codable, Identifiable, Hashable {
     let isDir: Bool
     let modified: String?
     let size: Int?
-    // reminder: add extension later
+    let `extension`: String?
 }

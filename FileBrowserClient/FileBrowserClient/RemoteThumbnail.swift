@@ -41,15 +41,20 @@ struct RemoteThumbnail: View {
 
     func loadThumbnail() {
         guard image == nil else { return }
+        let existingCache = FileCache.shared.data(
+            for: file.path,
+            modified: file.modified,
+            fileID: "thumb_\(file.extension ?? "unknown")"
+        )
 
         // Step 1: Load from memory or disk
         if file.name.lowercased().hasSuffix(".gif") {
-            if let cached = FileCache.shared.data(for: file.path, modified: file.modified) {
+            if let cached = existingCache {
                 self.gifData = cached
                 return
             }
         } else {
-            if let cached = FileCache.shared.data(for: file.path, modified: file.modified),
+            if let cached = existingCache,
                let image = UIImage(data: cached) {
                 self.image = image
                 return
@@ -69,7 +74,7 @@ struct RemoteThumbnail: View {
             DispatchQueue.main.async {
                 self.isLoading = false
                 guard let data = data else { return }
-                FileCache.shared.store(data: data, for: file.path, modified: file.modified)
+                FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: "thumb")
                 if file.name.lowercased().hasSuffix(".gif") {
                     self.gifData = data
                 } else if let image = UIImage(data: data) {

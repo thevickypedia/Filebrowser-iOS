@@ -20,14 +20,15 @@ class FileCache {
         try? fileManager.createDirectory(at: diskCacheURL, withIntermediateDirectories: true)
     }
 
-    private func cacheKey(for path: String, modified: String?) -> String {
+    private func cacheKey(for path: String, modified: String?, fileID: String?) -> String {
         let safePath = path.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? UUID().uuidString
         let safeModified = modified ?? "unknown"
-        return "cache-\(safePath)-\(safeModified)"
+        let safeFileID = fileID?.trimmingCharacters(in: CharacterSet(charactersIn: ".")) ?? "unknown"
+        return "cache-\(safePath)-\(safeFileID)-\(safeModified)"
     }
 
-    func data(for path: String, modified: String?) -> Data? {
-        let key = cacheKey(for: path, modified: modified)
+    func data(for path: String, modified: String?, fileID: String?) -> Data? {
+        let key = cacheKey(for: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
         // return try? Data(contentsOf: diskPath)
         if let data = try? Data(contentsOf: diskPath) {
@@ -37,8 +38,8 @@ class FileCache {
         return nil
     }
 
-    func store(data: Data, for path: String, modified: String?) {
-        let key = cacheKey(for: path, modified: modified)
+    func store(data: Data, for path: String, modified: String?, fileID: String?) {
+        let key = cacheKey(for: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
         // try? data.write(to: diskPath)
         if let _ = try? data.write(to: diskPath) {

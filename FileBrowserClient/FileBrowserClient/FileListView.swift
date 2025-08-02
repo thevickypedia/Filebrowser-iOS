@@ -784,7 +784,8 @@ struct FileListView: View {
             path: newResourceName,
             isDir: isDirectory,
             modified: isoString,
-            size: 0
+            size: 0,
+            extension: isDirectory ? nil : newResourceName.split(separator: ".").last.map(String.init)
         )
         let fullPath = self.fullPath(for: fileItem)
 
