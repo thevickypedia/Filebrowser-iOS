@@ -454,7 +454,7 @@ struct FileDetailView: View {
 
                 do {
                     self.metadata = try JSONDecoder().decode(ResourceMetadata.self, from: data)
-                    Log.info("✅ Metadata loaded for \(file.name)")
+                    Log.debug("✅ Metadata loaded for \(file.name)")
                 } catch {
                     self.error = "Failed to parse metadata"
                     Log.error("❌ Metadata decode error: \(error.localizedDescription)")

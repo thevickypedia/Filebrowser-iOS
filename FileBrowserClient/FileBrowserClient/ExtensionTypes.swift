@@ -21,7 +21,7 @@ struct ExtensionTypes {
     let audioExtensions: [String] = [
         ".mp3", ".wav", ".aac", ".ogg", ".m4a"
     ]
-    
+
     let mediaExtensions: [String]
     let previewExtensions: [String]
     let cacheExtensions: [String]
@@ -30,6 +30,6 @@ struct ExtensionTypes {
     init() {
         self.mediaExtensions = self.videoExtensions + self.audioExtensions
         self.previewExtensions = self.textExtensions + self.imageExtensions + [".pdf"]
-        self.cacheExtensions = [".pdf"] + self.imageExtensions
+        self.cacheExtensions = [".pdf"] + self.imageExtensions + self.textExtensions
     }
 }
