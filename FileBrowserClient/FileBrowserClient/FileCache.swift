@@ -20,10 +20,21 @@ class FileCache {
         try? fileManager.createDirectory(at: diskCacheURL, withIntermediateDirectories: true)
     }
 
+    private func sanitize(_ input: String, replacement: Character = "_") -> String {
+        let allowed = CharacterSet.alphanumerics
+        let replaced = input.map { char in
+            String(char).rangeOfCharacter(from: allowed) != nil ? char : replacement
+        }
+        let collapsed = String(replaced)
+            .replacingOccurrences(of: "\(replacement)+", with: String(replacement), options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: String(replacement)))
+        return collapsed
+    }
+
     private func cacheKey(for path: String, modified: String?, fileID: String?) -> String {
-        let safePath = path.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? UUID().uuidString
-        let safeModified = modified ?? "unknown"
-        let safeFileID = fileID?.trimmingCharacters(in: CharacterSet(charactersIn: ".")) ?? "unknown"
+        let safePath = sanitize(path)
+        let safeFileID = sanitize(fileID?.trimmingCharacters(in: CharacterSet(charactersIn: ".")) ?? "unknown")
+        let safeModified = sanitize(modified ?? "unknown", replacement: "-")
         return "cache-\(safePath)-\(safeFileID)-\(safeModified)"
     }
 
@@ -32,7 +43,7 @@ class FileCache {
         let diskPath = diskCacheURL.appendingPathComponent(key)
         // return try? Data(contentsOf: diskPath)
         if let data = try? Data(contentsOf: diskPath) {
-            Log.debug("Cache retrieved: {'path:' \(path), 'key': \(key)}")
+            Log.debug("Cache retrieved: \(diskPath)")
             return data
         }
         return nil
@@ -43,7 +54,7 @@ class FileCache {
         let diskPath = diskCacheURL.appendingPathComponent(key)
         // try? data.write(to: diskPath)
         if let _ = try? data.write(to: diskPath) {
-            Log.debug("Cache stored: {'path:' \(path), 'key': \(key)}")
+            Log.debug("Cache stored: \(diskPath)")
         }
     }
 
