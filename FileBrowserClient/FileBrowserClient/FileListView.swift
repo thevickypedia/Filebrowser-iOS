@@ -135,9 +135,7 @@ struct FileListView: View {
                                                 file: file,
                                                 serverURL: auth.serverURL ?? "",
                                                 token: auth.token ?? ""
-                                            ).id(
-                                                file.modified ?? ""
-                                            )
+                                            ).id(UUID().uuidString)
                                         } else {
                                             Image(
                                                 systemName: systemIcon(
