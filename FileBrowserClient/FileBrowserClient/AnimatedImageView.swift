@@ -35,7 +35,12 @@ struct AnimatedImageView: UIViewRepresentable {
         return container
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {}
+    func updateUIView(_ uiView: UIView, context: Context) {
+        // Restart animation if view is remounted or updated
+        if let animated = animatedImage(from: data) {
+            (uiView.subviews.first as? UIImageView)?.image = animated
+        }
+    }
 
     private func animatedImage(from data: Data) -> UIImage? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
