@@ -298,7 +298,7 @@ struct FileDetailView: View {
             return
         }
 
-        let urlString = "\(serverURL)/api/resources\(encodedFrom.hasPrefix("/") ? "" : "/")\(encodedFrom)?action=rename&destination=\(encodedTo)&override=false&rename=false"
+        let urlString = "\(serverURL)/api/resources/\(removePrefix(urlPath: encodedFrom))?action=rename&destination=/\(removePrefix(urlPath: encodedTo))&override=false&rename=false"
         guard let url = URL(string: urlString) else {
             error = "Invalid rename URL"
             return
@@ -397,8 +397,7 @@ struct FileDetailView: View {
             return
         }
 
-        // todo: URL path has multiple path sepearators "/api/preview/big//$PATH"
-        let urlString = "\(serverURL)/api/preview/big/\(encodedPath)?auth=\(token)"
+        let urlString = "\(serverURL)/api/preview/big/\(removePrefix(urlPath: encodedPath))?auth=\(token)"
         guard let url = URL(string: urlString) else {
             self.error = "Invalid preview URL"
             return
@@ -432,7 +431,7 @@ struct FileDetailView: View {
             return
         }
 
-        let urlString = "\(serverURL)/api/resources/\(encodedPath)?view=info"
+        let urlString = "\(serverURL)/api/resources/\(removePrefix(urlPath: encodedPath))?view=info"
         guard let url = URL(string: urlString) else {
             self.error = "Invalid metadata URL"
             return
@@ -480,7 +479,7 @@ struct FileDetailView: View {
             return
         }
 
-        let urlString = "\(serverURL)/api/raw/\(encodedPath)?auth=\(token)"
+        let urlString = "\(serverURL)/api/raw/\(removePrefix(urlPath: encodedPath))?auth=\(token)"
         guard let url = URL(string: urlString) else {
             self.error = "Invalid raw URL"
             isDownloading = false

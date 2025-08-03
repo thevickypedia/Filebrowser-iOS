@@ -20,7 +20,7 @@ struct MediaPlayerView: View {
         self.token = token
         self.serverURL = serverURL
         let path = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        let url = URL(string: "\(serverURL)/api/raw/\(path)?auth=\(token)")!
+        let url = URL(string: "\(serverURL)/api/raw/\(removePrefix(urlPath: path))?auth=\(token)")!
         self._player = State(initialValue: AVPlayer(url: url))
     }
 

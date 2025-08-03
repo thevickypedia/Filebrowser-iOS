@@ -425,9 +425,9 @@ struct FileListView: View {
 
     func getUploadURL(serverURL: String, encodedName: String) -> URL? {
         if path == "/" {
-            return URL(string: "\(serverURL)/api/tus/\(encodedName)?override=false")
+            return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: encodedName))?override=false")
         }
-        return URL(string: "\(serverURL)/api/tus\(path)/\(encodedName)?override=false")
+        return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: path))/\(encodedName)?override=false")
     }
 
     func initiateTusUpload(for fileURL: URL) {
@@ -700,7 +700,7 @@ struct FileListView: View {
         let group = DispatchGroup()
         for item in selectedItems {
             guard let encodedPath = item.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-                let url = URL(string: "\(baseURL)/api/resources/\(encodedPath)") else {
+                  let url = URL(string: "\(baseURL)/api/resources/\(removePrefix(urlPath: encodedPath))") else {
                 Log.error("❌ Invalid path for \(item.name)")
                 continue
             }
@@ -741,7 +741,7 @@ struct FileListView: View {
             return
         }
 
-        let endpoint = "/api/resources/\(encodedFrom)"
+        let endpoint = "/api/resources/\(removePrefix(urlPath: encodedFrom))"
         let query: [URLQueryItem] = [
             URLQueryItem(name: "action", value: "rename"),
             URLQueryItem(name: "destination", value: encodedTo),
@@ -793,7 +793,7 @@ struct FileListView: View {
         }
 
         let separator = isDirectory ? "/?" : "?"
-        let endpoint = "/api/resources\(encodedPath)\(separator)"
+        let endpoint = "/api/resources/\(removePrefix(urlPath: encodedPath))\(separator)"
         let query: [URLQueryItem] = [
             URLQueryItem(name: "override", value: "false")
         ]

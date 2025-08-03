@@ -11,7 +11,6 @@ struct RemoteThumbnail: View {
     let file: FileItem
     let serverURL: String
     let token: String
-    let extensionTypes: ExtensionTypes = ExtensionTypes()
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -44,7 +43,7 @@ struct RemoteThumbnail: View {
         return UIImage(
             systemName: systemIcon(
                 for: fileName,
-                extensionTypes: extensionTypes
+                extensionTypes: ExtensionTypes()
             ) ?? "doc"
         )
     }
@@ -81,7 +80,7 @@ struct RemoteThumbnail: View {
 
         // Step 2: Build URL
         guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let url = URL(string: "\(serverURL)/api/preview/thumb/\(encodedPath)?auth=\(token)&inline=true") else {
+              let url = URL(string: "\(serverURL)/api/preview/thumb/\(removePrefix(urlPath: encodedPath))?auth=\(token)&inline=true") else {
             return
         }
 
