@@ -21,7 +21,15 @@ struct AnimatedImageView: UIViewRepresentable {
         imageView.contentMode = .scaleAspectFit
         imageView.clipsToBounds = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.image = animatedImage(from: data)
+        // Load a static image
+        imageView.image = UIImage(systemName: "photo")
+        // Asynchronously decode .gif thumbnails off the main thread
+        DispatchQueue.global(qos: .userInitiated).async {
+            let animated = animatedImage(from: data)
+            DispatchQueue.main.async { [weak imageView] in
+                imageView?.image = animated
+            }
+        }
 
         container.addSubview(imageView)
 
