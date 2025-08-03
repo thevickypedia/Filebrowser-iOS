@@ -11,6 +11,7 @@ struct RemoteThumbnail: View {
     let file: FileItem
     let serverURL: String
     let token: String
+    let extensionTypes: ExtensionTypes = ExtensionTypes()
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -32,31 +33,48 @@ struct RemoteThumbnail: View {
             } else {
                 Color.clear
                     .frame(width: 32, height: 32)
-                    .onAppear {
-                    loadThumbnail()
-                }
             }
+        }
+        .onAppear {
+            loadThumbnail()
         }
     }
 
+    func defaultThumbnail(fileName: String) -> UIImage? {
+        return UIImage(
+            systemName: systemIcon(
+                for: fileName,
+                extensionTypes: extensionTypes
+            ) ?? "doc"
+        )
+    }
+
     func loadThumbnail() {
-        guard image == nil else { return }
+        // Reset thumbnails
+        image = nil
+        gifData = nil
+        isLoading = true
+
+        let fileName = file.name.lowercased()
+        let isGIF = fileName.hasSuffix(".gif")
         let existingCache = FileCache.shared.data(
             for: file.path,
             modified: file.modified,
-            fileID: "thumb_\(file.extension ?? "unknown")"
+            fileID: "thumb"
         )
 
         // Step 1: Load from memory or disk
-        if file.name.lowercased().hasSuffix(".gif") {
+        if isGIF {
             if let cached = existingCache {
                 self.gifData = cached
+                isLoading = false
                 return
             }
         } else {
             if let cached = existingCache,
                let image = UIImage(data: cached) {
                 self.image = image
+                isLoading = false
                 return
             }
         }
@@ -67,18 +85,26 @@ struct RemoteThumbnail: View {
             return
         }
 
-        isLoading = true
-
         // Step 3: Fetch and store
         URLSession.shared.dataTask(with: url) { data, _, _ in
             DispatchQueue.main.async {
                 self.isLoading = false
-                guard let data = data else { return }
-                FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: "thumb")
-                if file.name.lowercased().hasSuffix(".gif") {
+                guard let data = data else {
+                    self.image = defaultThumbnail(fileName: fileName)
+                    return
+                }
+                FileCache.shared.store(
+                    data: data,
+                    for: file.path,
+                    modified: file.modified,
+                    fileID: "thumb"
+                )
+                if isGIF {
                     self.gifData = data
                 } else if let image = UIImage(data: data) {
                     self.image = image
+                } else {
+                    self.image = defaultThumbnail(fileName: fileName)
                 }
             }
         }.resume()
