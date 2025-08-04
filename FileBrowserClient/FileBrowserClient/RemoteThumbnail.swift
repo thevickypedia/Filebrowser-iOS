@@ -11,6 +11,7 @@ struct RemoteThumbnail: View {
     let file: FileItem
     let serverURL: String
     let token: String
+    let animateGIF: Bool
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -18,7 +19,7 @@ struct RemoteThumbnail: View {
 
     var body: some View {
         Group {
-            if let gifData = gifData {
+            if let gifData = gifData, animateGIF {
                 AnimatedImageView(data: gifData)
                     .frame(width: 32, height: 32)
             } else if let image = image {

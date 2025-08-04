@@ -7,6 +7,16 @@
 
 import SwiftUI
 
+struct AdvancedSettings {
+    // Controlled with file extensions
+    let cacheImage: Bool
+    let cachePDF: Bool
+    let cacheText: Bool
+    // Controlled with individual condition blocks
+    let cacheThumbnail: Bool
+    let animateGIF: Bool
+}
+
 struct ContentView: View {
     @State private var pathStack: [String] = []
     @State private var serverURL = ""
@@ -20,19 +30,35 @@ struct ContentView: View {
     @State private var rememberMe = false
     @State private var showLogoutMessage = false
     @State private var statusMessage: String? = nil
-    @State private var transitProtection = false
     @EnvironmentObject var themeManager: ThemeManager
 
     @StateObject private var fileListViewModel = FileListViewModel()
 
+    @State private var showAdvancedOptions = false
+
+    @AppStorage("transitProtection") private var transitProtection = false
+    @AppStorage("cacheImage") private var cacheImage = true
+    @AppStorage("cachePDF") private var cachePDF = true
+    @AppStorage("cacheText") private var cacheText = true
+    @AppStorage("cacheThumbnail") private var cacheThumbnail = true
+    @AppStorage("animateGIF") private var animateGIF = true
+
     var body: some View {
         if isLoggedIn {
+            let advancedSettings = AdvancedSettings(
+                cacheImage: cacheImage,
+                cachePDF: cachePDF,
+                cacheText: cacheText,
+                cacheThumbnail: cacheThumbnail,
+                animateGIF: animateGIF
+            )
             NavigationStack(path: $pathStack) {
                 FileListView(
                     path: pathStack.last ?? "/",
                     isLoggedIn: $isLoggedIn,
                     pathStack: $pathStack, // ✅ pass it down
-                    logoutHandler: handleLogout
+                    logoutHandler: handleLogout,
+                    advancedSettings: advancedSettings
                 )
                 .environmentObject(fileListViewModel)
                 .navigationDestination(for: String.self) { newPath in
@@ -40,7 +66,8 @@ struct ContentView: View {
                         path: newPath,
                         isLoggedIn: $isLoggedIn,
                         pathStack: $pathStack,
-                        logoutHandler: handleLogout
+                        logoutHandler: handleLogout,
+                        advancedSettings: advancedSettings
                     )
                     .environmentObject(fileListViewModel)
                 }
@@ -76,7 +103,17 @@ struct ContentView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
             Toggle("Remember Me", isOn: $rememberMe)
-            Toggle("Transit Protection", isOn: $transitProtection)
+
+            Section {
+                DisclosureGroup("Advanced Settings", isExpanded: $showAdvancedOptions) {
+                    Toggle("Transit Protection", isOn: $transitProtection)
+                    Toggle("Cache Images", isOn: $cacheImage)
+                    Toggle("Cache PDFs", isOn: $cachePDF)
+                    Toggle("Cache Text Files", isOn: $cacheText)
+                    Toggle("Cache Thumbnails", isOn: $cacheThumbnail)
+                    Toggle("Animate GIF Files", isOn: $animateGIF)
+                }
+            }
 
             if let errorMessage = errorMessage {
                 Text(errorMessage)

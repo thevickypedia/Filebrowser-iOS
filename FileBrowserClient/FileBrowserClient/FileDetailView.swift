@@ -40,6 +40,8 @@ struct FileDetailView: View {
     // Use a closure callback to pass as argument in FileListView
     let onFileCached: (() -> Void)?
 
+    let advancedSettings: AdvancedSettings
+
     let extensionTypes: ExtensionTypes = ExtensionTypes()
     @State private var content: Data? = nil
     @State private var error: String? = nil
@@ -75,7 +77,7 @@ struct FileDetailView: View {
 
         } else if let content = content {
             if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                if fileName.hasSuffix(".gif") {
+                if advancedSettings.animateGIF && fileName.hasSuffix(".gif") {
                     AnimatedImageView(data: content)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let image = UIImage(data: content) {
@@ -238,8 +240,9 @@ struct FileDetailView: View {
     }
 
     func checkContentAndReload(fileName: String) {
+        let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
         if content == nil,
-           extensionTypes.cacheExtensions.contains(where: fileName.hasSuffix),
+           cacheExtensions.contains(where: fileName.hasSuffix),
            let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
             self.content = cached
         } else {
@@ -414,7 +417,8 @@ struct FileDetailView: View {
                 Log.debug("Fetch preview complete")
                 self.content = data
                 // Store cache-able extensions in FileCache
-                if extensionTypes.cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
+                let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
+                if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
                     FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)
                     // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
@@ -502,7 +506,8 @@ struct FileDetailView: View {
                 self.content = data
 
                 // Store cache-able extensions in FileCache
-                if extensionTypes.cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
+                let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
+                if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
                     FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)
                     // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions

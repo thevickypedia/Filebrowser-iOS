@@ -192,3 +192,17 @@ func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String?
 func removePrefix(urlPath: String) -> String {
     return urlPath.hasPrefix("/") ? String(urlPath.dropFirst()) : urlPath
 }
+
+func getCacheExtensions(advancedSettings: AdvancedSettings, extensionTypes: ExtensionTypes) -> [String] {
+    var cacheExtensions: [String] = []
+    if advancedSettings.cachePDF {
+        cacheExtensions.append(".pdf")
+    }
+    if advancedSettings.cacheImage {
+        cacheExtensions.append(contentsOf: extensionTypes.imageExtensions)
+    }
+    if advancedSettings.cacheText {
+        cacheExtensions.append(contentsOf: extensionTypes.textExtensions)
+    }
+    return cacheExtensions
+}
