@@ -40,9 +40,10 @@ struct FileDetailView: View {
     // Use a closure callback to pass as argument in FileListView
     let onFileCached: (() -> Void)?
 
-    let advancedSettings: AdvancedSettings
+    let extensionTypes: ExtensionTypes
+    let cacheExtensions: [String]
+    let animateGIF: Bool
 
-    let extensionTypes: ExtensionTypes = ExtensionTypes()
     @State private var content: Data? = nil
     @State private var error: String? = nil
     @State private var metadata: ResourceMetadata? = nil
@@ -77,7 +78,7 @@ struct FileDetailView: View {
 
         } else if let content = content {
             if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                if advancedSettings.animateGIF && fileName.hasSuffix(".gif") {
+                if animateGIF && fileName.hasSuffix(".gif") {
                     AnimatedImageView(data: content)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let image = UIImage(data: content) {
@@ -114,17 +115,8 @@ struct FileDetailView: View {
     }
 
     var body: some View {
-        let fileName = file.name.lowercased();
-
-        let fileNameMeta = metadata?.name ?? file.name
-        let filePathMeta = metadata?.path ?? file.path
-        let modified = metadata?.modified ?? file.modified
-        let dateFormatExact = auth.userAccount?.dateFormat ?? false
-        let fileModifiedMeta = dateFormatExact
-            ? (modified ?? "Unknown")
-            : timeAgoString(from: calculateTimeDifference(dateString: modified))
-        let fileSizeMeta = sizeConverter(metadata?.size ?? file.size)
-        let fileExtnMeta = metadata?.extension_ ?? file.extension ?? "None"
+        let fileName = file.name.lowercased()
+        let fileInfo = getFileInfo(metadata: metadata, file: file, auth: auth)
 
         fileContentView
         .navigationTitle(file.name)
@@ -191,24 +183,24 @@ struct FileDetailView: View {
                 HStack {
                     Image(systemName: "doc.text")
                         .imageScale(.medium)
-                    Text("Name: \(fileNameMeta)")
+                    Text("Name: \(fileInfo.name)")
                 }
                 HStack {
                     Image(systemName: "folder")
                         .imageScale(.medium)
-                    Text("Path: \(filePathMeta)")
+                    Text("Path: \(fileInfo.path)")
                 }
                 HStack {
                     Image(systemName: "clock")
-                    Text("Modified: \(fileModifiedMeta)")
+                    Text("Modified: \(fileInfo.modified)")
                 }
                 HStack {
                     Image(systemName: "shippingbox")
-                    Text("Size: \(fileSizeMeta)")
+                    Text("Size: \(fileInfo.size)")
                 }
                 HStack {
                     Image(systemName: "shippingbox")
-                    Text("Extension: \(fileExtnMeta)")
+                    Text("Extension: \(fileInfo.extension)")
                 }
                 if let res = metadata?.resolution {
                     HStack {
@@ -240,7 +232,6 @@ struct FileDetailView: View {
     }
 
     func checkContentAndReload(fileName: String) {
-        let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
         if content == nil,
            cacheExtensions.contains(where: fileName.hasSuffix),
            let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
@@ -274,7 +265,8 @@ struct FileDetailView: View {
             // ✅ Only load if preview is supported
             downloadFile(
                 fileName: fileName,
-                extensionTypes: extensionTypes
+                extensionTypes: extensionTypes,
+                
             )
         } else {
             Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
@@ -417,7 +409,6 @@ struct FileDetailView: View {
                 Log.debug("Fetch preview complete")
                 self.content = data
                 // Store cache-able extensions in FileCache
-                let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
                 if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
                     FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)
@@ -506,7 +497,6 @@ struct FileDetailView: View {
                 self.content = data
 
                 // Store cache-able extensions in FileCache
-                let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
                 if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
                     FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)

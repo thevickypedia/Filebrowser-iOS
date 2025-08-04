@@ -206,3 +206,30 @@ func getCacheExtensions(advancedSettings: AdvancedSettings, extensionTypes: Exte
     }
     return cacheExtensions
 }
+
+struct FileInfo {
+    let name: String
+    let path: String
+    let modified: String
+    let size: String
+    let `extension`: String
+}
+
+func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager) -> FileInfo {
+    let fileNameMeta = metadata?.name ?? file.name
+    let filePathMeta = metadata?.path ?? file.path
+    let modified = metadata?.modified ?? file.modified
+    let dateFormatExact = auth.userAccount?.dateFormat ?? false
+    let fileModifiedMeta = dateFormatExact
+        ? (modified ?? "Unknown")
+        : timeAgoString(from: calculateTimeDifference(dateString: modified))
+    let fileSizeMeta = sizeConverter(metadata?.size ?? file.size)
+    let fileExtnMeta = metadata?.extension_ ?? file.extension ?? "None"
+    return FileInfo(
+        name: fileNameMeta,
+        path: filePathMeta,
+        modified: fileModifiedMeta,
+        size: fileSizeMeta,
+        extension: fileExtnMeta
+    )
+}

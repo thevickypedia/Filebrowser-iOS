@@ -50,7 +50,7 @@ struct FileListView: View {
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
     let logoutHandler: () -> Void
-    let extensionTypes: ExtensionTypes = ExtensionTypes()
+    let extensionTypes: ExtensionTypes
 
     let advancedSettings: AdvancedSettings
 
@@ -382,7 +382,12 @@ struct FileListView: View {
             token: auth.token ?? "",
             // Pass a callback reference to fetchClientStorageInfo func
             onFileCached: { fetchClientStorageInfo() },
-            advancedSettings: advancedSettings
+            extensionTypes: extensionTypes,
+            cacheExtensions: getCacheExtensions(
+                advancedSettings: advancedSettings,
+                extensionTypes: extensionTypes
+            ),
+            animateGIF: advancedSettings.animateGIF
         )
     }
 

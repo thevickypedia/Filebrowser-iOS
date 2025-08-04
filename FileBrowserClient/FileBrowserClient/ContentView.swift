@@ -52,12 +52,14 @@ struct ContentView: View {
                 cacheThumbnail: cacheThumbnail,
                 animateGIF: animateGIF
             )
+            let extensionTypes = ExtensionTypes()
             NavigationStack(path: $pathStack) {
                 FileListView(
                     path: pathStack.last ?? "/",
                     isLoggedIn: $isLoggedIn,
                     pathStack: $pathStack, // ✅ pass it down
                     logoutHandler: handleLogout,
+                    extensionTypes: extensionTypes,
                     advancedSettings: advancedSettings
                 )
                 .environmentObject(fileListViewModel)
@@ -67,6 +69,7 @@ struct ContentView: View {
                         isLoggedIn: $isLoggedIn,
                         pathStack: $pathStack,
                         logoutHandler: handleLogout,
+                        extensionTypes: extensionTypes,
                         advancedSettings: advancedSettings
                     )
                     .environmentObject(fileListViewModel)
