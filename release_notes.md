@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+v1.11.0 (08/04/2025)
+--------------------
+- [5a00297](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a002973cd1eaa539e88c80a1811e3fe0953970e) chore: Release ``v1.11.0``
+- [365aa0e](https://github.com/thevickypedia/Filebrowser-iOS/commit/365aa0e9e2af97e9e20bcbaf0294f633fe4dc9cc) refactor: Setup dependencies in GHA workflow
+- [57e0f0a](https://github.com/thevickypedia/Filebrowser-iOS/commit/57e0f0aaa1fb849ed8edd01a724cc937e8bc463d) refactor: Restructure GH workflows
+- [46e4519](https://github.com/thevickypedia/Filebrowser-iOS/commit/46e45196c7d3baa94e2e199e2aefc7a8ff74b179) ci: Create a new GHA workflow to run test
+- [53b8954](https://github.com/thevickypedia/Filebrowser-iOS/commit/53b89547cb7c52563ab5049758ce7d27899959de) test: Run functional test with example
+- [9563935](https://github.com/thevickypedia/Filebrowser-iOS/commit/9563935b30e577e050c57f12e2e87041656de424) fix: Build error due to trailing ``,``
+- [e6f9f65](https://github.com/thevickypedia/Filebrowser-iOS/commit/e6f9f65f0baf0cae73438713861a6e86432d2805) ci: Update build workflow to run independently
+- [23ad132](https://github.com/thevickypedia/Filebrowser-iOS/commit/23ad1325dad35894a97cf61d82155066288e4a89) fix: Avoid updating ``NavigationStack`` multiple times per frame
+- [72697be](https://github.com/thevickypedia/Filebrowser-iOS/commit/72697bece646cb69be5620ff40d6cd0d273aac50) fix: Replace lexicographic sorting vs natural (human-friendly) sorting
+- [4a749c2](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a749c27f94fab1d415c2d275f601c3111b63f7f) perf: Reduce code redundancies for file metadata and extension types
+- [9e7ffec](https://github.com/thevickypedia/Filebrowser-iOS/commit/9e7ffec025d4c9ecc8a8e3f5a236746bb8192374) feat: Allow users to control caching and other advanced settings
+- [88c095c](https://github.com/thevickypedia/Filebrowser-iOS/commit/88c095cc097a8440f3d50e744dbb6b95136b3139) perf: Asynchronously decode GIF thumbnails off the main thread
+- [20701e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/20701e0e41c1efe36e4986f6ca2a26b4c3608bbf) chore: Update release notes for v1.10.0
+
 v1.10.0 (08/03/2025)
 --------------------
 - [6401c11](https://github.com/thevickypedia/Filebrowser-iOS/commit/6401c11faa75a55d4becc9dacf2c51a2fcd3e3f2) chore: Release ``v1.10.0``
