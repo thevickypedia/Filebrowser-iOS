@@ -44,39 +44,45 @@ struct ContentView: View {
     @AppStorage("animateGIF") private var animateGIF = true
 
     var body: some View {
-        if isLoggedIn {
-            let advancedSettings = AdvancedSettings(
-                cacheImage: cacheImage,
-                cachePDF: cachePDF,
-                cacheText: cacheText,
-                cacheThumbnail: cacheThumbnail,
-                animateGIF: animateGIF
-            )
-            let extensionTypes = ExtensionTypes()
-            NavigationStack(path: $pathStack) {
-                FileListView(
-                    path: pathStack.last ?? "/",
-                    isLoggedIn: $isLoggedIn,
-                    pathStack: $pathStack, // ✅ pass it down
-                    logoutHandler: handleLogout,
-                    extensionTypes: extensionTypes,
-                    advancedSettings: advancedSettings
-                )
-                .environmentObject(fileListViewModel)
-                .navigationDestination(for: String.self) { newPath in
+        NavigationStack(path: $pathStack) {
+            Group {
+                if isLoggedIn {
                     FileListView(
-                        path: newPath,
+                        path: pathStack.last ?? "/",
                         isLoggedIn: $isLoggedIn,
                         pathStack: $pathStack,
                         logoutHandler: handleLogout,
-                        extensionTypes: extensionTypes,
-                        advancedSettings: advancedSettings
+                        extensionTypes: ExtensionTypes(),
+                        advancedSettings: AdvancedSettings(
+                            cacheImage: cacheImage,
+                            cachePDF: cachePDF,
+                            cacheText: cacheText,
+                            cacheThumbnail: cacheThumbnail,
+                            animateGIF: animateGIF
+                        )
                     )
                     .environmentObject(fileListViewModel)
+                } else {
+                    loginView
                 }
             }
-        } else {
-            loginView
+            .navigationDestination(for: String.self) { newPath in
+                FileListView(
+                    path: newPath,
+                    isLoggedIn: $isLoggedIn,
+                    pathStack: $pathStack,
+                    logoutHandler: handleLogout,
+                    extensionTypes: ExtensionTypes(),
+                    advancedSettings: AdvancedSettings(
+                        cacheImage: cacheImage,
+                        cachePDF: cachePDF,
+                        cacheText: cacheText,
+                        cacheThumbnail: cacheThumbnail,
+                        animateGIF: animateGIF
+                    )
+                )
+                .environmentObject(fileListViewModel)
+            }
         }
     }
 
