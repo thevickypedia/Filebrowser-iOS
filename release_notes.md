@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.12.0 (08/04/2025)
+--------------------
+- [6ec574a](https://github.com/thevickypedia/Filebrowser-iOS/commit/6ec574a48835527631e06068ee29d33bfa734c7c) chore: Release ``v1.12.0``
+- [7509d52](https://github.com/thevickypedia/Filebrowser-iOS/commit/7509d52fd164d33fc2d3f986bd1139e901db79f4) perf: Set default GIF animation to false
+- [2c509d6](https://github.com/thevickypedia/Filebrowser-iOS/commit/2c509d693e17b7dda110dad8bc3fba5e2d8070cb) style: Move transit protection out of advanced settings in login UI
+- [994d21d](https://github.com/thevickypedia/Filebrowser-iOS/commit/994d21d3336d074c6e34ef2bca7357d071ce7aa0) chore: Update release notes for v1.11.0
+
 v1.11.0 (08/04/2025)
 --------------------
 - [5a00297](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a002973cd1eaa539e88c80a1811e3fe0953970e) chore: Release ``v1.11.0``
