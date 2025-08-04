@@ -41,7 +41,8 @@ struct ContentView: View {
     @AppStorage("cachePDF") private var cachePDF = true
     @AppStorage("cacheText") private var cacheText = true
     @AppStorage("cacheThumbnail") private var cacheThumbnail = true
-    @AppStorage("animateGIF") private var animateGIF = true
+    // Default to false since GIF animation in SwiftUI can be resource-intensive
+    @AppStorage("animateGIF") private var animateGIF = false
 
     var body: some View {
         NavigationStack(path: $pathStack) {
