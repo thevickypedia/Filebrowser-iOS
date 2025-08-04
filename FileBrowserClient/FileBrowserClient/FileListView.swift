@@ -99,12 +99,12 @@ struct FileListView: View {
 
                         // Both are folders or both are files — apply sort option
                         switch sortOption {
-                        case .nameAsc: return a.name.lowercased() < b.name.lowercased()
-                        case .nameDesc: return a.name.lowercased() > b.name.lowercased()
-                        case .sizeAsc: return (a.size ?? 0) < (b.size ?? 0)
-                        case .sizeDesc: return (a.size ?? 0) > (b.size ?? 0)
-                        case .modifiedAsc: return (a.modified ?? "") < (b.modified ?? "")
-                        case .modifiedDesc: return (a.modified ?? "") > (b.modified ?? "")
+                            case .nameAsc: return a.name.localizedStandardCompare(b.name) == .orderedAscending
+                            case .nameDesc: return a.name.localizedStandardCompare(b.name) == .orderedDescending
+                            case .sizeAsc: return (a.size ?? 0) < (b.size ?? 0)
+                            case .sizeDesc: return (a.size ?? 0) > (b.size ?? 0)
+                            case .modifiedAsc: return (a.modified ?? "") < (b.modified ?? "")
+                            case .modifiedDesc: return (a.modified ?? "") > (b.modified ?? "")
                         }
                     }
                     ForEach(sortedFiles) { file in
