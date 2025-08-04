@@ -22,7 +22,6 @@ on:
       - main
     paths:
       - "**/Info.plist"
-      - "**/*.xcodeproj/**"
 
 jobs:
   # Build if requested or triggered by push
