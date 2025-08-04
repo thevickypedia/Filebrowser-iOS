@@ -1,0 +1,67 @@
+name: 1. iOS Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "FileBrowserClient/FileBrowserClientTests/**"
+      - ".github/workflows/1_test.yml"
+  workflow_dispatch:
+    inputs:
+      iPhoneVersion:
+        type: string
+        description: iPhone version to run tests on
+        required: false
+        default: "15"
+      iOSVersion:
+        type: string
+        description: iOS version to run tests on
+        required: false
+        default: "17.4"
+  workflow_call:
+    inputs:
+      iPhoneVersion:
+        type: string
+        description: iPhone version to run tests on
+        required: false
+        default: "15"
+      iOSVersion:
+        type: string
+        description: iOS version to run tests on
+        required: false
+        default: "17.4"
+
+jobs:
+  test:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Set inputs
+        run: |
+          if [ -z "${{ inputs.iPhoneVersion }}" ]; then
+            echo "iPhoneVersion=15" >> $GITHUB_ENV
+          else
+            echo "iPhoneVersion=${{ inputs.iPhoneVersion }}" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.iOSVersion }}" ]; then
+            echo "iOSVersion=17.4" >> $GITHUB_ENV
+          else
+            echo "iOSVersion=${{ inputs.iOSVersion }}" >> $GITHUB_ENV
+          fi
+
+      - name: Run test
+        run: |
+          xcodebuild test -scheme FileBrowserClient \
+            -destination 'platform=iOS Simulator,name=iPhone ${{ env.iPhoneVersion }},OS=${{ env.iOSVersion }}' \
+            -configuration Debug \
+            EXCLUDED_ARCHS=arm64
+        working-directory: FileBrowserClient

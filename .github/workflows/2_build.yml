@@ -1,4 +1,4 @@
-name: 1. iOS Build
+name: 2. iOS Build
 
 on:
   push:
@@ -6,9 +6,31 @@ on:
       - main
     paths:
       - "**/*.xcodeproj/**"
-      - ".github/workflows/1_build.yml"
+      - ".github/workflows/2_build.yml"
   workflow_dispatch:
+    inputs:
+      iPhoneVersion:
+        type: string
+        description: iPhone version to build for
+        required: false
+        default: "15"
+      iOSVersion:
+        type: string
+        description: iOS version to build for
+        required: false
+        default: "17.4"
   workflow_call:
+    inputs:
+      iPhoneVersion:
+        type: string
+        description: iPhone version to build for
+        required: false
+        default: "15"
+      iOSVersion:
+        type: string
+        description: iOS version to build for
+        required: false
+        default: "17.4"
     outputs:
       project_version:
         description: "Extracted version from Info.plist"
@@ -28,12 +50,26 @@ jobs:
         run: |
           sudo xcode-select -s /Applications/Xcode.app
 
+      - name: Set inputs
+        run: |
+          if [ -z "${{ inputs.iPhoneVersion }}" ]; then
+            echo "iPhoneVersion=15" >> $GITHUB_ENV
+          else
+            echo "iPhoneVersion=${{ inputs.iPhoneVersion }}" >> $GITHUB_ENV
+          fi
+
+          if [ -z "${{ inputs.iOSVersion }}" ]; then
+            echo "iOSVersion=17.4" >> $GITHUB_ENV
+          else
+            echo "iOSVersion=${{ inputs.iOSVersion }}" >> $GITHUB_ENV
+          fi
+
       - name: Build app
         run: |
           xcodebuild -project FileBrowserClient.xcodeproj \
             -scheme FileBrowserClient \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.4' \
+            -destination 'platform=iOS Simulator,name=iPhone ${{ env.iPhoneVersion }},OS=${{ env.iOSVersion }}' \
             -configuration Debug \
             EXCLUDED_ARCHS=arm64 \
             clean build
