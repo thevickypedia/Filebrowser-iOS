@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "FileBrowserClient/FileBrowserClientTests/**"
-      - ".github/workflows/1_test.yml"
   workflow_dispatch:
     inputs:
       iPhoneVersion:

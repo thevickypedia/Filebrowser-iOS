@@ -44,7 +44,9 @@ jobs:
   # Set or validate the project version
   set-version:
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - test
+      - build
     outputs:
       project_version: ${{ steps.set-version.outputs.project_version }}
     steps:

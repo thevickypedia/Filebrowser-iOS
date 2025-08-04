@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "**/*.xcodeproj/**"
-      - ".github/workflows/2_build.yml"
   workflow_dispatch:
     inputs:
       iPhoneVersion:
