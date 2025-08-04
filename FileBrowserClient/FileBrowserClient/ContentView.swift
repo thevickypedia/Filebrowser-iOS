@@ -28,6 +28,7 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @State private var isLoggedIn = false
     @State private var rememberMe = false
+    @State private var transitProtection = false
     @State private var showLogoutMessage = false
     @State private var statusMessage: String? = nil
     @EnvironmentObject var themeManager: ThemeManager
@@ -36,7 +37,6 @@ struct ContentView: View {
 
     @State private var showAdvancedOptions = false
 
-    @AppStorage("transitProtection") private var transitProtection = false
     @AppStorage("cacheImage") private var cacheImage = true
     @AppStorage("cachePDF") private var cachePDF = true
     @AppStorage("cacheText") private var cacheText = true
@@ -112,10 +112,10 @@ struct ContentView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
             Toggle("Remember Me", isOn: $rememberMe)
+            Toggle("Transit Protection", isOn: $transitProtection)
 
             Section {
                 DisclosureGroup("Advanced Settings", isExpanded: $showAdvancedOptions) {
-                    Toggle("Transit Protection", isOn: $transitProtection)
                     Toggle("Cache Images", isOn: $cacheImage)
                     Toggle("Cache PDFs", isOn: $cachePDF)
                     Toggle("Cache Text Files", isOn: $cacheText)
@@ -184,7 +184,6 @@ struct ContentView: View {
             .padding(.bottom, 8)
         }
         .padding()
-        .navigationTitle("FileBrowser Login")
     }
 
     func handleLogout() {
