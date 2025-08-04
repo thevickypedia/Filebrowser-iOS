@@ -265,8 +265,7 @@ struct FileDetailView: View {
             // ✅ Only load if preview is supported
             downloadFile(
                 fileName: fileName,
-                extensionTypes: extensionTypes,
-                
+                extensionTypes: extensionTypes
             )
         } else {
             Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
