@@ -348,12 +348,10 @@ struct FileListView: View {
             }
         }
         .sheet(isPresented: $showPhotoPicker) {
-            PhotoPicker { data, filename in
-                if let url = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                    uploadQueue = [url]
-                    currentUploadIndex = 0
-                    uploadNextInQueue()
-                }
+            PhotoPicker { urls in
+                uploadQueue = urls
+                currentUploadIndex = 0
+                uploadNextInQueue()
             }
         }
         .fileImporter(
