@@ -2,93 +2,15 @@ name: 4. Update Release Notes
 
 on:
   workflow_dispatch:
+  workflow_call:
     inputs:
-      test:
-        description: "Test the iOS app?"
-        type: boolean
-        required: false
-        default: false
-      build:
-        description: "Build the iOS app?"
-        type: boolean
-        required: false
-        default: false
-      git_release:
-        description: "Create a GitHub release?"
-        type: boolean
-        required: false
-        default: false
       project_version:
-        description: "Project version to use for the release (required if build is false)"
-        required: false
         type: string
-  push:
-    branches:
-      - main
-    paths:
-      - "**/Info.plist"
+        description: Version of the project to update release notes for
+        required: true
 
 jobs:
-  # Test if requested or triggered by push
-  test:
-    if: ${{ inputs.test == 'true' || github.event_name != 'workflow_dispatch' }}
-    uses: ./.github/workflows/1_test.yml
-    secrets: inherit
-
-  # Build if requested or triggered by push
-  build:
-    if: ${{ inputs.build == 'true' || github.event_name != 'workflow_dispatch' }}
-    uses: ./.github/workflows/2_build.yml
-    secrets: inherit
-
-  # Set or validate the project version
-  set-version:
-    runs-on: ubuntu-latest
-    needs:
-      - test
-      - build
-    outputs:
-      project_version: ${{ steps.set-version.outputs.project_version }}
-    steps:
-      - name: Determine project version
-        id: set-version
-        run: |
-          echo "Resolving project version..."
-          PROJECT_VERSION=""
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "${{ inputs.build }}" == "true" ]]; then
-              PROJECT_VERSION="${{ needs.build.outputs.project_version }}"
-              echo "Using version from build: $PROJECT_VERSION"
-            elif [[ -n "${{ inputs.project_version }}" ]]; then
-              PROJECT_VERSION="${{ inputs.project_version }}"
-              echo "Using provided input version: $PROJECT_VERSION"
-            else
-              echo "ERROR: project_version input is required if build is false"
-              exit 1
-            fi
-          else
-            PROJECT_VERSION="${{ needs.build.outputs.project_version }}"
-            if [[ -z "$PROJECT_VERSION" ]]; then
-              echo "ERROR: project_version must be set for push events"
-              exit 1
-            fi
-            echo "Using version from build (push event): $PROJECT_VERSION"
-          fi
-          echo "project_version=$PROJECT_VERSION" >> $GITHUB_OUTPUT
-
-  # Create GitHub Release
-  release:
-    needs: set-version
-    if: ${{ inputs.git_release == 'true' || github.event_name != 'workflow_dispatch' }}
-    uses: ./.github/workflows/3_release.yml
-    with:
-      project_version: ${{ needs.set-version.outputs.project_version }}
-    secrets: inherit
-
-  # Update Release Notes
   release-notes:
-    needs: [set-version, release]
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.release.outputs.release_exists == 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -98,5 +20,5 @@ jobs:
         uses: thevickypedia/update-release-notes@v2
         with:
           git_token: ${{ secrets.GIT_TOKEN }}
-          commit_message: "chore: Update release notes for v${{ needs.set-version.outputs.project_version }}"
+          commit_message: "chore: Update release notes for v${{ inputs.project_version }}"
           filename: release_notes.md

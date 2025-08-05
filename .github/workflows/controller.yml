@@ -1,0 +1,60 @@
+name: Workflow Controller
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/Info.plist"
+
+jobs:
+  # 1. Test iOS build
+  test:
+    uses: ./.github/workflows/1_test.yml
+    secrets: inherit
+
+  # 2. Build iOS project
+  # Outputs the project version for use in subsequent jobs
+  build:
+    needs: test
+    uses: ./.github/workflows/2_build.yml
+    secrets: inherit
+
+  # Set and validate project version
+  set-version:
+    runs-on: ubuntu-latest
+    needs: build
+    outputs:
+      project_version: ${{ steps.set-version.outputs.project_version }}
+    steps:
+      - name: Determine project version
+        id: set-version
+        run: |
+          echo "Resolving project version..."
+          PROJECT_VERSION="${{ needs.build.outputs.project_version }}"
+          if [[ -z "$PROJECT_VERSION" ]]; then
+            echo "ERROR: project_version must be set for push events"
+            exit 1
+          fi
+          echo "project_version=$PROJECT_VERSION" >> $GITHUB_OUTPUT
+
+  # Create GitHub Release
+  # Outputs whether the release already exists
+  release:
+    needs: set-version
+    uses: ./.github/workflows/3_release.yml
+    with:
+      project_version: ${{ needs.set-version.outputs.project_version }}
+    secrets: inherit
+
+  # Update Release Notes
+  release-notes:
+    needs:
+      - set-version
+      - release
+    if: ${{ needs.release.outputs.release_exists == 'false' }}
+    uses: ./.github/workflows/4_notes.yml
+    with:
+      project_version: ${{ needs.set-version.outputs.project_version }}
+    secrets: inherit
