@@ -119,6 +119,7 @@ struct FileDetailView: View {
         let fileInfo = getFileInfo(metadata: metadata, file: file, auth: auth)
 
         fileContentView
+            .id(file.path)
         .navigationTitle(file.name)
         .toolbar {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -229,8 +230,9 @@ struct FileDetailView: View {
     }
 
     func checkContentAndReload(fileName: String) {
-        if content == nil,
-           cacheExtensions.contains(where: fileName.hasSuffix),
+        content = nil
+        error = nil
+        if cacheExtensions.contains(where: fileName.hasSuffix),
            let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
             self.content = cached
         } else {
@@ -257,14 +259,13 @@ struct FileDetailView: View {
     ) {
         content = nil
         error = nil
-        if !extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix)
-            && (extensionTypes.previewExtensions.contains(where: fileName.hasSuffix)) {
+        if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
             // ✅ Only load if preview is supported
             downloadFile(
                 fileName: fileName,
                 extensionTypes: extensionTypes
             )
-        } else {
+        } else if !extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
             Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
         }
         fetchMetadata()
