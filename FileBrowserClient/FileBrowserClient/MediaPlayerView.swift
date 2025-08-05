@@ -13,27 +13,37 @@ struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
     let token: String
-    @State private var player: AVPlayer
-
-    init(file: FileItem, serverURL: String, token: String) {
-        self.file = file
-        self.token = token
-        self.serverURL = serverURL
-        let path = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        let url = URL(string: "\(serverURL)/api/raw/\(removePrefix(urlPath: path))?auth=\(token)")!
-        self._player = State(initialValue: AVPlayer(url: url))
-    }
+    @State private var player: AVPlayer? = nil
 
     var body: some View {
-        VideoPlayer(player: player)
-            .navigationTitle(file.name)
-            .onAppear {
-                // Keep player paused until played manually
-                player.pause()
+        Group {
+            if let player = player {
+                VideoPlayer(player: player)
+            } else {
+                ProgressView("Loading video...")
             }
-            .onDisappear {
-                player.pause()
-                player.replaceCurrentItem(with: nil)
+        }
+        .onAppear {
+            if player == nil {
+                let path = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+                if let url = URL(string: "\(serverURL)/api/raw/\(removePrefix(urlPath: path))?auth=\(token)") {
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        let asset = AVURLAsset(url: url)
+                        let item = AVPlayerItem(asset: asset)
+                        let loadedPlayer = AVPlayer(playerItem: item)
+                        DispatchQueue.main.async {
+                            self.player = loadedPlayer
+                            loadedPlayer.pause()
+                        }
+                    }
+                }
             }
+        }
+        .onDisappear {
+            player?.pause()
+            player?.replaceCurrentItem(with: nil)
+            player = nil
+        }
+        .navigationTitle(file.name)
     }
 }
