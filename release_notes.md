@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.12.1 (08/05/2025)
+--------------------
+- [67a1fca](https://github.com/thevickypedia/Filebrowser-iOS/commit/67a1fca1fc8f2922a41dfb08b729b30834e40235) chore: Release ``v1.12.1``
+- [f091a9d](https://github.com/thevickypedia/Filebrowser-iOS/commit/f091a9dad099985d7dd05cce8dafa0fbd18b4744) refactor: Store login information in ``AppStorage``
+- [1dbf5dc](https://github.com/thevickypedia/Filebrowser-iOS/commit/1dbf5dc3b9c96f01f58191501f04b94b78bfd508) ci: Create a controller workflow for individual tasks
+- [9e37dad](https://github.com/thevickypedia/Filebrowser-iOS/commit/9e37dad0b3e71d77ce9707e68d09fbbe88b38142) chore: Update release notes for v1.12.0
+
 v1.12.0 (08/04/2025)
 --------------------
 - [6ec574a](https://github.com/thevickypedia/Filebrowser-iOS/commit/6ec574a48835527631e06068ee29d33bfa734c7c) chore: Release ``v1.12.0``
