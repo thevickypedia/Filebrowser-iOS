@@ -1,11 +1,6 @@
 name: 1. iOS Test
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "FileBrowserClient/FileBrowserClientTests/**"
   workflow_dispatch:
     inputs:
       iPhoneVersion:
