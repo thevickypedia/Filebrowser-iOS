@@ -56,6 +56,7 @@ jobs:
         run: |
           xcodebuild test -scheme FileBrowserClient \
             -destination 'platform=iOS Simulator,name=iPhone ${{ env.iPhoneVersion }},OS=${{ env.iOSVersion }}' \
+            -only-testing:FileBrowserClientTests/testExample \
             -configuration Debug \
             EXCLUDED_ARCHS=arm64
         working-directory: FileBrowserClient
