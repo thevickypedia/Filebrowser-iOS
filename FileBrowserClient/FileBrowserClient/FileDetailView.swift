@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 7/7/25.
 //
 
-
 import SwiftUI
 
 struct ResourceMetadata: Codable {
@@ -44,14 +43,14 @@ struct FileDetailView: View {
     let cacheExtensions: [String]
     let animateGIF: Bool
 
-    @State private var content: Data? = nil
-    @State private var error: String? = nil
-    @State private var metadata: ResourceMetadata? = nil
+    @State private var content: Data?
+    @State private var error: String?
+    @State private var metadata: ResourceMetadata?
     @State private var showInfo = false
     @State private var isRenaming = false
     @State private var newName = ""
     @State private var showingDeleteConfirm = false
-    @State private var downloadMessage: String? = nil
+    @State private var downloadMessage: String?
     @State private var isDownloading = false
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var auth: AuthManager
@@ -300,7 +299,7 @@ struct FileDetailView: View {
         request.httpMethod = "PATCH"  // ✅ Required by server
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     self.error = "Rename failed: \(error.localizedDescription)"

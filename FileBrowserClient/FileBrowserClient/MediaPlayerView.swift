@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 7/12/25.
 //
 
-
 import SwiftUI
 import AVKit
 
@@ -13,7 +12,7 @@ struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
     let token: String
-    @State private var player: AVPlayer? = nil
+    @State private var player: AVPlayer?
     @State private var isVisible = false
 
     var body: some View {

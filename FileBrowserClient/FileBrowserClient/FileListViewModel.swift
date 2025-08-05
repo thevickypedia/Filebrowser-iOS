@@ -5,13 +5,12 @@
 //  Created by Vignesh Rao on 7/7/25.
 //
 
-
 import Foundation
 import SwiftUI
 
 class FileListViewModel: ObservableObject {
     @Published var files: [FileItem] = []
-    @Published var errorMessage: String? = nil
+    @Published var errorMessage: String?
     @Published var isLoading: Bool = false
 
     var token: String?
@@ -58,7 +57,7 @@ class FileListViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
                 self.isLoading = false
 

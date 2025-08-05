@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 7/6/25.
 //
 
-
 import Foundation
 
 struct UserPermission: Codable {
@@ -20,11 +19,11 @@ struct UserPermission: Codable {
 }
 
 class AuthManager: ObservableObject {
-    @Published var token: String? = nil
-    @Published var serverURL: String? = nil
-    @Published var permissions: UserPermission? = nil
-    @Published var username: String? = nil
-    @Published var userAccount: UserAccount? = nil
+    @Published var token: String?
+    @Published var serverURL: String?
+    @Published var permissions: UserPermission?
+    @Published var username: String?
+    @Published var userAccount: UserAccount?
 
     var isAuthenticated: Bool {
         return token != nil && serverURL != nil

@@ -31,7 +31,7 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @State private var isLoggedIn = false
     @State private var showLogoutMessage = false
-    @State private var statusMessage: String? = nil
+    @State private var statusMessage: String?
     @EnvironmentObject var themeManager: ThemeManager
 
     @StateObject private var fileListViewModel = FileListViewModel()

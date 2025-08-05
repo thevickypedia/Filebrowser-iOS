@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 7/29/25.
 //
 
-
 import SwiftUI
 
 enum ValidationError: Error {
@@ -35,13 +34,13 @@ func timeAgoString(from diff: [String: Double]) -> String {
     let hours = Int(diff["hours"] ?? 0)
     let days = Int(diff["days"] ?? 0)
     let weeks = Int(diff["weeks"] ?? 0)
-    //let months = Int(diff["months"] ?? 0)
-    //let years = Int(diff["years"] ?? 0)
+    // let months = Int(diff["months"] ?? 0)
+    // let years = Int(diff["years"] ?? 0)
 
     switch true {
-    //case years >= 1:
+    // case years >= 1:
     //    return "\(years) year\(years == 1 ? "" : "s") ago"
-    //case months >= 1:
+    // case months >= 1:
     //    return "\(months) month\(months == 1 ? "" : "s") ago"
     case weeks >= 1:
         return "\(weeks) week\(weeks == 1 ? "" : "s") ago"
@@ -128,23 +127,23 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
 
 func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String? {
     // 📄 Text & Code
-    if fileName.hasSuffix(".txt")          { return "doc.text" }
-    if fileName.hasSuffix(".md")           { return "text.alignleft" }
-    if fileName.hasSuffix(".csv")          { return "tablecells" }
-    if fileName.hasSuffix(".json")         { return "curlybraces" }
-    if fileName.hasSuffix(".xml")          { return "chevron.left.slash.chevron.right" }
+    if fileName.hasSuffix(".txt") { return "doc.text" }
+    if fileName.hasSuffix(".md") { return "text.alignleft" }
+    if fileName.hasSuffix(".csv") { return "tablecells" }
+    if fileName.hasSuffix(".json") { return "curlybraces" }
+    if fileName.hasSuffix(".xml") { return "chevron.left.slash.chevron.right" }
     if fileName.hasSuffix(".html") || fileName.hasSuffix(".htm") {
         return "globe"
     }
     if fileName.hasSuffix(".js") || fileName.hasSuffix(".ts") {
         return "curlybraces.square"
     }
-    if fileName.hasSuffix(".swift")        { return "swift" }
-    if fileName.hasSuffix(".py")           { return "chevron.left.slash.chevron.right" }
-    if fileName.hasSuffix(".sh")           { return "terminal" }
+    if fileName.hasSuffix(".swift") { return "swift" }
+    if fileName.hasSuffix(".py") { return "chevron.left.slash.chevron.right" }
+    if fileName.hasSuffix(".sh") { return "terminal" }
 
     // 📚 Documents
-    if fileName.hasSuffix(".pdf")          { return "doc.richtext" }
+    if fileName.hasSuffix(".pdf") { return "doc.richtext" }
     if fileName.hasSuffix(".doc") || fileName.hasSuffix(".docx") {
         return "doc.plaintext"
     }
@@ -174,7 +173,7 @@ func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String?
     if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
         return "photo"
     }
-    if fileName.hasSuffix(".svg")          { return "scribble" }
+    if fileName.hasSuffix(".svg") { return "scribble" }
 
     // 🔐 Certs & Keys
     if fileName.hasSuffix(".pem") || fileName.hasSuffix(".crt") || fileName.hasSuffix(".key") {
@@ -182,9 +181,9 @@ func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String?
     }
 
     // 🧪 Misc
-    if fileName.hasSuffix(".log")          { return "doc.append" }
-    if fileName.hasSuffix(".conf")         { return "gearshape" }
-    if fileName.hasSuffix(".env")          { return "leaf" }
+    if fileName.hasSuffix(".log") { return "doc.append" }
+    if fileName.hasSuffix(".conf") { return "gearshape" }
+    if fileName.hasSuffix(".env") { return "leaf" }
 
     return nil
 }

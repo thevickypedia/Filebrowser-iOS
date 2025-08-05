@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 7/29/25.
 //
 
-
 import UIKit
 
 class FileCache {
@@ -41,7 +40,7 @@ class FileCache {
     func data(for path: String, modified: String?, fileID: String?) -> Data? {
         let key = cacheKey(for: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
-        var result: Data? = nil
+        var result: Data?
         DispatchQueue.global(qos: .utility).sync {
             result = try? Data(contentsOf: diskPath)
             if result != nil {

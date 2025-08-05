@@ -11,7 +11,7 @@ import SwiftUI
 struct FileBrowserClientApp: App {
     @StateObject private var authManager = AuthManager()
     @StateObject private var themeManager = ThemeManager()
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()

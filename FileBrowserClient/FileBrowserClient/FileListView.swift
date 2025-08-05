@@ -42,7 +42,7 @@ struct FileListView: View {
     @State private var showPhotoPicker = false
     @State private var isUploadCancelled = false
 
-    @State private var usageInfo: (used: Int64, total: Int64)? = nil
+    @State private var usageInfo: (used: Int64, total: Int64)?
     @State private var fileCacheSize: Int64 = 0
 
     @State private var sortOption: SortOption = .nameAsc
@@ -117,10 +117,8 @@ struct FileListView: View {
                                 NavigationLink(destination: detailView(for: file)) {
                                     let fileName = file.name.lowercased()
                                     HStack {
-                                        if (
-                                            advancedSettings.cacheThumbnail &&
-                                            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix)
-                                        ) {
+                                        if advancedSettings.cacheThumbnail &&
+                                            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
                                             RemoteThumbnail(
                                                 file: file,
                                                 serverURL: auth.serverURL ?? "",
@@ -174,7 +172,7 @@ struct FileListView: View {
 
             // Center: Home button
             ToolbarItem(placement: .principal) {
-                Button(action: { 
+                Button(action: {
                     pathStack = []
                     viewModel.fetchFiles(at: "/")
                     Log.info("🔙 Dismissing to root directory")
@@ -458,7 +456,7 @@ struct FileListView: View {
         request.setValue("0", forHTTPHeaderField: "Content-Length")
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { _, response, error in
+        URLSession.shared.dataTask(with: request) { _, _, error in
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ POST failed: \(error.localizedDescription)")
@@ -626,7 +624,7 @@ struct FileListView: View {
             }
             completion(data, response, error)
         }
-        
+
         task.resume()
         return task
     }
@@ -679,7 +677,7 @@ struct FileListView: View {
 
         request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { data, response, _ in
             DispatchQueue.main.async {
                 let body = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
