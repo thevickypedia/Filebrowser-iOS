@@ -41,20 +41,23 @@ class FileCache {
     func data(for path: String, modified: String?, fileID: String?) -> Data? {
         let key = cacheKey(for: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
-        // return try? Data(contentsOf: diskPath)
-        if let data = try? Data(contentsOf: diskPath) {
-            Log.debug("Cache retrieved: \(diskPath)")
-            return data
+        var result: Data? = nil
+        DispatchQueue.global(qos: .utility).sync {
+            result = try? Data(contentsOf: diskPath)
+            if result != nil {
+                Log.debug("Cache retrieved: \(diskPath)")
+            }
         }
-        return nil
+        return result
     }
 
     func store(data: Data, for path: String, modified: String?, fileID: String?) {
         let key = cacheKey(for: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
-        // try? data.write(to: diskPath)
-        if let _ = try? data.write(to: diskPath) {
-            Log.debug("Cache stored: \(diskPath)")
+        DispatchQueue.global(qos: .utility).async {
+            if let _ = try? data.write(to: diskPath) {
+                Log.debug("Cache stored: \(diskPath)")
+            }
         }
     }
 
