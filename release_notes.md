@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.12.3 (08/05/2025)
+--------------------
+- [2876c36](https://github.com/thevickypedia/Filebrowser-iOS/commit/2876c36626a3ed088535e60bb36e8c5d11957b22) chore: Release ``v1.12.3``
+- [a09cf4d](https://github.com/thevickypedia/Filebrowser-iOS/commit/a09cf4d3a7f32f2b18cff7a8d7b0b4d84d37a6bb) perf: Fetch user account and user permissions in the background
+- [403f48d](https://github.com/thevickypedia/Filebrowser-iOS/commit/403f48df6eafe0c708e0e670e2be47e064ed3e59) chore: Update release notes for v1.12.2
+
 v1.12.2 (08/05/2025)
 --------------------
 - [69eb728](https://github.com/thevickypedia/Filebrowser-iOS/commit/69eb728a19d85606e514fc3c03a21a1166d9f8cd) chore: Release ``v1.12.2``
