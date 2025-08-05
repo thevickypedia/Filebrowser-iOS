@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.12.5 (08/05/2025)
+--------------------
+- [3c62e34](https://github.com/thevickypedia/Filebrowser-iOS/commit/3c62e34ab7f3b12cacd3c1b1ed757361b6b47fa4) chore: Release ``v1.12.5``
+- [7dfcaf6](https://github.com/thevickypedia/Filebrowser-iOS/commit/7dfcaf6310bdc85e901560579c0625d8e0786c61) style: Set navigation title in media player to be inline
+- [89c4c26](https://github.com/thevickypedia/Filebrowser-iOS/commit/89c4c26f472c57efe5ddbd825d6fdba1f09bab8f) perf: Conditionally load ``AVPlayer`` only when visible
+- [627ea4d](https://github.com/thevickypedia/Filebrowser-iOS/commit/627ea4d79dcade46029895c70e9a409d3b429276) chore: Update release notes for v1.12.4
+
 v1.12.4 (08/05/2025)
 --------------------
 - [e4c757b](https://github.com/thevickypedia/Filebrowser-iOS/commit/e4c757be4b0b6953d2ee3744ad8e27188396cbd7) chore: Release ``v1.12.4``
