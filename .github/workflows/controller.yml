@@ -14,12 +14,13 @@ jobs:
     uses: ./.github/workflows/1_lint.yml
     secrets: inherit
 
-  # 1. Test iOS build
+  # 2. Test iOS build
   test:
+    needs: lint
     uses: ./.github/workflows/2_test.yml
     secrets: inherit
 
-  # 2. Build iOS project
+  # 3. Build iOS project
   # Outputs the project version for use in subsequent jobs
   build:
     needs: test
@@ -44,7 +45,7 @@ jobs:
           fi
           echo "project_version=$PROJECT_VERSION" >> $GITHUB_OUTPUT
 
-  # Create GitHub Release
+  # 4. Create GitHub Release
   # Outputs whether the release already exists
   release:
     needs: set-version
@@ -53,7 +54,7 @@ jobs:
       project_version: ${{ needs.set-version.outputs.project_version }}
     secrets: inherit
 
-  # Update Release Notes
+  # 5. Update Release Notes
   release-notes:
     needs:
       - set-version
