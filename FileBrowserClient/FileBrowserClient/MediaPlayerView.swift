@@ -31,5 +31,9 @@ struct MediaPlayerView: View {
                 // Keep player paused until played manually
                 player.pause()
             }
+            .onDisappear {
+                player.pause()
+                player.replaceCurrentItem(with: nil)
+            }
     }
 }
