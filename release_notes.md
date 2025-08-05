@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.12.4 (08/05/2025)
+--------------------
+- [e4c757b](https://github.com/thevickypedia/Filebrowser-iOS/commit/e4c757be4b0b6953d2ee3744ad8e27188396cbd7) chore: Release ``v1.12.4``
+- [9bbe3d1](https://github.com/thevickypedia/Filebrowser-iOS/commit/9bbe3d15f244bb0624aa3abbb87f303b42d98537) perf: Lazy-load the ``AVPlayer`` asynchronously
+- [342f644](https://github.com/thevickypedia/Filebrowser-iOS/commit/342f64418a43bf0d1bcd9f92582ba093113c6bd4) perf: Ensure that when ``currentIndex`` updates to a new file SwiftUI sees it as a new view state
+- [2a181ad](https://github.com/thevickypedia/Filebrowser-iOS/commit/2a181adb035da996d41a14d038430cee0a1a0869) chore: Update release notes for v1.12.3
+
 v1.12.3 (08/05/2025)
 --------------------
 - [2876c36](https://github.com/thevickypedia/Filebrowser-iOS/commit/2876c36626a3ed088535e60bb36e8c5d11957b22) chore: Release ``v1.12.3``
