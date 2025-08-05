@@ -20,13 +20,16 @@ struct MediaPlayerView: View {
         Group {
             if let player = player {
                 VideoPlayer(player: player)
+                    .ignoresSafeArea() // ✅ Fullscreen under status/nav bar
             } else {
                 ProgressView("Loading video...")
             }
         }
         .onAppear {
             isVisible = true
-            if player == nil && isVisible { loadPlayer() }
+            if player == nil && isVisible {
+                loadPlayer()
+            }
         }
         .onDisappear {
             isVisible = false
@@ -35,6 +38,7 @@ struct MediaPlayerView: View {
             player = nil
         }
         .navigationTitle(file.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     func loadPlayer() {
