@@ -213,10 +213,7 @@ struct FileDetailView: View {
             }
             .padding()
         }
-        .onChange(of: currentIndex) { _ in
-            checkContentAndReload(fileName: fileName)
-        }
-        .onAppear {
+        .task(id: currentIndex) {
             checkContentAndReload(fileName: fileName)
         }
         .gesture(
