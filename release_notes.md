@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.13.0 (08/05/2025)
+--------------------
+- [7405aaf](https://github.com/thevickypedia/Filebrowser-iOS/commit/7405aafa6298ee85ffd743f98c8bec0a29bbcf0e) chore: Release ``v1.13.0``
+- [3d4f985](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d4f985e20acf8c0db3f618ac5919b1dcd8d69cf) feat: Add a new feature to upload from Photos application
+- [7f0e974](https://github.com/thevickypedia/Filebrowser-iOS/commit/7f0e974436b71f340887a3e630945e934f84a020) test: Avoid running full client UI test suite
+- [8a38b9e](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a38b9e214585e980f20a954f8528a564edfd4ec) chore: Update release notes for v1.12.6
+
 v1.12.6 (08/05/2025)
 --------------------
 - [31b1705](https://github.com/thevickypedia/Filebrowser-iOS/commit/31b17054833d92af02cf31206ecf1aede289230e) chore: Release ``v1.12.6``
