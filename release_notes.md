@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.13.2 (08/05/2025)
+--------------------
+- [4a86555](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a86555049c9b23a416eec849b6a5cbc570fdacd) chore: Release ``v1.13.2``
+- [538b72e](https://github.com/thevickypedia/Filebrowser-iOS/commit/538b72ea99fc54968b6794b2d36e53326bf2f71e) fix: Use source filename for photo/video uploads with fallback set to UUID
+- [1269b67](https://github.com/thevickypedia/Filebrowser-iOS/commit/1269b6789b37bd011983e7bcc87cc82d3c485757) chore: Update release notes for v1.13.1
+
 v1.13.1 (08/05/2025)
 --------------------
 - [568093c](https://github.com/thevickypedia/Filebrowser-iOS/commit/568093ccbc8604cafcea0b99e395a76bcdbf7a85) chore: Release ``v1.13.1``
