@@ -11,6 +11,7 @@
 		986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A662E39A78A0058E2C4 /* FileCache.swift */; };
 		986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A682E3A237D0058E2C4 /* ThemeManager.swift */; };
 		986F5A6B2E3AC0190058E2C4 /* AnimatedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */; };
+		986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A762E42BB130058E2C4 /* PhotoPicker.swift */; };
 		98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */; };
 		98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ED02E1AFADA004CBB11 /* ContentView.swift */; };
 		98823ED32E1AFADC004CBB11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 98823ED22E1AFADC004CBB11 /* Assets.xcassets */; };
@@ -52,6 +53,7 @@
 		986F5A662E39A78A0058E2C4 /* FileCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCache.swift; sourceTree = "<group>"; };
 		986F5A682E3A237D0058E2C4 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedImageView.swift; sourceTree = "<group>"; };
+		986F5A762E42BB130058E2C4 /* PhotoPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPicker.swift; sourceTree = "<group>"; };
 		98823ECB2E1AFADA004CBB11 /* FileBrowserClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FileBrowserClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientApp.swift; sourceTree = "<group>"; };
 		98823ED02E1AFADA004CBB11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -124,6 +126,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				986F5A762E42BB130058E2C4 /* PhotoPicker.swift */,
 				986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */,
 				986F5A682E3A237D0058E2C4 /* ThemeManager.swift */,
 				986F5A662E39A78A0058E2C4 /* FileCache.swift */,
@@ -313,6 +316,7 @@
 				F8BE8BBC2E379CF300967D18 /* ExtensionTypes.swift in Sources */,
 				F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
+				986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */,
 				F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */,
 				F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */,
 				986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */,

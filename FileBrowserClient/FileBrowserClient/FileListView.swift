@@ -39,6 +39,7 @@ struct FileListView: View {
     @State private var uploadProgress: Double = 0.0
     @State private var isUploading = false
     @State private var uploadTask: URLSessionUploadTask?
+    @State private var showPhotoPicker = false
     @State private var isUploadCancelled = false
 
     @State private var usageInfo: (used: Int64, total: Int64)? = nil
@@ -205,9 +206,14 @@ struct FileListView: View {
                             showingCreateFolderAlert = true
                         })
                     }
-                    Button("Upload File", systemImage: "square.and.arrow.up", action: {
-                        showFileImporter = true
-                    })
+                    Menu("Upload File", systemImage: "square.and.arrow.up") {
+                        Button("From Files", systemImage: "doc", action: {
+                            showFileImporter = true
+                        })
+                        Button("From Photos", systemImage: "photo", action: {
+                            showPhotoPicker = true
+                        })
+                    }
                     Button("Settings", systemImage: "gearshape", action: {
                         showingSettings = true
                     })
@@ -339,6 +345,15 @@ struct FileListView: View {
                 dateFormatExact = auth.userAccount?.dateFormat ?? false
                 fetchUsageInfo()
                 fetchClientStorageInfo()
+            }
+        }
+        .sheet(isPresented: $showPhotoPicker) {
+            PhotoPicker { data, filename in
+                if let url = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
+                    uploadQueue = [url]
+                    currentUploadIndex = 0
+                    uploadNextInQueue()
+                }
             }
         }
         .fileImporter(

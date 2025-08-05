@@ -79,4 +79,15 @@ class FileCache {
             try? fileManager.removeItem(at: url)
         }
     }
+
+    func writeTemporaryFile(data: Data, suggestedName: String) -> URL? {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(suggestedName)
+        do {
+            try data.write(to: tempURL)
+            return tempURL
+        } catch {
+            Log.error("❌ Failed to write temp file: \(error)")
+            return nil
+        }
+    }
 }
