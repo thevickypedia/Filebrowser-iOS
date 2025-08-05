@@ -45,13 +45,20 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
             for result in results {
                 let provider = result.itemProvider
+                let suggestedName = provider.suggestedName ?? "" // <-- get suggested name if available
 
                 if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
                     dispatchGroup.enter()
                     provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
                         defer { dispatchGroup.leave() }
-                        if let data = data,
-                           let url = FileCache.shared.writeTemporaryFile(data: data, suggestedName: "photo-\(UUID().uuidString).jpg") {
+
+                        guard let data = data else { return }
+
+                        let ext = (suggestedName as NSString).pathExtension.isEmpty ? "jpg" : (suggestedName as NSString).pathExtension
+                        let base = (suggestedName as NSString).deletingPathExtension
+                        let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
+
+                        if let url = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
                             tempURLs.append(url)
                         }
                     }
@@ -59,11 +66,17 @@ struct PhotoPicker: UIViewControllerRepresentable {
                     dispatchGroup.enter()
                     provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
                         defer { dispatchGroup.leave() }
+
                         guard let url = url,
-                              let data = try? Data(contentsOf: url),
-                              let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: "video-\(UUID().uuidString).mov")
-                        else { return }
-                        tempURLs.append(temp)
+                              let data = try? Data(contentsOf: url) else { return }
+
+                        let ext = (suggestedName as NSString).pathExtension.isEmpty ? "mov" : (suggestedName as NSString).pathExtension
+                        let base = (suggestedName as NSString).deletingPathExtension
+                        let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
+
+                        if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
+                            tempURLs.append(temp)
+                        }
                     }
                 }
             }
