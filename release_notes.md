@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.12.6 (08/05/2025)
+--------------------
+- [31b1705](https://github.com/thevickypedia/Filebrowser-iOS/commit/31b17054833d92af02cf31206ecf1aede289230e) chore: Release ``v1.12.6``
+- [c5e9290](https://github.com/thevickypedia/Filebrowser-iOS/commit/c5e929068d7263bb520d77caf4817fd7adcdf921) ci: Remove on push triggers for individual build and test
+- [2b02078](https://github.com/thevickypedia/Filebrowser-iOS/commit/2b0207845547482656dee2064e14b1f53052f972) chore: Change hyperlink for version to releases page
+- [9f3178b](https://github.com/thevickypedia/Filebrowser-iOS/commit/9f3178b8356f0ab31d34d87b7bd96ffb1aa3f679) style: Set theme button to be dynamic based on system scheme
+- [d495769](https://github.com/thevickypedia/Filebrowser-iOS/commit/d495769c9e806c2a985e8cd61a6d381a37dbe84e) chore: Update release notes for v1.12.5
+
 v1.12.5 (08/05/2025)
 --------------------
 - [3c62e34](https://github.com/thevickypedia/Filebrowser-iOS/commit/3c62e34ab7f3b12cacd3c1b1ed757361b6b47fa4) chore: Release ``v1.12.5``
