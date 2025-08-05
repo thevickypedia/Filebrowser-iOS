@@ -50,60 +50,46 @@ struct UserAccount: Codable {
 
 extension AuthManager {
 
-    func fetchUserAccount(for username: String, token: String, serverURL: String) {
+    func fetchUserAccount(for username: String, token: String, serverURL: String) async {
         guard let url = URL(string: "\(serverURL)/api/users") else { return }
 
         var request = URLRequest(url: url)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            guard let data = data, error == nil else {
-                Log.error("❌ Failed to fetch user list")
-                return
-            }
-
-            do {
-                let users = try JSONDecoder().decode([UserAccount].self, from: data)
-                if let current = users.first(where: { $0.username == username }) {
-                    DispatchQueue.main.async {
-                        self.userAccount = current
-                        Log.info("✅ Loaded user ID: \(current.id)")
-                    }
-                } else {
-                    Log.error("❌ User not found")
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let users = try JSONDecoder().decode([UserAccount].self, from: data)
+            if let current = users.first(where: { $0.username == username }) {
+                await MainActor.run {
+                    self.userAccount = current
+                    Log.info("✅ Loaded user ID: \(current.id)")
                 }
-            } catch {
-                Log.error("❌ Failed to decode user list: \(error)")
             }
-        }.resume()
+        } catch {
+            Log.error("❌ Failed to load user account: \(error)")
+        }
     }
 
-    func fetchPermissions(for username: String, token: String, serverURL: String) {
+    func fetchPermissions(for username: String, token: String, serverURL: String) async {
         guard let url = URL(string: "\(serverURL)/api/users") else { return }
 
         var request = URLRequest(url: url)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            guard let data = data, error == nil else {
-                Log.error("❌ Failed to fetch permissions: \(error?.localizedDescription ?? "Unknown error")")
-                return
-            }
-
-            do {
-                let users = try JSONDecoder().decode([UserAccount].self, from: data)
-                if let current = users.first(where: { $0.username == username }) {
-                    DispatchQueue.main.async {
-                        self.permissions = current.perm
-                        self.userAccount = current
-                        Log.debug("✅ Permissions + user loaded for \(username)")
-                    }
-                } else {
-                    Log.error("❌ User not found in /api/users")
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let users = try JSONDecoder().decode([UserAccount].self, from: data)
+            if let current = users.first(where: { $0.username == username }) {
+                await MainActor.run {
+                    self.permissions = current.perm
+                    self.userAccount = current
+                    Log.debug("✅ Permissions + user loaded for \(username)")
                 }
-            } catch {
-                Log.error("❌ JSON decode failed: \(error)")
+            } else {
+                Log.error("❌ User not found in /api/users")
             }
-        }.resume()
+        } catch {
+            Log.error("❌ Failed to fetch permissions: \(error)")
+        }
     }
 }
