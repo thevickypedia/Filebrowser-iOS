@@ -1,4 +1,4 @@
-name: 1. iOS Test
+name: 2. iOS Test
 
 on:
   workflow_dispatch:

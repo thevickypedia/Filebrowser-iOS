@@ -1,0 +1,27 @@
+name: 1. SwiftLint
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.swift"
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  lint:
+    name: Run SwiftLint
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: |
+          brew install swiftlint
+
+      - name: Run SwiftLint
+        run: |
+          swiftlint

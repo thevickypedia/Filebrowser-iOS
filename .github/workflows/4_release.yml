@@ -1,4 +1,4 @@
-name: 3. Create GitHub Release
+name: 4. Create GitHub Release
 
 on:
   workflow_dispatch:
