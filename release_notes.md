@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.13.1 (08/05/2025)
+--------------------
+- [568093c](https://github.com/thevickypedia/Filebrowser-iOS/commit/568093ccbc8604cafcea0b99e395a76bcdbf7a85) chore: Release ``v1.13.1``
+- [2a64fdd](https://github.com/thevickypedia/Filebrowser-iOS/commit/2a64fdd984df4d737796b40f48b3195e737e907b) feat: Allow uploading multiple photos/videos at a time
+- [2cbcf34](https://github.com/thevickypedia/Filebrowser-iOS/commit/2cbcf34d97eac829f6c1ae272a6d1d6035eb9db7) chore: Update release notes for v1.13.0
+
 v1.13.0 (08/05/2025)
 --------------------
 - [7405aaf](https://github.com/thevickypedia/Filebrowser-iOS/commit/7405aafa6298ee85ffd743f98c8bec0a29bbcf0e) chore: Release ``v1.13.0``
