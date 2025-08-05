@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.12.2 (08/05/2025)
+--------------------
+- [69eb728](https://github.com/thevickypedia/Filebrowser-iOS/commit/69eb728a19d85606e514fc3c03a21a1166d9f8cd) chore: Release ``v1.12.2``
+- [00db44a](https://github.com/thevickypedia/Filebrowser-iOS/commit/00db44aecac61a21c2aa2dcd0631b7b215c73c7e) perf: Store and retrieve cache data in the background with an async process
+- [02ecc03](https://github.com/thevickypedia/Filebrowser-iOS/commit/02ecc03179786f9594287041d9e18d882936c266) fix: Memory leak - stop on cleanup media player `onDisappear`
+- [c7b0924](https://github.com/thevickypedia/Filebrowser-iOS/commit/c7b0924cb6bb4f248954a040d71b9c11ed083f7c) perf: Replace `onChange` + `onAppear` combo with `taskID` to check and reload content
+- [243b135](https://github.com/thevickypedia/Filebrowser-iOS/commit/243b1359634404320b883c9c3da9d73359da3758) perf: Avoid sorting files every time the body recomputes
+- [37af164](https://github.com/thevickypedia/Filebrowser-iOS/commit/37af164c5762aad653a2bd7bade058e3a4c667bf) chore: Update release notes for v1.12.1
+
 v1.12.1 (08/05/2025)
 --------------------
 - [67a1fca](https://github.com/thevickypedia/Filebrowser-iOS/commit/67a1fca1fc8f2922a41dfb08b729b30834e40235) chore: Release ``v1.12.1``
