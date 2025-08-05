@@ -22,6 +22,22 @@ class FileListViewModel: ObservableObject {
         self.serverURL = serverURL
     }
 
+    func sortedFiles(by sortOption: SortOption) -> [FileItem] {
+        files.sorted { a, b in
+            if a.isDir && !b.isDir { return true }
+            if !a.isDir && b.isDir { return false }
+
+            switch sortOption {
+                case .nameAsc: return a.name.localizedStandardCompare(b.name) == .orderedAscending
+                case .nameDesc: return a.name.localizedStandardCompare(b.name) == .orderedDescending
+                case .sizeAsc: return (a.size ?? 0) < (b.size ?? 0)
+                case .sizeDesc: return (a.size ?? 0) > (b.size ?? 0)
+                case .modifiedAsc: return (a.modified ?? "") < (b.modified ?? "")
+                case .modifiedDesc: return (a.modified ?? "") > (b.modified ?? "")
+            }
+        }
+    }
+
     func fetchFiles(at path: String) {
         Log.debug("📡 Fetching files at path: \(path)")
         guard let token = token, let serverURL = serverURL else {

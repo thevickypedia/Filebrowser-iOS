@@ -90,23 +90,7 @@ struct FileListView: View {
                 } else if let error = viewModel.errorMessage {
                     Text("Error: \(error)").foregroundColor(.red)
                 } else {
-                    let sortedFiles = viewModel.files.sorted { a, b in
-                        if a.isDir && !b.isDir {
-                            return true
-                        } else if !a.isDir && b.isDir {
-                            return false
-                        }
-
-                        // Both are folders or both are files — apply sort option
-                        switch sortOption {
-                            case .nameAsc: return a.name.localizedStandardCompare(b.name) == .orderedAscending
-                            case .nameDesc: return a.name.localizedStandardCompare(b.name) == .orderedDescending
-                            case .sizeAsc: return (a.size ?? 0) < (b.size ?? 0)
-                            case .sizeDesc: return (a.size ?? 0) > (b.size ?? 0)
-                            case .modifiedAsc: return (a.modified ?? "") < (b.modified ?? "")
-                            case .modifiedDesc: return (a.modified ?? "") > (b.modified ?? "")
-                        }
-                    }
+                    let sortedFiles = viewModel.sortedFiles(by: sortOption)
                     ForEach(sortedFiles) { file in
                         if selectionMode {
                             HStack {
