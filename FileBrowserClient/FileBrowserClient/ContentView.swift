@@ -18,17 +18,18 @@ struct AdvancedSettings {
 }
 
 struct ContentView: View {
+    @AppStorage("serverURL") private var serverURL = ""
+    @AppStorage("username") private var username = ""
+    @AppStorage("password") private var password = ""
+    @AppStorage("rememberMe") private var rememberMe = false
+    @AppStorage("transitProtection") private var transitProtection = false
+
     @State private var pathStack: [String] = []
-    @State private var serverURL = ""
-    @State private var username = ""
-    @State private var password = ""
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var token: String?
     @EnvironmentObject var auth: AuthManager
     @State private var isLoggedIn = false
-    @State private var rememberMe = false
-    @State private var transitProtection = false
     @State private var showLogoutMessage = false
     @State private var statusMessage: String? = nil
     @EnvironmentObject var themeManager: ThemeManager
