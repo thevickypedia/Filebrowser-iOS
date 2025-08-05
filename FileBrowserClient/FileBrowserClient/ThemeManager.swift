@@ -9,5 +9,9 @@
 import SwiftUI
 
 class ThemeManager: ObservableObject {
-    @Published var colorScheme: ColorScheme? = nil // nil = system default
+    @Published var colorScheme: ColorScheme? = systemScheme()
+}
+
+func systemScheme() -> ColorScheme {
+    UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
 }
