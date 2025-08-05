@@ -175,10 +175,16 @@ struct ContentView: View {
 
             // Footer
             VStack(spacing: 2) {
-                Link(("Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown")"),
-                     destination: URL(string: "https://github.com/thevickypedia/Filebrowser-iOS")!)
-                    .font(.footnote)
-                    .foregroundColor(.blue)
+                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                   let url = URL(string: "https://github.com/thevickypedia/Filebrowser-iOS/releases/tag/v\(version)") {
+                    Link("Version: \(version)", destination: url)
+                        .font(.footnote)
+                        .foregroundColor(.blue)
+                } else {
+                    Link("Version: unknown", destination: URL(string: "https://github.com/thevickypedia/Filebrowser-iOS/releases")!)
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                }
                 Link("© 2025 Vignesh Rao", destination: URL(string: "https://vigneshrao.com")!)
                     .font(.footnote)
                     .foregroundColor(.blue)
