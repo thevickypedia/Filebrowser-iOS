@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.13.4 (08/06/2025)
+--------------------
+- [9bf7512](https://github.com/thevickypedia/Filebrowser-iOS/commit/9bf7512c60155120084c66f7770a2d5f9ae71faf) chore: Release ``v1.13.4``
+- [d5af71c](https://github.com/thevickypedia/Filebrowser-iOS/commit/d5af71cd01807792f3a64d680b2e52ef964fabea) style: Display only the relevant icons in selection mode
+- [72ab4b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/72ab4b9a9e2ba3a32ab2e41c926fc650e2aa4a6d) chore: Update release notes for v1.13.3
+
 v1.13.3 (08/06/2025)
 --------------------
 - [35f3b14](https://github.com/thevickypedia/Filebrowser-iOS/commit/35f3b14449b607040926c754fbf0c527cf9558f0) chore: Release ``v1.13.3``
