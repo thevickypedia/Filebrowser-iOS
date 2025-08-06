@@ -64,36 +64,28 @@ struct FileListView: View {
         ZStack(alignment: .bottomTrailing) {
             List {
                 if isUploading {
-                    VStack(alignment: .leading, spacing: 12) {
-                        // 🗂️ Current File
-                        HStack {
-                            Image(systemName: "doc")
-                            VStack(alignment: .leading) {
-                                Text("Uploading:")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                    VStack(alignment: .leading, spacing: 16) {
+
+                        // 🗂️ File Info
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "doc.fill")
+                                .foregroundColor(.blue)
+                                .font(.title2)
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(currentUploadFile ?? "Unknown")
-                                    .font(.body)
-                            }
-                        }
-
-                        // 📦 File Size
-                        HStack {
-                            Image(systemName: "externaldrive")
-                            VStack(alignment: .leading) {
-                                Text("Size:")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                                    .font(.headline)
                                 Text(currentUploadFileSize ?? "0.0 MB")
-                                    .font(.body)
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
                             }
                         }
 
-                        // 🔄 Progress Count
-                        HStack {
+                        // 🔄 Queue
+                        HStack(spacing: 12) {
                             Image(systemName: "list.number")
-                            VStack(alignment: .leading) {
-                                Text("Queue:")
+                                .foregroundColor(.indigo)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Queue")
                                     .font(.caption)
                                     .foregroundColor(.gray)
                                 Text("\(currentUploadIndex + 1) of \(uploadQueue.count)")
@@ -102,10 +94,11 @@ struct FileListView: View {
                         }
 
                         // 🚀 Speed
-                        HStack {
+                        HStack(spacing: 12) {
                             Image(systemName: "speedometer")
-                            VStack(alignment: .leading) {
-                                Text("Speed:")
+                                .foregroundColor(.green)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Speed")
                                     .font(.caption)
                                     .foregroundColor(.gray)
                                 Text(String(format: "%.2f MB/s", currentUploadSpeed))
@@ -113,24 +106,28 @@ struct FileListView: View {
                             }
                         }
 
-                        // 📤 Chunk Rate
-                        HStack {
+                        // 📤 Chunk Size
+                        HStack(spacing: 12) {
                             Image(systemName: "square.stack.3d.up")
-                            VStack(alignment: .leading) {
-                                Text("Chunk:")
+                                .foregroundColor(.orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Chunk Size")
                                     .font(.caption)
                                     .foregroundColor(.gray)
                                 Text("\(advancedSettings.chunkSize) MB")
                                     .font(.body)
                             }
                         }
+
+                        // 📊 Progress Bar
                         ProgressView(value: uploadProgress)
                             .progressViewStyle(LinearProgressViewStyle())
-                            .padding()
+                            .padding(.top, 8)
                     }
                     .padding()
                     .background(.ultraThinMaterial)
                     .cornerRadius(12)
+                    .shadow(radius: 4)
                     Button(action: {
                         isUploadCancelled = true
                         uploadTask?.cancel()
