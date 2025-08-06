@@ -162,6 +162,8 @@ struct FileListView: View {
             .padding(.bottom, 30)
         }
         .navigationTitle(getNavigationTitle())
+        .navigationBarTitleDisplayMode(.large)
+        .navigationBarHidden(false)
         .toolbar {
             // Left: Refresh button
             ToolbarItem(placement: .navigationBarLeading) {
@@ -281,6 +283,7 @@ struct FileListView: View {
                 }
             }
         }
+        .id("filelist-\(path)-\(pathStack.count)")
         .alert("Create New File", isPresented: $showingCreateFileAlert) {
             TextField("Filename", text: $newResourceName)
             Button("Create", action: {
