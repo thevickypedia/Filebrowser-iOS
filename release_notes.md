@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.16.0 (08/06/2025)
+--------------------
+- [2b07c9f](https://github.com/thevickypedia/Filebrowser-iOS/commit/2b07c9fdf2f773a9f209ada594c11571e3ac751d) chore: Release ``v1.16.0``
+- [b89a0b7](https://github.com/thevickypedia/Filebrowser-iOS/commit/b89a0b7fa201f15ad567e971487c2a93900756f5) refactor: Move format bytes to utils
+- [f0b848c](https://github.com/thevickypedia/Filebrowser-iOS/commit/f0b848c6cbc0e93ee1546b4bfd3a3d86593f540a) refactor: Move alert modifiers into reusable view modifiers
+- [9da5ba1](https://github.com/thevickypedia/Filebrowser-iOS/commit/9da5ba1d42c50f9be70a1dea049e33a22e883ca9) style: Re-define the upload progress bar view
+- [42eeca0](https://github.com/thevickypedia/Filebrowser-iOS/commit/42eeca03c9f8045230233380cd72f6b60f77d182) style: Change display styling for upload progress
+- [c8a052d](https://github.com/thevickypedia/Filebrowser-iOS/commit/c8a052dd113e83e62f4e19b916b0d70bbc607c83) style: Display current upload file's name and size in progress bar
+- [fb2ce13](https://github.com/thevickypedia/Filebrowser-iOS/commit/fb2ce138256c4cf16897aa189c318633e8712f74) style: Show sorting icon only when directory contains more than one file
+- [0cf0801](https://github.com/thevickypedia/Filebrowser-iOS/commit/0cf08016bb809969ab491c791d02829af1d5aae7) fix: Move upload start time to function var to avoid race condition during multi file uploads
+- [557a39a](https://github.com/thevickypedia/Filebrowser-iOS/commit/557a39abbac6943cc7f612682abe6eda602b95df) feat: Display current upload speed
+- [72d2dfb](https://github.com/thevickypedia/Filebrowser-iOS/commit/72d2dfb4e01697b88e38347ea1ad946cee29bd19) chore: Update release notes for v1.15.2
+
 v1.15.2 (08/06/2025)
 --------------------
 - [18c4ef1](https://github.com/thevickypedia/Filebrowser-iOS/commit/18c4ef1c097b81900ea5fcda3249f1b20a894e5d) chore: Release ``v1.15.2``
