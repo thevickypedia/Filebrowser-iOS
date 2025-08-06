@@ -22,7 +22,7 @@ struct AdvancedSettings {
 struct ContentView: View {
     @AppStorage("serverURL") private var serverURL = ""
     @AppStorage("username") private var username = ""
-    @AppStorage("password") private var password = ""
+    @State private var password = ""
     @AppStorage("rememberMe") private var rememberMe = false
     @AppStorage("transitProtection") private var transitProtection = false
 
