@@ -193,17 +193,19 @@ struct FileListView: View {
             // Right: Create and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if !selectionMode {
-                    Menu {
-                        Picker("Sort by", selection: $sortOption) {
-                            Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
-                            Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
-                            Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
-                            Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
-                            Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
-                            Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
+                    if viewModel.files.count > 1 {
+                        Menu {
+                            Picker("Sort by", selection: $sortOption) {
+                                Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
+                                Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
+                                Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
+                                Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
+                                Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
+                                Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.arrow.down.square")
                         }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down.square")
                     }
                     Menu {
                         if auth.permissions?.create == true {
