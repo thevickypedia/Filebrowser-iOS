@@ -11,7 +11,8 @@ struct RemoteThumbnail: View {
     let file: FileItem
     let serverURL: String
     let token: String
-    let animateGIF: Bool
+    let advancedSettings: AdvancedSettings
+    let extensionTypes: ExtensionTypes
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -19,7 +20,7 @@ struct RemoteThumbnail: View {
 
     var body: some View {
         Group {
-            if let gifData = gifData, animateGIF {
+            if let gifData = gifData, advancedSettings.animateGIF {
                 AnimatedImageView(data: gifData)
                     .frame(width: 32, height: 32)
             } else if let image = image {
@@ -57,25 +58,28 @@ struct RemoteThumbnail: View {
 
         let fileName = file.name.lowercased()
         let isGIF = fileName.hasSuffix(".gif")
-        let existingCache = FileCache.shared.data(
-            for: file.path,
-            modified: file.modified,
-            fileID: "thumb"
-        )
 
-        // Step 1: Load from memory or disk
-        if isGIF {
-            if let cached = existingCache {
-                self.gifData = cached
-                isLoading = false
-                return
-            }
-        } else {
-            if let cached = existingCache,
-               let image = UIImage(data: cached) {
-                self.image = image
-                isLoading = false
-                return
+        if advancedSettings.cacheThumbnail {
+            let existingCache = FileCache.shared.data(
+                for: file.path,
+                modified: file.modified,
+                fileID: "thumb"
+            )
+            
+            // Step 1: Load from memory or disk
+            if isGIF {
+                if let cached = existingCache {
+                    self.gifData = cached
+                    isLoading = false
+                    return
+                }
+            } else {
+                if let cached = existingCache,
+                   let image = UIImage(data: cached) {
+                    self.image = image
+                    isLoading = false
+                    return
+                }
             }
         }
 
@@ -93,12 +97,14 @@ struct RemoteThumbnail: View {
                     self.image = defaultThumbnail(fileName: fileName)
                     return
                 }
-                FileCache.shared.store(
-                    data: data,
-                    for: file.path,
-                    modified: file.modified,
-                    fileID: "thumb"
-                )
+                if advancedSettings.cacheThumbnail {
+                    FileCache.shared.store(
+                        data: data,
+                        for: file.path,
+                        modified: file.modified,
+                        fileID: "thumb"
+                    )
+                }
                 if isGIF {
                     self.gifData = data
                 } else if let image = UIImage(data: data) {

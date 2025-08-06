@@ -56,9 +56,10 @@ struct FileListView: View {
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
     let logoutHandler: () -> Void
-    let extensionTypes: ExtensionTypes
 
+    let extensionTypes: ExtensionTypes
     let advancedSettings: AdvancedSettings
+    let cacheExtensions: [String]
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -174,14 +175,15 @@ struct FileListView: View {
                                 NavigationLink(destination: detailView(for: file)) {
                                     let fileName = file.name.lowercased()
                                     HStack {
-                                        if advancedSettings.cacheThumbnail &&
-                                            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+                                        if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
                                             RemoteThumbnail(
                                                 file: file,
                                                 serverURL: auth.serverURL ?? "",
                                                 token: auth.token ?? "",
-                                                animateGIF: advancedSettings.animateGIF
-                                            ).id(UUID().uuidString)
+                                                advancedSettings: advancedSettings,
+                                                extensionTypes: extensionTypes
+                                            )
+                                            .id(UUID().uuidString)
                                         } else {
                                             Image(
                                                 systemName: systemIcon(

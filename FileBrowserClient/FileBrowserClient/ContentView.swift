@@ -48,6 +48,16 @@ struct ContentView: View {
     @State private var chunkSizeText: String = "1"
 
     var body: some View {
+        let extensionTypes = ExtensionTypes()
+        let advancedSettings = AdvancedSettings(
+            cacheImage: cacheImage,
+            cachePDF: cachePDF,
+            cacheText: cacheText,
+            cacheThumbnail: cacheThumbnail,
+            animateGIF: animateGIF,
+            chunkSize: chunkSize
+        )
+        let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
         NavigationStack(path: $pathStack) {
             Group {
                 if isLoggedIn {
@@ -56,15 +66,9 @@ struct ContentView: View {
                         isLoggedIn: $isLoggedIn,
                         pathStack: $pathStack,
                         logoutHandler: handleLogout,
-                        extensionTypes: ExtensionTypes(),
-                        advancedSettings: AdvancedSettings(
-                            cacheImage: cacheImage,
-                            cachePDF: cachePDF,
-                            cacheText: cacheText,
-                            cacheThumbnail: cacheThumbnail,
-                            animateGIF: animateGIF,
-                            chunkSize: chunkSize
-                        )
+                        extensionTypes: extensionTypes,
+                        advancedSettings: advancedSettings,
+                        cacheExtensions: cacheExtensions
                     )
                     .environmentObject(fileListViewModel)
                 } else {
@@ -77,15 +81,9 @@ struct ContentView: View {
                     isLoggedIn: $isLoggedIn,
                     pathStack: $pathStack,
                     logoutHandler: handleLogout,
-                    extensionTypes: ExtensionTypes(),
-                    advancedSettings: AdvancedSettings(
-                        cacheImage: cacheImage,
-                        cachePDF: cachePDF,
-                        cacheText: cacheText,
-                        cacheThumbnail: cacheThumbnail,
-                        animateGIF: animateGIF,
-                        chunkSize: chunkSize
-                    )
+                    extensionTypes: extensionTypes,
+                    advancedSettings: advancedSettings,
+                    cacheExtensions: cacheExtensions
                 )
                 .environmentObject(fileListViewModel)
             }
