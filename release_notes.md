@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.16.1 (08/06/2025)
+--------------------
+- [446a4bb](https://github.com/thevickypedia/Filebrowser-iOS/commit/446a4bb21823c00880902b3d52519b60fdc04657) chore: Release ``v1.16.1``
+- [e5942b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/e5942b9ffcf0fa86bc5c9538e9b4d4960021f427) style: Include a new toggle button to enable/disable thumbnails
+- [c7b762c](https://github.com/thevickypedia/Filebrowser-iOS/commit/c7b762cad7ab8eeddb50a0775209f55442f53bc2) fix: Fix disabling thumbnail cache automatically disabling thumbnails
+- [7c74c9a](https://github.com/thevickypedia/Filebrowser-iOS/commit/7c74c9a3ab5aa475d22dce025155e90df7aa2576) chore: Update release notes for v1.16.0
+
 v1.16.0 (08/06/2025)
 --------------------
 - [2b07c9f](https://github.com/thevickypedia/Filebrowser-iOS/commit/2b07c9fdf2f773a9f209ada594c11571e3ac751d) chore: Release ``v1.16.0``
