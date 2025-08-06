@@ -41,6 +41,8 @@ struct FileListView: View {
     @State private var uploadTask: URLSessionUploadTask?
     @State private var showPhotoPicker = false
     @State private var isUploadCancelled = false
+    @State private var uploadStartTime: Date = .now
+    @State private var currentUploadSpeed: Double = 0.0 // in MB/s
 
     @State private var usageInfo: (used: Int64, total: Int64)?
     @State private var fileCacheSize: Int64 = 0
@@ -63,6 +65,8 @@ struct FileListView: View {
                 if isUploading {
                     VStack {
                         Text("Uploading file \(currentUploadIndex + 1) of \(uploadQueue.count)...")
+                        Text(String(format: "Speed: %.2f MB/s", currentUploadSpeed))
+                        Text("Rate: \(advancedSettings.chunkSize) MB/chunk")
                         ProgressView(value: uploadProgress)
                             .progressViewStyle(LinearProgressViewStyle())
                             .padding()
@@ -570,6 +574,9 @@ struct FileListView: View {
         var currentOffset = offset
 
         func uploadNext() {
+            uploadStartTime = .now
+            let startOffset = currentOffset
+
             // 🔁 Cancel check
             if isUploadCancelled {
                 Log.info("⏹️ Upload cancelled by user.")
@@ -621,6 +628,11 @@ struct FileListView: View {
                     }
 
                     currentOffset += data.count
+                    let elapsed = Date().timeIntervalSince(uploadStartTime)
+                    let bytesSent = currentOffset - startOffset
+                    if elapsed > 0 {
+                        currentUploadSpeed = Double(bytesSent) / elapsed / 1_048_576 // Convert to MB/s
+                    }
                     uploadProgress = Double(currentOffset) / Double(fileSize)
                     Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
