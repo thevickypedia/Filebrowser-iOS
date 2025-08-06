@@ -21,7 +21,7 @@ struct MediaPlayerView: View {
                 VideoPlayer(player: player)
                     .ignoresSafeArea() // ✅ Fullscreen under status/nav bar
             } else {
-                ProgressView("Loading video...")
+                ProgressView("Loading media player...")
             }
         }
         .onAppear {
