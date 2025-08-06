@@ -172,54 +172,58 @@ struct FileListView: View {
 
             // Center: Home button
             ToolbarItem(placement: .principal) {
-                Button(action: {
-                    pathStack = []
-                    viewModel.fetchFiles(at: "/")
-                    Log.info("🔙 Dismissing to root directory")
-                 }) {
-                    Image(systemName: "house")
+                if !selectionMode {
+                    Button(action: {
+                        pathStack = []
+                        viewModel.fetchFiles(at: "/")
+                        Log.info("🔙 Dismissing to root directory")
+                    }) {
+                        Image(systemName: "house")
+                    }
                 }
             }
 
             // Right: Create and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Menu {
-                    Picker("Sort by", selection: $sortOption) {
-                        Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
-                        Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
-                        Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
-                        Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
-                        Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
-                        Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
+                if !selectionMode {
+                    Menu {
+                        Picker("Sort by", selection: $sortOption) {
+                            Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
+                            Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
+                            Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
+                            Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
+                            Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
+                            Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.arrow.down.square")
                     }
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down.square")
-                }
-                Menu {
-                    if auth.permissions?.create == true {
-                        Button("Create File", systemImage: "doc.badge.plus", action: {
-                            showingCreateFileAlert = true
+                    Menu {
+                        if auth.permissions?.create == true {
+                            Button("Create File", systemImage: "doc.badge.plus", action: {
+                                showingCreateFileAlert = true
+                            })
+                            Button("Create Folder", systemImage: "folder.badge.plus", action: {
+                                showingCreateFolderAlert = true
+                            })
+                        }
+                        Menu("Upload File", systemImage: "square.and.arrow.up") {
+                            Button("From Files", systemImage: "doc", action: {
+                                showFileImporter = true
+                            })
+                            Button("From Photos", systemImage: "photo", action: {
+                                showPhotoPicker = true
+                            })
+                        }
+                        Button("Settings", systemImage: "gearshape", action: {
+                            showingSettings = true
                         })
-                        Button("Create Folder", systemImage: "folder.badge.plus", action: {
-                            showingCreateFolderAlert = true
-                        })
+                    } label: {
+                        Label("Actions", systemImage: "person.circle")
+                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
                     }
-                    Menu("Upload File", systemImage: "square.and.arrow.up") {
-                        Button("From Files", systemImage: "doc", action: {
-                            showFileImporter = true
-                        })
-                        Button("From Photos", systemImage: "photo", action: {
-                            showPhotoPicker = true
-                        })
-                    }
-                    Button("Settings", systemImage: "gearshape", action: {
-                        showingSettings = true
-                    })
-                } label: {
-                    Label("Actions", systemImage: "person.circle")
-                        .padding()
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
                 }
             }
             ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -262,10 +266,10 @@ struct FileListView: View {
                     }
 
                 } else {
-                    Button(action: {
-                        selectionMode = true
-                    }) {
-                        Image(systemName: "checkmark.circle")
+                    if !viewModel.files.isEmpty {
+                        Button(action: { selectionMode = true }) {
+                            Image(systemName: "checkmark.circle")
+                        }
                     }
                 }
                 Button(action: {
