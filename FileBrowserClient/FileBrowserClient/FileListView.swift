@@ -500,7 +500,8 @@ struct FileListView: View {
     }
 
     func uploadFileInChunks(fileURL: URL, to uploadURL: URL, startingAt offset: Int) {
-        let chunkSize = 1 * 1024 * 1024 // 1MB
+        // todo: errors should be communicated back to the user instead of a stuck in progress screen
+        let chunkSize = advancedSettings.chunkSize * 1024 * 1024
         guard let fileHandle = try? FileHandle(forReadingFrom: fileURL) else {
             Log.error("❌ Cannot open file: \(fileURL.lastPathComponent)")
             return

@@ -15,6 +15,7 @@ struct AdvancedSettings {
     // Controlled with individual condition blocks
     let cacheThumbnail: Bool
     let animateGIF: Bool
+    let chunkSize: Int
 }
 
 struct ContentView: View {
@@ -42,8 +43,9 @@ struct ContentView: View {
     @AppStorage("cachePDF") private var cachePDF = true
     @AppStorage("cacheText") private var cacheText = true
     @AppStorage("cacheThumbnail") private var cacheThumbnail = true
-    // Default to false since GIF animation in SwiftUI can be resource-intensive
-    @AppStorage("animateGIF") private var animateGIF = false
+    @AppStorage("animateGIF") private var animateGIF = true
+    @AppStorage("chunkSize") private var chunkSize = 1
+    @State private var chunkSizeText: String = "1"
 
     var body: some View {
         NavigationStack(path: $pathStack) {
@@ -60,7 +62,8 @@ struct ContentView: View {
                             cachePDF: cachePDF,
                             cacheText: cacheText,
                             cacheThumbnail: cacheThumbnail,
-                            animateGIF: animateGIF
+                            animateGIF: animateGIF,
+                            chunkSize: chunkSize
                         )
                     )
                     .environmentObject(fileListViewModel)
@@ -80,7 +83,8 @@ struct ContentView: View {
                         cachePDF: cachePDF,
                         cacheText: cacheText,
                         cacheThumbnail: cacheThumbnail,
-                        animateGIF: animateGIF
+                        animateGIF: animateGIF,
+                        chunkSize: chunkSize
                     )
                 )
                 .environmentObject(fileListViewModel)
@@ -118,11 +122,26 @@ struct ContentView: View {
 
             Section {
                 DisclosureGroup("Advanced Settings", isExpanded: $showAdvancedOptions) {
+                    HStack {
+                        Text("Chunk Size (MB)")
+                        Spacer()
+                        Picker(selection: $chunkSize, label: Text("\(chunkSize)")) {
+                            ForEach([1, 5, 10, 20, 25, 50, 100], id: \.self) { size in
+                                Text("\(size)").tag(size)
+                            }
+                        }
+                        // WheelPickerStyle takes too much space
+                        .pickerStyle(MenuPickerStyle())
+                        .frame(width: 80)
+                    }
                     Toggle("Cache Images", isOn: $cacheImage)
                     Toggle("Cache PDFs", isOn: $cachePDF)
                     Toggle("Cache Text Files", isOn: $cacheText)
                     Toggle("Cache Thumbnails", isOn: $cacheThumbnail)
                     Toggle("Animate GIF Files", isOn: $animateGIF)
+                }
+                .onAppear {
+                    chunkSizeText = String(chunkSize)
                 }
             }
 
