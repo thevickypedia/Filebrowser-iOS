@@ -64,21 +64,73 @@ struct FileListView: View {
         ZStack(alignment: .bottomTrailing) {
             List {
                 if isUploading {
-                    VStack {
-                        Text("Uploading \(currentUploadFile ?? "Unknown") [\(currentUploadFileSize ?? "0.0 MB")]")
-                        Text("Processing \(currentUploadIndex + 1) of \(uploadQueue.count)")
-                        Text(String(format: "Speed: %.2f MB/s", currentUploadSpeed))
-                        Text("Rate: \(advancedSettings.chunkSize) MB/chunk")
+                    VStack(alignment: .leading, spacing: 12) {
+                        // 🗂️ Current File
+                        HStack {
+                            Image(systemName: "doc")
+                            VStack(alignment: .leading) {
+                                Text("Uploading:")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Text(currentUploadFile ?? "Unknown")
+                                    .font(.body)
+                            }
+                        }
+
+                        // 📦 File Size
+                        HStack {
+                            Image(systemName: "externaldrive")
+                            VStack(alignment: .leading) {
+                                Text("Size:")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Text(currentUploadFileSize ?? "0.0 MB")
+                                    .font(.body)
+                            }
+                        }
+
+                        // 🔄 Progress Count
+                        HStack {
+                            Image(systemName: "list.number")
+                            VStack(alignment: .leading) {
+                                Text("Queue:")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Text("\(currentUploadIndex + 1) of \(uploadQueue.count)")
+                                    .font(.body)
+                            }
+                        }
+
+                        // 🚀 Speed
+                        HStack {
+                            Image(systemName: "speedometer")
+                            VStack(alignment: .leading) {
+                                Text("Speed:")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Text(String(format: "%.2f MB/s", currentUploadSpeed))
+                                    .font(.body)
+                            }
+                        }
+
+                        // 📤 Chunk Rate
+                        HStack {
+                            Image(systemName: "square.stack.3d.up")
+                            VStack(alignment: .leading) {
+                                Text("Chunk:")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                Text("\(advancedSettings.chunkSize) MB")
+                                    .font(.body)
+                            }
+                        }
                         ProgressView(value: uploadProgress)
                             .progressViewStyle(LinearProgressViewStyle())
                             .padding()
                     }
-                    .frame(maxWidth: .infinity)
                     .padding()
                     .background(.ultraThinMaterial)
                     .cornerRadius(12)
-                    .padding(.bottom, 80)
-                    .transition(.opacity)
                     Button(action: {
                         isUploadCancelled = true
                         uploadTask?.cancel()
