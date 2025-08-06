@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.15.0 (08/06/2025)
+--------------------
+- [85e6301](https://github.com/thevickypedia/Filebrowser-iOS/commit/85e630118fe01809e47f04da2891f381512225fd) chore: Release ``v1.15.0``
+- [8b62f05](https://github.com/thevickypedia/Filebrowser-iOS/commit/8b62f0568e62e89d974bbe7489670d8344e5ee57) feat: Users are now notified about server/network errors
+- [2f29252](https://github.com/thevickypedia/Filebrowser-iOS/commit/2f292529e8ef61b8fb9140b60342d903d880750a) fix: Ensure navigation title is always displayed and current
+- [b0ed26a](https://github.com/thevickypedia/Filebrowser-iOS/commit/b0ed26a239c4da4037a5d0a00a7b87d8d007c5dc) fix: Missing or invalid navigation title in home page
+- [5f14207](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f142079a86dea8b667c0f71c5a5fb89d12ca955) fix: Clear navigation stack during logout
+- [cd8fed3](https://github.com/thevickypedia/Filebrowser-iOS/commit/cd8fed3d441f7b9bbb94b688339172635cadbaf6) chore: Update release notes for v1.14.0
+
 v1.14.0 (08/06/2025)
 --------------------
 - [aa44149](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa44149d1666d36d12906e08e7212a60be307a7c) chore: Release ``v1.14.0``
