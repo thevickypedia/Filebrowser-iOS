@@ -20,17 +20,59 @@ struct ErrorAlert: ViewModifier {
     }
 }
 
-// todo: Move all alerts here
-// struct CreateFileAlert: ViewModifier {
-//    @Binding var showingCreateFileAlert: Bool
-//    @Binding var newResourceName: String
-//    var createAction: () -> Void
-//
-//    func body(content: Content) -> some View {
-//        content.alert("Create New File", isPresented: $showingCreateFileAlert) {
-//            TextField("Filename", text: $newResourceName)
-//            Button("Create", action: createAction)
-//            Button("Cancel", role: .cancel) { }
-//        }
-//    }
-// }
+struct CreateFileAlert: ViewModifier {
+    @Binding var createFile: Bool
+    @Binding var fileName: String
+    var action: () -> Void
+
+    func body(content: Content) -> some View {
+        content.alert("Create New File", isPresented: $createFile) {
+            TextField("Filename", text: $fileName)
+            Button("Create", action: action)
+            Button("Cancel", role: .cancel) { }
+        }
+    }
+ }
+
+struct CreateFolderAlert: ViewModifier {
+    @Binding var createFolder: Bool
+    @Binding var folderName: String
+    var action: () -> Void
+
+    func body(content: Content) -> some View {
+        content.alert("Create New Folder", isPresented: $createFolder) {
+            TextField("Folder Name", text: $folderName)
+            Button("Create", action: action)
+            Button("Cancel", role: .cancel) { }
+        }
+    }
+ }
+
+struct DeleteConfirmAlert: ViewModifier {
+    @Binding var isPresented: Bool
+    var selectedCount: Int
+    var deleteAction: () -> Void
+
+    func body(content: Content) -> some View {
+        content.alert("Delete Selected?", isPresented: $isPresented) {
+            Button("Delete", role: .destructive, action: deleteAction)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to delete \(selectedCount) items?")
+        }
+    }
+}
+
+struct RenameAlert: ViewModifier {
+    @Binding var isPresented: Bool
+    @Binding var renameInput: String
+    var renameAction: () -> Void
+
+    func body(content: Content) -> some View {
+        content.alert("Rename", isPresented: $isPresented) {
+            TextField("New name", text: $renameInput)
+            Button("Rename", action: renameAction)
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+}

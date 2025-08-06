@@ -18,8 +18,8 @@ struct FileListView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    @State private var showingCreateFileAlert = false
-    @State private var showingCreateFolderAlert = false
+    @State private var showCreateFile = false
+    @State private var showCreateFolder = false
     @State private var newResourceName = ""
 
     @State private var selectionMode = false
@@ -262,10 +262,10 @@ struct FileListView: View {
                     Menu {
                         if auth.permissions?.create == true {
                             Button("Create File", systemImage: "doc.badge.plus", action: {
-                                showingCreateFileAlert = true
+                                showCreateFile = true
                             })
                             Button("Create Folder", systemImage: "folder.badge.plus", action: {
-                                showingCreateFolderAlert = true
+                                showCreateFolder = true
                             })
                         }
                         Button("Settings", systemImage: "gearshape", action: {
@@ -344,33 +344,26 @@ struct FileListView: View {
         }
         .id("filelist-\(path)-\(pathStack.count)")
         .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
-        .alert("Create New File", isPresented: $showingCreateFileAlert) {
-            TextField("Filename", text: $newResourceName)
-            Button("Create", action: {
-                createResource(isDirectory: false)
-            })
-            Button("Cancel", role: .cancel) { }
-        }
-        .alert("Create New Folder", isPresented: $showingCreateFolderAlert) {
-            TextField("Folder Name", text: $newResourceName)
-            Button("Create", action: {
-                createResource(isDirectory: true)
-            })
-            Button("Cancel", role: .cancel) { }
-        }
-        .alert("Delete Selected?", isPresented: $showingDeleteConfirm) {
-            Button("Delete", role: .destructive) {
-                deleteSelectedItems()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Are you sure you want to delete \(selectedItems.count) items?")
-        }
-        .alert("Rename", isPresented: $isRenaming) {
-            TextField("New name", text: $renameInput)
-            Button("Rename", action: renameSelectedItem)
-            Button("Cancel", role: .cancel) {}
-        }
+        .modifier(CreateFileAlert(
+            createFile: $showCreateFile,
+            fileName: $newResourceName,
+            action: { createResource(isDirectory: false) }
+        ))
+        .modifier(CreateFolderAlert(
+            createFolder: $showCreateFolder,
+            folderName: $newResourceName,
+            action: { createResource(isDirectory: true) }
+        ))
+        .modifier(DeleteConfirmAlert(
+            isPresented: $showingDeleteConfirm,
+            selectedCount: selectedItems.count,
+            deleteAction: { deleteSelectedItems() }
+        ))
+        .modifier(RenameAlert(
+            isPresented: $isRenaming,
+            renameInput: $renameInput,
+            renameAction: renameSelectedItem
+        ))
         .onAppear {
             Log.debug("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
