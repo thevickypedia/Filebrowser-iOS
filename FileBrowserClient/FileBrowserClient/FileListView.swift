@@ -207,6 +207,9 @@ struct FileListView: View {
                                 showingCreateFolderAlert = true
                             })
                         }
+                        Button("Settings", systemImage: "gearshape", action: {
+                            showingSettings = true
+                        })
                         Menu("Upload File", systemImage: "square.and.arrow.up") {
                             Button("From Files", systemImage: "doc", action: {
                                 showFileImporter = true
@@ -215,9 +218,6 @@ struct FileListView: View {
                                 showPhotoPicker = true
                             })
                         }
-                        Button("Settings", systemImage: "gearshape", action: {
-                            showingSettings = true
-                        })
                     } label: {
                         Label("Actions", systemImage: "person.circle")
                             .padding()

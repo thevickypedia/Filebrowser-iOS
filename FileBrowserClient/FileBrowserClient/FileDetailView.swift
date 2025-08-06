@@ -139,12 +139,6 @@ struct FileDetailView: View {
                             })
                         }
 
-                        if auth.permissions?.delete == true {
-                            Button("Delete", systemImage: "trash", role: .destructive, action: {
-                                showingDeleteConfirm = true
-                            })
-                        }
-
                         if auth.permissions?.download == true {
                             Button("Download", systemImage: "arrow.down.circle", action: {
                                 downloadAndSave()
@@ -154,6 +148,12 @@ struct FileDetailView: View {
                         if auth.permissions?.share == true {
                             Button("Share", systemImage: "square.and.arrow.up", action: {
                                 downloadAndSave()
+                            })
+                        }
+
+                        if auth.permissions?.delete == true {
+                            Button("Delete", systemImage: "trash", role: .destructive, action: {
+                                showingDeleteConfirm = true
                             })
                         }
                     } label: {
