@@ -45,6 +45,7 @@ struct FileListView: View {
     @State private var currentUploadFile: String?
     @State private var currentUploadFileIcon: String?
     @State private var currentUploadFileSize: String?
+    @State private var currentUploadedFileSize: String?
 
     @State private var usageInfo: (used: Int64, total: Int64)?
     @State private var fileCacheSize: Int64 = 0
@@ -76,7 +77,7 @@ struct FileListView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(currentUploadFile ?? "Unknown")
                                     .font(.headline)
-                                Text(currentUploadFileSize ?? "0.0 MB")
+                                Text("\(currentUploadedFileSize ?? "0.0 MB") / \(currentUploadFileSize ?? "0.0 MB")")
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
@@ -687,6 +688,7 @@ struct FileListView: View {
 
                     currentOffset += data.count
                     uploadProgress = Double(currentOffset) / Double(fileSize)
+                    currentUploadedFileSize = sizeConverter(currentOffset)
                     Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
                 }

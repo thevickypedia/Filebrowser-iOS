@@ -25,7 +25,12 @@ func sizeConverter(_ byteSize: Int?) -> String {
         index += 1
     }
 
-    return String(format: "%.2f %@", size, sizeNames[index])
+    // Check if size has fractional part
+    if size.truncatingRemainder(dividingBy: 1) == 0 {
+        return String(format: "%.0f %@", size, sizeNames[index])
+    } else {
+        return String(format: "%.2f %@", size, sizeNames[index])
+    }
 }
 
 func formatBytes(_ bytes: Int64) -> String {
