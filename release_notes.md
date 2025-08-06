@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.16.2 (08/06/2025)
+--------------------
+- [40f9c82](https://github.com/thevickypedia/Filebrowser-iOS/commit/40f9c823194f29acb968a3c18e57f1815d10fe7c) chore: Release ``v1.16.2``
+- [1f1b905](https://github.com/thevickypedia/Filebrowser-iOS/commit/1f1b9050072d79e0a56a7fca9168390f27f84813) ci: Avoid running linter for each change
+- [5a73ab6](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a73ab67c64782fbe777b828d40855374e0e2ae8) perf: Switch caching mechanism to memory-mapped loading
+- [12a839f](https://github.com/thevickypedia/Filebrowser-iOS/commit/12a839f2640e4ee70ab9dd1274adb935dede986d) refactor: Set generic loading label for media progress view
+- [19cdbbe](https://github.com/thevickypedia/Filebrowser-iOS/commit/19cdbbed54374272cd515ee7104807b73fc39508) refactor: Cap chunk size options
+- [0ec93eb](https://github.com/thevickypedia/Filebrowser-iOS/commit/0ec93eb07dc64ea48ee8a4f2f8068e3e11cc1d8e) chore: Update release notes for v1.16.1
+
 v1.16.1 (08/06/2025)
 --------------------
 - [446a4bb](https://github.com/thevickypedia/Filebrowser-iOS/commit/446a4bb21823c00880902b3d52519b60fdc04657) chore: Release ``v1.16.1``
