@@ -58,9 +58,9 @@ struct AnimatedImageView: UIViewRepresentable {
         var images: [UIImage] = []
         var duration: TimeInterval = 0
 
-        for i in 0..<CGImageSourceGetCount(source) {
-            guard let cgImage = CGImageSourceCreateImageAtIndex(source, i, nil) else { continue }
-            let frameDuration = getFrameDuration(from: source, at: i)
+        for frameIndex in 0..<CGImageSourceGetCount(source) {
+            guard let cgImage = CGImageSourceCreateImageAtIndex(source, frameIndex, nil) else { continue }
+            let frameDuration = getFrameDuration(from: source, at: frameIndex)
             duration += frameDuration
             images.append(UIImage(cgImage: cgImage))
         }

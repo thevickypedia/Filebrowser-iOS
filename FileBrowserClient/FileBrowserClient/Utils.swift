@@ -223,7 +223,7 @@ func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager)
         ? (modified ?? "Unknown")
         : timeAgoString(from: calculateTimeDifference(dateString: modified))
     let fileSizeMeta = sizeConverter(metadata?.size ?? file.size)
-    let fileExtnMeta = metadata?.extension_ ?? file.extension ?? "None"
+    let fileExtnMeta = metadata?.fileExtension ?? file.extension ?? "None"
     return FileInfo(
         name: fileNameMeta,
         path: filePathMeta,

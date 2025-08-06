@@ -13,12 +13,12 @@ struct ResourceMetadata: Codable {
     let size: Int
     let modified: String
     let type: String
-    let extension_: String?
+    let fileExtension: String?
     let resolution: Resolution?
 
     enum CodingKeys: String, CodingKey {
         case name, path, size, modified, type
-        case extension_ = "extension"
+        case fileExtension = "extension"
         case resolution
     }
 }
@@ -126,8 +126,8 @@ struct FileDetailView: View {
                     Image(systemName: "info.circle")
                 }
                 var hasAnyActionPermission: Bool {
-                    let p = auth.permissions
-                    return p?.rename == true || p?.delete == true || p?.download == true || p?.share == true
+                    let permissions = auth.permissions
+                    return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
                 }
                 // Actions menu (only if any permission is true)
                 if hasAnyActionPermission {

@@ -54,7 +54,7 @@ class FileCache {
         let key = cacheKey(for: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
         DispatchQueue.global(qos: .utility).async {
-            if let _ = try? data.write(to: diskPath) {
+            if (try? data.write(to: diskPath)) != nil {
                 Log.debug("Cache stored: \(diskPath)")
             }
         }
