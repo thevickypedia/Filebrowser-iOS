@@ -214,6 +214,8 @@ struct ContentView: View {
     }
 
     func handleLogout() {
+        pathStack.removeAll()
+
         isLoggedIn = false
         if !rememberMe {
             username = ""
