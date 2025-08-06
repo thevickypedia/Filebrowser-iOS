@@ -21,7 +21,7 @@ struct ErrorAlert: ViewModifier {
 }
 
 // todo: Move all alerts here
-//struct CreateFileAlert: ViewModifier {
+// struct CreateFileAlert: ViewModifier {
 //    @Binding var showingCreateFileAlert: Bool
 //    @Binding var newResourceName: String
 //    var createAction: () -> Void
@@ -33,4 +33,4 @@ struct ErrorAlert: ViewModifier {
 //            Button("Cancel", role: .cancel) { }
 //        }
 //    }
-//}
+// }

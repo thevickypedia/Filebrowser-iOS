@@ -465,7 +465,7 @@ struct FileListView: View {
         return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: path))/\(encodedName)?override=false")
     }
 
-    func initiateTusUpload(for fileURL: URL, showErrorAlert: Bool = true) {
+    func initiateTusUpload(for fileURL: URL) {
         guard let token = auth.token, let serverURL = auth.serverURL else {
             Log.error("❌ Missing auth info")
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -476,10 +476,8 @@ struct FileListView: View {
         guard let encodedName = fileName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let uploadURL = getUploadURL(serverURL: serverURL, encodedName: encodedName) else {
             Log.error("❌ Invalid upload URL")
-            if showErrorAlert {
-                errorTitle = "Invalid upload URL"
-                errorMessage = "Failed to construct upload URL for: \(fileName)"
-            }
+            errorTitle = "Invalid upload URL"
+            errorMessage = "Failed to construct upload URL for: \(fileName)"
             return
         }
 
@@ -491,10 +489,8 @@ struct FileListView: View {
             fileHandle = try FileHandle(forReadingFrom: fileURL)
         } catch {
             Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error)")
-            if showErrorAlert {
-                errorTitle = "File Error"
-                errorMessage = error.localizedDescription
-            }
+            errorTitle = "File Error"
+            errorMessage = error.localizedDescription
             cancelUpload(fileHandle: nil)
             return
         }
@@ -509,10 +505,8 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ POST failed: \(error.localizedDescription)")
-                    if showErrorAlert {
-                        errorTitle = "Upload Failed"
-                        errorMessage = error.localizedDescription
-                    }
+                    errorTitle = "Upload Failed"
+                    errorMessage = error.localizedDescription
                     return
                 }
 
@@ -522,7 +516,7 @@ struct FileListView: View {
         }.resume()
     }
 
-    func getUploadOffset(fileHandle: FileHandle, fileURL: URL, uploadURL: URL, showErrorAlert: Bool = true) {
+    func getUploadOffset(fileHandle: FileHandle, fileURL: URL, uploadURL: URL) {
         var request = URLRequest(url: uploadURL)
         request.httpMethod = "HEAD"
         request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
@@ -532,10 +526,8 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ HEAD failed: \(error.localizedDescription)")
-                    if showErrorAlert {
-                        errorTitle = "Upload Failed"
-                        errorMessage = error.localizedDescription
-                    }
+                    errorTitle = "Upload Failed"
+                    errorMessage = error.localizedDescription
                     return
                 }
 
@@ -543,10 +535,8 @@ struct FileListView: View {
                       let offsetStr = http.value(forHTTPHeaderField: "Upload-Offset"),
                       let offset = Int(offsetStr) else {
                     Log.error("❌ HEAD missing Upload-Offset")
-                    if showErrorAlert {
-                        errorTitle = "Upload Failed"
-                        errorMessage = "HEAD missing Upload-Offset"
-                    }
+                    errorTitle = "Upload Failed"
+                    errorMessage = "HEAD missing Upload-Offset"
                     return
                 }
 
@@ -572,8 +562,7 @@ struct FileListView: View {
         fileHandle: FileHandle,
         fileURL: URL,
         to uploadURL: URL,
-        startingAt offset: Int,
-        showErrorAlert: Bool = true
+        startingAt offset: Int
     ) {
         let chunkSize = advancedSettings.chunkSize * 1024 * 1024
 
@@ -619,19 +608,15 @@ struct FileListView: View {
 
                     if let error = error {
                         Log.error("❌ PATCH failed: \(error.localizedDescription)")
-                        if showErrorAlert {
-                            errorTitle = "Server Error"
-                            errorMessage = error.localizedDescription
-                        }
+                        errorTitle = "Server Error"
+                        errorMessage = error.localizedDescription
                         return
                     }
 
                     guard let http = response as? HTTPURLResponse, http.statusCode == 204 else {
                         Log.error("❌ Unexpected PATCH response: \(response.debugDescription)")
-                        if showErrorAlert {
-                            errorTitle = "Server Error"
-                            errorMessage = "[PATCH Failed]: \(String(describing: response?.description))"
-                        }
+                        errorTitle = "Server Error"
+                        errorMessage = "[PATCH Failed]: \(String(describing: response?.description))"
                         return
                     }
 
@@ -666,8 +651,7 @@ struct FileListView: View {
         queryItems: [URLQueryItem]? = nil,
         body: Data? = nil,
         contentType: String = "application/json",
-        completion: @escaping (Data?, URLResponse?, Error?) -> Void,
-        showErrorAlert: Bool = true
+        completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) -> URLSessionDataTask? {
         guard let token = auth.token,
               let serverURL = auth.serverURL,
@@ -678,9 +662,7 @@ struct FileListView: View {
 
         components.queryItems = queryItems
         guard let url = components.url else {
-            if showErrorAlert {
-                errorMessage = "Failed to build URL"
-            }
+            errorMessage = "Failed to build URL"
             return nil
         }
 
@@ -694,20 +676,16 @@ struct FileListView: View {
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             let responseCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-            
+
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ Request failed: \(error.localizedDescription)")
-                    if showErrorAlert {
-                        errorMessage = error.localizedDescription
-                    }
+                    errorMessage = error.localizedDescription
                 } else if responseCode != 200 {
                     let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "No details"
                     Log.error("❌ Request failed with status \(responseCode): \(bodyString)")
-                    if showErrorAlert {
-                        errorTitle = "Server Error"
-                        errorMessage = "[\(responseCode)]: \(bodyString)"
-                    }
+                    errorTitle = "Server Error"
+                    errorMessage = "[\(responseCode)]: \(bodyString)"
                 }
                 completion(data, response, error)
             }
