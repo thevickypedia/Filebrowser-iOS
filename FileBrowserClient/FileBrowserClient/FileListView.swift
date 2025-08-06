@@ -161,7 +161,7 @@ struct FileListView: View {
             .padding(.trailing, 20)
             .padding(.bottom, 30)
         }
-        .navigationTitle(pathStack.last?.components(separatedBy: "/").last ?? "Home")
+        .navigationTitle(getNavigationTitle())
         .toolbar {
             // Left: Refresh button
             ToolbarItem(placement: .navigationBarLeading) {
@@ -388,6 +388,23 @@ struct FileListView: View {
             ),
             animateGIF: advancedSettings.animateGIF
         )
+    }
+
+    private func getNavigationTitle() -> String {
+        // If we have a pathStack, use the last path component
+        if let lastPath = pathStack.last, !lastPath.isEmpty {
+            let components = lastPath.components(separatedBy: "/")
+            return components.last ?? "Home"
+        }
+
+        // If pathStack is empty or path is empty, we're at root
+        if pathStack.isEmpty || path == "/" {
+            return "Home"
+        }
+
+        // Fallback: use the current path
+        let components = path.components(separatedBy: "/")
+        return components.last ?? "Home"
     }
 
     func fetchClientStorageInfo() {
