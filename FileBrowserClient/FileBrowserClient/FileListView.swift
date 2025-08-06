@@ -34,13 +34,7 @@ struct FileListView: View {
     @State private var dateFormatExact = false
 
     @State private var showFileImporter = false
-    @State private var uploadQueue: [URL] = []
-    @State private var currentUploadIndex = 0
-    @State private var uploadProgress: Double = 0.0
-    @State private var isUploading = false
-    @State private var uploadTask: URLSessionUploadTask?
     @State private var showPhotoPicker = false
-    @State private var isUploadCancelled = false
 
     @State private var usageInfo: (used: Int64, total: Int64)?
     @State private var fileCacheSize: Int64 = 0
@@ -48,6 +42,7 @@ struct FileListView: View {
     @State private var sortOption: SortOption = .nameAsc
     @State private var errorTitle: String?
     @State private var errorMessage: String?
+    @ObservedObject var uploader = UploadManager.shared
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -60,10 +55,10 @@ struct FileListView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
-                if isUploading {
+                if uploader.isUploading {
                     VStack {
-                        Text("Uploading file \(currentUploadIndex + 1) of \(uploadQueue.count)...")
-                        ProgressView(value: uploadProgress)
+                        Text("Uploading...")
+                        ProgressView(value: uploader.uploadProgress)
                             .progressViewStyle(LinearProgressViewStyle())
                             .padding()
                     }
@@ -72,17 +67,9 @@ struct FileListView: View {
                     .background(.ultraThinMaterial)
                     .cornerRadius(12)
                     .padding(.bottom, 80)
-                    .transition(.opacity)
                     Button(action: {
-                        isUploadCancelled = true
-                        uploadTask?.cancel()
-                        uploadTask = nil
-                        uploadQueue = []
-                        currentUploadIndex = 0
-                        uploadProgress = 0.0
-                        isUploading = false
-                        Log.info("❌ Upload cancelled by user.")
-                }) {
+                        UploadManager.shared.cancel()
+                    }) {
                         Label("Cancel Upload", systemImage: "xmark.circle.fill")
                             .foregroundColor(.red)
                     }
@@ -357,9 +344,7 @@ struct FileListView: View {
         }
         .sheet(isPresented: $showPhotoPicker) {
             PhotoPicker { urls in
-                uploadQueue = urls
-                currentUploadIndex = 0
-                uploadNextInQueue()
+                UploadManager.shared.startQueue(urls, auth: auth, path: path)
             }
         }
         .fileImporter(
@@ -369,9 +354,7 @@ struct FileListView: View {
         ) { result in
             switch result {
             case .success(let urls):
-                uploadQueue = urls
-                currentUploadIndex = 0
-                uploadNextInQueue()
+                UploadManager.shared.startQueue(urls, auth: auth, path: path)
             case .failure(let error):
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
             }
@@ -456,192 +439,6 @@ struct FileListView: View {
                 }
             }
         }.resume()
-    }
-
-    func getUploadURL(serverURL: String, encodedName: String) -> URL? {
-        if path == "/" {
-            return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: encodedName))?override=false")
-        }
-        return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: path))/\(encodedName)?override=false")
-    }
-
-    func initiateTusUpload(for fileURL: URL) {
-        guard let token = auth.token, let serverURL = auth.serverURL else {
-            Log.error("❌ Missing auth info")
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
-
-        let fileName = fileURL.lastPathComponent
-        guard let encodedName = fileName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let uploadURL = getUploadURL(serverURL: serverURL, encodedName: encodedName) else {
-            Log.error("❌ Invalid upload URL")
-            errorTitle = "Invalid upload URL"
-            errorMessage = "Failed to construct upload URL for: \(fileName)"
-            return
-        }
-
-        // Create file handle before making upload request
-        // 1. This will avoid showing upload progress bar before it begins
-        // 2. There is no trace of the file in the server (since this runs before POST and HEAD)
-        let fileHandle: FileHandle
-        do {
-            fileHandle = try FileHandle(forReadingFrom: fileURL)
-        } catch {
-            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error)")
-            errorTitle = "File Error"
-            errorMessage = error.localizedDescription
-            cancelUpload(fileHandle: nil)
-            return
-        }
-
-        var request = URLRequest(url: uploadURL)
-        request.httpMethod = "POST"
-        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-        request.setValue("0", forHTTPHeaderField: "Content-Length")
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { _, _, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    Log.error("❌ POST failed: \(error.localizedDescription)")
-                    errorTitle = "Upload Failed"
-                    errorMessage = error.localizedDescription
-                    return
-                }
-
-                Log.info("✅ Upload session initiated at: \(uploadURL.relativePath)")
-                getUploadOffset(fileHandle: fileHandle, fileURL: fileURL, uploadURL: uploadURL)
-            }
-        }.resume()
-    }
-
-    func getUploadOffset(fileHandle: FileHandle, fileURL: URL, uploadURL: URL) {
-        var request = URLRequest(url: uploadURL)
-        request.httpMethod = "HEAD"
-        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { _, response, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    Log.error("❌ HEAD failed: \(error.localizedDescription)")
-                    errorTitle = "Upload Failed"
-                    errorMessage = error.localizedDescription
-                    return
-                }
-
-                guard let http = response as? HTTPURLResponse,
-                      let offsetStr = http.value(forHTTPHeaderField: "Upload-Offset"),
-                      let offset = Int(offsetStr) else {
-                    Log.error("❌ HEAD missing Upload-Offset")
-                    errorTitle = "Upload Failed"
-                    errorMessage = "HEAD missing Upload-Offset"
-                    return
-                }
-
-                Log.info("📍 Upload starting from offset: \(offset)")
-                uploadFileInChunks(
-                    fileHandle: fileHandle,
-                    fileURL: fileURL,
-                    to: uploadURL,
-                    startingAt: offset
-                )
-            }
-        }.resume()
-    }
-
-    func cancelUpload(fileHandle: FileHandle?) {
-        fileHandle?.closeFile()
-        uploadTask?.cancel()
-        uploadTask = nil
-        isUploading = false
-    }
-
-    func uploadFileInChunks(
-        fileHandle: FileHandle,
-        fileURL: URL,
-        to uploadURL: URL,
-        startingAt offset: Int
-    ) {
-        let chunkSize = advancedSettings.chunkSize * 1024 * 1024
-
-        let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
-        var currentOffset = offset
-
-        func uploadNext() {
-            // 🔁 Cancel check
-            if isUploadCancelled {
-                Log.info("⏹️ Upload cancelled by user.")
-                cancelUpload(fileHandle: fileHandle)
-                return
-            }
-
-            // ✅ Finished?
-            guard currentOffset < fileSize else {
-                fileHandle.closeFile()
-                Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
-                currentUploadIndex += 1
-                uploadTask = nil
-                uploadNextInQueue()
-                viewModel.fetchFiles(at: path)
-                return
-            }
-
-            fileHandle.seek(toFileOffset: UInt64(currentOffset))
-            let data = fileHandle.readData(ofLength: chunkSize)
-
-            var request = URLRequest(url: uploadURL)
-            request.httpMethod = "PATCH"
-            request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-            request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
-            request.setValue("application/offset+octet-stream", forHTTPHeaderField: "Content-Type")
-            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
-
-            uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
-                DispatchQueue.main.async {
-                    if isUploadCancelled {
-                        Log.info("⏹️ Upload cancelled mid-chunk.")
-                        cancelUpload(fileHandle: fileHandle)
-                        return
-                    }
-
-                    if let error = error {
-                        Log.error("❌ PATCH failed: \(error.localizedDescription)")
-                        errorTitle = "Server Error"
-                        errorMessage = error.localizedDescription
-                        return
-                    }
-
-                    guard let http = response as? HTTPURLResponse, http.statusCode == 204 else {
-                        Log.error("❌ Unexpected PATCH response: \(response.debugDescription)")
-                        errorTitle = "Server Error"
-                        errorMessage = "[PATCH Failed]: \(String(describing: response?.description))"
-                        return
-                    }
-
-                    currentOffset += data.count
-                    uploadProgress = Double(currentOffset) / Double(fileSize)
-                    Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
-                    uploadNext()
-                }
-            }
-            uploadTask?.resume()
-        }
-        uploadNext()
-    }
-
-    func uploadNextInQueue() {
-        guard currentUploadIndex < uploadQueue.count else {
-            isUploading = false
-            return
-        }
-
-        isUploading = true
-        isUploadCancelled = false
-        uploadProgress = 0.0
-        let fileURL = uploadQueue[currentUploadIndex]
-        initiateTusUpload(for: fileURL)
     }
 
     @discardableResult
