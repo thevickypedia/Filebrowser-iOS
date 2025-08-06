@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.14.0 (08/06/2025)
+--------------------
+- [aa44149](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa44149d1666d36d12906e08e7212a60be307a7c) chore: Release ``v1.14.0``
+- [8a4f32b](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a4f32be8598450d01b9788bd0ba50c3aef5c60a) feat: Allow users to choose ``chunkSize`` for file uploads
+- [20be4bf](https://github.com/thevickypedia/Filebrowser-iOS/commit/20be4bf6b7c706e166921ecee2f10f3f78232df3) chore: Update release notes for v1.13.5
+
 v1.13.5 (08/06/2025)
 --------------------
 - [d884bcb](https://github.com/thevickypedia/Filebrowser-iOS/commit/d884bcb0c6f23e39c70dc5ff39d4fcec3bb3d84f) chore: Release ``v1.13.5``
