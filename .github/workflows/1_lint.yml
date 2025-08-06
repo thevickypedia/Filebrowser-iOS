@@ -1,11 +1,6 @@
 name: 1. SwiftLint
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "**/*.swift"
   workflow_dispatch:
   workflow_call:
 
