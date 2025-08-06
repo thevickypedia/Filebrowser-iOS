@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.15.2 (08/06/2025)
+--------------------
+- [18c4ef1](https://github.com/thevickypedia/Filebrowser-iOS/commit/18c4ef1c097b81900ea5fcda3249f1b20a894e5d) chore: Release ``v1.15.2``
+- [b832181](https://github.com/thevickypedia/Filebrowser-iOS/commit/b8321813db59713067ca8c53b31d8d51cc9dddce) style: Remove unused optional bindings
+- [5553d68](https://github.com/thevickypedia/Filebrowser-iOS/commit/5553d682ffbeba818a5af931fdb0ab9e2ac72fa0) refactor: Remove conditional alerting and make it default
+- [6e4f474](https://github.com/thevickypedia/Filebrowser-iOS/commit/6e4f4747cc398045240dcad22ae6b00d5f36e7b3) chore: Add more alerts in the UI for network/client/server errors
+- [5d2cfe0](https://github.com/thevickypedia/Filebrowser-iOS/commit/5d2cfe0fb78512cff3adc44fb48d4cd929fba9b8) chore: Update release notes for v1.15.1
+
 v1.15.1 (08/06/2025)
 --------------------
 - [2e128ba](https://github.com/thevickypedia/Filebrowser-iOS/commit/2e128ba62fb30c0570c8611b30ec904b5b23109b) chore: Release ``v1.15.1``
