@@ -4,7 +4,6 @@ disabled_rules:
   - function_body_length
   - line_length
   - multiple_closures_with_trailing_closure
-  - unused_optional_binding
   - cyclomatic_complexity
 
 # Optional: Customize length limits instead of disabling

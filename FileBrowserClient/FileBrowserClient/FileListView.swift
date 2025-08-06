@@ -851,7 +851,10 @@ struct FileListView: View {
     }
 
     func createResource(isDirectory: Bool) {
-        guard let _ = auth.serverURL, let _ = auth.token else { return }
+        guard auth.serverURL != nil, auth.token != nil else {
+            errorMessage = "Invalid authorization. Please log out and log back in."
+            return
+        }
 
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withColonSeparatorInTimeZone]
