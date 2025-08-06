@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.13.3 (08/06/2025)
+--------------------
+- [35f3b14](https://github.com/thevickypedia/Filebrowser-iOS/commit/35f3b14449b607040926c754fbf0c527cf9558f0) chore: Release ``v1.13.3``
+- [3f905f9](https://github.com/thevickypedia/Filebrowser-iOS/commit/3f905f93f855c6ed85af90c16d62a367718a10af) refactor: Update coding standards to honor linter
+- [3f2ba7f](https://github.com/thevickypedia/Filebrowser-iOS/commit/3f2ba7f38f92b3cd7fcddad5f76bb90bb3fc828a) refactor: Run linter with ``autocorrect``
+- [cf6d02d](https://github.com/thevickypedia/Filebrowser-iOS/commit/cf6d02d738ffaf85e254146a69c586ac76739e64) ci: Set dependency on linting for control workflow
+- [5cea25c](https://github.com/thevickypedia/Filebrowser-iOS/commit/5cea25cb16752f225057f08e3d18d54dca1fa2bb) ci: Onboard a Swift linter
+- [33a83a8](https://github.com/thevickypedia/Filebrowser-iOS/commit/33a83a84b622b68a92b5c383d5a14281e8b8386e) chore: Update release notes for v1.13.2
+
 v1.13.2 (08/05/2025)
 --------------------
 - [4a86555](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a86555049c9b23a416eec849b6a5cbc570fdacd) chore: Release ``v1.13.2``
