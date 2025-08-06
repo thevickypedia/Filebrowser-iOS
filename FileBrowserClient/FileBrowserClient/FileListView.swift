@@ -175,7 +175,8 @@ struct FileListView: View {
                                 NavigationLink(destination: detailView(for: file)) {
                                     let fileName = file.name.lowercased()
                                     HStack {
-                                        if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+                                        if advancedSettings.displayThumbnail &&
+                                            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
                                             RemoteThumbnail(
                                                 file: file,
                                                 serverURL: auth.serverURL ?? "",

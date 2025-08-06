@@ -13,6 +13,7 @@ struct AdvancedSettings {
     let cachePDF: Bool
     let cacheText: Bool
     // Controlled with individual condition blocks
+    let displayThumbnail: Bool
     let cacheThumbnail: Bool
     let animateGIF: Bool
     let chunkSize: Int
@@ -43,6 +44,7 @@ struct ContentView: View {
     @AppStorage("cachePDF") private var cachePDF = true
     @AppStorage("cacheText") private var cacheText = true
     @AppStorage("cacheThumbnail") private var cacheThumbnail = true
+    @AppStorage("displayThumbnail") private var displayThumbnail = true
     @AppStorage("animateGIF") private var animateGIF = true
     @AppStorage("chunkSize") private var chunkSize = 1
     @State private var chunkSizeText: String = "1"
@@ -53,6 +55,7 @@ struct ContentView: View {
             cacheImage: cacheImage,
             cachePDF: cachePDF,
             cacheText: cacheText,
+            displayThumbnail: displayThumbnail,
             cacheThumbnail: cacheThumbnail,
             animateGIF: animateGIF,
             chunkSize: chunkSize
@@ -135,6 +138,7 @@ struct ContentView: View {
                     Toggle("Cache Images", isOn: $cacheImage)
                     Toggle("Cache PDFs", isOn: $cachePDF)
                     Toggle("Cache Text Files", isOn: $cacheText)
+                    Toggle("Display Thumbnails", isOn: $displayThumbnail)
                     Toggle("Cache Thumbnails", isOn: $cacheThumbnail)
                     Toggle("Animate GIF Files", isOn: $animateGIF)
                 }

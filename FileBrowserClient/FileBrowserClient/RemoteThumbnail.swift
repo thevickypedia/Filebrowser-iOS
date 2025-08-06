@@ -65,7 +65,7 @@ struct RemoteThumbnail: View {
                 modified: file.modified,
                 fileID: "thumb"
             )
-            
+
             // Step 1: Load from memory or disk
             if isGIF {
                 if let cached = existingCache {
