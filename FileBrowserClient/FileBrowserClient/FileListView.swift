@@ -428,6 +428,7 @@ struct FileListView: View {
         guard let serverURL = auth.serverURL, let token = auth.token,
               let url = URL(string: "\(serverURL)/api/usage/") else {
             Log.error("❌ Invalid URL or auth for /api/usage/")
+            errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
 
@@ -467,10 +468,7 @@ struct FileListView: View {
     func initiateTusUpload(for fileURL: URL, showErrorAlert: Bool = true) {
         guard let token = auth.token, let serverURL = auth.serverURL else {
             Log.error("❌ Missing auth info")
-            if showErrorAlert {
-                errorTitle = "Unauthorized"
-                errorMessage = "Missing auth auth.token or serverURL"
-            }
+            errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
 
@@ -674,9 +672,7 @@ struct FileListView: View {
         guard let token = auth.token,
               let serverURL = auth.serverURL,
               var components = URLComponents(string: serverURL + endpoint) else {
-            if showErrorAlert {
-                errorMessage = "Invalid auth or URL"
-            }
+            errorMessage = "Invalid authorization. Please log out and log back in."
             return nil
         }
 
@@ -746,6 +742,7 @@ struct FileListView: View {
             let token = auth.token,
             let serverURL = auth.serverURL else {
             Log.error("❌ Missing auth or user info")
+            errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
 
@@ -780,6 +777,8 @@ struct FileListView: View {
                     viewModel.fetchFiles(at: path)
                 } else {
                     Log.error("❌ Settings save failed: \(body)")
+                    errorTitle = "Settings save failed"
+                    errorMessage = body
                 }
             }
         }.resume()
@@ -794,13 +793,17 @@ struct FileListView: View {
     }
 
     func deleteSelectedItems() {
-        guard let token = auth.token, let baseURL = auth.serverURL else { return }
+        guard let token = auth.token, let baseURL = auth.serverURL else {
+            errorMessage = "Invalid authorization. Please log out and log back in."
+            return
+        }
 
         let group = DispatchGroup()
         for item in selectedItems {
             guard let encodedPath = item.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
                   let url = URL(string: "\(baseURL)/api/resources/\(removePrefix(urlPath: encodedPath))") else {
                 Log.error("❌ Invalid path for \(item.name)")
+                viewModel.errorMessage = "Invalid path for \(item.name)"
                 continue
             }
 
@@ -888,6 +891,7 @@ struct FileListView: View {
 
         guard let encodedPath = encodedPath(fullPath) else {
             Log.error("❌ Failed to encode path")
+            viewModel.errorMessage = "Failed to encode path"
             return
         }
 
@@ -904,6 +908,8 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ \(resourceType) creation failed: \(error.localizedDescription)")
+                    errorTitle = "Create Failed"
+                    errorMessage = "\(resourceType) creation failed: \(error.localizedDescription)"
                     return
                 }
 
@@ -917,6 +923,8 @@ struct FileListView: View {
                     viewModel.fetchFiles(at: path)
                 } else {
                     Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")
+                    errorTitle = "Create Failed"
+                    errorMessage = "\(resourceType) creation failed: \(http.statusCode)"
                 }
             }
         }
