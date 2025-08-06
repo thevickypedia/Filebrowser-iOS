@@ -28,6 +28,13 @@ func sizeConverter(_ byteSize: Int?) -> String {
     return String(format: "%.2f %@", size, sizeNames[index])
 }
 
+func formatBytes(_ bytes: Int64) -> String {
+    let formatter = ByteCountFormatter()
+    formatter.allowedUnits = [.useTB, .useGB, .useMB, .useKB]
+    formatter.countStyle = .file
+    return formatter.string(fromByteCount: bytes)
+}
+
 func timeAgoString(from diff: [String: Double]) -> String {
     let seconds = Int(diff["seconds"] ?? 0)
     let minutes = Int(diff["minutes"] ?? 0)

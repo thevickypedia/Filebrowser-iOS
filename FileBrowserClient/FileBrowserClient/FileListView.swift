@@ -467,13 +467,6 @@ struct FileListView: View {
         fileCacheSize = FileCache.shared.diskCacheSize()
     }
 
-    func formatBytes(_ bytes: Int64) -> String {
-        let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useTB, .useGB, .useMB, .useKB]
-        formatter.countStyle = .file
-        return formatter.string(fromByteCount: bytes)
-    }
-
     func fetchUsageInfo() {
         guard let serverURL = auth.serverURL, let token = auth.token,
               let url = URL(string: "\(serverURL)/api/usage/") else {
@@ -869,10 +862,6 @@ struct FileListView: View {
         }
     }
 
-    func encodedPath(_ path: String, allowed: CharacterSet = .urlPathAllowed) -> String? {
-        return path.addingPercentEncoding(withAllowedCharacters: allowed)
-    }
-
     func renameSelectedItem() {
         guard let item = selectedItems.first else { return }
         let fromPath = item.path
@@ -936,7 +925,7 @@ struct FileListView: View {
         )
         let fullPath = self.fullPath(for: fileItem)
 
-        guard let encodedPath = encodedPath(fullPath) else {
+        guard let encodedPath = fullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             Log.error("❌ Failed to encode path")
             viewModel.errorMessage = "Failed to encode path"
             return
