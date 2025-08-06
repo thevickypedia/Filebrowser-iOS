@@ -127,7 +127,7 @@ struct ContentView: View {
                         Text("Chunk Size (MB)")
                         Spacer()
                         Picker(selection: $chunkSize, label: Text("\(chunkSize)")) {
-                            ForEach([1, 5, 10, 20, 25, 50, 100], id: \.self) { size in
+                            ForEach([1, 2, 5, 10, 20], id: \.self) { size in
                                 Text("\(size)").tag(size)
                             }
                         }
