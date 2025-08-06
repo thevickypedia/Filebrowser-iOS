@@ -464,9 +464,13 @@ struct FileListView: View {
         return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: path))/\(encodedName)?override=false")
     }
 
-    func initiateTusUpload(for fileURL: URL) {
+    func initiateTusUpload(for fileURL: URL, showErrorAlert: Bool = true) {
         guard let token = auth.token, let serverURL = auth.serverURL else {
             Log.error("❌ Missing auth info")
+            if showErrorAlert {
+                errorTitle = "Unauthorized"
+                errorMessage = "Missing auth auth.token or serverURL"
+            }
             return
         }
 
@@ -474,6 +478,26 @@ struct FileListView: View {
         guard let encodedName = fileName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let uploadURL = getUploadURL(serverURL: serverURL, encodedName: encodedName) else {
             Log.error("❌ Invalid upload URL")
+            if showErrorAlert {
+                errorTitle = "Invalid upload URL"
+                errorMessage = "Failed to construct upload URL for: \(fileName)"
+            }
+            return
+        }
+
+        // Create file handle before making upload request
+        // 1. This will avoid showing upload progress bar before it begins
+        // 2. There is no trace of the file in the server (since this runs before POST and HEAD)
+        let fileHandle: FileHandle
+        do {
+            fileHandle = try FileHandle(forReadingFrom: fileURL)
+        } catch {
+            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error)")
+            if showErrorAlert {
+                errorTitle = "File Error"
+                errorMessage = error.localizedDescription
+            }
+            cancelUpload(fileHandle: nil)
             return
         }
 
@@ -487,16 +511,20 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ POST failed: \(error.localizedDescription)")
+                    if showErrorAlert {
+                        errorTitle = "Upload Failed"
+                        errorMessage = error.localizedDescription
+                    }
                     return
                 }
 
                 Log.info("✅ Upload session initiated at: \(uploadURL.relativePath)")
-                getUploadOffset(fileURL: fileURL, uploadURL: uploadURL)
+                getUploadOffset(fileHandle: fileHandle, fileURL: fileURL, uploadURL: uploadURL)
             }
         }.resume()
     }
 
-    func getUploadOffset(fileURL: URL, uploadURL: URL) {
+    func getUploadOffset(fileHandle: FileHandle, fileURL: URL, uploadURL: URL, showErrorAlert: Bool = true) {
         var request = URLRequest(url: uploadURL)
         request.httpMethod = "HEAD"
         request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
@@ -506,6 +534,10 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ HEAD failed: \(error.localizedDescription)")
+                    if showErrorAlert {
+                        errorTitle = "Upload Failed"
+                        errorMessage = error.localizedDescription
+                    }
                     return
                 }
 
@@ -513,28 +545,39 @@ struct FileListView: View {
                       let offsetStr = http.value(forHTTPHeaderField: "Upload-Offset"),
                       let offset = Int(offsetStr) else {
                     Log.error("❌ HEAD missing Upload-Offset")
+                    if showErrorAlert {
+                        errorTitle = "Upload Failed"
+                        errorMessage = "HEAD missing Upload-Offset"
+                    }
                     return
                 }
 
                 Log.info("📍 Upload starting from offset: \(offset)")
-                uploadFileInChunks(fileURL: fileURL, to: uploadURL, startingAt: offset)
+                uploadFileInChunks(
+                    fileHandle: fileHandle,
+                    fileURL: fileURL,
+                    to: uploadURL,
+                    startingAt: offset
+                )
             }
         }.resume()
     }
 
-    func uploadFileInChunks(fileURL: URL, to uploadURL: URL, startingAt offset: Int, showErrorAlert: Bool = true) {
+    func cancelUpload(fileHandle: FileHandle?) {
+        fileHandle?.closeFile()
+        uploadTask?.cancel()
+        uploadTask = nil
+        isUploading = false
+    }
+
+    func uploadFileInChunks(
+        fileHandle: FileHandle,
+        fileURL: URL,
+        to uploadURL: URL,
+        startingAt offset: Int,
+        showErrorAlert: Bool = true
+    ) {
         let chunkSize = advancedSettings.chunkSize * 1024 * 1024
-        let fileHandle: FileHandle
-        do {
-            fileHandle = try FileHandle(forReadingFrom: fileURL)
-        } catch {
-            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error)")
-            if showErrorAlert {
-                errorTitle = "File Error"
-                errorMessage = error.localizedDescription
-            }
-            return
-        }
 
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
         var currentOffset = offset
@@ -542,11 +585,8 @@ struct FileListView: View {
         func uploadNext() {
             // 🔁 Cancel check
             if isUploadCancelled {
-                fileHandle.closeFile()
                 Log.info("⏹️ Upload cancelled by user.")
-                uploadTask?.cancel()
-                uploadTask = nil
-                isUploading = false
+                cancelUpload(fileHandle: fileHandle)
                 return
             }
 
@@ -574,10 +614,8 @@ struct FileListView: View {
             uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
                     if isUploadCancelled {
-                        fileHandle.closeFile()
                         Log.info("⏹️ Upload cancelled mid-chunk.")
-                        uploadTask = nil
-                        isUploading = false
+                        cancelUpload(fileHandle: fileHandle)
                         return
                     }
 
