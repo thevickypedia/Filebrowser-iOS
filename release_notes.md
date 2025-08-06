@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.15.1 (08/06/2025)
+--------------------
+- [2e128ba](https://github.com/thevickypedia/Filebrowser-iOS/commit/2e128ba62fb30c0570c8611b30ec904b5b23109b) chore: Release ``v1.15.1``
+- [b75b94d](https://github.com/thevickypedia/Filebrowser-iOS/commit/b75b94d75be52226cab9faf62e6b709e8e5874b4) perf: Move file handling logic before initiating TUS upload
+- [11eb9bd](https://github.com/thevickypedia/Filebrowser-iOS/commit/11eb9bd39fd0127fcdeae704bf5a5966b39f6278) chore: Update release notes for v1.15.0
+
 v1.15.0 (08/06/2025)
 --------------------
 - [85e6301](https://github.com/thevickypedia/Filebrowser-iOS/commit/85e630118fe01809e47f04da2891f381512225fd) chore: Release ``v1.15.0``
