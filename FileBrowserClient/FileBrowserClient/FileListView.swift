@@ -42,6 +42,8 @@ struct FileListView: View {
     @State private var showPhotoPicker = false
     @State private var isUploadCancelled = false
     @State private var currentUploadSpeed: Double = 0.0
+    @State private var currentUploadFile: String?
+    @State private var currentUploadFileSize: String?
 
     @State private var usageInfo: (used: Int64, total: Int64)?
     @State private var fileCacheSize: Int64 = 0
@@ -63,7 +65,8 @@ struct FileListView: View {
             List {
                 if isUploading {
                     VStack {
-                        Text("Uploading file \(currentUploadIndex + 1) of \(uploadQueue.count)...")
+                        Text("Uploading \(currentUploadFile ?? "Unknown") [\(currentUploadFileSize ?? "0.0 MB")]")
+                        Text("Processing \(currentUploadIndex + 1) of \(uploadQueue.count)")
                         Text(String(format: "Speed: %.2f MB/s", currentUploadSpeed))
                         Text("Rate: \(advancedSettings.chunkSize) MB/chunk")
                         ProgressView(value: uploadProgress)
@@ -572,6 +575,8 @@ struct FileListView: View {
         let chunkSize = advancedSettings.chunkSize * 1024 * 1024
 
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
+        currentUploadFile = fileURL.lastPathComponent
+        currentUploadFileSize = sizeConverter(fileSize)
         var currentOffset = offset
 
         var uploadStartTime = Date()
