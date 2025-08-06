@@ -46,6 +46,8 @@ struct FileListView: View {
     @State private var fileCacheSize: Int64 = 0
 
     @State private var sortOption: SortOption = .nameAsc
+    @State private var errorTitle: String?
+    @State private var errorMessage: String?
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -284,6 +286,7 @@ struct FileListView: View {
             }
         }
         .id("filelist-\(path)-\(pathStack.count)")
+        .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
         .alert("Create New File", isPresented: $showingCreateFileAlert) {
             TextField("Filename", text: $newResourceName)
             Button("Create", action: {
@@ -519,11 +522,17 @@ struct FileListView: View {
         }.resume()
     }
 
-    func uploadFileInChunks(fileURL: URL, to uploadURL: URL, startingAt offset: Int) {
-        // todo: errors should be communicated back to the user instead of a stuck in progress screen
+    func uploadFileInChunks(fileURL: URL, to uploadURL: URL, startingAt offset: Int, showErrorAlert: Bool = true) {
         let chunkSize = advancedSettings.chunkSize * 1024 * 1024
-        guard let fileHandle = try? FileHandle(forReadingFrom: fileURL) else {
-            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent)")
+        let fileHandle: FileHandle
+        do {
+            fileHandle = try FileHandle(forReadingFrom: fileURL)
+        } catch {
+            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error)")
+            if showErrorAlert {
+                errorTitle = "File Error"
+                errorMessage = error.localizedDescription
+            }
             return
         }
 
@@ -574,11 +583,19 @@ struct FileListView: View {
 
                     if let error = error {
                         Log.error("❌ PATCH failed: \(error.localizedDescription)")
+                        if showErrorAlert {
+                            errorTitle = "Server Error"
+                            errorMessage = error.localizedDescription
+                        }
                         return
                     }
 
                     guard let http = response as? HTTPURLResponse, http.statusCode == 204 else {
                         Log.error("❌ Unexpected PATCH response: \(response.debugDescription)")
+                        if showErrorAlert {
+                            errorTitle = "Server Error"
+                            errorMessage = "[PATCH Failed]: \(String(describing: response?.description))"
+                        }
                         return
                     }
 
@@ -613,19 +630,23 @@ struct FileListView: View {
         queryItems: [URLQueryItem]? = nil,
         body: Data? = nil,
         contentType: String = "application/json",
-        completion: @escaping (Data?, URLResponse?, Error?) -> Void
+        completion: @escaping (Data?, URLResponse?, Error?) -> Void,
+        showErrorAlert: Bool = true
     ) -> URLSessionDataTask? {
-        // todo: Ensure user is aware of failed requests to the server and the reason for failure
         guard let token = auth.token,
               let serverURL = auth.serverURL,
               var components = URLComponents(string: serverURL + endpoint) else {
-            Log.error("❌ Invalid auth or URL for request")
+            if showErrorAlert {
+                errorMessage = "Invalid auth or URL"
+            }
             return nil
         }
 
         components.queryItems = queryItems
         guard let url = components.url else {
-            Log.error("❌ Failed to build URL with query parameters")
+            if showErrorAlert {
+                errorMessage = "Failed to build URL"
+            }
             return nil
         }
 
@@ -639,15 +660,23 @@ struct FileListView: View {
 
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             let responseCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-            if let error = error {
-                Log.error("❌ Request failed: \(error.localizedDescription)")
-            } else if responseCode != 200 {
-                let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
-                Log.error("❌ Request failed with status \(responseCode): \(bodyString)")
-            } else {
-                Log.info("✅ Request successful: \(responseCode)")
+            
+            DispatchQueue.main.async {
+                if let error = error {
+                    Log.error("❌ Request failed: \(error.localizedDescription)")
+                    if showErrorAlert {
+                        errorMessage = error.localizedDescription
+                    }
+                } else if responseCode != 200 {
+                    let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "No details"
+                    Log.error("❌ Request failed with status \(responseCode): \(bodyString)")
+                    if showErrorAlert {
+                        errorTitle = "Server Error"
+                        errorMessage = "[\(responseCode)]: \(bodyString)"
+                    }
+                }
+                completion(data, response, error)
             }
-            completion(data, response, error)
         }
 
         task.resume()
