@@ -43,6 +43,7 @@ struct FileListView: View {
     @State private var isUploadCancelled = false
     @State private var currentUploadSpeed: Double = 0.0
     @State private var currentUploadFile: String?
+    @State private var currentUploadFileIcon: String?
     @State private var currentUploadFileSize: String?
 
     @State private var usageInfo: (used: Int64, total: Int64)?
@@ -69,7 +70,7 @@ struct FileListView: View {
 
                         // 🗂️ File Info
                         HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: "doc.fill")
+                            Image(systemName: currentUploadFileIcon ?? "doc.fill")
                                 .foregroundColor(.blue)
                                 .font(.title2)
                             VStack(alignment: .leading, spacing: 4) {
@@ -613,8 +614,10 @@ struct FileListView: View {
         let chunkSize = advancedSettings.chunkSize * 1024 * 1024
 
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
-        currentUploadFile = fileURL.lastPathComponent
+        let fileName = fileURL.lastPathComponent
+        currentUploadFile = fileName
         currentUploadFileSize = sizeConverter(fileSize)
+        currentUploadFileIcon = systemIcon(for: fileName.lowercased(), extensionTypes: extensionTypes)
         var currentOffset = offset
 
         var uploadStartTime = Date()
