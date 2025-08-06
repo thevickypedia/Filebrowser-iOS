@@ -42,7 +42,7 @@ class FileCache {
         let diskPath = diskCacheURL.appendingPathComponent(key)
         var result: Data?
         DispatchQueue.global(qos: .utility).sync {
-            result = try? Data(contentsOf: diskPath)
+            result = try? Data(contentsOf: diskPath, options: .mappedIfSafe)
             if result != nil {
                 Log.debug("Cache retrieved: \(diskPath)")
             }
