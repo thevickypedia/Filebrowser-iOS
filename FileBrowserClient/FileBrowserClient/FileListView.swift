@@ -41,8 +41,7 @@ struct FileListView: View {
     @State private var uploadTask: URLSessionUploadTask?
     @State private var showPhotoPicker = false
     @State private var isUploadCancelled = false
-    @State private var uploadStartTime: Date = .now
-    @State private var currentUploadSpeed: Double = 0.0 // in MB/s
+    @State private var currentUploadSpeed: Double = 0.0
 
     @State private var usageInfo: (used: Int64, total: Int64)?
     @State private var fileCacheSize: Int64 = 0
@@ -573,10 +572,10 @@ struct FileListView: View {
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
         var currentOffset = offset
 
-        func uploadNext() {
-            uploadStartTime = .now
-            let startOffset = currentOffset
+        var uploadStartTime = Date()
+        var startOffset = currentOffset
 
+        func uploadNext() {
             // 🔁 Cancel check
             if isUploadCancelled {
                 Log.info("⏹️ Upload cancelled by user.")
@@ -590,6 +589,8 @@ struct FileListView: View {
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
                 currentUploadIndex += 1
                 uploadTask = nil
+                uploadProgress = 1.0
+                currentUploadSpeed = 0.0
                 uploadNextInQueue()
                 viewModel.fetchFiles(at: path)
                 return
@@ -597,6 +598,9 @@ struct FileListView: View {
 
             fileHandle.seek(toFileOffset: UInt64(currentOffset))
             let data = fileHandle.readData(ofLength: chunkSize)
+
+            uploadStartTime = Date()
+            startOffset = currentOffset
 
             var request = URLRequest(url: uploadURL)
             request.httpMethod = "PATCH"
@@ -627,12 +631,13 @@ struct FileListView: View {
                         return
                     }
 
-                    currentOffset += data.count
                     let elapsed = Date().timeIntervalSince(uploadStartTime)
-                    let bytesSent = currentOffset - startOffset
+                    let bytesSent = currentOffset + data.count - startOffset
                     if elapsed > 0 {
-                        currentUploadSpeed = Double(bytesSent) / elapsed / 1_048_576 // Convert to MB/s
+                        currentUploadSpeed = Double(bytesSent) / elapsed / (1024 * 1024)
                     }
+
+                    currentOffset += data.count
                     uploadProgress = Double(currentOffset) / Double(fileSize)
                     Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
