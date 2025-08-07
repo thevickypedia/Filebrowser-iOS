@@ -404,8 +404,8 @@ struct FileListView: View {
                 if let usage = usageInfo {
                     Section(header: Text("Server Capacity")) {
                         VStack(alignment: .leading) {
-                            Text("Used: \(formatBytes(usage.used))")
-                            Text("Total: \(formatBytes(usage.total))")
+                            SelectableTextView(text: "Used: \(formatBytes(usage.used))")
+                            SelectableTextView(text: "Total: \(formatBytes(usage.total))")
                             ProgressView(value: Double(usage.used), total: Double(usage.total))
                         }
                     }
@@ -415,7 +415,7 @@ struct FileListView: View {
                     }
                 }
                 Section(header: Text("Client Storage")) {
-                    Text("File Cache: \(formatBytes(fileCacheSize))")
+                    SelectableTextView(text: "File Cache: \(formatBytes(fileCacheSize))")
                 }
                 Section {
                     Button(role: .destructive) {
@@ -427,10 +427,10 @@ struct FileListView: View {
                 }
                 Section(
                     footer: VStack(alignment: .leading) {
-                        Text("Issuer: \(auth.iss ?? "Unknown")")
-                        Text("Issued: \(timeStampToString(from: auth.iat))")
-                        Text("Expiration: \(timeStampToString(from: auth.exp))")
-                        Text("Time Left: \(timeLeftString(until: auth.exp))")
+                        Text("Issuer: \(auth.iss ?? "Unknown")").textSelection(.enabled)
+                        Text("Issued: \(timeStampToString(from: auth.iat))").textSelection(.enabled)
+                        Text("Expiration: \(timeStampToString(from: auth.exp))").textSelection(.enabled)
+                        Text("Time Left: \(timeLeftString(until: auth.exp))").textSelection(.enabled)
                     }
                     .padding(.top, 8)
                     .frame(maxWidth: .infinity, alignment: .center)

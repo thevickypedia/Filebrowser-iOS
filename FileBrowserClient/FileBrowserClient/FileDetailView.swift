@@ -183,30 +183,30 @@ struct FileDetailView: View {
                 HStack {
                     Image(systemName: "doc.text")
                         .imageScale(.medium)
-                    Text("Name: \(fileInfo.name)")
+                    SelectableTextView(text: "Name: \(fileInfo.name)")
                 }
                 HStack {
                     Image(systemName: "folder")
                         .imageScale(.medium)
-                    Text("Path: \(fileInfo.path)")
+                    SelectableTextView(text: "Path: \(fileInfo.path)")
                 }
                 HStack {
                     Image(systemName: "clock")
-                    Text("Modified: \(fileInfo.modified)")
+                    SelectableTextView(text: "Modified: \(fileInfo.modified)")
                 }
                 HStack {
                     Image(systemName: "shippingbox")
-                    Text("Size: \(fileInfo.size)")
+                    SelectableTextView(text: "Size: \(fileInfo.size)")
                 }
                 HStack {
                     Image(systemName: "shippingbox")
-                    Text("Extension: \(fileInfo.extension)")
+                    SelectableTextView(text: "Extension: \(fileInfo.extension)")
                 }
                 if let res = metadata?.resolution {
                     HStack {
                         Image(systemName: "ruler")
                             .imageScale(.medium)
-                        Text("Resolution: \(res.width)x\(res.height)")
+                        SelectableTextView(text: "Resolution: \(res.width)x\(res.height)")
                     }
                 }
                 Spacer()
