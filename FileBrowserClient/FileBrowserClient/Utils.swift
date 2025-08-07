@@ -139,7 +139,7 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
 
 func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String? {
     let ext = (fileName as NSString).pathExtension.lowercased()
-    
+
     // Direct lookup from dictionary
     if let icon = fileExtensionToIconMap[ext] {
         return icon
@@ -256,7 +256,7 @@ func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> St
     }
 
     let remaining = Int(timestamp - Date().timeIntervalSince1970)
-    
+
     guard remaining > 0 else {
         return "Expired"
     }

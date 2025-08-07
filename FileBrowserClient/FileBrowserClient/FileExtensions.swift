@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 8/6/25.
 //
 
-
 let fileExtensionToIconMap: [String: String] = [
     // 📄 Text & Code
     "txt": "doc.text",
