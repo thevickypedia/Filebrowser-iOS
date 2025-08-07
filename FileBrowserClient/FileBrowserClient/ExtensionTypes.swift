@@ -11,15 +11,14 @@ struct ExtensionTypes {
     ]
     let textExtensions: [String] = [
         ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
-        ".bat", ".ps1", ".psd", ".psb", ".text", ".rtf", ".doc", ".docx", ".xls", ".xlsx", ".ppt",
-        ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".m", ".mm",
-        ".java", ".css", ".rs", ".ts"
+        ".bat", ".ps1", ".text", ".rtf", ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp",
+        ".h", ".hpp", ".m", ".mm", ".css", ".rs", ".ts"
     ]
     let videoExtensions: [String] = [
-        ".mp4", ".mov"
+        ".mp4", ".mov", ".m4v"
     ]
     let audioExtensions: [String] = [
-        ".mp3", ".wav", ".aac", ".ogg", ".m4a"
+        ".mp3", ".wav", ".aac", ".m4a", ".caf"
     ]
 
     let mediaExtensions: [String]
