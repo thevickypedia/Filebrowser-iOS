@@ -34,12 +34,17 @@ struct FileListView: View {
     @State private var dateFormatExact = false
 
     @State private var showFileImporter = false
+    @State private var showPhotoPicker = false
+
     @State private var uploadQueue: [URL] = []
     @State private var currentUploadIndex = 0
     @State private var uploadProgress: Double = 0.0
+
+    // This is a required redundancy since the combination is used to show preparation stage
     @State private var isUploading = false
+    @State private var isPreparingUpload = false
+
     @State private var uploadTask: URLSessionUploadTask?
-    @State private var showPhotoPicker = false
     @State private var isUploadCancelled = false
     @State private var currentUploadSpeed: Double = 0.0
     @State private var currentUploadFile: String?
@@ -66,6 +71,17 @@ struct FileListView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
+                if isPreparingUpload {
+                    ZStack {
+                        ProgressView("Preparing for upload…")
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .padding(24)
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(16)
+                            .shadow(radius: 10)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
                 if isUploading {
                     VStack(alignment: .leading, spacing: 16) {
 
@@ -279,9 +295,11 @@ struct FileListView: View {
                         Menu("Upload File", systemImage: "square.and.arrow.up") {
                             Button("From Files", systemImage: "doc", action: {
                                 showFileImporter = true
+                                isPreparingUpload = true
                             })
                             Button("From Photos", systemImage: "photo", action: {
                                 showPhotoPicker = true
+                                isPreparingUpload = true
                             })
                         }
                     } label: {
@@ -705,6 +723,7 @@ struct FileListView: View {
         }
 
         isUploading = true
+        isPreparingUpload = false
         isUploadCancelled = false
         uploadProgress = 0.0
         let fileURL = uploadQueue[currentUploadIndex]
