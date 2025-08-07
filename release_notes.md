@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.16.5 (08/07/2025)
+--------------------
+- [3d9280e](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d9280eafb354c75e15bfd3f263d51488c47f80f) chore: Release ``v1.16.5``
+- [7653446](https://github.com/thevickypedia/Filebrowser-iOS/commit/7653446cbbf9739e8d19680c460ace6600c7650f) style: Update styling on session information
+- [88be7ec](https://github.com/thevickypedia/Filebrowser-iOS/commit/88be7ec6e58d6c14f34a601cb75b5b94c58d688c) refactor: Replace condition blocks with function calls for session information
+- [27b4e68](https://github.com/thevickypedia/Filebrowser-iOS/commit/27b4e68f70f734e3c8be6496669dafc5f3bab8fd) style: Parse JWT to display session information in settings view
+- [2414f6b](https://github.com/thevickypedia/Filebrowser-iOS/commit/2414f6b5f0ea23fbd3de0c3f69a4117e9ddeaa92) chore: Update release notes for v1.16.4
+
 v1.16.4 (08/07/2025)
 --------------------
 - [e3403f3](https://github.com/thevickypedia/Filebrowser-iOS/commit/e3403f3d5a898ad7b2394569b21c729044b30fe1) chore: Release ``v1.16.4``
