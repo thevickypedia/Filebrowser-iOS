@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 8/7/25.
 //
 
-
 import SwiftUI
 
 struct StatusPayload {
@@ -62,7 +61,7 @@ struct StatusMessage: ViewModifier {
             }
         }
         workItem = task
-        
+
         let duration = payload?.duration ?? 2.5
         DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: task)
     }

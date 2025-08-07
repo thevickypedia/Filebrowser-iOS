@@ -307,11 +307,11 @@ struct FileListView: View {
                         Menu("Upload File", systemImage: "square.and.arrow.up") {
                             Button("From Files", systemImage: "doc", action: {
                                 showFileImporter = true
-                                isPreparingUpload = true
+                                showPrepareUpload()
                             })
                             Button("From Photos", systemImage: "photo", action: {
                                 showPhotoPicker = true
-                                isPreparingUpload = true
+                                showPrepareUpload()
                             })
                         }
                     } label: {
@@ -474,6 +474,23 @@ struct FileListView: View {
                 uploadNextInQueue()
             case .failure(let error):
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    func showPrepareUpload(after duration: Int = 10) {
+        // There is no real way to detect a cancel even from file importer or photo picker
+        // This is to make sure "preparing to upload" banner is not shown forever
+        isPreparingUpload = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(duration)) {
+            if isPreparingUpload {
+                isPreparingUpload = false
+                Log.debug("Forcing isPreparingUpload flag to false")
+                statusMessage = StatusPayload(
+                    text: "⚠️ Getting things ready... Upload will follow if files were selected.",
+                    color: .yellow,
+                    duration: 5
+                )
             }
         }
     }
@@ -710,9 +727,13 @@ struct FileListView: View {
             uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
                     if isUploadCancelled {
-                        Log.info("⏹️ Upload cancelled mid-chunk.")
+                        Log.info("⏹️ Upload cancelled mid-chunk. \(fileName) may be incomplete.")
                         cancelUpload(fileHandle: fileHandle)
-                        statusMessage = StatusPayload(text: "⚠️ Upload cancelled mid-chunk", color: .yellow)
+                        statusMessage = StatusPayload(
+                            text: "⚠️ Upload cancelled mid-chunk, '\(fileName)' may be incomplete.",
+                            color: .yellow,
+                            duration: 7
+                        )
                         return
                     }
 
