@@ -90,7 +90,7 @@ struct FileDetailView: View {
                 }
 
             } else if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
-                if let text = previewText(from: URL(fileURLWithPath: file.path)) {
+                if let text = String(data: content, encoding: .utf8) {
                     ScrollView {
                         Text(text).padding()
                     }
@@ -373,22 +373,6 @@ struct FileDetailView: View {
         } else {
             Log.debug("📥 Defaulting to raw download for: \(fileName)")
             downloadRaw()
-        }
-    }
-
-    func previewText(from fileURL: URL, limit: Int = 100_000) -> String? {
-        do {
-            let fileHandle = try FileHandle(forReadingFrom: fileURL)
-            defer { try? fileHandle.close() }
-
-            let data = try fileHandle.read(upToCount: limit) ?? Data()
-            if data.contains(0x00) { // quick binary check
-                return nil
-            }
-
-            return String(data: data, encoding: .utf8)
-        } catch {
-            return nil
         }
     }
 
