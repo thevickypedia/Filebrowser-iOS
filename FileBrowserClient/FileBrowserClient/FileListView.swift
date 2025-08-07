@@ -81,7 +81,7 @@ struct FileListView: View {
                 if isPreparingUpload {
                     ZStack {
                         // todo: Doesn't reset if operation is cancelled without adding files
-                        ProgressView("Preparing for upload…")
+                        ProgressView("Preparing for upload...")
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .padding(24)
                             .background(.ultraThinMaterial)
@@ -690,7 +690,7 @@ struct FileListView: View {
                 currentUploadSpeed = 0.0
                 uploadNextInQueue()
                 viewModel.fetchFiles(at: path)
-                statusMessage = StatusPayload(text: "✅ Uploaded \(fileURL.lastPathComponent)")
+                statusMessage = StatusPayload(text: "📤 Uploaded \(fileURL.lastPathComponent)")
                 return
             }
 
@@ -752,7 +752,7 @@ struct FileListView: View {
     func uploadNextInQueue() {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
-            statusMessage = StatusPayload(text: "✅ Uploaded \(currentUploadIndex) items")
+            statusMessage = StatusPayload(text: "📤 Uploaded \(currentUploadIndex) items")
             return
         }
 
