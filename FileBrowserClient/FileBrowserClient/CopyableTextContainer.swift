@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 8/7/25.
 //
 
-
 import SwiftUI
 
 struct CopyableTextContainer: View {
@@ -13,28 +12,61 @@ struct CopyableTextContainer: View {
 
     @State private var fontSize: CGFloat = 14
     @State private var useMonospaced: Bool = false
-    @State private var showFontMenu = false
+    @State private var showFontControls = false
+
+    private let defaultFontSize: CGFloat = 14
+    private let minFontSize: CGFloat = 10
+    private let maxFontSize: CGFloat = 24
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Spacer()
-                Button(action: { showFontMenu.toggle() }) {
-                    Image(systemName: "chevron.down.circle")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
-                        .padding(6)
-                }
-                .popover(isPresented: $showFontMenu) {
-                    VStack(spacing: 12) {
-                        Toggle("Monospaced", isOn: $useMonospaced)
-                        Stepper("Size: \(Int(fontSize))", value: $fontSize, in: 10...24, step: 1)
+            DisclosureGroup(
+                isExpanded: $showFontControls,
+                content: {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle(isOn: $useMonospaced) {
+                            Label("Monospaced Font", systemImage: "textformat")
+                        }
+
+                        HStack {
+                            Label("Font Size", systemImage: "textformat.size")
+                            Spacer()
+                            Stepper("\(Int(fontSize))", value: $fontSize, in: minFontSize...maxFontSize)
+                        }
+
+                        HStack {
+                            Spacer()
+                            Button("Reset") {
+                                fontSize = defaultFontSize
+                                useMonospaced = false
+                            }
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                            .buttonStyle(.bordered)
+                        }
                     }
                     .padding()
-                    .frame(width: 200)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                    .font(.subheadline)
+                },
+                label: {
+                    HStack {
+                        Label("Text Options", systemImage: "slider.horizontal.3")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
                 }
-            }
-            .padding(.trailing, 12)
+            )
+            .padding(.bottom, 8)
 
             ScrollView {
                 CopyableTextView(
@@ -46,5 +78,6 @@ struct CopyableTextContainer: View {
                 .padding()
             }
         }
+        .padding()
     }
 }
