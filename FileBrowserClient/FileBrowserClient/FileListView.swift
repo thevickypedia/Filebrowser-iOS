@@ -426,19 +426,10 @@ struct FileListView: View {
                     }
                 }
                 Section(header: Text("Connection Information")) {
-                    Text("Issuer: \(auth.iss ?? "nil")")
-                    if let iat = auth.iat {
-                        Text("Issued: \(timeStampToString(from: iat))")
-                    } else {
-                        Text("Issued: Unknown")
-                    }
-                    if let exp = auth.exp {
-                        Text("Expiration: \(timeStampToString(from: exp))")
-                        Text("Time Left: \(timeLeftString(until: exp))")
-                    } else {
-                        Text("Expiration: Unknown")
-                        Text("Time Left: Unknown")
-                    }
+                    Text("Issuer: \(auth.iss ?? "Unknown")")
+                    Text("Issued: \(timeStampToString(from: auth.iat))")
+                    Text("Expiration: \(timeStampToString(from: auth.exp))")
+                    Text("Time Left: \(timeLeftString(until: auth.exp))")
                 }
             }
             .onAppear {

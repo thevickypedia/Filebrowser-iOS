@@ -239,16 +239,22 @@ func decodeJWT(jwt: String) -> [String: Any]? {
     }
 }
 
-func timeStampToString(from timestamp: TimeInterval) -> String {
+func timeStampToString(from timestamp: TimeInterval?) -> String {
+    guard let timestamp = timestamp else {
+        return "Unknown"
+    }
     let date = Date(timeIntervalSince1970: timestamp)
     let formatter = DateFormatter()
-    // formatter.dateFormat = "yyyy-MM-dd HH:mm:ss zzz"
     formatter.dateFormat = "MMM dd, yyyy hh:mm a zzz"
     formatter.timeZone = .current
     return formatter.string(from: date)
 }
 
-func timeLeftString(until timestamp: TimeInterval) -> String {
+func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> String {
+    guard let timestamp = timestamp else {
+        return "Unknown"
+    }
+
     let remaining = Int(timestamp - Date().timeIntervalSince1970)
     
     guard remaining > 0 else {
@@ -259,5 +265,9 @@ func timeLeftString(until timestamp: TimeInterval) -> String {
     let minutes = (remaining % 3600) / 60
     let seconds = remaining % 60
 
-    return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    if asString {
+        return "\(hours) hour\(hours == 1 ? "" : "s"), \(minutes) minute\(minutes == 1 ? "" : "s")"
+    } else {
+        return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+    }
 }
