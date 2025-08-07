@@ -69,13 +69,13 @@ struct FileDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black.opacity(0.2))
 
-        } else if let error = error {
+        } else if let error = self.error {
             Text("Error: \(error)").foregroundColor(.red)
 
         } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
             MediaPlayerView(file: file, serverURL: serverURL, token: token)
 
-        } else if let content = content {
+        } else if let content = self.content {
             if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
                 if animateGIF && fileName.hasSuffix(".gif") {
                     AnimatedImageView(data: content)
@@ -229,8 +229,8 @@ struct FileDetailView: View {
     }
 
     func checkContentAndReload(fileName: String) {
-        content = nil
-        error = nil
+        self.content = nil
+        self.error = nil
         if cacheExtensions.contains(where: fileName.hasSuffix),
            let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
             self.content = cached
@@ -256,8 +256,8 @@ struct FileDetailView: View {
         fileName: String,
         extensionTypes: ExtensionTypes
     ) {
-        content = nil
-        error = nil
+        self.content = nil
+        self.error = nil
         if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
             // ✅ Only load if preview is supported
             downloadFile(
@@ -285,13 +285,13 @@ struct FileDetailView: View {
 
         guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            error = "Failed to encode rename paths"
+            self.error = "Failed to encode rename paths"
             return
         }
 
         let urlString = "\(serverURL)/api/resources/\(removePrefix(urlPath: encodedFrom))?action=rename&destination=/\(removePrefix(urlPath: encodedTo))&override=false&rename=false"
         guard let url = URL(string: urlString) else {
-            error = "Invalid rename URL"
+            self.error = "Invalid rename URL"
             return
         }
 
@@ -347,7 +347,7 @@ struct FileDetailView: View {
     }
 
     func saveFile() {
-        guard let content = content else { return }
+        guard let content = self.content else { return }
 
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
         try? content.write(to: tempURL)

@@ -942,7 +942,7 @@ struct FileListView: View {
             selectedItems.removeAll()
             selectionMode = false
             viewModel.fetchFiles(at: path)
-            statusMessage = StatusPayload(text: "🗑️ Deleted \(count) items", color: .red, duration: 3)
+            statusMessage = StatusPayload(text: "🗑️ Deleted \(count) \(count == 1 ? "item" : "items")", color: .red, duration: 3)
         }
     }
 
@@ -957,6 +957,7 @@ struct FileListView: View {
         guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             Log.error("❌ Failed to encode paths")
+            errorMessage = "Failed to rename \(item.name)"
             return
         }
 
@@ -976,7 +977,7 @@ struct FileListView: View {
                     isRenaming = false
                     selectionMode = false
                     viewModel.fetchFiles(at: path)
-                    statusMessage = StatusPayload(text: "📝 Renamed \(item.name) -> \(renameInput)", color: .yellow, duration: 3)
+                    statusMessage = StatusPayload(text: "📝 Renamed \(item.name) → \(renameInput)", color: .yellow, duration: 3)
                 }
             }
         }
