@@ -21,6 +21,9 @@ struct UserPermission: Codable {
 class AuthManager: ObservableObject {
     @Published var token: String?
     @Published var serverURL: String?
+    @Published var iss: String?
+    @Published var iat: TimeInterval?
+    @Published var exp: TimeInterval?
     @Published var permissions: UserPermission?
     @Published var username: String?
     @Published var userAccount: UserAccount?

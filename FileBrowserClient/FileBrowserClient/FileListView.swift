@@ -425,6 +425,21 @@ struct FileListView: View {
                         Label("Clear Local Cache", systemImage: "trash")
                     }
                 }
+                Section(header: Text("Connection Information")) {
+                    Text("Issuer: \(auth.iss ?? "nil")")
+                    if let iat = auth.iat {
+                        Text("Issued: \(timeStampToString(from: iat))")
+                    } else {
+                        Text("Issued: Unknown")
+                    }
+                    if let exp = auth.exp {
+                        Text("Expiration: \(timeStampToString(from: exp))")
+                        Text("Time Left: \(timeLeftString(until: exp))")
+                    } else {
+                        Text("Expiration: Unknown")
+                        Text("Time Left: Unknown")
+                    }
+                }
             }
             .onAppear {
                 hideDotfiles = auth.userAccount?.hideDotfiles ?? false

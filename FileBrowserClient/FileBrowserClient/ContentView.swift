@@ -302,6 +302,13 @@ struct ContentView: View {
 
                 if httpResponse.statusCode == 200 {
                     if let jwt = String(data: data, encoding: .utf8) {
+                        if let payload = decodeJWT(jwt: jwt) {
+                            auth.iss = payload["iss"] as? String
+                            auth.exp = payload["exp"] as? TimeInterval
+                            auth.iat = payload["iat"] as? TimeInterval
+                        } else {
+                            Log.error("Failed to decode JWT")
+                        }
                         token = jwt
                         auth.token = jwt
                         auth.serverURL = serverURL

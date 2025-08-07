@@ -205,3 +205,59 @@ func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager)
         extension: fileExtnMeta
     )
 }
+
+func decodeJWT(jwt: String) -> [String: Any]? {
+    let segments = jwt.split(separator: ".")
+    guard segments.count == 3 else {
+        Log.error("Invalid JWT")
+        return nil
+    }
+
+    let payloadSegment = segments[1]
+
+    // Pad the base64 string if needed
+    var base64String = String(payloadSegment)
+        .replacingOccurrences(of: "-", with: "+")
+        .replacingOccurrences(of: "_", with: "/")
+
+    // Pad with '=' if needed
+    while base64String.count % 4 != 0 {
+        base64String += "="
+    }
+
+    guard let payloadData = Data(base64Encoded: base64String) else {
+        Log.error("Invalid base64 payload")
+        return nil
+    }
+
+    do {
+        let jsonObject = try JSONSerialization.jsonObject(with: payloadData, options: [])
+        return jsonObject as? [String: Any]
+    } catch {
+        Log.error("Error decoding JSON: \(error)")
+        return nil
+    }
+}
+
+func timeStampToString(from timestamp: TimeInterval) -> String {
+    let date = Date(timeIntervalSince1970: timestamp)
+    let formatter = DateFormatter()
+    // formatter.dateFormat = "yyyy-MM-dd HH:mm:ss zzz"
+    formatter.dateFormat = "MMM dd, yyyy hh:mm a zzz"
+    formatter.timeZone = .current
+    return formatter.string(from: date)
+}
+
+func timeLeftString(until timestamp: TimeInterval) -> String {
+    let remaining = Int(timestamp - Date().timeIntervalSince1970)
+    
+    guard remaining > 0 else {
+        return "Expired"
+    }
+
+    let hours = remaining / 3600
+    let minutes = (remaining % 3600) / 60
+    let seconds = remaining % 60
+
+    return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+}
