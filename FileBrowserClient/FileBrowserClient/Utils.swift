@@ -138,120 +138,24 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
 }
 
 func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String? {
-    // 📄 Text & Code
-    if fileName.hasSuffix(".txt") { return "doc.text" }
-    if fileName.hasSuffix(".md") || fileName.hasSuffix(".markdown") { return "text.alignleft" }
-    if fileName.hasSuffix(".csv") || fileName.hasSuffix(".tsv") { return "tablecells" }
-    if fileName.hasSuffix(".json") { return "curlybraces" }
-    if fileName.hasSuffix(".xml") || fileName.hasSuffix(".plist") { return "chevron.left.slash.chevron.right" }
-    if fileName.hasSuffix(".html") || fileName.hasSuffix(".htm") { return "globe" }
-    if fileName.hasSuffix(".js") || fileName.hasSuffix(".ts") { return "curlybraces.square" }
-    if fileName.hasSuffix(".swift") { return "swift" }
-    if fileName.hasSuffix(".py") { return "chevron.left.slash.chevron.right" }
-    if fileName.hasSuffix(".sh") || fileName.hasSuffix(".bash") { return "terminal" }
-    if fileName.hasSuffix(".rb") { return "diamond.fill" }
-    if fileName.hasSuffix(".go") { return "tortoise.fill" }
-    if fileName.hasSuffix(".java") { return "cup.and.saucer" }
-    if fileName.hasSuffix(".c") || fileName.hasSuffix(".cpp") || fileName.hasSuffix(".h") || fileName.hasSuffix(".hpp") {
-        return "hammer"
-    }
-    if fileName.hasSuffix(".rs") { return "gearshape.2" }
-    if fileName.hasSuffix(".scala") { return "square.stack.3d.forward.dottedline" }
-    if fileName.hasSuffix(".php") { return "chevron.left.slash.chevron.right" }
-    if fileName.hasSuffix(".css") { return "paintbrush" }
-    if fileName.hasSuffix(".scss") || fileName.hasSuffix(".sass") { return "scissors" }
-    if fileName.hasSuffix(".yml") || fileName.hasSuffix(".yaml") { return "list.bullet.rectangle.portrait" }
-    if fileName.hasSuffix(".ini") || fileName.hasSuffix(".config") || fileName.hasSuffix(".conf") { return "gearshape" }
-    if fileName.hasSuffix(".log") { return "doc.append" }
-    if fileName.hasSuffix(".env") { return "leaf" }
-    if fileName.hasSuffix(".bat") || fileName.hasSuffix(".ps1") { return "terminal.fill" }
-
-    // 📚 Office Documents
-    if fileName.hasSuffix(".pdf") { return "doc.richtext" }
-    if fileName.hasSuffix(".doc") || fileName.hasSuffix(".docx") { return "doc.plaintext" }
-    if fileName.hasSuffix(".ppt") || fileName.hasSuffix(".pptx") { return "chart.bar.doc.horizontal" }
-    if fileName.hasSuffix(".xls") || fileName.hasSuffix(".xlsx") { return "tablecells.badge.ellipsis" }
-    if fileName.hasSuffix(".rtf") || fileName.hasSuffix(".text") { return "doc.text.fill" }
-
-    // 🗜 Archives
-    if fileName.hasSuffix(".zip") || fileName.hasSuffix(".tar") || fileName.hasSuffix(".gz") ||
-       fileName.hasSuffix(".rar") || fileName.hasSuffix(".7z") || fileName.hasSuffix(".bz2") ||
-       fileName.hasSuffix(".xz") || fileName.hasSuffix(".lz") || fileName.hasSuffix(".lzma") {
-        return "archivebox"
+    let ext = (fileName as NSString).pathExtension.lowercased()
+    
+    // Direct lookup from dictionary
+    if let icon = fileExtensionToIconMap[ext] {
+        return icon
     }
 
-    // 🎵 Audio
+    // Match against audio/video/image extensions in ExtensionTypes
     if extensionTypes.audioExtensions.contains(where: fileName.hasSuffix) {
         return "waveform"
     }
-    if fileName.hasSuffix(".flac") || fileName.hasSuffix(".ogg") || fileName.hasSuffix(".oga") {
-        return "waveform.circle"
-    }
-    if fileName.hasSuffix(".mid") || fileName.hasSuffix(".midi") {
-        return "music.note"
-    }
 
-    // 🎬 Video
     if extensionTypes.videoExtensions.contains(where: fileName.hasSuffix) {
         return "film"
     }
-    if fileName.hasSuffix(".avi") || fileName.hasSuffix(".mkv") || fileName.hasSuffix(".flv") || fileName.hasSuffix(".wmv") {
-        return "film.stack"
-    }
 
-    // 🖼️ Images
     if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
         return "photo"
-    }
-    if fileName.hasSuffix(".svg") { return "scribble" }
-    if fileName.hasSuffix(".ico") || fileName.hasSuffix(".bmp") || fileName.hasSuffix(".tiff") || fileName.hasSuffix(".tif") {
-        return "photo.on.rectangle"
-
-    }
-
-    // 🔐 Security
-    if fileName.hasSuffix(".pem") || fileName.hasSuffix(".crt") || fileName.hasSuffix(".cer") || fileName.hasSuffix(".key") {
-        return "lock.shield"
-    }
-    if fileName.hasSuffix(".p12") || fileName.hasSuffix(".pfx") {
-        return "lock.square.stack"
-    }
-
-    // 📦 Package / Installers
-    if fileName.hasSuffix(".dmg") || fileName.hasSuffix(".pkg") || fileName.hasSuffix(".msi") || fileName.hasSuffix(".exe") {
-        return "shippingbox"
-    }
-    if fileName.hasSuffix(".app") { return "app" }
-
-    // 🎮 Game-related
-    if fileName.hasSuffix(".nes") || fileName.hasSuffix(".sfc") || fileName.hasSuffix(".smc") || fileName.hasSuffix(".gba") {
-        return "gamecontroller"
-    }
-
-    // 📱 Mobile Assets
-    if fileName.hasSuffix(".ipa") || fileName.hasSuffix(".apk") { return "app.badge" }
-
-    // 🧩 Plugins, Extensions, Modules
-    if fileName.hasSuffix(".plugin") || fileName.hasSuffix(".bundle") || fileName.hasSuffix(".framework") {
-        return "puzzlepiece.extension"
-    }
-
-    // ⚙️ Dev Build Files
-    if fileName.hasSuffix(".xcodeproj") || fileName.hasSuffix(".xcworkspace") {
-        return "hammer.fill"
-    }
-
-    // ☁️ Cloud & Sync
-    if fileName.hasSuffix(".icloud") {
-        return "icloud"
-    }
-
-    // 🧪 Others & Catch-All
-    if fileName.hasSuffix(".bak") || fileName.hasSuffix(".old") {
-        return "clock.arrow.circlepath"
-    }
-    if fileName.hasSuffix(".tmp") || fileName.hasSuffix(".temp") {
-        return "exclamationmark.triangle"
     }
 
     return nil
