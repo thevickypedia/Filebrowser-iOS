@@ -39,6 +39,7 @@ struct FileListView: View {
     @State private var uploadQueue: [URL] = []
     @State private var currentUploadIndex = 0
     @State private var uploadProgress: Double = 0.0
+    @State private var uploadProgressPct: Int = 0
 
     // This is a required redundancy since the combination is used to show preparation stage
     @State private var isUploading = false
@@ -139,9 +140,13 @@ struct FileListView: View {
                         }
 
                         // 📊 Progress Bar
-                        ProgressView(value: uploadProgress)
-                            .progressViewStyle(LinearProgressViewStyle())
-                            .padding(.top, 8)
+                        ProgressView(value: uploadProgress, total: 1.0) {
+                            EmptyView() // No label
+                        } currentValueLabel: {
+                            Text("\(uploadProgressPct)%")
+                        }
+                        .progressViewStyle(LinearProgressViewStyle())
+                        .padding(.top, 8)
                     }
                     .padding()
                     .background(.ultraThinMaterial)
@@ -706,6 +711,7 @@ struct FileListView: View {
 
                     currentOffset += data.count
                     uploadProgress = Double(currentOffset) / Double(fileSize)
+                    uploadProgressPct = Int((uploadProgress * 100).rounded())
                     currentUploadedFileSize = sizeConverter(currentOffset)
                     Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
