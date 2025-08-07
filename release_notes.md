@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.17.1 (08/07/2025)
+--------------------
+- [6bf1c09](https://github.com/thevickypedia/Filebrowser-iOS/commit/6bf1c09c94648e21bb0e6a465245437a23c47cec) chore: Release ``v1.17.1``
+- [8ecf94e](https://github.com/thevickypedia/Filebrowser-iOS/commit/8ecf94e1532bab579468da123ccc51789a17e2eb) style: Update status messages
+- [bcc7cf4](https://github.com/thevickypedia/Filebrowser-iOS/commit/bcc7cf49a19f89fd8451ce28d3a81d64cb02d170) fix: Ensure preparing to upload banner is reset after interval
+- [91b7a04](https://github.com/thevickypedia/Filebrowser-iOS/commit/91b7a04fd7b79520f14d559dece64aa68a3dc902) style: Minor updates to upload status
+- [0aaeb20](https://github.com/thevickypedia/Filebrowser-iOS/commit/0aaeb201d7f882189da5b5d2af0a4f20642a5444) style: Include more status indicators
+- [e66e5e5](https://github.com/thevickypedia/Filebrowser-iOS/commit/e66e5e546609285e7152833c7b7f41e17c5d3e7f) chore: Update release notes for v1.17.0
+
 v1.17.0 (08/07/2025)
 --------------------
 - [cf33552](https://github.com/thevickypedia/Filebrowser-iOS/commit/cf33552fc108ed7589bb7719d9ae4b55fa471d49) chore: Release ``v1.17.0``
