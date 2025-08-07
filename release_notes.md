@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.16.3 (08/07/2025)
+--------------------
+- [aa1c7dc](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa1c7dc927d93edab4061ed67cd7ee19e0f70525) chore: Release ``v1.16.3``
+- [5564806](https://github.com/thevickypedia/Filebrowser-iOS/commit/55648066795581518131b52b58515e56562cd405) perf: Replace giant condition block for ``systemIcons`` with a dictionary
+- [2704748](https://github.com/thevickypedia/Filebrowser-iOS/commit/2704748d9dcd7b8f0629fb0a06348a743e79c71b) chore: Extend UTF8 text formats for supported extensions
+- [464ef16](https://github.com/thevickypedia/Filebrowser-iOS/commit/464ef160ecdbd027a48aaa845286c6e0ddc247c9) chore: Extend system icons
+- [86ccb15](https://github.com/thevickypedia/Filebrowser-iOS/commit/86ccb15a4f469e8dbed50097742c21f47e5cb7e6) chore: remove non-UTF8 text formats from supported extensions
+- [637656c](https://github.com/thevickypedia/Filebrowser-iOS/commit/637656c2eb7d8e86df3d0fe2b0b9404ea5a15192) style: Display a preparing for upload banner to cover propagation delay
+- [706c464](https://github.com/thevickypedia/Filebrowser-iOS/commit/706c4641d1863c06767d32d7d3d1a7f23e359fa4) style: Display current uploaded file size along with total file size in upload progress view
+- [ef8d8ea](https://github.com/thevickypedia/Filebrowser-iOS/commit/ef8d8ea57f0cdcc96908ba9b80b43d6df06b242b) fix: Avoid remembering password
+- [bd9470c](https://github.com/thevickypedia/Filebrowser-iOS/commit/bd9470c233942dbb7a772b3de0dd68c81c0d137e) style: Show file type icons during file upload progress view
+- [b369cd9](https://github.com/thevickypedia/Filebrowser-iOS/commit/b369cd9a6b51928a7001c53b96159fe17e714ffe) chore: Update release notes for v1.16.2
+
 v1.16.2 (08/06/2025)
 --------------------
 - [40f9c82](https://github.com/thevickypedia/Filebrowser-iOS/commit/40f9c823194f29acb968a3c18e57f1815d10fe7c) chore: Release ``v1.16.2``
