@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.16.4 (08/07/2025)
+--------------------
+- [e3403f3](https://github.com/thevickypedia/Filebrowser-iOS/commit/e3403f3d5a898ad7b2394569b21c729044b30fe1) chore: Release ``v1.16.4``
+- [8b6b4cc](https://github.com/thevickypedia/Filebrowser-iOS/commit/8b6b4cc609060d422a43226b25008bc56a8a36e0) style: Include a percentage indicator in upload progress view
+- [3c997a2](https://github.com/thevickypedia/Filebrowser-iOS/commit/3c997a270d5cda96fee8f0e9e0b917fd561b81bd) chore: Update release notes for v1.16.3
+
 v1.16.3 (08/07/2025)
 --------------------
 - [aa1c7dc](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa1c7dc927d93edab4061ed67cd7ee19e0f70525) chore: Release ``v1.16.3``
