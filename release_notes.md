@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v1.16.6 (08/07/2025)
+--------------------
+- [28821cf](https://github.com/thevickypedia/Filebrowser-iOS/commit/28821cf36015e1733100c1581b9299a330e550d0) chore: Release ``v1.16.6``
+- [8d30264](https://github.com/thevickypedia/Filebrowser-iOS/commit/8d302641d37b205d5acb48aa420d7f2f475140ac) lint: Make linting happy
+- [9456a59](https://github.com/thevickypedia/Filebrowser-iOS/commit/9456a595e51a12328495c0d5d9abbcf77341f54e) style: Improve the text options view to modify font and size
+- [00fad44](https://github.com/thevickypedia/Filebrowser-iOS/commit/00fad44dfb42ec2adfb9e5497e965317a9f8d392) feat: Add a new feature to change font and size for text files
+- [0c498b1](https://github.com/thevickypedia/Filebrowser-iOS/commit/0c498b1f5c47546fba1e01f6768969629b663c62) feat: Implement copyable text view to improve reading experience
+- [c2d04c7](https://github.com/thevickypedia/Filebrowser-iOS/commit/c2d04c7c4f5a055ea54ff8a5b9fd4cb985e4c8e7) feat: Make all text attributes copy-able
+- [2f3b0bd](https://github.com/thevickypedia/Filebrowser-iOS/commit/2f3b0bda046693d6598df5fff4d61aa06e89c174) revert: Binary check on text files
+- [e5d8819](https://github.com/thevickypedia/Filebrowser-iOS/commit/e5d8819c84b0f38e09e5c9653919089b9a7a9cb1) feat: Include a binary check on text files to avoid misrepresented extensions causing memory leak
+- [6e9f343](https://github.com/thevickypedia/Filebrowser-iOS/commit/6e9f343bf4bc6eb28fb02461fe6d63383ac7f2f2) chore: Update release notes for v1.16.5
+
 v1.16.5 (08/07/2025)
 --------------------
 - [3d9280e](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d9280eafb354c75e15bfd3f263d51488c47f80f) chore: Release ``v1.16.5``
