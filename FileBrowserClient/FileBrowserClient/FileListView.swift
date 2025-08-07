@@ -57,8 +57,14 @@ struct FileListView: View {
     @State private var fileCacheSize: Int64 = 0
 
     @State private var sortOption: SortOption = .nameAsc
+
+    // Display as alerts
     @State private var errorTitle: String?
     @State private var errorMessage: String?
+
+    // Display as disappearing labels
+    @State private var statusMessage: StatusPayload?
+    @State private var settingsMessage: StatusPayload?
 
     let path: String
     @Binding var isLoggedIn: Bool
@@ -371,6 +377,7 @@ struct FileListView: View {
             }
         }
         .id("filelist-\(path)-\(pathStack.count)")
+        .modifier(StatusMessage(payload: $statusMessage))
         .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
         .modifier(CreateFileAlert(
             createFile: $showCreateFile,
@@ -421,6 +428,7 @@ struct FileListView: View {
                     Button(role: .destructive) {
                         FileCache.shared.clearDiskCache()
                         fetchClientStorageInfo()
+                        settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)
                     } label: {
                         Label("Clear Local Cache", systemImage: "trash")
                     }
@@ -438,6 +446,7 @@ struct FileListView: View {
                     EmptyView()
                 }
             }
+            .modifier(StatusMessage(payload: $settingsMessage))
             .onAppear {
                 hideDotfiles = auth.userAccount?.hideDotfiles ?? false
                 dateFormatExact = auth.userAccount?.dateFormat ?? false
@@ -855,12 +864,13 @@ struct FileListView: View {
                     Log.info("✅ Settings saved")
                     auth.userAccount?.hideDotfiles = hideDotfiles
                     auth.userAccount?.dateFormat = dateFormatExact
-                    showingSettings = false
-                    viewModel.fetchFiles(at: path)
+                    // todo: Show a status message here similar to logout successful
+                    settingsMessage = StatusPayload(text: "✅ Settings saved")
                 } else {
                     Log.error("❌ Settings save failed: \(body)")
                     errorTitle = "Settings save failed"
                     errorMessage = body
+                    settingsMessage = StatusPayload(text: "❌ Settings save failed")
                 }
             }
         }.resume()
