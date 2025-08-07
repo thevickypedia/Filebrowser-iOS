@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.17.0 (08/07/2025)
+--------------------
+- [cf33552](https://github.com/thevickypedia/Filebrowser-iOS/commit/cf33552fc108ed7589bb7719d9ae4b55fa471d49) chore: Release ``v1.17.0``
+- [7ee4237](https://github.com/thevickypedia/Filebrowser-iOS/commit/7ee42372c8219ff4e76ef8c53de854410e71e15d) feat: Display disappearing lables to indicate status in settings page
+- [c2ae5f8](https://github.com/thevickypedia/Filebrowser-iOS/commit/c2ae5f8a375ee5e3cdda58f481bbc0d445c505b0) chore: Update release notes for v1.16.6
+
 v1.16.6 (08/07/2025)
 --------------------
 - [28821cf](https://github.com/thevickypedia/Filebrowser-iOS/commit/28821cf36015e1733100c1581b9299a330e550d0) chore: Release ``v1.16.6``
