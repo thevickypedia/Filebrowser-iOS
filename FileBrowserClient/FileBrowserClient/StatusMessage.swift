@@ -10,8 +10,8 @@ import SwiftUI
 
 struct StatusPayload {
     var text: String?
-    var duration: TimeInterval = 2.5
     var color: Color = .green
+    var duration: TimeInterval = 2.5
 }
 
 struct StatusMessage: ViewModifier {

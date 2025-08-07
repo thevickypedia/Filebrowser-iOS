@@ -80,6 +80,7 @@ struct FileListView: View {
             List {
                 if isPreparingUpload {
                     ZStack {
+                        // todo: Doesn't reset if operation is cancelled without adding files
                         ProgressView("Preparing for upload…")
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .padding(24)
@@ -584,6 +585,7 @@ struct FileListView: View {
             errorTitle = "File Error"
             errorMessage = error.localizedDescription
             cancelUpload(fileHandle: nil)
+            statusMessage = StatusPayload(text: "❌ Upload failed", color: .red)
             return
         }
 
@@ -648,6 +650,7 @@ struct FileListView: View {
         uploadTask?.cancel()
         uploadTask = nil
         isUploading = false
+        viewModel.fetchFiles(at: path)
     }
 
     func uploadFileInChunks(
@@ -673,6 +676,7 @@ struct FileListView: View {
             if isUploadCancelled {
                 Log.info("⏹️ Upload cancelled by user.")
                 cancelUpload(fileHandle: fileHandle)
+                statusMessage = StatusPayload(text: "⚠️ Upload cancelled", color: .yellow)
                 return
             }
 
@@ -686,6 +690,7 @@ struct FileListView: View {
                 currentUploadSpeed = 0.0
                 uploadNextInQueue()
                 viewModel.fetchFiles(at: path)
+                statusMessage = StatusPayload(text: "✅ Uploaded \(fileURL.lastPathComponent)")
                 return
             }
 
@@ -707,6 +712,7 @@ struct FileListView: View {
                     if isUploadCancelled {
                         Log.info("⏹️ Upload cancelled mid-chunk.")
                         cancelUpload(fileHandle: fileHandle)
+                        statusMessage = StatusPayload(text: "⚠️ Upload cancelled mid-chunk", color: .yellow)
                         return
                     }
 
@@ -746,6 +752,7 @@ struct FileListView: View {
     func uploadNextInQueue() {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
+            statusMessage = StatusPayload(text: "✅ Uploaded \(currentUploadIndex) items")
             return
         }
 
@@ -864,7 +871,6 @@ struct FileListView: View {
                     Log.info("✅ Settings saved")
                     auth.userAccount?.hideDotfiles = hideDotfiles
                     auth.userAccount?.dateFormat = dateFormatExact
-                    // todo: Show a status message here similar to logout successful
                     settingsMessage = StatusPayload(text: "✅ Settings saved")
                 } else {
                     Log.error("❌ Settings save failed: \(body)")
@@ -910,10 +916,12 @@ struct FileListView: View {
         }
 
         group.notify(queue: .main) {
-            Log.info("✅ Deleted \(selectedItems.count) items")
+            let count = selectedItems.count
+            Log.info("✅ Deleted \(count) items")
             selectedItems.removeAll()
             selectionMode = false
             viewModel.fetchFiles(at: path)
+            statusMessage = StatusPayload(text: "🗑️ Deleted \(count) items", color: .red, duration: 3)
         }
     }
 
@@ -947,6 +955,7 @@ struct FileListView: View {
                     isRenaming = false
                     selectionMode = false
                     viewModel.fetchFiles(at: path)
+                    statusMessage = StatusPayload(text: "📝 Renamed \(item.name) -> \(renameInput)", color: .yellow, duration: 3)
                 }
             }
         }
@@ -987,12 +996,13 @@ struct FileListView: View {
         }
 
         let separator = isDirectory ? "/?" : "?"
+        let resourceType = isDirectory ? "Folder" : "File"
+        let emoji = isDirectory ? "📁" : "📄"
         let endpoint = "/api/resources/\(removePrefix(urlPath: encodedPath))\(separator)"
         let query: [URLQueryItem] = [
             URLQueryItem(name: "override", value: "false")
         ]
 
-        let resourceType = isDirectory ? "Folder" : "File"
         Log.info("🔄 Creating \(resourceType) at path: \(fullPath)")
 
         makeRequest(endpoint: endpoint, method: "POST", queryItems: query) { _, response, error in
@@ -1012,6 +1022,7 @@ struct FileListView: View {
                 if http.statusCode == 200 {
                     Log.info("✅ \(resourceType) created successfully")
                     viewModel.fetchFiles(at: path)
+                    statusMessage = StatusPayload(text: "\(emoji) \(newResourceName) created")
                 } else {
                     Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")
                     errorTitle = "Create Failed"
