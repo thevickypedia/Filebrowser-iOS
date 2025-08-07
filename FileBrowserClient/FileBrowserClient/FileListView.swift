@@ -425,11 +425,17 @@ struct FileListView: View {
                         Label("Clear Local Cache", systemImage: "trash")
                     }
                 }
-                Section(header: Text("Connection Information")) {
-                    Text("Issuer: \(auth.iss ?? "Unknown")")
-                    Text("Issued: \(timeStampToString(from: auth.iat))")
-                    Text("Expiration: \(timeStampToString(from: auth.exp))")
-                    Text("Time Left: \(timeLeftString(until: auth.exp))")
+                Section(
+                    footer: VStack(alignment: .leading) {
+                        Text("Issuer: \(auth.iss ?? "Unknown")")
+                        Text("Issued: \(timeStampToString(from: auth.iat))")
+                        Text("Expiration: \(timeStampToString(from: auth.exp))")
+                        Text("Time Left: \(timeLeftString(until: auth.exp))")
+                    }
+                    .padding(.top, 8)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                ) {
+                    EmptyView()
                 }
             }
             .onAppear {
