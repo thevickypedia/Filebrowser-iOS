@@ -92,7 +92,8 @@ struct FileDetailView: View {
             } else if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
                 if let text = String(data: content, encoding: .utf8) {
                     ScrollView {
-                        Text(text).padding()
+                        CopyableTextView(text: text)
+                            .padding()
                     }
                 } else {
                     Text("Failed to decode text")
