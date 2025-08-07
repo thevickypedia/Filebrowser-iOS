@@ -12,7 +12,10 @@ struct ExtensionTypes {
     let textExtensions: [String] = [
         ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
         ".bat", ".ps1", ".text", ".rtf", ".py", ".scala", ".rb", ".swift", ".go", ".java", ".c", ".cpp",
-        ".h", ".hpp", ".m", ".mm", ".css", ".rs", ".ts"
+        ".h", ".hpp", ".m", ".mm", ".css", ".rs", ".ts", ".md", ".js", ".env",
+        ".html", ".htm", ".php", ".sql", ".toml", ".conf", ".cfg", ".plist",
+        ".asciidoc", ".adoc", ".tex", ".rst", ".lua", ".pl", ".dart", ".kts",
+        ".jsx", ".tsx", ".jsonl", ".ndjson"
     ]
     let videoExtensions: [String] = [
         ".mp4", ".mov", ".m4v"
