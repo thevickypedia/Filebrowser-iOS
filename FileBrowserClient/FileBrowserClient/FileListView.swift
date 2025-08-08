@@ -575,49 +575,52 @@ struct FileListView: View {
             }
         }
     }
-
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
         let style = GridStyle(gridHeight: module ? 70 : 100, isModule: module)
 
-        let tapAction = {
+        // ✅ Common action for file taps
+        let handleFileTap = {
             if selectionMode {
                 toggleSelection(for: file)
-            } else if !file.isDir {
+            } else {
                 selectedFileIndex = index
                 selectedFileList = fileList
             }
         }
 
+        // ✅ Common action for folder taps
+        let handleFolderTap = {
+            if selectionMode {
+                toggleSelection(for: file)
+            }
+        }
+
         ZStack(alignment: .topTrailing) {
-            Group {
-                if file.isDir {
-                    if selectionMode {
-                        Button(action: { toggleSelection(for: file) }) {
-                            gridContent(file: file, style: style, module: module)
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        NavigationLink(value: fullPath(for: file)) {
-                            gridContent(file: file, style: style, module: module)
-                        }
-                        .buttonStyle(.plain)
+            // 📦 Main cell content
+            if file.isDir {
+                if selectionMode {
+                    // 🔹 Folders in selection mode = button only
+                    Button(action: handleFolderTap) {
+                        gridContent(file: file, style: style, module: module)
                     }
+                    .buttonStyle(.plain)
                 } else {
-                    Button(action: {
-                        if selectionMode {
-                            toggleSelection(for: file)
-                        } else {
-                            selectedFileIndex = index
-                            selectedFileList = fileList
-                        }
-                    }) {
+                    // 🔹 Normal mode = navigates
+                    NavigationLink(value: fullPath(for: file)) {
                         gridContent(file: file, style: style, module: module)
                     }
                     .buttonStyle(.plain)
                 }
+            } else {
+                // 🔹 Files always use Button (action changes by mode)
+                Button(action: handleFileTap) {
+                    gridContent(file: file, style: style, module: module)
+                }
+                .buttonStyle(.plain)
             }
 
+            // ✅ Selection checkmark overlay
             if selectionMode {
                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
                     .resizable()
@@ -635,6 +638,7 @@ struct FileListView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray6))
                     .frame(height: style.gridHeight)
+
                 thumbnailOrIcon(for: file, style: style)
             }
 
