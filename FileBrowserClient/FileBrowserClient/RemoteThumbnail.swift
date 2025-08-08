@@ -13,6 +13,8 @@ struct RemoteThumbnail: View {
     let token: String
     let advancedSettings: AdvancedSettings
     let extensionTypes: ExtensionTypes
+    var width: CGFloat = 32
+    var height: CGFloat = 32
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -22,18 +24,18 @@ struct RemoteThumbnail: View {
         Group {
             if let gifData = gifData, advancedSettings.animateGIF {
                 AnimatedImageView(data: gifData)
-                    .frame(width: 32, height: 32)
+                    .frame(width: self.width, height: self.height)
             } else if let image = image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 32, height: 32)
+                    .frame(width: self.width, height: self.height)
             } else if isLoading {
                 ProgressView()
-                    .frame(width: 32, height: 32)
+                    .frame(width: self.width, height: self.height)
             } else {
                 Color.clear
-                    .frame(width: 32, height: 32)
+                    .frame(width: self.width, height: self.height)
             }
         }
         .onAppear {

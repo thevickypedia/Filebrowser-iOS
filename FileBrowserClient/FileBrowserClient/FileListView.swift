@@ -533,6 +533,7 @@ struct FileListView: View {
             }
         }
     }
+
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem]) -> some View {
         if selectionMode {
@@ -594,7 +595,8 @@ struct FileListView: View {
                                 serverURL: auth.serverURL ?? "",
                                 token: auth.token ?? "",
                                 advancedSettings: advancedSettings,
-                                extensionTypes: extensionTypes
+                                extensionTypes: extensionTypes,
+                                width: 160, height: 160
                             )
                             .scaledToFit()
                             .frame(height: 80)
