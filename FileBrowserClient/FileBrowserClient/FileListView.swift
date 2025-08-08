@@ -32,6 +32,17 @@ struct GridStyle {
     }
 }
 
+struct ViewStyle {
+    // List mode sizes
+    static let listIconSize: CGFloat = 28
+    static let listCornerRadius: CGFloat = 4
+    
+    // Grid/module shared style
+    static func gridStyle(module: Bool) -> GridStyle {
+        GridStyle(gridHeight: module ? 70 : 100, isModule: module)
+    }
+}
+
 struct Icons {
     // Icon - SystemName mapping to be used in FileListView
     static let folder: String = "folder"
@@ -512,7 +523,7 @@ struct FileListView: View {
         let fileName = file.name.lowercased()
         let useThumbnail = advancedSettings.displayThumbnail &&
             extensionTypes.imageExtensions.contains(where: fileName.hasSuffix)
-
+        
         if useThumbnail {
             RemoteThumbnail(
                 file: file,
@@ -520,46 +531,47 @@ struct FileListView: View {
                 token: auth.token ?? "",
                 advancedSettings: advancedSettings,
                 extensionTypes: extensionTypes,
-                width: style?.gridHeight ?? 40,
-                height: style?.gridHeight ?? 40
+                width: style?.gridHeight ?? ViewStyle.listIconSize,
+                height: style?.gridHeight ?? ViewStyle.listIconSize
             )
             .scaledToFill()
-            .frame(width: style?.gridHeight ?? 40, height: style?.gridHeight ?? 40)
+            .frame(
+                width: style?.gridHeight ?? ViewStyle.listIconSize,
+                height: style?.gridHeight ?? ViewStyle.listIconSize
+            )
             .clipped()
             .id(file.path)
         } else {
-            Image(systemName: file.isDir ? Icons.folder : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
+            Image(systemName: file.isDir
+                  ? Icons.folder
+                  : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
                 .resizable()
                 .scaledToFit()
-                .frame(height: style?.iconSize ?? 24)
+                .frame(height: style?.iconSize ?? ViewStyle.listIconSize)
                 .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
         }
     }
 
     @ViewBuilder
     func listView(for fileList: [FileItem]) -> some View {
-        let listIconSize: CGFloat = 28
-
         ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
             if selectionMode {
                 HStack {
                     Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
                     thumbnailOrIcon(for: file)
-                        .frame(width: listIconSize, height: listIconSize) // ✅ Same size in selectionMode
+                        .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
                     Text(file.name)
                     Spacer()
                 }
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    toggleSelection(for: file)
-                }
+                .onTapGesture { toggleSelection(for: file) }
             } else {
                 if file.isDir {
                     NavigationLink(value: fullPath(for: file)) {
                         HStack {
                             thumbnailOrIcon(for: file)
-                                .frame(width: listIconSize, height: listIconSize) // ✅ Same size in normal mode
+                                .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
                             Text(file.name)
                         }
                     }
@@ -567,7 +579,7 @@ struct FileListView: View {
                     NavigationLink(destination: detailView(for: file, index: index, sortedFiles: fileList)) {
                         HStack {
                             thumbnailOrIcon(for: file)
-                                .frame(width: listIconSize, height: listIconSize) // ✅ Same size here too
+                                .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
                             Text(file.name)
                         }
                     }
@@ -575,11 +587,11 @@ struct FileListView: View {
             }
         }
     }
+
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
-        let style = GridStyle(gridHeight: module ? 70 : 100, isModule: module)
+        let style = ViewStyle.gridStyle(module: module)
 
-        // ✅ Common action for file taps
         let handleFileTap = {
             if selectionMode {
                 toggleSelection(for: file)
@@ -589,7 +601,6 @@ struct FileListView: View {
             }
         }
 
-        // ✅ Common action for folder taps
         let handleFolderTap = {
             if selectionMode {
                 toggleSelection(for: file)
@@ -597,30 +608,25 @@ struct FileListView: View {
         }
 
         ZStack(alignment: .topTrailing) {
-            // 📦 Main cell content
             if file.isDir {
                 if selectionMode {
-                    // 🔹 Folders in selection mode = button only
                     Button(action: handleFolderTap) {
                         gridContent(file: file, style: style, module: module)
                     }
                     .buttonStyle(.plain)
                 } else {
-                    // 🔹 Normal mode = navigates
                     NavigationLink(value: fullPath(for: file)) {
                         gridContent(file: file, style: style, module: module)
                     }
                     .buttonStyle(.plain)
                 }
             } else {
-                // 🔹 Files always use Button (action changes by mode)
                 Button(action: handleFileTap) {
                     gridContent(file: file, style: style, module: module)
                 }
                 .buttonStyle(.plain)
             }
 
-            // ✅ Selection checkmark overlay
             if selectionMode {
                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
                     .resizable()
