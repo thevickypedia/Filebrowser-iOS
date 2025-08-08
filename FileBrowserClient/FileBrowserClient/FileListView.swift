@@ -17,8 +17,8 @@ enum ViewMode {
 
 struct GridStyle {
     let gridHeight: CGFloat
-    var iconSize: CGFloat { gridHeight * 0.5 }
-    var folderSize: CGFloat { gridHeight * 0.3 }
+    var iconSize: CGFloat { gridHeight * 0.4 } // Reduced from 0.5 to match NextCloud
+    var folderSize: CGFloat { gridHeight * 0.35 } // Slightly increased for better visibility
     var selectionSize: CGFloat { gridHeight * 0.2 }
 }
 
@@ -550,10 +550,11 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
-        let style = module ? GridStyle(gridHeight: 50) : GridStyle(gridHeight: 100)
+        // Use consistent height for both module and regular views
+        let style = GridStyle(gridHeight: 80)
 
         if selectionMode {
-            VStack {
+            VStack(spacing: 4) {
                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
                     .resizable()
                     .scaledToFit()
@@ -561,9 +562,10 @@ struct FileListView: View {
                     .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
                 Text(file.name)
                     .lineLimit(1)
-                    .font(.caption)
+                    .font(.caption2)
             }
-            .padding()
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
             .background(Color(.secondarySystemBackground))
             .cornerRadius(8)
             .contentShape(Rectangle())
@@ -573,24 +575,25 @@ struct FileListView: View {
 
         } else if file.isDir {
             NavigationLink(value: fullPath(for: file)) {
-                VStack(spacing: 6) {
+                VStack(spacing: 4) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.systemGray6))
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(red: 0.2, green: 0.6, blue: 0.9))
                             .frame(height: style.gridHeight)
 
-                        Image(systemName: "folder")
+                        Image(systemName: "folder.fill")
                             .resizable()
                             .scaledToFit()
                             .frame(height: style.folderSize)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.white)
                     }
 
                     Text(file.name)
-                        .font(.caption)
+                        .font(.caption2)
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .padding(.horizontal, 4)
+                        .lineLimit(1)
+                        .padding(.horizontal, 2)
+                        .foregroundColor(.primary)
                 }
             }
             .buttonStyle(.plain)
@@ -600,11 +603,12 @@ struct FileListView: View {
                 selectedFileIndex = index
                 selectedFileList = fileList
             }) {
-                VStack(spacing: 6) {
+                VStack(spacing: 4) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.systemGray6))
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray5))
                             .frame(height: style.gridHeight)
+
                         if advancedSettings.displayThumbnail &&
                             extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
                             RemoteThumbnail(
@@ -617,10 +621,10 @@ struct FileListView: View {
                             )
                             .scaledToFit()
                             .frame(height: style.iconSize)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                             .id(file.path)
                         } else {
-                            Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc")
+                            Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc.fill")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(height: style.iconSize)
@@ -629,10 +633,11 @@ struct FileListView: View {
                     }
 
                     Text(file.name)
-                        .font(.caption)
+                        .font(.caption2)
                         .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .padding(.horizontal, 4)
+                        .lineLimit(1)
+                        .padding(.horizontal, 2)
+                        .foregroundColor(.primary)
                 }
             }
             .buttonStyle(.plain)
@@ -643,17 +648,18 @@ struct FileListView: View {
     func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
         // Dynamically set number of columns
         let columns: [GridItem] = Array(
-            repeating: GridItem(.flexible(), spacing: 16),
-            count: module ? 3 : 2
+            repeating: GridItem(.flexible(), spacing: 12),
+            count: 3 // Always 3 columns
         )
 
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 16) {
+            LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
                     gridCell(for: file, at: index, in: fileList, module: module)
                 }
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
     }
 
