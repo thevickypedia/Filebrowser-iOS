@@ -564,98 +564,80 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
-        // Use consistent height for both module and grid views
-        let gridHeight: CGFloat = module ? 70 : 100 // Made module view smaller but not too small
-        let style = GridStyle(gridHeight: gridHeight, isModule: module)
+        let style = GridStyle(gridHeight: module ? 70 : 100, isModule: module)
 
-        if selectionMode {
-            VStack(spacing: 2) { // Minimal spacing
-                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? Icons.folder : Icons.doc))
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: style.selectionSize, height: style.selectionSize)
-                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
-                Text(file.name)
-                    .lineLimit(style.lineLimit)
-                    .font(module ? .caption2 : .caption) // Different font sizes
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(8)
-            .contentShape(Rectangle())
-            .onTapGesture {
+        let tapAction = {
+            if selectionMode {
                 toggleSelection(for: file)
-            }
-
-        } else if file.isDir {
-            NavigationLink(value: fullPath(for: file)) {
-                VStack(spacing: 2) { // Minimal spacing between icon and text
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(.systemGray6)) // Gray background instead of blue
-                            .frame(height: style.gridHeight)
-
-                        Image(systemName: Icons.folder)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: style.folderSize)
-                            .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
-                    }
-
-                    Text(file.name)
-                        .font(module ? .caption2 : .caption) // Different font sizes for module vs grid
-                        .multilineTextAlignment(.center)
-                        .lineLimit(style.lineLimit)
-                        .padding(.horizontal, 2)
-                        .foregroundColor(.primary)
-                }
-            }
-            .buttonStyle(.plain)
-
-        } else {
-            Button(action: {
+            } else if !file.isDir {
                 selectedFileIndex = index
                 selectedFileList = fileList
-            }) {
-                VStack(spacing: 2) { // Minimal spacing between icon and text
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(.systemGray5))
-                            .frame(height: style.gridHeight)
+            }
+        }
 
-                        if advancedSettings.displayThumbnail &&
-                            extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
-                            RemoteThumbnail(
-                                file: file,
-                                serverURL: auth.serverURL ?? "",
-                                token: auth.token ?? "",
-                                advancedSettings: advancedSettings,
-                                extensionTypes: extensionTypes,
-                                width: style.gridHeight, height: style.gridHeight
-                            )
-                            .scaledToFill() // Fill the entire area
-                            .frame(width: style.gridHeight, height: style.gridHeight)
-                            .clipped() // Clip to bounds instead of corner radius
-                            .id(file.path)
-                        } else {
-                            Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc.fill") // Use filled icons
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: style.iconSize)
-                                .foregroundColor(.primary)
-                        }
+        ZStack(alignment: .topTrailing) {
+            Group {
+                if file.isDir {
+                    NavigationLink(value: fullPath(for: file)) {
+                        gridContent(file: file, style: style, module: module)
                     }
-
-                    Text(file.name)
-                        .font(module ? .caption2 : .caption) // Different font sizes for module vs grid
-                        .multilineTextAlignment(.center)
-                        .lineLimit(style.lineLimit)
-                        .padding(.horizontal, 2)
-                        .foregroundColor(.primary)
+                    .buttonStyle(.plain)
+                } else {
+                    Button(action: tapAction) {
+                        gridContent(file: file, style: style, module: module)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .buttonStyle(.plain)
+
+            if selectionMode {
+                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                    .resizable()
+                    .frame(width: style.selectionSize, height: style.selectionSize)
+                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                    .padding(6)
+            }
+        }
+    }
+
+    @ViewBuilder
+    func gridContent(file: FileItem, style: GridStyle, module: Bool) -> some View {
+        VStack(spacing: 2) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray6))
+                    .frame(height: style.gridHeight)
+
+                if !file.isDir, advancedSettings.displayThumbnail,
+                   extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                    RemoteThumbnail(
+                        file: file,
+                        serverURL: auth.serverURL ?? "",
+                        token: auth.token ?? "",
+                        advancedSettings: advancedSettings,
+                        extensionTypes: extensionTypes,
+                        width: style.gridHeight,
+                        height: style.gridHeight
+                    )
+                    .scaledToFill()
+                    .frame(width: style.gridHeight, height: style.gridHeight)
+                    .clipped()
+                    .id(file.path)
+                } else {
+                    Image(systemName: file.isDir ? Icons.folder : systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? Icons.doc)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: file.isDir ? style.folderSize : style.iconSize)
+                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+                }
+            }
+
+            Text(file.name)
+                .font(module ? .caption2 : .caption)
+                .multilineTextAlignment(.center)
+                .lineLimit(style.lineLimit)
+                .padding(.horizontal, 2)
+                .foregroundColor(.primary)
         }
     }
 
