@@ -189,8 +189,7 @@ struct FileListView: View {
                         if viewMode == .list {
                             listView(for: sortedFiles)
                         } else {
-                            listView(for: sortedFiles)
-                            // gridView(for: sortedFiles)
+                            gridView(for: sortedFiles)
                         }
                     }
                     if viewModel.files.isEmpty && !viewModel.isLoading {
@@ -531,34 +530,43 @@ struct FileListView: View {
                         toggleSelection(for: file)
                     }
                 } else {
-                    NavigationLink(value: fullPath(for: file)) {
-                        VStack {
-                            let fileName = file.name.lowercased()
-                            if advancedSettings.displayThumbnail &&
-                                extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                                RemoteThumbnail(
-                                    file: file,
-                                    serverURL: auth.serverURL ?? "",
-                                    token: auth.token ?? "",
-                                    advancedSettings: advancedSettings,
-                                    extensionTypes: extensionTypes
-                                )
-                                .frame(width: 40, height: 40)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                .id(file.path)
-                            } else {
-                                Image(systemName: file.isDir ? "folder" : (systemIcon(for: fileName, extensionTypes: extensionTypes) ?? "doc"))
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40, height: 40)
+                    if file.isDir {
+                        NavigationLink(value: fullPath(for: file)) {
+                            HStack {
+                                Image(systemName: "folder")
+                                Text(file.name)
                             }
-                            Text(file.name)
-                                .lineLimit(1)
-                                .font(.caption)
                         }
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(8)
+                    } else {
+                        NavigationLink(destination: detailView(for: file)) {
+                            let fileName = file.name.lowercased()
+                            VStack {
+                                if advancedSettings.displayThumbnail &&
+                                    extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+                                    RemoteThumbnail(
+                                        file: file,
+                                        serverURL: auth.serverURL ?? "",
+                                        token: auth.token ?? "",
+                                        advancedSettings: advancedSettings,
+                                        extensionTypes: extensionTypes
+                                    )
+                                    .frame(width: 40, height: 40)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .id(file.path)
+                                } else {
+                                    Image(systemName: file.isDir ? "folder" : (systemIcon(for: fileName, extensionTypes: extensionTypes) ?? "doc"))
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 40, height: 40)
+                                }
+                                Text(file.name)
+                                    .lineLimit(1)
+                                    .font(.caption)
+                            }
+                            .padding()
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(8)
+                        }
                     }
                 }
             }
