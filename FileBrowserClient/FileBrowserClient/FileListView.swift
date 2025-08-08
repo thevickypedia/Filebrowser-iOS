@@ -15,6 +15,13 @@ enum ViewMode {
     case list, grid, module
 }
 
+struct GridStyle {
+    let gridHeight: CGFloat
+    var iconSize: CGFloat { gridHeight * 0.5 }
+    var folderSize: CGFloat { gridHeight * 0.3 }
+    var selectionSize: CGFloat { gridHeight * 0.2 }
+}
+
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
@@ -543,20 +550,14 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
-        // condition ? valueIfTrue : valueIfFalse
-        let selectionImage: CGFloat = module ? 20 : 40
-        let roundedRectangle: CGFloat = module ? 50 : 100
-        let folderImage: CGFloat = module ? 30 : 50
-        let remoteThumbnail: CGFloat = module ? 40 : 80
-        let remoteThumbnailFrame: CGFloat = module ? 40 : 80
-        let systemIconSize: CGFloat = module ? 20 : 50
+        let style = module ? GridStyle(gridHeight: 50) : GridStyle(gridHeight: 100)
 
         if selectionMode {
             VStack {
                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
                     .resizable()
                     .scaledToFit()
-                    .frame(width: selectionImage, height: selectionImage)
+                    .frame(width: style.selectionSize, height: style.selectionSize)
                     .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
                 Text(file.name)
                     .lineLimit(1)
@@ -576,12 +577,12 @@ struct FileListView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
-                            .frame(height: roundedRectangle)
+                            .frame(height: style.gridHeight)
 
                         Image(systemName: "folder")
                             .resizable()
                             .scaledToFit()
-                            .frame(height: folderImage)
+                            .frame(height: style.folderSize)
                             .foregroundColor(.primary)
                     }
 
@@ -603,7 +604,7 @@ struct FileListView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
-                            .frame(height: roundedRectangle)
+                            .frame(height: style.gridHeight)
                         if advancedSettings.displayThumbnail &&
                             extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
                             RemoteThumbnail(
@@ -612,17 +613,17 @@ struct FileListView: View {
                                 token: auth.token ?? "",
                                 advancedSettings: advancedSettings,
                                 extensionTypes: extensionTypes,
-                                width: remoteThumbnail, height: remoteThumbnail
+                                width: style.iconSize, height: style.iconSize
                             )
                             .scaledToFit()
-                            .frame(height: remoteThumbnailFrame)
+                            .frame(height: style.iconSize)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .id(file.path)
                         } else {
                             Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(height: systemIconSize)
+                                .frame(height: style.iconSize)
                                 .foregroundColor(.primary)
                         }
                     }
@@ -640,7 +641,11 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
-        let columns = [GridItem(.flexible()), GridItem(.flexible())]
+        // Dynamically set number of columns
+        let columns: [GridItem] = Array(
+            repeating: GridItem(.flexible(), spacing: 16),
+            count: module ? 3 : 2
+        )
 
         ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
