@@ -83,10 +83,7 @@ struct FileDetailView: View {
                     AnimatedImageView(data: content)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let image = UIImage(data: content) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .padding()
+                    ZoomableImageView(image: image)
                 } else {
                     Text("Failed to load image")
                 }
