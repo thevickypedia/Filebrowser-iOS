@@ -11,30 +11,6 @@ enum SortOption {
     case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
 }
 
-enum ViewMode {
-    case list, grid, module
-}
-
-struct GridStyle {
-    let gridHeight: CGFloat
-    let isModule: Bool
-
-    var iconSize: CGFloat {
-        isModule ? gridHeight * 0.45 : gridHeight * 0.4
-    }
-    var folderSize: CGFloat {
-        isModule ? gridHeight * 0.45 : gridHeight * 0.35
-    }
-    var selectionSize: CGFloat { gridHeight * 0.2 }
-    var lineLimit: Int { isModule ? 2 : 1 }
-}
-
-struct Icons {
-    // Icon - SystemName mapping to be used in FileListView
-    static let folder: String = "folder"
-    static let doc: String = "doc"
-}
-
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
