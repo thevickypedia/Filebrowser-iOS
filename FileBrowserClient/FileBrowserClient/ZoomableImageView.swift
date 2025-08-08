@@ -10,6 +10,8 @@ import SwiftUI
 
 struct ZoomableImageView: View {
     let image: UIImage
+    let onSwipeLeft: () -> Void
+    let onSwipeRight: () -> Void
 
     @State private var scale: CGFloat = 1.0
     @GestureState private var gestureScale: CGFloat = 1.0
@@ -23,13 +25,17 @@ struct ZoomableImageView: View {
         GeometryReader { geometry in
             Image(uiImage: image)
                 .resizable()
-                .aspectRatio(contentMode: .fit) // Keeps image centered
+                .aspectRatio(contentMode: .fit)
                 .scaleEffect(scale * gestureScale)
-                .offset(x: offset.width + gestureOffset.width, y: offset.height + gestureOffset.height)
-                .frame(width: geometry.size.width, height: geometry.size.height, alignment: .center)
+                .offset(x: offset.width + gestureOffset.width,
+                        y: offset.height + gestureOffset.height)
+                .frame(width: geometry.size.width, height: geometry.size.height)
                 .gesture(pinchGesture())
-                .gesture(doubleTapGesture())
-                .gesture(panGesture())
+                .simultaneousGesture(panGesture())
+                .simultaneousGesture(doubleTapGesture())
+                .gesture(
+                    !isZoomed ? swipeGesture() : nil // Only allow swipe when not zoomed
+                )
                 .animation(.easeInOut(duration: 0.25), value: scale)
         }
     }
@@ -42,20 +48,20 @@ struct ZoomableImageView: View {
                 state = value
             }
             .onEnded { value in
-                let newScale = scale * value
-                scale = max(newScale, 1.0) // Don't zoom out below original size
+                scale = max(scale * value, 1.0)
+                isZoomed = scale > 1.0
             }
     }
 
     private func panGesture() -> some Gesture {
         DragGesture()
             .updating($gestureOffset) { value, state, _ in
-                if scale > 1.0 {
+                if isZoomed {
                     state = value.translation
                 }
             }
             .onEnded { value in
-                if scale > 1.0 {
+                if isZoomed {
                     offset.width += value.translation.width
                     offset.height += value.translation.height
                 }
@@ -69,10 +75,22 @@ struct ZoomableImageView: View {
                     if isZoomed {
                         scale = 1.0
                         offset = .zero
+                        isZoomed = false
                     } else {
                         scale = 2.5
+                        isZoomed = true
                     }
-                    isZoomed.toggle()
+                }
+            }
+    }
+
+    private func swipeGesture() -> some Gesture {
+        DragGesture()
+            .onEnded { value in
+                if value.translation.width < -50 {
+                    onSwipeLeft()
+                } else if value.translation.width > 50 {
+                    onSwipeRight()
                 }
             }
     }
