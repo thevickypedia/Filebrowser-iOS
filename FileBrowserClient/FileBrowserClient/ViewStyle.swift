@@ -77,3 +77,25 @@ struct Icons {
     static let folder: String = "folder"
     static let doc: String = "doc"
 }
+
+func adaptiveColumns(module: Bool) -> [GridItem] {
+    /*
+     On iPhone portrait, you’ll get ~3–4 columns depending on module/grid mode.
+     On iPhone landscape, you’ll see 5–6 columns.
+     On iPad portrait, possibly 6–8 columns.
+     On iPad landscape, 10+ columns.
+    */
+    let screenWidth = UIScreen.main.bounds.width
+    let style = ViewStyle.gridStyle(module: module)
+
+    // Available space per item including spacing (padding handled separately)
+    let minItemWidth = style.gridHeight + 20 // height ~= width + padding buffer
+
+    // Figure out how many items fit in the width
+    let columnsCount = max(1, Int(screenWidth / minItemWidth))
+
+    return Array(
+        repeating: GridItem(.flexible(), spacing: 12),
+        count: columnsCount
+    )
+}

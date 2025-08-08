@@ -621,20 +621,14 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
-        // Dynamically set number of columns
-        let columns: [GridItem] = Array(
-            repeating: GridItem(.flexible(), spacing: 12), // Reduced spacing
-            count: module ? 4 : 3
-        )
-
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 12) { // Vertical spacing
+            LazyVGrid(columns: adaptiveColumns(module: module), spacing: 12) {
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
                     gridCell(for: file, at: index, in: fileList, module: module)
                 }
             }
-            .padding(.horizontal, 16) // Horizontal padding
-            .padding(.vertical, 12)   // Vertical padding
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
     }
 
