@@ -30,6 +30,8 @@ struct Resolution: Codable {
 
 struct FileDetailView: View {
     @State var currentIndex: Int
+    @GestureState private var dragOffset: CGFloat = 0
+
     let files: [FileItem]
     let serverURL: String
     let token: String
@@ -119,115 +121,122 @@ struct FileDetailView: View {
 
         fileContentView
             .id(file.path)
-        .navigationTitle(file.name)
-        .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                Button(action: { showInfo = true }) {
-                    Image(systemName: "info.circle")
-                }
-                var hasAnyActionPermission: Bool {
-                    let permissions = auth.permissions
-                    return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
-                }
-                // Actions menu (only if any permission is true)
-                if hasAnyActionPermission {
-                    Menu {
-                        if auth.permissions?.rename == true {
-                            Button("Rename", systemImage: "pencil", action: {
-                                newName = metadata?.name ?? file.name
-                                isRenaming = true
-                            })
-                        }
+            .offset(x: dragOffset) // <-- Drag follows finger
+            //.animation(.interactiveSpring(), value: dragOffset == 0)
+            .animation(.interactiveSpring(), value: dragOffset)
+            //.animation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.25), value: dragOffset)
+            .navigationTitle(file.name)
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button(action: { showInfo = true }) {
+                        Image(systemName: "info.circle")
+                    }
 
-                        if auth.permissions?.download == true {
-                            Button("Download", systemImage: "arrow.down.circle", action: {
-                                downloadAndSave()
-                            })
-                        }
+                    var hasAnyActionPermission: Bool {
+                        let permissions = auth.permissions
+                        return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
+                    }
 
-                        if auth.permissions?.share == true {
-                            Button("Share", systemImage: "square.and.arrow.up", action: {
-                                downloadAndSave()
-                            })
-                        }
+                    if hasAnyActionPermission {
+                        Menu {
+                            if auth.permissions?.rename == true {
+                                Button("Rename", systemImage: "pencil", action: {
+                                    newName = metadata?.name ?? file.name
+                                    isRenaming = true
+                                })
+                            }
 
-                        if auth.permissions?.delete == true {
-                            Button("Delete", systemImage: "trash", role: .destructive, action: {
-                                showingDeleteConfirm = true
-                            })
+                            if auth.permissions?.download == true {
+                                Button("Download", systemImage: "arrow.down.circle", action: {
+                                    downloadAndSave()
+                                })
+                            }
+
+                            if auth.permissions?.share == true {
+                                Button("Share", systemImage: "square.and.arrow.up", action: {
+                                    downloadAndSave()
+                                })
+                            }
+
+                            if auth.permissions?.delete == true {
+                                Button("Delete", systemImage: "trash", role: .destructive, action: {
+                                    showingDeleteConfirm = true
+                                })
+                            }
+                        } label: {
+                            Label("Actions", systemImage: "person.circle")
+                                .padding()
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
                         }
-                    } label: {
-                        Label("Actions", systemImage: "person.circle")
-                            .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
                     }
                 }
             }
-        }
-        .alert("Rename File", isPresented: $isRenaming, actions: {
-            TextField("New name", text: $newName)
-            Button("Rename", action: renameFile)
-            Button("Cancel", role: .cancel) { }
-        })
-
-        .alert("Delete File?", isPresented: $showingDeleteConfirm) {
-            Button("Delete", role: .destructive, action: deleteFile)
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Are you sure you want to delete \(file.name)?")
-        }
-
-        .sheet(isPresented: $showInfo) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "doc.text")
-                        .imageScale(.medium)
-                    SelectableTextView(text: "Name: \(fileInfo.name)")
-                }
-                HStack {
-                    Image(systemName: "folder")
-                        .imageScale(.medium)
-                    SelectableTextView(text: "Path: \(fileInfo.path)")
-                }
-                HStack {
-                    Image(systemName: "clock")
-                    SelectableTextView(text: "Modified: \(fileInfo.modified)")
-                }
-                HStack {
-                    Image(systemName: "shippingbox")
-                    SelectableTextView(text: "Size: \(fileInfo.size)")
-                }
-                HStack {
-                    Image(systemName: "shippingbox")
-                    SelectableTextView(text: "Extension: \(fileInfo.extension)")
-                }
-                if let res = metadata?.resolution {
+            .alert("Rename File", isPresented: $isRenaming, actions: {
+                TextField("New name", text: $newName)
+                Button("Rename", action: renameFile)
+                Button("Cancel", role: .cancel) { }
+            })
+            .alert("Delete File?", isPresented: $showingDeleteConfirm) {
+                Button("Delete", role: .destructive, action: deleteFile)
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("Are you sure you want to delete \(file.name)?")
+            }
+            .sheet(isPresented: $showInfo) {
+                VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Image(systemName: "ruler")
+                        Image(systemName: "doc.text")
                             .imageScale(.medium)
-                        SelectableTextView(text: "Resolution: \(res.width)x\(res.height)")
+                        SelectableTextView(text: "Name: \(fileInfo.name)")
                     }
-                }
-                Spacer()
-            }
-            .padding()
-        }
-        .task(id: currentIndex) {
-            checkContentAndReload(fileName: fileName)
-        }
-        .gesture(
-            DragGesture()
-                .onEnded { value in
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        if value.translation.width < -50 {
-                            goToNext()
-                        } else if value.translation.width > 50 {
-                            goToPrevious()
+                    HStack {
+                        Image(systemName: "folder")
+                            .imageScale(.medium)
+                        SelectableTextView(text: "Path: \(fileInfo.path)")
+                    }
+                    HStack {
+                        Image(systemName: "clock")
+                        SelectableTextView(text: "Modified: \(fileInfo.modified)")
+                    }
+                    HStack {
+                        Image(systemName: "shippingbox")
+                        SelectableTextView(text: "Size: \(fileInfo.size)")
+                    }
+                    HStack {
+                        Image(systemName: "shippingbox")
+                        SelectableTextView(text: "Extension: \(fileInfo.extension)")
+                    }
+                    if let res = metadata?.resolution {
+                        HStack {
+                            Image(systemName: "ruler")
+                                .imageScale(.medium)
+                            SelectableTextView(text: "Resolution: \(res.width)x\(res.height)")
                         }
                     }
+                    Spacer()
                 }
-        )
+                .padding()
+            }
+            .task(id: currentIndex) {
+                checkContentAndReload(fileName: fileName)
+            }
+            .gesture(
+                DragGesture()
+                    .updating($dragOffset) { value, state, _ in
+                        state = value.translation.width
+                    }
+                    .onEnded { value in
+                        let threshold: CGFloat = 100
+                        withAnimation(.interactiveSpring()) {
+                            if value.translation.width < -threshold {
+                                goToNext()
+                            } else if value.translation.width > threshold {
+                                goToPrevious()
+                            }
+                        }
+                    }
+            )
     }
 
     func checkContentAndReload(fileName: String) {
