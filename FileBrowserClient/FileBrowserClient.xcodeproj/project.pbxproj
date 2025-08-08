@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		98067D4A2E38E6CF00808541 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98067D492E38E6CD00808541 /* Utils.swift */; };
+		984F17022E468CA9003502DF /* ViewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F17012E468CA9003502DF /* ViewStyle.swift */; };
 		986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A662E39A78A0058E2C4 /* FileCache.swift */; };
 		986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A682E3A237D0058E2C4 /* ThemeManager.swift */; };
 		986F5A6B2E3AC0190058E2C4 /* AnimatedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */; };
@@ -56,6 +57,7 @@
 
 /* Begin PBXFileReference section */
 		98067D492E38E6CD00808541 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		984F17012E468CA9003502DF /* ViewStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewStyle.swift; sourceTree = "<group>"; };
 		986F5A662E39A78A0058E2C4 /* FileCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCache.swift; sourceTree = "<group>"; };
 		986F5A682E3A237D0058E2C4 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedImageView.swift; sourceTree = "<group>"; };
@@ -138,6 +140,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				984F17012E468CA9003502DF /* ViewStyle.swift */,
 				98D563EC2E45194700DE0079 /* StatusMessage.swift */,
 				98D563D82E44F27A00DE0079 /* CopyableTextContainer.swift */,
 				98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */,
@@ -328,6 +331,7 @@
 				986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */,
 				986F5A6B2E3AC0190058E2C4 /* AnimatedImageView.swift in Sources */,
 				988D9DE82E43915400C37B15 /* FileListAlerts.swift in Sources */,
+				984F17022E468CA9003502DF /* ViewStyle.swift in Sources */,
 				F85295442E303AF900498675 /* Log.swift in Sources */,
 				F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */,
 				F8BE8BBA2E379B8500967D18 /* RemoteThumbnail.swift in Sources */,

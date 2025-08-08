@@ -29,26 +29,6 @@ struct GridStyle {
     var lineLimit: Int { isModule ? 2 : 1 }
 }
 
-struct ViewStyle {
-    /* To handle scaling globally:
-
-     ViewStyle.globalScale = 1.2 // 20% bigger
-     ViewStyle.globalScale = 0.9 // 10% smaller
-
-     */
-    static var globalScale: CGFloat = 1.0
-
-    // List sizes
-    static var listIconSize: CGFloat { 28 * globalScale }
-    static var listCornerRadius: CGFloat { 4 * globalScale }
-
-    // Grid/module sizes
-    static func gridStyle(module: Bool) -> GridStyle {
-        let baseHeight: CGFloat = module ? 70 : 100
-        return GridStyle(gridHeight: baseHeight * globalScale, isModule: module)
-    }
-}
-
 struct Icons {
     // Icon - SystemName mapping to be used in FileListView
     static let folder: String = "folder"
