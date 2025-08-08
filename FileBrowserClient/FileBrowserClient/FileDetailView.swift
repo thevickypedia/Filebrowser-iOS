@@ -254,12 +254,12 @@ struct FileDetailView: View {
     }
 
     func goToNext() {
-        guard currentIndex < files.count - 1 else { return }
+        guard currentIndex < files.count - 1 && !files[currentIndex + 1].isDir else { return }
         currentIndex += 1
     }
 
     func goToPrevious() {
-        guard currentIndex > 0 else { return }
+        guard currentIndex > 0 && !files[currentIndex - 1].isDir else { return }
         currentIndex -= 1
     }
 
