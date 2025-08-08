@@ -17,8 +17,15 @@ enum ViewMode {
 
 struct GridStyle {
     let gridHeight: CGFloat
-    var iconSize: CGFloat { gridHeight * 0.4 } // Reduced from 0.5 to match NextCloud
-    var folderSize: CGFloat { gridHeight * 0.35 } // Slightly increased for better visibility
+    let isModule: Bool
+    
+    var iconSize: CGFloat {
+        // Much smaller icons in module view
+        isModule ? gridHeight * 0.25 : gridHeight * 0.4
+    }
+    var folderSize: CGFloat {
+        isModule ? gridHeight * 0.25 : gridHeight * 0.35
+    }
     var selectionSize: CGFloat { gridHeight * 0.2 }
 }
 
@@ -551,10 +558,11 @@ struct FileListView: View {
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
         // Use consistent height for both module and regular views
-        let style = GridStyle(gridHeight: 80)
+        let gridHeight: CGFloat = module ? 70 : 100 // Made module view smaller but not too small
+        let style = GridStyle(gridHeight: gridHeight, isModule: module)
 
         if selectionMode {
-            VStack(spacing: 4) {
+            VStack(spacing: 2) { // Minimal spacing
                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
                     .resizable()
                     .scaledToFit()
@@ -562,10 +570,10 @@ struct FileListView: View {
                     .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
                 Text(file.name)
                     .lineLimit(1)
-                    .font(.caption2)
+                    .font(module ? .caption2 : .caption) // Different font sizes
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.vertical, 4)
             .background(Color(.secondarySystemBackground))
             .cornerRadius(8)
             .contentShape(Rectangle())
@@ -575,21 +583,21 @@ struct FileListView: View {
 
         } else if file.isDir {
             NavigationLink(value: fullPath(for: file)) {
-                VStack(spacing: 4) {
+                VStack(spacing: 2) { // Minimal spacing between icon and text
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(red: 0.2, green: 0.6, blue: 0.9))
+                            .fill(Color(.systemGray6)) // Gray background instead of blue
                             .frame(height: style.gridHeight)
 
-                        Image(systemName: "folder.fill")
+                        Image(systemName: "folder.fill") // Use filled folder icon
                             .resizable()
                             .scaledToFit()
                             .frame(height: style.folderSize)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
                     }
 
                     Text(file.name)
-                        .font(.caption2)
+                        .font(module ? .caption2 : .caption) // Different font sizes for module vs regular
                         .multilineTextAlignment(.center)
                         .lineLimit(1)
                         .padding(.horizontal, 2)
@@ -603,12 +611,12 @@ struct FileListView: View {
                 selectedFileIndex = index
                 selectedFileList = fileList
             }) {
-                VStack(spacing: 4) {
+                VStack(spacing: 2) { // Minimal spacing between icon and text
                     ZStack {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color(.systemGray5))
                             .frame(height: style.gridHeight)
-
+                        
                         if advancedSettings.displayThumbnail &&
                             extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
                             RemoteThumbnail(
@@ -617,14 +625,14 @@ struct FileListView: View {
                                 token: auth.token ?? "",
                                 advancedSettings: advancedSettings,
                                 extensionTypes: extensionTypes,
-                                width: style.iconSize, height: style.iconSize
+                                width: style.gridHeight, height: style.gridHeight
                             )
-                            .scaledToFit()
-                            .frame(height: style.iconSize)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .scaledToFill() // Fill the entire area
+                            .frame(width: style.gridHeight, height: style.gridHeight)
+                            .clipped() // Clip to bounds instead of corner radius
                             .id(file.path)
                         } else {
-                            Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc.fill")
+                            Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc.fill") // Use filled icons
                                 .resizable()
                                 .scaledToFit()
                                 .frame(height: style.iconSize)
@@ -633,7 +641,7 @@ struct FileListView: View {
                     }
 
                     Text(file.name)
-                        .font(.caption2)
+                        .font(module ? .caption2 : .caption) // Different font sizes for module vs regular
                         .multilineTextAlignment(.center)
                         .lineLimit(1)
                         .padding(.horizontal, 2)
@@ -648,18 +656,18 @@ struct FileListView: View {
     func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
         // Dynamically set number of columns
         let columns: [GridItem] = Array(
-            repeating: GridItem(.flexible(), spacing: 12),
+            repeating: GridItem(.flexible(), spacing: 12), // Reduced spacing
             count: 3 // Always 3 columns
         )
 
         ScrollView {
-            LazyVGrid(columns: columns, spacing: 12) {
+            LazyVGrid(columns: columns, spacing: 12) { // Vertical spacing
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
                     gridCell(for: file, at: index, in: fileList, module: module)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16) // Horizontal padding
+            .padding(.vertical, 12)   // Vertical padding
         }
     }
 
