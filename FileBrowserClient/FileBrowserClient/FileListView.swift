@@ -508,18 +508,45 @@ struct FileListView: View {
     }
 
     @ViewBuilder
+    func thumbnailOrIcon(for file: FileItem, style: GridStyle? = nil) -> some View {
+        let fileName = file.name.lowercased()
+        let useThumbnail = advancedSettings.displayThumbnail &&
+            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix)
+
+        if useThumbnail {
+            RemoteThumbnail(
+                file: file,
+                serverURL: auth.serverURL ?? "",
+                token: auth.token ?? "",
+                advancedSettings: advancedSettings,
+                extensionTypes: extensionTypes,
+                width: style?.gridHeight ?? 40,
+                height: style?.gridHeight ?? 40
+            )
+            .scaledToFill()
+            .frame(width: style?.gridHeight ?? 40, height: style?.gridHeight ?? 40)
+            .clipped()
+            .id(file.path)
+        } else {
+            Image(systemName: file.isDir ? Icons.folder : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
+                .resizable()
+                .scaledToFit()
+                .frame(height: style?.iconSize ?? 24)
+                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+        }
+    }
+
+    @ViewBuilder
     func listView(for fileList: [FileItem]) -> some View {
+        let listIconSize: CGFloat = 28
+
         ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
-            let fileName = file.name.lowercased()
             if selectionMode {
                 HStack {
-                    // Check icon
                     Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
-                    // Folder/File icon (no thumbnail in selection mode)
-                    // todo: Include thumbnails with dedicated re-usable HStacks for list and grid
-                    Image(systemName: file.isDir ? Icons.folder : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
-                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
+                    thumbnailOrIcon(for: file)
+                        .frame(width: listIconSize, height: listIconSize) // ✅ Same size in selectionMode
                     Text(file.name)
                     Spacer()
                 }
@@ -531,29 +558,16 @@ struct FileListView: View {
                 if file.isDir {
                     NavigationLink(value: fullPath(for: file)) {
                         HStack {
-                            Image(systemName: Icons.folder)
-                                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
+                            thumbnailOrIcon(for: file)
+                                .frame(width: listIconSize, height: listIconSize) // ✅ Same size in normal mode
                             Text(file.name)
                         }
                     }
                 } else {
                     NavigationLink(destination: detailView(for: file, index: index, sortedFiles: fileList)) {
-                        let fileName = file.name.lowercased()
                         HStack {
-                            if advancedSettings.displayThumbnail &&
-                                extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                                RemoteThumbnail(
-                                    file: file,
-                                    serverURL: auth.serverURL ?? "",
-                                    token: auth.token ?? "",
-                                    advancedSettings: advancedSettings,
-                                    extensionTypes: extensionTypes
-                                )
-                                .id(file.path)
-                            } else {
-                                Image(systemName: systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
-                                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
-                            }
+                            thumbnailOrIcon(for: file)
+                                .frame(width: listIconSize, height: listIconSize) // ✅ Same size here too
                             Text(file.name)
                         }
                     }
@@ -607,29 +621,7 @@ struct FileListView: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray6))
                     .frame(height: style.gridHeight)
-
-                if !file.isDir, advancedSettings.displayThumbnail,
-                   extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
-                    RemoteThumbnail(
-                        file: file,
-                        serverURL: auth.serverURL ?? "",
-                        token: auth.token ?? "",
-                        advancedSettings: advancedSettings,
-                        extensionTypes: extensionTypes,
-                        width: style.gridHeight,
-                        height: style.gridHeight
-                    )
-                    .scaledToFill()
-                    .frame(width: style.gridHeight, height: style.gridHeight)
-                    .clipped()
-                    .id(file.path)
-                } else {
-                    Image(systemName: file.isDir ? Icons.folder : systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? Icons.doc)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: file.isDir ? style.folderSize : style.iconSize)
-                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                }
+                thumbnailOrIcon(for: file, style: style)
             }
 
             Text(file.name)
