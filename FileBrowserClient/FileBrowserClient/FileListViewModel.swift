@@ -82,7 +82,10 @@ class FileListViewModel: ObservableObject {
                     self.isLoading = false
                 } catch {
                     self.errorMessage = "Failed to parse files"
-                    Log.error("Raw response: \(String(data: data, encoding: .utf8) ?? "nil")")
+                    Log.error("Failed to decode JSON: \(error.localizedDescription)")
+                    if let raw = String(data: data, encoding: .utf8) {
+                        Log.error("❌ Raw response: \(raw)")
+                    }
                 }
             }
         }.resume()
