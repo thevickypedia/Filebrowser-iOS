@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.21.1 (08/08/2025)
+--------------------
+- [89748d4](https://github.com/thevickypedia/Filebrowser-iOS/commit/89748d43e4f1f61b57506af8402bc5c63d5d7c10) chore: Release ``v1.21.1``
+- [cebf916](https://github.com/thevickypedia/Filebrowser-iOS/commit/cebf9164b904277606d24b31c19c4a3a8a3cc519) style: Include pinch and double tap gestures
+- [8f5d8d5](https://github.com/thevickypedia/Filebrowser-iOS/commit/8f5d8d5fc02c6812e31d8fb63b92c5a8a3d6a726) chore: Update release notes for v1.21.0
+
 v1.21.0 (08/08/2025)
 --------------------
 - [c973582](https://github.com/thevickypedia/Filebrowser-iOS/commit/c9735825ec1bc344167c46e2b39b940298210bbe) chore: Release ``v1.21.0``
