@@ -1,6 +1,28 @@
 Release Notes
 =============
 
+v1.19.0 (08/08/2025)
+--------------------
+- [366fa87](https://github.com/thevickypedia/Filebrowser-iOS/commit/366fa8706fb96f2160d8548093083b91612924cc) chore: Release ``v1.19.0``
+- [0dd758b](https://github.com/thevickypedia/Filebrowser-iOS/commit/0dd758b97210d102a9f4109c71e224458cd9260c) feat: Support ``ViewStyle.globalScale`` adaptive for different devices and orientations
+- [6ba4870](https://github.com/thevickypedia/Filebrowser-iOS/commit/6ba48707e0aecc73e1e097f9c86dc85b0dc2d735) perf: Introduce ``globalScale`` to handle ``viewStyle`` without touching multiple frames
+- [cc55f02](https://github.com/thevickypedia/Filebrowser-iOS/commit/cc55f022af8ef2ab896bc0af164b751375629d1a) refactor: Use a centralized ``ViewStyle`` to handle sizing
+- [ed8b068](https://github.com/thevickypedia/Filebrowser-iOS/commit/ed8b0680ff343b5d00c73e42ca349d2351057310) refactor: Reduce code redundancy
+- [8409f65](https://github.com/thevickypedia/Filebrowser-iOS/commit/8409f65e5adc897f31193b34d1670dccaa9cb61a) fix: Disable navigation when ``selectionMode`` is enabled
+- [5fb2e7b](https://github.com/thevickypedia/Filebrowser-iOS/commit/5fb2e7bccbc90535211321d5d181c54c49944cbd) style: Retain the original orientation when selection mode is enabled in all 3 views
+- [bd4cbe2](https://github.com/thevickypedia/Filebrowser-iOS/commit/bd4cbe2f8bc5a8571cfd21126e8902fe5b438450) style: ``selectionMode`` should not shrink or alter the layout in grid/module view
+- [df3f883](https://github.com/thevickypedia/Filebrowser-iOS/commit/df3f883917c75d6796fccbe7901048e02a0ca0cd) style: Display ``systemIcons`` in list view when ``selectionMode`` is enabled
+- [a5b2c4a](https://github.com/thevickypedia/Filebrowser-iOS/commit/a5b2c4ae5842af1d20ed6d5ba35cf9ffa4a573c0) fix: Mismatch when fetching system icons for different file types
+- [e0cf455](https://github.com/thevickypedia/Filebrowser-iOS/commit/e0cf45520d293cd948d2181d63345348024b6c0f) style: Update module view to be significantly different from grid
+- [fcd4c49](https://github.com/thevickypedia/Filebrowser-iOS/commit/fcd4c499c289124f9fb1d259b35c30380c6d7b48) style: Use ``Picker`` instead of individual buttons for view options
+- [73d902b](https://github.com/thevickypedia/Filebrowser-iOS/commit/73d902bc9e4bbc752e4b3558608272146b838a78) style: Update styling in grid view
+- [6009caa](https://github.com/thevickypedia/Filebrowser-iOS/commit/6009caa313afe55e3417c1a00442fcca6b3bfb5c) style: Update grid view to expand thumbnail containers
+- [1a9c4de](https://github.com/thevickypedia/Filebrowser-iOS/commit/1a9c4de07db00629d7dd739963522a29320eaf45) style: Update grid view to support arbritary values
+- [c5329df](https://github.com/thevickypedia/Filebrowser-iOS/commit/c5329df2c66edd2831317e54bbbdcb37cb72e403) refactor: Move grid size options to func level variables
+- [32153b3](https://github.com/thevickypedia/Filebrowser-iOS/commit/32153b3d8cff4d355a3a45d38d79a606d06164de) style: Add a new view option ``module``
+- [5da1137](https://github.com/thevickypedia/Filebrowser-iOS/commit/5da1137bc10d68052b33079c61409c3ab0ffeecd) style: Move view options button inside it's own menu
+- [23ecfbd](https://github.com/thevickypedia/Filebrowser-iOS/commit/23ecfbd5c52a3cda5bc1035341e87c37d19462c6) chore: Update release notes for v1.18.0
+
 v1.18.0 (08/08/2025)
 --------------------
 - [798b03c](https://github.com/thevickypedia/Filebrowser-iOS/commit/798b03c7d7482c32431bf4f97ff9ec549db62753) chore: Release ``v1.18.0``
