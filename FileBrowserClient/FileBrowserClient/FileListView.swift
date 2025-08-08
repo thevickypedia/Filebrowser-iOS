@@ -21,12 +21,21 @@ struct GridStyle {
 
     var iconSize: CGFloat {
         // Much smaller icons in module view
-        isModule ? gridHeight * 0.25 : gridHeight * 0.4
+        isModule ? gridHeight * 0.45 : gridHeight * 0.4
     }
     var folderSize: CGFloat {
-        isModule ? gridHeight * 0.25 : gridHeight * 0.35
+        isModule ? gridHeight * 0.45 : gridHeight * 0.35
     }
     var selectionSize: CGFloat { gridHeight * 0.2 }
+    var lineLimit: Int {
+        isModule ? 2 : 1
+    }
+}
+
+struct Icons {
+    // Icon - SystemName mapping to be used in FileListView
+    static let folder: String = "folder"
+    static let doc: String = "doc"
 }
 
 struct FileListView: View {
@@ -271,7 +280,7 @@ struct FileListView: View {
                             showingSettings = true
                         })
                         Menu("Upload File", systemImage: "square.and.arrow.up") {
-                            Button("From Files", systemImage: "doc", action: {
+                            Button("From Files", systemImage: Icons.doc, action: {
                                 showFileImporter = true
                                 showPrepareUpload()
                             })
@@ -289,9 +298,9 @@ struct FileListView: View {
                     Menu {
                         Menu {
                             Picker("View mode", selection: $viewMode) {
-                                Label("List view", systemImage: "list.bullet").tag(ViewMode.list)
-                                Label("Grid view", systemImage: "square.grid.2x2").tag(ViewMode.grid)
-                                Label("Module view", systemImage: "square.grid.3x3").tag(ViewMode.module)
+                                Label("List", systemImage: "list.bullet").tag(ViewMode.list)
+                                Label("Grid", systemImage: "square.grid.2x2").tag(ViewMode.grid)
+                                Label("Module", systemImage: "square.grid.3x3").tag(ViewMode.module)
                             }
                         } label: {
                             Label("View Options", systemImage: "arrow.up.arrow.down.square")
@@ -505,7 +514,7 @@ struct FileListView: View {
                 HStack {
                     Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
-                    Image(systemName: file.isDir ? "folder" : "doc")
+                    Image(systemName: file.isDir ? Icons.folder : Icons.doc)
                     Text(file.name)
                     Spacer()
                 }
@@ -517,7 +526,8 @@ struct FileListView: View {
                 if file.isDir {
                     NavigationLink(value: fullPath(for: file)) {
                         HStack {
-                            Image(systemName: "folder")
+                            Image(systemName: Icons.folder)
+                                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
                             Text(file.name)
                         }
                     }
@@ -541,7 +551,7 @@ struct FileListView: View {
                                 )
                                 .id(file.path)
                             } else {
-                                Image(systemName: systemIcon(for: fileName, extensionTypes: extensionTypes) ?? "doc")
+                                Image(systemName: systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
                             }
                             Text(file.name)
                         }
@@ -559,13 +569,13 @@ struct FileListView: View {
 
         if selectionMode {
             VStack(spacing: 2) { // Minimal spacing
-                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
+                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? Icons.folder : Icons.doc))
                     .resizable()
                     .scaledToFit()
                     .frame(width: style.selectionSize, height: style.selectionSize)
                     .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
                 Text(file.name)
-                    .lineLimit(1)
+                    .lineLimit(style.lineLimit)
                     .font(module ? .caption2 : .caption) // Different font sizes
             }
             .padding(.horizontal, 8)
@@ -585,7 +595,7 @@ struct FileListView: View {
                             .fill(Color(.systemGray6)) // Gray background instead of blue
                             .frame(height: style.gridHeight)
 
-                        Image(systemName: "folder.fill") // Use filled folder icon
+                        Image(systemName: Icons.folder)
                             .resizable()
                             .scaledToFit()
                             .frame(height: style.folderSize)
@@ -595,7 +605,7 @@ struct FileListView: View {
                     Text(file.name)
                         .font(module ? .caption2 : .caption) // Different font sizes for module vs regular
                         .multilineTextAlignment(.center)
-                        .lineLimit(1)
+                        .lineLimit(style.lineLimit)
                         .padding(.horizontal, 2)
                         .foregroundColor(.primary)
                 }
@@ -639,7 +649,7 @@ struct FileListView: View {
                     Text(file.name)
                         .font(module ? .caption2 : .caption) // Different font sizes for module vs regular
                         .multilineTextAlignment(.center)
-                        .lineLimit(1)
+                        .lineLimit(style.lineLimit)
                         .padding(.horizontal, 2)
                         .foregroundColor(.primary)
                 }
@@ -653,7 +663,7 @@ struct FileListView: View {
         // Dynamically set number of columns
         let columns: [GridItem] = Array(
             repeating: GridItem(.flexible(), spacing: 12), // Reduced spacing
-            count: 3 // Always 3 columns
+            count: module ? 4 : 3
         )
 
         ScrollView {
