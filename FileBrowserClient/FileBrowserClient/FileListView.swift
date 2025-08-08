@@ -20,26 +20,32 @@ struct GridStyle {
     let isModule: Bool
 
     var iconSize: CGFloat {
-        // Much smaller icons in module view
         isModule ? gridHeight * 0.45 : gridHeight * 0.4
     }
     var folderSize: CGFloat {
         isModule ? gridHeight * 0.45 : gridHeight * 0.35
     }
     var selectionSize: CGFloat { gridHeight * 0.2 }
-    var lineLimit: Int {
-        isModule ? 2 : 1
-    }
+    var lineLimit: Int { isModule ? 2 : 1 }
 }
 
 struct ViewStyle {
-    // List mode sizes
-    static let listIconSize: CGFloat = 28
-    static let listCornerRadius: CGFloat = 4
-    
-    // Grid/module shared style
+    /* To handle scaling globally:
+
+     ViewStyle.globalScale = 1.2 // 20% bigger
+     ViewStyle.globalScale = 0.9 // 10% smaller
+
+     */
+    static var globalScale: CGFloat = 1.0
+
+    // List sizes
+    static var listIconSize: CGFloat { 28 * globalScale }
+    static var listCornerRadius: CGFloat { 4 * globalScale }
+
+    // Grid/module sizes
     static func gridStyle(module: Bool) -> GridStyle {
-        GridStyle(gridHeight: module ? 70 : 100, isModule: module)
+        let baseHeight: CGFloat = module ? 70 : 100
+        return GridStyle(gridHeight: baseHeight * globalScale, isModule: module)
     }
 }
 
@@ -523,7 +529,7 @@ struct FileListView: View {
         let fileName = file.name.lowercased()
         let useThumbnail = advancedSettings.displayThumbnail &&
             extensionTypes.imageExtensions.contains(where: fileName.hasSuffix)
-        
+
         if useThumbnail {
             RemoteThumbnail(
                 file: file,
