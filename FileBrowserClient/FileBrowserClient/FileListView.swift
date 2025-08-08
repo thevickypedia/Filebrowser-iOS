@@ -510,11 +510,16 @@ struct FileListView: View {
     @ViewBuilder
     func listView(for fileList: [FileItem]) -> some View {
         ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
+            let fileName = file.name.lowercased()
             if selectionMode {
                 HStack {
+                    // Check icon
                     Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
-                    Image(systemName: file.isDir ? Icons.folder : Icons.doc)
+                    // Folder/File icon (no thumbnail in selection mode)
+                    // todo: Include thumbnails with dedicated re-usable HStacks for list and grid
+                    Image(systemName: file.isDir ? Icons.folder : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
+                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
                     Text(file.name)
                     Spacer()
                 }
@@ -532,12 +537,7 @@ struct FileListView: View {
                         }
                     }
                 } else {
-                    NavigationLink(
-                        destination: detailView(for: file, index: index, sortedFiles: fileList)
-                            .onAppear {
-                                print("listView: Opening file: \(file.name), index: \(index)")
-                            }
-                    ) {
+                    NavigationLink(destination: detailView(for: file, index: index, sortedFiles: fileList)) {
                         let fileName = file.name.lowercased()
                         HStack {
                             if advancedSettings.displayThumbnail &&
@@ -552,6 +552,7 @@ struct FileListView: View {
                                 .id(file.path)
                             } else {
                                 Image(systemName: systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
+                                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9)) // Blue icon on gray background
                             }
                             Text(file.name)
                         }
@@ -563,7 +564,7 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
-        // Use consistent height for both module and regular views
+        // Use consistent height for both module and grid views
         let gridHeight: CGFloat = module ? 70 : 100 // Made module view smaller but not too small
         let style = GridStyle(gridHeight: gridHeight, isModule: module)
 
@@ -603,7 +604,7 @@ struct FileListView: View {
                     }
 
                     Text(file.name)
-                        .font(module ? .caption2 : .caption) // Different font sizes for module vs regular
+                        .font(module ? .caption2 : .caption) // Different font sizes for module vs grid
                         .multilineTextAlignment(.center)
                         .lineLimit(style.lineLimit)
                         .padding(.horizontal, 2)
@@ -647,7 +648,7 @@ struct FileListView: View {
                     }
 
                     Text(file.name)
-                        .font(module ? .caption2 : .caption) // Different font sizes for module vs regular
+                        .font(module ? .caption2 : .caption) // Different font sizes for module vs grid
                         .multilineTextAlignment(.center)
                         .lineLimit(style.lineLimit)
                         .padding(.horizontal, 2)
