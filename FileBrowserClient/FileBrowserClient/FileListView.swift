@@ -18,7 +18,7 @@ enum ViewMode {
 struct GridStyle {
     let gridHeight: CGFloat
     let isModule: Bool
-    
+
     var iconSize: CGFloat {
         // Much smaller icons in module view
         isModule ? gridHeight * 0.25 : gridHeight * 0.4
@@ -288,15 +288,11 @@ struct FileListView: View {
                     }
                     Menu {
                         Menu {
-                            Button("List view", systemImage: "list.bullet", action: {
-                                self.viewMode = .list
-                            })
-                            Button("Grid view", systemImage: "square.grid.2x2", action: {
-                                self.viewMode = .grid
-                            })
-                            Button("Module view", systemImage: "square.grid.3x3", action: {
-                                self.viewMode = .module
-                            })
+                            Picker("View mode", selection: $viewMode) {
+                                Label("List view", systemImage: "list.bullet").tag(ViewMode.list)
+                                Label("Grid view", systemImage: "square.grid.2x2").tag(ViewMode.grid)
+                                Label("Module view", systemImage: "square.grid.3x3").tag(ViewMode.module)
+                            }
                         } label: {
                             Label("View Options", systemImage: "arrow.up.arrow.down.square")
                         }
@@ -616,7 +612,7 @@ struct FileListView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .fill(Color(.systemGray5))
                             .frame(height: style.gridHeight)
-                        
+
                         if advancedSettings.displayThumbnail &&
                             extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
                             RemoteThumbnail(
