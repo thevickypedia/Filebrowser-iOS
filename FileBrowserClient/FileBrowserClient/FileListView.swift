@@ -543,13 +543,20 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
-        // todo: if module is true, expand logos
+        // condition ? valueIfTrue : valueIfFalse
+        let selectionImage: CGFloat = module ? 20 : 40
+        let roundedRectangle: CGFloat = module ? 50 : 100
+        let folderImage: CGFloat = module ? 30 : 50
+        let remoteThumbnail: CGFloat = module ? 40 : 80
+        let remoteThumbnailFrame: CGFloat = module ? 40 : 80
+        let systemIconSize: CGFloat = module ? 20 : 50
+
         if selectionMode {
             VStack {
                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 40, height: 40)
+                    .frame(width: selectionImage, height: selectionImage)
                     .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
                 Text(file.name)
                     .lineLimit(1)
@@ -569,12 +576,12 @@ struct FileListView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
-                            .frame(height: 100)
+                            .frame(height: roundedRectangle)
 
                         Image(systemName: "folder")
                             .resizable()
                             .scaledToFit()
-                            .frame(height: 50)
+                            .frame(height: folderImage)
                             .foregroundColor(.primary)
                     }
 
@@ -585,6 +592,7 @@ struct FileListView: View {
                         .padding(.horizontal, 4)
                 }
             }
+            .buttonStyle(.plain)
 
         } else {
             Button(action: {
@@ -595,7 +603,7 @@ struct FileListView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
-                            .frame(height: 100)
+                            .frame(height: roundedRectangle)
                         if advancedSettings.displayThumbnail &&
                             extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
                             RemoteThumbnail(
@@ -604,17 +612,17 @@ struct FileListView: View {
                                 token: auth.token ?? "",
                                 advancedSettings: advancedSettings,
                                 extensionTypes: extensionTypes,
-                                width: 100, height: 100
+                                width: remoteThumbnail, height: remoteThumbnail
                             )
                             .scaledToFit()
-                            .frame(height: 100)
+                            .frame(height: remoteThumbnailFrame)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .id(file.path)
                         } else {
                             Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(height: 50)
+                                .frame(height: systemIconSize)
                                 .foregroundColor(.primary)
                         }
                     }
