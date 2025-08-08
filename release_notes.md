@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.21.0 (08/08/2025)
+--------------------
+- [c973582](https://github.com/thevickypedia/Filebrowser-iOS/commit/c9735825ec1bc344167c46e2b39b940298210bbe) chore: Release ``v1.21.0``
+- [20b8c94](https://github.com/thevickypedia/Filebrowser-iOS/commit/20b8c94e302cd2ae2912a0488d3d18e69b31121b) feat: Display zoomable images in preview mode
+- [0e66c52](https://github.com/thevickypedia/Filebrowser-iOS/commit/0e66c52e50866eebeeb098e87e062cdeb80440e3) chore: Update release notes for v1.20.1
+
 v1.20.1 (08/08/2025)
 --------------------
 - [76e8173](https://github.com/thevickypedia/Filebrowser-iOS/commit/76e8173cd49ba139286bd3fc9369fc7fff7acb31) chore: Release ``v1.20.1``
