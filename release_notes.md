@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.19.1 (08/08/2025)
+--------------------
+- [4f75539](https://github.com/thevickypedia/Filebrowser-iOS/commit/4f75539c52aa593cee86ce48d1861ca01b30b059) chore: Release ``v1.19.1``
+- [eb0623f](https://github.com/thevickypedia/Filebrowser-iOS/commit/eb0623f9a39feb4a7f1f263b86fe7d6b86d13dee) style: Create an adaptive grid view for iPad and potrait mode
+- [ea16dc3](https://github.com/thevickypedia/Filebrowser-iOS/commit/ea16dc3e3e53f6fb1f53661b67c400c79f6cfaad) refactor: Move view structs into view style module
+- [29d66ba](https://github.com/thevickypedia/Filebrowser-iOS/commit/29d66ba80e075d060d4134d8ad76c4fb2df7b4c0) chore: Update release notes for v1.19.0
+
 v1.19.0 (08/08/2025)
 --------------------
 - [366fa87](https://github.com/thevickypedia/Filebrowser-iOS/commit/366fa8706fb96f2160d8548093083b91612924cc) chore: Release ``v1.19.0``
