@@ -219,10 +219,12 @@ struct FileDetailView: View {
         .gesture(
             DragGesture()
                 .onEnded { value in
-                    if value.translation.width < -50 {
-                        goToNext()
-                    } else if value.translation.width > 50 {
-                        goToPrevious()
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        if value.translation.width < -50 {
+                            goToNext()
+                        } else if value.translation.width > 50 {
+                            goToPrevious()
+                        }
                     }
                 }
         )
