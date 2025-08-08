@@ -12,7 +12,7 @@ enum SortOption {
 }
 
 enum ViewMode {
-    case list, grid
+    case list, grid, module
 }
 
 struct FileListView: View {
@@ -193,7 +193,7 @@ struct FileListView: View {
                         if viewMode == .list {
                             listView(for: sortedFiles)
                         } else {
-                            gridView(for: sortedFiles)
+                            gridView(for: sortedFiles, module: viewMode == .module)
                         }
                     }
                     if viewModel.files.isEmpty && !viewModel.isLoading {
@@ -279,6 +279,9 @@ struct FileListView: View {
                             })
                             Button("Grid view", systemImage: "square.grid.2x2", action: {
                                 self.viewMode = .grid
+                            })
+                            Button("Module view", systemImage: "square.grid.3x3", action: {
+                                self.viewMode = .module
                             })
                         } label: {
                             Label("View Options", systemImage: "arrow.up.arrow.down.square")
@@ -539,7 +542,8 @@ struct FileListView: View {
     }
 
     @ViewBuilder
-    func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem]) -> some View {
+    func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
+        // todo: if module is true, expand logos
         if selectionMode {
             VStack {
                 Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
@@ -627,13 +631,13 @@ struct FileListView: View {
     }
 
     @ViewBuilder
-    func gridView(for fileList: [FileItem]) -> some View {
+    func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
         let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
         ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
-                    gridCell(for: file, at: index, in: fileList)
+                    gridCell(for: file, at: index, in: fileList, module: module)
                 }
             }
             .padding()
