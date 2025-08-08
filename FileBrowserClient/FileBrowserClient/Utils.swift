@@ -138,7 +138,7 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
 }
 
 func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String? {
-    let ext = (fileName as NSString).pathExtension.lowercased()
+    let ext = "." + URL(fileURLWithPath: fileName).pathExtension.lowercased()
 
     // Direct lookup from dictionary
     if let icon = fileExtensionToIconMap[ext] {
