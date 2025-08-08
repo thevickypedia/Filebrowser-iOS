@@ -533,6 +533,92 @@ struct FileListView: View {
             }
         }
     }
+    @ViewBuilder
+    func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem]) -> some View {
+        if selectionMode {
+            VStack {
+                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                Text(file.name)
+                    .lineLimit(1)
+                    .font(.caption)
+            }
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(8)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                toggleSelection(for: file)
+            }
+
+        } else if file.isDir {
+            NavigationLink(value: fullPath(for: file)) {
+                VStack(spacing: 6) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                            .frame(height: 100)
+
+                        Image(systemName: "folder")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 50)
+                            .foregroundColor(.primary)
+                    }
+
+                    Text(file.name)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.horizontal, 4)
+                }
+            }
+
+        } else {
+            Button(action: {
+                selectedFileIndex = index
+                selectedFileList = fileList
+            }) {
+                VStack(spacing: 6) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                            .frame(height: 100)
+                        if advancedSettings.displayThumbnail &&
+                            extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                            RemoteThumbnail(
+                                file: file,
+                                serverURL: auth.serverURL ?? "",
+                                token: auth.token ?? "",
+                                advancedSettings: advancedSettings,
+                                extensionTypes: extensionTypes
+                            )
+                            .scaledToFit()
+                            .frame(height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .id(file.path)
+                        } else {
+                            Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 50)
+                                .foregroundColor(.primary)
+                        }
+                    }
+
+                    Text(file.name)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .padding(.horizontal, 4)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
 
     @ViewBuilder
     func gridView(for fileList: [FileItem]) -> some View {
@@ -541,76 +627,7 @@ struct FileListView: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
-                    if selectionMode {
-                        VStack {
-                            Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 40, height: 40)
-                                .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
-                            Text(file.name)
-                                .lineLimit(1)
-                                .font(.caption)
-                        }
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(8)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            toggleSelection(for: file)
-                        }
-                    } else {
-                        if file.isDir {
-                            NavigationLink(value: fullPath(for: file)) {
-                                VStack {
-                                    Image(systemName: "folder")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 40, height: 40)
-                                    Text(file.name)
-                                        .lineLimit(1)
-                                        .font(.caption)
-                                }
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(8)
-                            }
-                        } else {
-                            Button(action: {
-                                selectedFileIndex = index
-                                selectedFileList = fileList
-                                print("Tapped index \(index): \(file.name)")
-                            }) {
-                                VStack {
-                                    if advancedSettings.displayThumbnail &&
-                                        extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
-                                        RemoteThumbnail(
-                                            file: file,
-                                            serverURL: auth.serverURL ?? "",
-                                            token: auth.token ?? "",
-                                            advancedSettings: advancedSettings,
-                                            extensionTypes: extensionTypes
-                                        )
-                                        .frame(width: 40, height: 40)
-                                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                                        .id(file.path)
-                                    } else {
-                                        Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 40, height: 40)
-                                    }
-
-                                    Text(file.name)
-                                        .lineLimit(1)
-                                        .font(.caption)
-                                }
-                                .padding()
-                                .background(Color(.secondarySystemBackground))
-                                .cornerRadius(8)
-                            }
-                        }
-                    }
+                    gridCell(for: file, at: index, in: fileList)
                 }
             }
             .padding()
