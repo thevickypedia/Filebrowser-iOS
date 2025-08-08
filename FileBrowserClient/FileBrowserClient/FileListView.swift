@@ -592,12 +592,26 @@ struct FileListView: View {
         ZStack(alignment: .topTrailing) {
             Group {
                 if file.isDir {
-                    NavigationLink(value: fullPath(for: file)) {
-                        gridContent(file: file, style: style, module: module)
+                    if selectionMode {
+                        Button(action: { toggleSelection(for: file) }) {
+                            gridContent(file: file, style: style, module: module)
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        NavigationLink(value: fullPath(for: file)) {
+                            gridContent(file: file, style: style, module: module)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 } else {
-                    Button(action: tapAction) {
+                    Button(action: {
+                        if selectionMode {
+                            toggleSelection(for: file)
+                        } else {
+                            selectedFileIndex = index
+                            selectedFileList = fileList
+                        }
+                    }) {
                         gridContent(file: file, style: style, module: module)
                     }
                     .buttonStyle(.plain)
