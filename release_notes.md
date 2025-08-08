@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.18.0 (08/08/2025)
+--------------------
+- [798b03c](https://github.com/thevickypedia/Filebrowser-iOS/commit/798b03c7d7482c32431bf4f97ff9ec549db62753) chore: Release ``v1.18.0``
+- [adef899](https://github.com/thevickypedia/Filebrowser-iOS/commit/adef89970200ad9dd7c1ca34506b909ee7100ff9) style: Include an option to arbitrarily resize thumbnails to fit grid view
+- [ac38dd0](https://github.com/thevickypedia/Filebrowser-iOS/commit/ac38dd0d7cb98389d40160525bc941b6c135864f) style: Improve styling in grid view
+- [4e21966](https://github.com/thevickypedia/Filebrowser-iOS/commit/4e21966337563716554ba1617dc35e2319a18417) fix: Get grid view working for file and folder navigation
+- [c0f0440](https://github.com/thevickypedia/Filebrowser-iOS/commit/c0f0440404b5dbf90dc5d066a027ab958d7b4a14) fix: Replicate list view coding options in grid
+- [8268235](https://github.com/thevickypedia/Filebrowser-iOS/commit/826823597e796317acbe1440055480e968c43891) style: Improve error message when failed to parse file list
+- [a23ab76](https://github.com/thevickypedia/Filebrowser-iOS/commit/a23ab7686c3ed5454aaeb5f4db47332716dd57a2) feat: Include a view option for list vs grid types
+- [c9f4369](https://github.com/thevickypedia/Filebrowser-iOS/commit/c9f436991431f501a519223971a6ba5e01be33ed) chore: Update release notes for v1.17.1
+
 v1.17.1 (08/07/2025)
 --------------------
 - [6bf1c09](https://github.com/thevickypedia/Filebrowser-iOS/commit/6bf1c09c94648e21bb0e6a465245437a23c47cec) chore: Release ``v1.17.1``
