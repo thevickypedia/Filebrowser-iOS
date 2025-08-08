@@ -71,6 +71,10 @@ struct FileListView: View {
     @State private var statusMessage: StatusPayload?
     @State private var settingsMessage: StatusPayload?
 
+    // Specific for Grid view
+    @State private var selectedFileIndex: Int?
+    @State private var selectedFileList: [FileItem] = []
+
     let path: String
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
@@ -449,11 +453,37 @@ struct FileListView: View {
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
             }
         }
+        .navigationDestination(isPresented: Binding<Bool>(
+            get: { selectedFileIndex != nil },
+            set: { if !$0 { selectedFileIndex = nil } }
+        )) {
+            if let index = selectedFileIndex {
+                detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
+            }
+        }
+    }
+
+    @ViewBuilder
+    func detailView(for file: FileItem, index: Int, sortedFiles: [FileItem]) -> some View {
+        FileDetailView(
+            currentIndex: index,
+            files: sortedFiles,
+            serverURL: auth.serverURL ?? "",
+            token: auth.token ?? "",
+            // Pass a callback reference to fetchClientStorageInfo func
+            onFileCached: { fetchClientStorageInfo() },
+            extensionTypes: extensionTypes,
+            cacheExtensions: getCacheExtensions(
+                advancedSettings: advancedSettings,
+                extensionTypes: extensionTypes
+            ),
+            animateGIF: advancedSettings.animateGIF
+        )
     }
 
     @ViewBuilder
     func listView(for fileList: [FileItem]) -> some View {
-        ForEach(fileList) { file in
+        ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
             if selectionMode {
                 HStack {
                     Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
@@ -475,7 +505,12 @@ struct FileListView: View {
                         }
                     }
                 } else {
-                    NavigationLink(destination: detailView(for: file)) {
+                    NavigationLink(
+                        destination: detailView(for: file, index: index, sortedFiles: fileList)
+                            .onAppear {
+                                print("listView: Opening file: \(file.name), index: \(index)")
+                            }
+                    ) {
                         let fileName = file.name.lowercased()
                         HStack {
                             if advancedSettings.displayThumbnail &&
@@ -489,12 +524,7 @@ struct FileListView: View {
                                 )
                                 .id(file.path)
                             } else {
-                                Image(
-                                    systemName: systemIcon(
-                                        for: fileName,
-                                        extensionTypes: extensionTypes
-                                    ) ?? "doc"
-                                )
+                                Image(systemName: systemIcon(for: fileName, extensionTypes: extensionTypes) ?? "doc")
                             }
                             Text(file.name)
                         }
@@ -506,70 +536,84 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridView(for fileList: [FileItem]) -> some View {
-        // Grid view is buggy!!
         let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
-        LazyVGrid(columns: columns, spacing: 16) {
-            ForEach(fileList) { file in
-                if selectionMode {
-                    VStack {
-                        Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 40, height: 40)
-                            .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
-                        Text(file.name)
-                            .lineLimit(1)
-                            .font(.caption)
-                    }
-                    .padding()
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(8)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        toggleSelection(for: file)
-                    }
-                } else {
-                    if file.isDir {
-                        NavigationLink(value: fullPath(for: file)) {
-                            HStack {
-                                Image(systemName: "folder")
-                                Text(file.name)
-                            }
+        ScrollView {
+            LazyVGrid(columns: columns, spacing: 16) {
+                ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
+                    if selectionMode {
+                        VStack {
+                            Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 40, height: 40)
+                                .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                            Text(file.name)
+                                .lineLimit(1)
+                                .font(.caption)
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(8)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            toggleSelection(for: file)
                         }
                     } else {
-                        NavigationLink(destination: detailView(for: file)) {
-                            let fileName = file.name.lowercased()
-                            VStack {
-                                if advancedSettings.displayThumbnail &&
-                                    extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                                    RemoteThumbnail(
-                                        file: file,
-                                        serverURL: auth.serverURL ?? "",
-                                        token: auth.token ?? "",
-                                        advancedSettings: advancedSettings,
-                                        extensionTypes: extensionTypes
-                                    )
-                                    .frame(width: 40, height: 40)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                                    .id(file.path)
-                                } else {
-                                    Image(systemName: file.isDir ? "folder" : (systemIcon(for: fileName, extensionTypes: extensionTypes) ?? "doc"))
+                        if file.isDir {
+                            NavigationLink(value: fullPath(for: file)) {
+                                VStack {
+                                    Image(systemName: "folder")
                                         .resizable()
                                         .scaledToFit()
                                         .frame(width: 40, height: 40)
+                                    Text(file.name)
+                                        .lineLimit(1)
+                                        .font(.caption)
                                 }
-                                Text(file.name)
-                                    .lineLimit(1)
-                                    .font(.caption)
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(8)
                             }
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(8)
+                        } else {
+                            Button(action: {
+                                selectedFileIndex = index
+                                selectedFileList = fileList
+                                print("Tapped index \(index): \(file.name)")
+                            }) {
+                                VStack {
+                                    if advancedSettings.displayThumbnail &&
+                                        extensionTypes.imageExtensions.contains(where: file.name.lowercased().hasSuffix) {
+                                        RemoteThumbnail(
+                                            file: file,
+                                            serverURL: auth.serverURL ?? "",
+                                            token: auth.token ?? "",
+                                            advancedSettings: advancedSettings,
+                                            extensionTypes: extensionTypes
+                                        )
+                                        .frame(width: 40, height: 40)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .id(file.path)
+                                    } else {
+                                        Image(systemName: systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes) ?? "doc")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                    }
+
+                                    Text(file.name)
+                                        .lineLimit(1)
+                                        .font(.caption)
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(8)
+                            }
                         }
                     }
                 }
             }
+            .padding()
         }
     }
 
@@ -588,24 +632,6 @@ struct FileListView: View {
                 )
             }
         }
-    }
-
-    @ViewBuilder
-    func detailView(for file: FileItem) -> some View {
-        FileDetailView(
-            currentIndex: viewModel.files.firstIndex(of: file) ?? 0,
-            files: viewModel.files,
-            serverURL: auth.serverURL ?? "",
-            token: auth.token ?? "",
-            // Pass a callback reference to fetchClientStorageInfo func
-            onFileCached: { fetchClientStorageInfo() },
-            extensionTypes: extensionTypes,
-            cacheExtensions: getCacheExtensions(
-                advancedSettings: advancedSettings,
-                extensionTypes: extensionTypes
-            ),
-            animateGIF: advancedSettings.animateGIF
-        )
     }
 
     private func getNavigationTitle() -> String {
