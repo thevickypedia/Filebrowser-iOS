@@ -11,6 +11,10 @@ enum SortOption {
     case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
 }
 
+enum ViewMode {
+    case list, grid
+}
+
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
@@ -57,6 +61,7 @@ struct FileListView: View {
     @State private var fileCacheSize: Int64 = 0
 
     @State private var sortOption: SortOption = .nameAsc
+    @State private var viewMode: ViewMode = .list
 
     // Display as alerts
     @State private var errorTitle: String?
@@ -180,56 +185,14 @@ struct FileListView: View {
                     Text("Error: \(error)").foregroundColor(.red)
                 } else {
                     let sortedFiles = viewModel.sortedFiles(by: sortOption)
-                    ForEach(sortedFiles) { file in
-                        if selectionMode {
-                            HStack {
-                                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
-                                Image(systemName: file.isDir ? "folder" : "doc")
-                                Text(file.name)
-                                Spacer()
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                toggleSelection(for: file)
-                            }
+                    Group {
+                        if viewMode == .list {
+                            listView(for: sortedFiles)
                         } else {
-                            if file.isDir {
-                                NavigationLink(value: fullPath(for: file)) {
-                                    HStack {
-                                        Image(systemName: "folder")
-                                        Text(file.name)
-                                    }
-                                }
-                            } else {
-                                NavigationLink(destination: detailView(for: file)) {
-                                    let fileName = file.name.lowercased()
-                                    HStack {
-                                        if advancedSettings.displayThumbnail &&
-                                            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
-                                            RemoteThumbnail(
-                                                file: file,
-                                                serverURL: auth.serverURL ?? "",
-                                                token: auth.token ?? "",
-                                                advancedSettings: advancedSettings,
-                                                extensionTypes: extensionTypes
-                                            )
-                                            .id(UUID().uuidString)
-                                        } else {
-                                            Image(
-                                                systemName: systemIcon(
-                                                    for: fileName,
-                                                    extensionTypes: extensionTypes
-                                                ) ?? "doc"
-                                            )
-                                        }
-                                        Text(file.name)
-                                    }
-                                }
-                            }
+                            listView(for: sortedFiles)
+                            // gridView(for: sortedFiles)
                         }
                     }
-
                     if viewModel.files.isEmpty && !viewModel.isLoading {
                         Text("No files found").foregroundColor(.gray)
                     }
@@ -278,20 +241,6 @@ struct FileListView: View {
             // Right: Create and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if !selectionMode {
-                    if viewModel.files.count > 1 {
-                        Menu {
-                            Picker("Sort by", selection: $sortOption) {
-                                Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
-                                Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
-                                Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
-                                Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
-                                Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
-                                Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
-                            }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down.square")
-                        }
-                    }
                     Menu {
                         if auth.permissions?.create == true {
                             Button("Create File", systemImage: "doc.badge.plus", action: {
@@ -319,6 +268,31 @@ struct FileListView: View {
                             .padding()
                             .background(Color.blue.opacity(0.1))
                             .cornerRadius(8)
+                    }
+                    Menu {
+                        Button(action: {
+                            viewMode = (viewMode == .list ? .grid : .list)
+                        }) {
+                            Image(systemName: viewMode == .list ? "square.grid.2x2" : "list.bullet")
+                            Text("Toggle View Mode")
+                        }
+
+                        if viewModel.files.count > 1 {
+                            Menu {
+                                Picker("Sort by", selection: $sortOption) {
+                                    Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
+                                    Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
+                                    Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
+                                    Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
+                                    Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
+                                    Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
+                                }
+                            } label: {
+                                Label("Sort Options", systemImage: "arrow.up.arrow.down.square")
+                            }
+                        }
+                    } label: {
+                        Label("Options", systemImage: "ellipsis.circle")
                     }
                 }
             }
@@ -474,6 +448,119 @@ struct FileListView: View {
                 uploadNextInQueue()
             case .failure(let error):
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    @ViewBuilder
+    func listView(for fileList: [FileItem]) -> some View {
+        ForEach(fileList) { file in
+            if selectionMode {
+                HStack {
+                    Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                    Image(systemName: file.isDir ? "folder" : "doc")
+                    Text(file.name)
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    toggleSelection(for: file)
+                }
+            } else {
+                if file.isDir {
+                    NavigationLink(value: fullPath(for: file)) {
+                        HStack {
+                            Image(systemName: "folder")
+                            Text(file.name)
+                        }
+                    }
+                } else {
+                    NavigationLink(destination: detailView(for: file)) {
+                        let fileName = file.name.lowercased()
+                        HStack {
+                            if advancedSettings.displayThumbnail &&
+                                extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+                                RemoteThumbnail(
+                                    file: file,
+                                    serverURL: auth.serverURL ?? "",
+                                    token: auth.token ?? "",
+                                    advancedSettings: advancedSettings,
+                                    extensionTypes: extensionTypes
+                                )
+                                .id(file.path)
+                            } else {
+                                Image(
+                                    systemName: systemIcon(
+                                        for: fileName,
+                                        extensionTypes: extensionTypes
+                                    ) ?? "doc"
+                                )
+                            }
+                            Text(file.name)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    func gridView(for fileList: [FileItem]) -> some View {
+        // Grid view is buggy!!
+        let columns = [GridItem(.flexible()), GridItem(.flexible())]
+
+        LazyVGrid(columns: columns, spacing: 16) {
+            ForEach(fileList) { file in
+                if selectionMode {
+                    VStack {
+                        Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : (file.isDir ? "folder" : "doc"))
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 40, height: 40)
+                            .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                        Text(file.name)
+                            .lineLimit(1)
+                            .font(.caption)
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(8)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        toggleSelection(for: file)
+                    }
+                } else {
+                    NavigationLink(value: fullPath(for: file)) {
+                        VStack {
+                            let fileName = file.name.lowercased()
+                            if advancedSettings.displayThumbnail &&
+                                extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+                                RemoteThumbnail(
+                                    file: file,
+                                    serverURL: auth.serverURL ?? "",
+                                    token: auth.token ?? "",
+                                    advancedSettings: advancedSettings,
+                                    extensionTypes: extensionTypes
+                                )
+                                .frame(width: 40, height: 40)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .id(file.path)
+                            } else {
+                                Image(systemName: file.isDir ? "folder" : (systemIcon(for: fileName, extensionTypes: extensionTypes) ?? "doc"))
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 40, height: 40)
+                            }
+                            Text(file.name)
+                                .lineLimit(1)
+                                .font(.caption)
+                        }
+                        .padding()
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(8)
+                    }
+                }
             }
         }
     }
