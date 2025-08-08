@@ -273,11 +273,15 @@ struct FileListView: View {
                             .cornerRadius(8)
                     }
                     Menu {
-                        Button(action: {
-                            viewMode = (viewMode == .list ? .grid : .list)
-                        }) {
-                            Image(systemName: viewMode == .list ? "square.grid.2x2" : "list.bullet")
-                            Text("Toggle View Mode")
+                        Menu {
+                            Button("List view", systemImage: "list.bullet", action: {
+                                self.viewMode = .list
+                            })
+                            Button("Grid view", systemImage: "square.grid.2x2", action: {
+                                self.viewMode = .grid
+                            })
+                        } label: {
+                            Label("View Options", systemImage: "arrow.up.arrow.down.square")
                         }
 
                         if viewModel.files.count > 1 {
@@ -596,10 +600,10 @@ struct FileListView: View {
                                 token: auth.token ?? "",
                                 advancedSettings: advancedSettings,
                                 extensionTypes: extensionTypes,
-                                width: 160, height: 160
+                                width: 100, height: 100
                             )
                             .scaledToFit()
-                            .frame(height: 80)
+                            .frame(height: 100)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             .id(file.path)
                         } else {
