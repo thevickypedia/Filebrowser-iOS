@@ -346,7 +346,6 @@ struct FileListView: View {
                 }
                 Button(action: {
                     Log.info("Logged out!")
-                    auth.logout()
                     logoutHandler()
                 }) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")

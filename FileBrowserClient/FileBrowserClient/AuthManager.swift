@@ -31,12 +31,6 @@ class AuthManager: ObservableObject {
     var isAuthenticated: Bool {
         return token != nil && serverURL != nil
     }
-
-    func logout() {
-        token = nil
-        serverURL = nil
-        KeychainHelper.deleteSession()
-    }
 }
 
 struct UserAccount: Codable {
