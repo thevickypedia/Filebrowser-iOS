@@ -32,7 +32,7 @@ enum KeychainHelper {
             SecItemAdd(query as CFDictionary, nil)
         }
     }
-    
+
     static func loadSession() -> [String: String]? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -49,7 +49,7 @@ enum KeychainHelper {
         }
         return session
     }
-    
+
     static func deleteSession() {
         Log.info("Deleting session information from keychain")
         let query: [String: Any] = [
@@ -58,7 +58,7 @@ enum KeychainHelper {
         ]
         SecItemDelete(query as CFDictionary)
     }
-    
+
     static func authenticateWithBiometrics(reason: String = "Authenticate to restore session", completion: @escaping (Bool) -> Void) {
         let context = LAContext()
         var error: NSError?

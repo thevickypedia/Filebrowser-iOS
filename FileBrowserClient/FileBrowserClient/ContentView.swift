@@ -23,7 +23,7 @@ struct ContentView: View {
     @State private var knownServers: [String] = []
     @State private var showAddServerAlert = false
     @State private var newServerURL = ""
-    @AppStorage("serverURL") private var serverURL = ""
+    @State private var serverURL = ""
     @State private var username = ""
     @State private var password = ""
     @AppStorage("rememberMe") private var rememberMe = false
@@ -81,7 +81,7 @@ struct ContentView: View {
                     loginView
                 }
             }
-            .navigationDestination(for: String.self) { newPath in
+            .navigationDestination(for: String.self) { _ in
                 FileListView(
                     isLoggedIn: $isLoggedIn,
                     pathStack: $pathStack,
@@ -108,19 +108,8 @@ struct ContentView: View {
                 .bold()
                 .padding(.top, 1)
 
-            Picker("Server URL", selection: $serverURL) {
-                ForEach(knownServers, id: \.self) { url in
-                    Text(url).tag(url)
-                }
-                Text("➕ Add new server").tag("add-new-server")
-            }
-            .pickerStyle(MenuPickerStyle())
-            .onChange(of: serverURL) { newValue in
-                if newValue == "add-new-server" {
-                    showAddServerAlert = true
-                    serverURL = knownServers.first ?? ""
-                }
-            }
+            ServerURLMenu(serverURL: $serverURL, showAddServerAlert: $showAddServerAlert, knownServers: knownServers)
+                .padding(.top, 1)
 
             let hasSavedSession = KeychainHelper.loadSession() != nil
 
