@@ -350,7 +350,12 @@ struct ContentView: View {
                             statusMessage = nil
                         }
                         if rememberMe || useFaceID {
-                            KeychainHelper.saveSession(token: jwt, username: username, serverURL: serverURL)
+                            KeychainHelper.saveSession(
+                                token: jwt,
+                                username: username,
+                                serverURL: serverURL,
+                                password: useFaceID ? password : nil
+                            )
                         } else {
                             // ensure any existing saved session is removed when the user opts out
                             KeychainHelper.deleteSession()
@@ -365,24 +370,53 @@ struct ContentView: View {
         }.resume()
     }
 
+    func logTokenInfo() {
+        Log.info("Issuer: \(auth.iss ?? "Unknown")")
+        Log.info("Issued: \(timeStampToString(from: auth.iat))")
+        Log.info("Expiration: \(timeStampToString(from: auth.exp))")
+        Log.info("Time Left: \(timeLeftString(until: auth.exp))")
+    }
+
     func biometricSignIn() {
-        // todo: Not sure if reusing session tokens without re-authenticating is the way to go
         KeychainHelper.authenticateWithBiometrics { success in
             guard success,
                   let session = KeychainHelper.loadSession(),
-                  var token = session["token"],
+                  let token = session["token"],
                   let username = session["username"],
                   let serverURL = session["serverURL"] else {
                 DispatchQueue.main.async {
-                    // Show error and fall back to credentials form
-                    useFaceID = false // ✅ this ensures credentials are shown again
+                    useFaceID = false // fallback to manual login
                 }
                 return
             }
 
+            // Decode JWT to check expiration
+            if let payload = decodeJWT(jwt: token),
+               let exp = payload["exp"] as? TimeInterval {
+                let now = Date().timeIntervalSince1970
+                if now >= exp {
+                    Log.info("🔑 Token expired — refreshing via stored credentials.")
+                    // If we stored password securely:
+                    if let password = session["password"] {
+                        DispatchQueue.main.async {
+                            self.serverURL = serverURL
+                            self.username = username
+                            self.password = password
+                            self.login() // reuse your normal login flow
+                            logTokenInfo()
+                        }
+                    } else {
+                        // No password stored — fallback to showing login UI
+                        DispatchQueue.main.async {
+                            useFaceID = false
+                        }
+                    }
+                    return
+                }
+            }
+
+            // Token still valid — just use it
             DispatchQueue.main.async {
-                // set app auth state same as successful login
-                token = token
                 auth.token = token
                 auth.serverURL = serverURL
                 auth.username = username
@@ -391,6 +425,7 @@ struct ContentView: View {
                     auth.iss = payload["iss"] as? String
                     auth.exp = payload["exp"] as? TimeInterval
                     auth.iat = payload["iat"] as? TimeInterval
+                    logTokenInfo()
                 } else {
                     Log.error("Failed to decode JWT")
                 }
@@ -401,6 +436,7 @@ struct ContentView: View {
                 fileListViewModel.configure(token: token, serverURL: serverURL)
                 isLoggedIn = true
                 statusMessage = "✅ Face ID login successful!"
+                Log.info("✅ Face ID login successful")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) { statusMessage = nil }
             }
         }

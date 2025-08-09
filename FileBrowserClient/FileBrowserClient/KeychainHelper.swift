@@ -11,9 +11,15 @@ import Security
 
 enum KeychainHelper {
     static let key = "savedSession"
-
-    static func saveSession(token: String, username: String, serverURL: String) {
-        let session = ["token": token, "username": username, "serverURL": serverURL]
+    static func saveSession(token: String, username: String, serverURL: String, password: String? = nil) {
+        var session: [String: String] = [
+            "token": token,
+            "username": username,
+            "serverURL": serverURL
+        ]
+        if let password = password {
+            session["password"] = password
+        }
         if let data = try? JSONEncoder().encode(session) {
             let query: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
