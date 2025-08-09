@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.22.5 (08/09/2025)
+--------------------
+- [1c5534b](https://github.com/thevickypedia/Filebrowser-iOS/commit/1c5534b168b53e66f069e9de36b6de110945612e) chore: Release ``v1.22.5``
+- [b32e3bb](https://github.com/thevickypedia/Filebrowser-iOS/commit/b32e3bbe8c0e06e9b2d26dcc10592140bf993bb9) fix: Face ID failing silently when session expires
+- [4694901](https://github.com/thevickypedia/Filebrowser-iOS/commit/46949017f8a93072d82db887c982ff95be77c6c4) refactor: Merge path and pathStack into a single source of truth
+- [c0ca5cb](https://github.com/thevickypedia/Filebrowser-iOS/commit/c0ca5cbd34fb310acd1759486c1bacfccbc65779) fix: Fix home page pointing to last stack
+- [83f7ccc](https://github.com/thevickypedia/Filebrowser-iOS/commit/83f7cccc8b62c6e85b7081a539b58eda5713702f) chore: Update release notes for v1.22.4
+
 v1.22.4 (08/09/2025)
 --------------------
 - [d6d5af7](https://github.com/thevickypedia/Filebrowser-iOS/commit/d6d5af7740b72581c294a32791cb4049f9312a4d) chore: Release ``v1.22.4``
