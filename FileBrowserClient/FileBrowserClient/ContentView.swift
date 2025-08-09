@@ -21,7 +21,7 @@ struct AdvancedSettings {
 
 struct ContentView: View {
     @AppStorage("serverURL") private var serverURL = ""
-    @AppStorage("username") private var username = ""
+    @State private var username = ""
     @State private var password = ""
     @AppStorage("rememberMe") private var rememberMe = false
     @AppStorage("transitProtection") private var transitProtection = false
@@ -124,7 +124,6 @@ struct ContentView: View {
 
                 Toggle("Remember Me", isOn: $rememberMe)
                 Toggle("Use Face ID", isOn: $useFaceID)
-                Toggle("Transit Protection", isOn: $transitProtection)
 
                 Button(action: { login() }) {
                     if isLoading { ProgressView() } else {
@@ -150,6 +149,7 @@ struct ContentView: View {
                 }
                 .padding(.top, 6)
             }
+            Toggle("Transit Protection", isOn: $transitProtection)
 
             Section {
                 DisclosureGroup("Advanced Settings", isExpanded: $showAdvancedOptions) {
@@ -224,11 +224,6 @@ struct ContentView: View {
                     .foregroundColor(.blue)
             }
             .padding(.bottom, 8)
-        }
-        .onAppear {
-            if useFaceID, KeychainHelper.loadSession() != nil {
-                biometricSignIn()
-            }
         }
         .padding()
     }
