@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.22.0 (08/09/2025)
+--------------------
+- [594b62f](https://github.com/thevickypedia/Filebrowser-iOS/commit/594b62f3d64b3f9db08c7e5f637be4e1d281d9ce) chore: Release ``v1.22.0``
+- [5972b91](https://github.com/thevickypedia/Filebrowser-iOS/commit/5972b91cf51375cad9fcdb43b0312472e0d520f2) feat: Include support for Face ID
+- [a9952d9](https://github.com/thevickypedia/Filebrowser-iOS/commit/a9952d9392e5c49ca76b68b318a3caf313d6f38a) revert: Revert refactor for individual modules
+- [1a1a558](https://github.com/thevickypedia/Filebrowser-iOS/commit/1a1a5588da738ba2c769177e1d4996ec6cea4263) refactor: Create individual modules for cell and thumbnail views
+- [29d6971](https://github.com/thevickypedia/Filebrowser-iOS/commit/29d697135f8b6d80dced8d536b9bca8976ad87e6) chore: Update release notes for v1.21.3
+
 v1.21.3 (08/09/2025)
 --------------------
 - [978d3b1](https://github.com/thevickypedia/Filebrowser-iOS/commit/978d3b1d8e8ed19213932d21a871941a854113e7) chore: Release ``v1.21.3``
