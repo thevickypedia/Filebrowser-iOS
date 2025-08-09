@@ -28,9 +28,16 @@ struct Resolution: Codable {
     let height: Int
 }
 
+enum SwipeDirection {
+    case left, right
+}
+
 struct FileDetailView: View {
     @State var currentIndex: Int
     @GestureState private var dragOffset: CGFloat = 0
+    @Namespace private var animation
+
+    @State private var swipeDirection: SwipeDirection = .left
 
     let files: [FileItem]
     let serverURL: String
@@ -85,9 +92,30 @@ struct FileDetailView: View {
                 } else if let image = UIImage(data: content) {
                     ZoomableImageView(
                         image: image,
-                        onSwipeLeft: goToNext,
-                        onSwipeRight: goToPrevious
+                        onSwipeLeft: {
+                            swipeDirection = .left
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                if currentIndex < files.count - 1 && !files[currentIndex + 1].isDir {
+                                    currentIndex += 1
+                                }
+                            }
+                        },
+                        onSwipeRight: {
+                            swipeDirection = .right
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                if currentIndex > 0 && !files[currentIndex - 1].isDir {
+                                    currentIndex -= 1
+                                }
+                            }
+                        }
                     )
+                    .transition(
+                        .asymmetric(
+                            insertion: .move(edge: swipeDirection == .left ? .trailing : .leading),
+                            removal: .move(edge: swipeDirection == .left ? .leading : .trailing)
+                        )
+                    )
+                    .id(currentIndex) // force re-render for transition to work
                 } else {
                     Text("Failed to load image")
                 }
@@ -123,9 +151,9 @@ struct FileDetailView: View {
         fileContentView
             .id(file.path)
             .offset(x: dragOffset) // <-- Drag follows finger
-            //.animation(.interactiveSpring(), value: dragOffset == 0)
+            // .animation(.interactiveSpring(), value: dragOffset == 0)
             .animation(.interactiveSpring(), value: dragOffset)
-            //.animation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.25), value: dragOffset)
+            // .animation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.25), value: dragOffset)
             .navigationTitle(file.name)
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -230,9 +258,9 @@ struct FileDetailView: View {
                     .onEnded { value in
                         let threshold: CGFloat = 100
                         withAnimation(.interactiveSpring()) {
-                            if value.translation.width < -threshold {
+                            if value.translation.width < -threshold && !files[currentIndex + 1].isDir {
                                 goToNext()
-                            } else if value.translation.width > threshold {
+                            } else if value.translation.width > threshold && !files[currentIndex - 1].isDir {
                                 goToPrevious()
                             }
                         }
@@ -255,12 +283,12 @@ struct FileDetailView: View {
     }
 
     func goToNext() {
-        guard currentIndex < files.count - 1 && !files[currentIndex + 1].isDir else { return }
+        guard currentIndex < files.count - 1 else { return }
         currentIndex += 1
     }
 
     func goToPrevious() {
-        guard currentIndex > 0 && !files[currentIndex - 1].isDir else { return }
+        guard currentIndex > 0 else { return }
         currentIndex -= 1
     }
 

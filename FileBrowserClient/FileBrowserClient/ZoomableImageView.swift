@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 8/8/25.
 //
 
-
 import SwiftUI
 
 struct ZoomableImageView: View {
