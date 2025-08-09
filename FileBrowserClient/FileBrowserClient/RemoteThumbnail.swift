@@ -62,8 +62,9 @@ struct RemoteThumbnail: View {
         let isGIF = fileName.hasSuffix(".gif")
 
         if advancedSettings.cacheThumbnail {
-            let existingCache = FileCache.shared.data(
-                for: file.path,
+            let existingCache = FileCache.shared.retrieve(
+                for: serverURL,
+                path: file.path,
                 modified: file.modified,
                 fileID: "thumb"
             )
@@ -101,8 +102,9 @@ struct RemoteThumbnail: View {
                 }
                 if advancedSettings.cacheThumbnail {
                     FileCache.shared.store(
+                        for: serverURL,
                         data: data,
-                        for: file.path,
+                        path: file.path,
                         modified: file.modified,
                         fileID: "thumb"
                     )

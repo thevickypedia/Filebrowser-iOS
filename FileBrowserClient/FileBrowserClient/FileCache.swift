@@ -30,15 +30,16 @@ class FileCache {
         return collapsed
     }
 
-    private func cacheKey(for path: String, modified: String?, fileID: String?) -> String {
+    private func cacheKey(for server: String, path: String, modified: String?, fileID: String?) -> String {
         let safePath = sanitize(path)
+        let safeServer = sanitize(server.trimmingCharacters(in: CharacterSet(charactersIn: ".")))
         let safeFileID = sanitize(fileID?.trimmingCharacters(in: CharacterSet(charactersIn: ".")) ?? "unknown")
         let safeModified = sanitize(modified ?? "unknown", replacement: "-")
-        return "cache-\(safePath)-\(safeFileID)-\(safeModified)"
+        return "cache-\(safeServer)-\(safePath)-\(safeFileID)-\(safeModified)"
     }
 
-    func data(for path: String, modified: String?, fileID: String?) -> Data? {
-        let key = cacheKey(for: path, modified: modified, fileID: fileID)
+    func retrieve(for server: String, path: String, modified: String?, fileID: String?) -> Data? {
+        let key = cacheKey(for: server, path: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
         var result: Data?
         DispatchQueue.global(qos: .utility).sync {
@@ -50,8 +51,8 @@ class FileCache {
         return result
     }
 
-    func store(data: Data, for path: String, modified: String?, fileID: String?) {
-        let key = cacheKey(for: path, modified: modified, fileID: fileID)
+    func store(for server: String, data: Data, path: String, modified: String?, fileID: String?) {
+        let key = cacheKey(for: server, path: path, modified: modified, fileID: fileID)
         let diskPath = diskCacheURL.appendingPathComponent(key)
         DispatchQueue.global(qos: .utility).async {
             if (try? data.write(to: diskPath)) != nil {
@@ -71,6 +72,7 @@ class FileCache {
     }
 
     func clearDiskCache() {
+        // TODO: Instead of deleting all cache, only the logged in server's cache should be cleared
         guard let urls = try? fileManager.contentsOfDirectory(at: diskCacheURL, includingPropertiesForKeys: nil) else {
             return
         }

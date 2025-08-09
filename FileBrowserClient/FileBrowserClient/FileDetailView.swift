@@ -272,7 +272,9 @@ struct FileDetailView: View {
         self.content = nil
         self.error = nil
         if cacheExtensions.contains(where: fileName.hasSuffix),
-           let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
+           let cached = FileCache.shared.retrieve(
+            for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
+           ) {
             self.content = cached
         } else {
             reloadFile(
@@ -418,7 +420,9 @@ struct FileDetailView: View {
 
     func downloadPreview() {
         // Try to load preview from cache
-        if let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
+        if let cached = FileCache.shared.retrieve(
+            for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
+        ) {
             self.content = cached
             return
         }
@@ -447,7 +451,9 @@ struct FileDetailView: View {
                 // Store cache-able extensions in FileCache
                 if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
-                    FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)
+                    FileCache.shared.store(
+                        for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
+                    )
                     // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
                     // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
                     onFileCached?()
@@ -496,7 +502,9 @@ struct FileDetailView: View {
 
     func downloadRaw(showSave: Bool = false) {
         // Try to load raw file from cache
-        if let cached = FileCache.shared.data(for: file.path, modified: file.modified, fileID: file.extension) {
+        if let cached = FileCache.shared.retrieve(
+            for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
+        ) {
             self.content = cached
             if showSave {
                 self.saveFile()
@@ -535,7 +543,9 @@ struct FileDetailView: View {
                 // Store cache-able extensions in FileCache
                 if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
                    let data = data {
-                    FileCache.shared.store(data: data, for: file.path, modified: file.modified, fileID: file.extension)
+                    FileCache.shared.store(
+                        for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
+                    )
                     // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
                     // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
                     onFileCached?()
