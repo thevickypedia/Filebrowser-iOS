@@ -527,12 +527,14 @@ struct FileListView: View {
     func deleteSession() {
         Log.info("Removing stored session information")
         KeychainHelper.deleteSession()
+        var message = "🗑️ Session cleared, logging out..."
         if self.removeKnownServers {
             Log.info("Removing known server list")
             KeychainHelper.deleteKnownServers()
+            message = "🗑️ Session cleared and known servers deleted, logging out..."
         }
-        settingsMessage = StatusPayload(text: "🗑️ Session cleared, logging out...", color: .red, duration: 5)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+        settingsMessage = StatusPayload(text: message, color: .red, duration: 3.5)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
             logoutHandler(self.removeKnownServers)
         }
     }
