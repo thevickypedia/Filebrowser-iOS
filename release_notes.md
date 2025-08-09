@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.23.2 (08/09/2025)
+--------------------
+- [ff1250d](https://github.com/thevickypedia/Filebrowser-iOS/commit/ff1250d2adb3bfdad6acc01b91bdad44ad49f685) chore: Release ``v1.23.2``
+- [4f52421](https://github.com/thevickypedia/Filebrowser-iOS/commit/4f52421dd17a52f2d6fae9e297ad43c9586ad13e) fix: Remove ``serverURL`` and ``knownServers`` in active state when requested from settings view
+- [cb33c05](https://github.com/thevickypedia/Filebrowser-iOS/commit/cb33c0512bac6065c5f0bda750be8747bba8179c) style: Restructure ``serverURL`` menu to look similar to legacy text box
+- [2282a96](https://github.com/thevickypedia/Filebrowser-iOS/commit/2282a96fee8a42c32fc8436a9569f6b03be3b89d) style: Include a message box for session deletion confirmation
+- [25099c5](https://github.com/thevickypedia/Filebrowser-iOS/commit/25099c57248336f26ebf83336976a6600ea99d8d) chore: Update release notes for v1.23.1
+
 v1.23.1 (08/09/2025)
 --------------------
 - [5f63944](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f6394485cfcdf15873a414fda573512e8478b54) chore: Release ``v1.23.1``
