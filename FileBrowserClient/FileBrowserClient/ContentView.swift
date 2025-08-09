@@ -113,11 +113,9 @@ struct ContentView: View {
                 .autocapitalization(.none)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
-            // Face ID mode: offer a Face ID button
-            Toggle("Use Face ID", isOn: $useFaceID) // keep toggle visible (on by default now)
-                .padding(.top, 8)
+            let hasSavedSession = KeychainHelper.loadSession() != nil
 
-            if !useFaceID {
+            if !(useFaceID && hasSavedSession) {
                 // Normal credential-based login
                 TextField("Username", text: $username)
                     .autocapitalization(.none)
@@ -127,9 +125,9 @@ struct ContentView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
                 Toggle("Remember Me", isOn: $rememberMe)
+                Toggle("Use Face ID", isOn: $useFaceID)
                 Toggle("Transit Protection", isOn: $transitProtection)
 
-                // existing Login button remains unchanged
                 Button(action: { login() }) {
                     if isLoading { ProgressView() }
                     else {
@@ -139,24 +137,13 @@ struct ContentView: View {
                 }
                 .disabled(isLoading)
             } else {
-                Button(action: {
-                    biometricSignIn()
-                }) {
-                    Label("Sign in with Face ID", systemImage: "faceid")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                        .font(.headline)
-                }
-                .padding(.top, 6)
+                // Face ID mode: no credentials shown
+                Toggle("Use Face ID", isOn: $useFaceID)
+                    .padding(.top, 8)
 
-                Text("Face ID will log you in directly if a saved session exists. If you haven't logged in before, toggle Use Face ID off, sign in once, and re-enable it.")
-                    .font(.caption)
+                Text("Signing in with Face ID...")
+                    .font(.subheadline)
                     .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
             }
 
             Section {
@@ -232,6 +219,11 @@ struct ContentView: View {
                     .foregroundColor(.blue)
             }
             .padding(.bottom, 8)
+        }
+        .onAppear {
+            if useFaceID, KeychainHelper.loadSession() != nil {
+                biometricSignIn()
+            }
         }
         .padding()
     }
