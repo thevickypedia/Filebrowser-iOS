@@ -327,6 +327,7 @@ struct ContentView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                             statusMessage = nil
                         }
+                        KeychainHelper.saveSession(token: jwt, username: username, serverURL: serverURL)
                     } else {
                         errorMessage = "Failed to decode token"
                     }

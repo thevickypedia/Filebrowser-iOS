@@ -35,6 +35,7 @@ class AuthManager: ObservableObject {
     func logout() {
         token = nil
         serverURL = nil
+        KeychainHelper.deleteSession()
     }
 }
 

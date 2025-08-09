@@ -10,6 +10,7 @@
 		98067D4A2E38E6CF00808541 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98067D492E38E6CD00808541 /* Utils.swift */; };
 		984F17022E468CA9003502DF /* ViewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F17012E468CA9003502DF /* ViewStyle.swift */; };
 		984F17062E46A8AA003502DF /* ZoomableImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F17052E46A8AA003502DF /* ZoomableImageView.swift */; };
+		984F170C2E46D5D5003502DF /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F170B2E46D5D5003502DF /* KeychainHelper.swift */; };
 		986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A662E39A78A0058E2C4 /* FileCache.swift */; };
 		986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A682E3A237D0058E2C4 /* ThemeManager.swift */; };
 		986F5A6B2E3AC0190058E2C4 /* AnimatedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */; };
@@ -60,6 +61,7 @@
 		98067D492E38E6CD00808541 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		984F17012E468CA9003502DF /* ViewStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewStyle.swift; sourceTree = "<group>"; };
 		984F17052E46A8AA003502DF /* ZoomableImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableImageView.swift; sourceTree = "<group>"; };
+		984F170B2E46D5D5003502DF /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		986F5A662E39A78A0058E2C4 /* FileCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileCache.swift; sourceTree = "<group>"; };
 		986F5A682E3A237D0058E2C4 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedImageView.swift; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				984F170B2E46D5D5003502DF /* KeychainHelper.swift */,
 				984F17052E46A8AA003502DF /* ZoomableImageView.swift */,
 				984F17012E468CA9003502DF /* ViewStyle.swift */,
 				98D563EC2E45194700DE0079 /* StatusMessage.swift */,
@@ -349,6 +352,7 @@
 				98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */,
 				986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */,
 				F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */,
+				984F170C2E46D5D5003502DF /* KeychainHelper.swift in Sources */,
 				F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */,
 				986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */,
 				98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */,
@@ -517,6 +521,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FileBrowserClient/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to authenticate securely.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -545,6 +550,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FileBrowserClient/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to authenticate securely.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

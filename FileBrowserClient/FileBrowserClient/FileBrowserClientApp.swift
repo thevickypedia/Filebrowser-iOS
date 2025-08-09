@@ -17,7 +17,27 @@ struct FileBrowserClientApp: App {
             ContentView()
                 .environmentObject(authManager)
                 .environmentObject(themeManager)
-                .preferredColorScheme(themeManager.colorScheme) // 👈 apply
+                .preferredColorScheme(themeManager.colorScheme)
+                .onAppear {
+                    attemptSessionRestore()
+                }
+        }
+    }
+
+    func attemptSessionRestore() {
+        KeychainHelper.authenticateWithBiometrics { success in
+            guard success, let session = KeychainHelper.loadSession(),
+                  let token = session["token"],
+                  let username = session["username"],
+                  let serverURL = session["serverURL"] else {
+                return
+            }
+            authManager.token = token
+            authManager.username = username
+            authManager.serverURL = serverURL
+            Task {
+                await authManager.fetchPermissions(for: username, token: token, serverURL: serverURL)
+            }
         }
     }
 }
