@@ -43,12 +43,32 @@ struct ServerURLMenu: View {
                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
             )
         }
-        .alert("Add New Server", isPresented: $showAddServerAlert, actions: {
-            TextField("Server URL", text: $newServerURL)
-            Button("Add", action: addNewServer)
-            Button("Cancel", role: .cancel) {}
-        }, message: {
-            Text("Enter the full server URL.")
-        })
+        // Using .sheet instead of .alert to allow for a custom form
+        .sheet(isPresented: $showAddServerAlert) {
+            VStack {
+                Text("Add New Server")
+                    .font(.title2)
+                    .padding()
+
+                TextField("Server URL", text: $newServerURL)
+                    .autocapitalization(.none)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
+
+                Button("Add", action: {
+                    addNewServer()
+                    showAddServerAlert = false // Dismiss sheet
+                })
+                .padding()
+                .buttonStyle(.borderedProminent)
+
+                Button("Cancel", role: .cancel) {
+                    showAddServerAlert = false // Dismiss sheet
+                }
+                .padding()
+            }
+            .padding()
+            .presentationDetents([.fraction(0.3)]) // 30% of the screen height
+        }
     }
 }
