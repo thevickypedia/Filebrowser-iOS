@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.23.4 (08/09/2025)
+--------------------
+- [e0087f0](https://github.com/thevickypedia/Filebrowser-iOS/commit/e0087f0bf243bfb9d0f6f22d14efe3e6e55e7656) chore: Release ``v1.23.4``
+- [64456e2](https://github.com/thevickypedia/Filebrowser-iOS/commit/64456e204674e60a314d63896212f2043add8f05) style: Disable remember me button when face ID is toggled
+- [d62fb0d](https://github.com/thevickypedia/Filebrowser-iOS/commit/d62fb0db1442774b391c1bad62c616ad312cfd1f) chore: Update release notes for v1.23.3
+
 v1.23.3 (08/09/2025)
 --------------------
 - [c25b300](https://github.com/thevickypedia/Filebrowser-iOS/commit/c25b300af278dbe50b2f693c24ba4e9f8fe12ad1) chore: Release ``v1.23.3``
