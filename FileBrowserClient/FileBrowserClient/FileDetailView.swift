@@ -146,7 +146,6 @@ struct FileDetailView: View {
 
     var body: some View {
         let fileName = file.name.lowercased()
-        let fileInfo = getFileInfo(metadata: metadata, file: file, auth: auth)
 
         fileContentView
             .id(file.path)
@@ -213,6 +212,7 @@ struct FileDetailView: View {
                 Text("Are you sure you want to delete \(file.name)?")
             }
             .sheet(isPresented: $showInfo) {
+                let fileInfo = getFileInfo(metadata: metadata, file: file, auth: auth)
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Image(systemName: "doc.text")
