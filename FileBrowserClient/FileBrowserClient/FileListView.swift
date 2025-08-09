@@ -44,7 +44,10 @@ struct FileListView: View {
     // This is a required redundancy since the combination is used to show preparation stage
     @State private var isUploading = false
     @State private var isPreparingUpload = false
+
+    @State private var showDeleteOptions = false
     @State private var showDeleteConfirmation = false
+    @State private var includeKnownServers = false
 
     @State private var uploadTask: URLSessionUploadTask?
     @State private var isUploadCancelled = false
@@ -423,24 +426,50 @@ struct FileListView: View {
                         Label("Clear Local Cache", systemImage: "trash")
                     }
                 }
+
                 Section {
                     Button(role: .destructive) {
-                        showDeleteConfirmation = true
+                        showDeleteOptions = true
                     } label: {
                         Label("Delete Stored Session", systemImage: "trash")
                     }
                 }
+                .sheet(isPresented: $showDeleteOptions) {
+                    VStack(spacing: 20) {
+                        Text("Delete Session")
+                            .font(.title2)
+                            .bold()
+
+                        Toggle("Include known servers", isOn: $includeKnownServers)
+                            .padding()
+
+                        HStack {
+                            Button("Cancel") {
+                                showDeleteOptions = false
+                            }
+                            .padding()
+
+                            Spacer()
+
+                            Button(role: .destructive) {
+                                showDeleteOptions = false
+                                showDeleteConfirmation = true
+                            } label: {
+                                Text("Continue")
+                            }
+                            .padding()
+                        }
+                    }
+                    .padding()
+                    .presentationDetents([.medium]) // Optional: adjusts sheet size
+                }
                 .alert("Are you sure?", isPresented: $showDeleteConfirmation) {
                     Button("Delete", role: .destructive) {
-                        KeychainHelper.deleteSession()
-                        // todo: Create a new button to clear known servers' list
-                        settingsMessage = StatusPayload(text: "🗑️ Session cleared, logging out...", color: .red, duration: 5)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: logoutHandler)
+                        deleteSession()
                     }
                     Button("Cancel", role: .cancel) { }
-                } message: {
-                    Text("This will logout the current session and require password to login again.")
                 }
+
                 Section(
                     footer: VStack(alignment: .leading) {
                         Text("Issuer: \(auth.iss ?? "Unknown")").textSelection(.enabled)
@@ -491,6 +520,17 @@ struct FileListView: View {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
             }
         }
+    }
+
+    func deleteSession() {
+        Log.info("Removing stored session information")
+        KeychainHelper.deleteSession()
+        if includeKnownServers {
+            Log.info("Removing known server list")
+            KeychainHelper.deleteKnownServers()
+        }
+        settingsMessage = StatusPayload(text: "🗑️ Session cleared, logging out...", color: .red, duration: 5)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: logoutHandler)
     }
 
     @ViewBuilder
