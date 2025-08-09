@@ -113,6 +113,10 @@ struct ContentView: View {
                 .autocapitalization(.none)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
+            // Face ID mode: offer a Face ID button
+            Toggle("Use Face ID", isOn: $useFaceID) // keep toggle visible (on by default now)
+                .padding(.top, 8)
+
             if !useFaceID {
                 // Normal credential-based login
                 TextField("Username", text: $username)
@@ -135,10 +139,6 @@ struct ContentView: View {
                 }
                 .disabled(isLoading)
             } else {
-                // Face ID mode: offer a Face ID button
-                Toggle("Use Face ID", isOn: $useFaceID) // keep toggle visible (on by default now)
-                    .padding(.top, 8)
-
                 Button(action: {
                     biometricSignIn()
                 }) {
