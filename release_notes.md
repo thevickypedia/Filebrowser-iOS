@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.23.1 (08/09/2025)
+--------------------
+- [5f63944](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f6394485cfcdf15873a414fda573512e8478b54) chore: Release ``v1.23.1``
+- [164ec68](https://github.com/thevickypedia/Filebrowser-iOS/commit/164ec68a3d6d6febab5ecf27b1d55d0343946d1f) feat: Include an option to clear known servers along with stored session
+- [c0aefce](https://github.com/thevickypedia/Filebrowser-iOS/commit/c0aefceebabdcff52e9f221478c2d7c8073ff8f2) chore: Update release notes for v1.23.0
+
 v1.23.0 (08/09/2025)
 --------------------
 - [189517a](https://github.com/thevickypedia/Filebrowser-iOS/commit/189517ac621b594c6b7a44b0a493a840c638498a) chore: Release ``v1.23.0``
