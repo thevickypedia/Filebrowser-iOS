@@ -615,6 +615,11 @@ struct FileListView: View {
                 .lineLimit(style.lineLimit)
                 .padding(.horizontal, 2)
                 .foregroundColor(.primary)
+            if !module {
+                Text(parseDate(from: file.modified))
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
         }
     }
 

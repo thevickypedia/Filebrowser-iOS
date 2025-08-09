@@ -71,7 +71,7 @@ func timeAgoString(from diff: [String: Double]) -> String {
     }
 }
 
-func parseDate(from dateString: String, defaultResult: Date? = nil) throws -> Date {
+func parseDateTime(from dateString: String, defaultResult: Date? = nil) throws -> Date {
     let formats = [
         "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX",  // SSSSSS → 6 digits of fractional seconds
         "yyyy-MM-dd'T'HH:mm:ssXXXXX",         // ISO 8601 with timezone
@@ -101,6 +101,24 @@ func parseDate(from dateString: String, defaultResult: Date? = nil) throws -> Da
     return date
 }
 
+func parseDate(from dateString: String?, defaultResult: String = "") -> String {
+    guard let dateString = dateString else {
+        return defaultResult
+    }
+
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSXXXXX"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+
+    if let date = formatter.date(from: dateString) {
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    } else {
+        Log.error("Invalid date format: \(String(describing: dateString))")
+        return defaultResult
+    }
+}
+
 func calculateTimeDifference(dateString: String?) -> [String: Double] {
     let defaultResult: [String: Double] = [
         "seconds": 0.0,
@@ -118,7 +136,7 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
     }
 
     do {
-        let date = try parseDate(from: dateString)
+        let date = try parseDateTime(from: dateString)
         let now = Date()
         let timeInterval = abs(now.timeIntervalSince(date)) // in seconds
 
