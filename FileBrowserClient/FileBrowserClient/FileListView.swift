@@ -481,62 +481,150 @@ struct FileListView: View {
     }
 
     @ViewBuilder
-    func listView(for fileList: [FileItem]) -> some View {
-        ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
-            let isSelected = selectedItems.contains(file)
-            FileCellView(
+    func thumbnailOrIcon(for file: FileItem, style: GridStyle? = nil) -> some View {
+        let fileName = file.name.lowercased()
+        let useThumbnail = advancedSettings.displayThumbnail &&
+            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix)
+
+        if useThumbnail {
+            RemoteThumbnail(
                 file: file,
-                index: index,
-                style: nil,
-                module: false,
-                selectionMode: selectionMode,
-                isSelected: isSelected,
-                onTap: {
-                    handleFileTap(file: file, index: index, fileList: fileList)
-                },
-                extensionTypes: extensionTypes,
-                advancedSettings: advancedSettings,
                 serverURL: auth.serverURL ?? "",
-                token: auth.token ?? ""
+                token: auth.token ?? "",
+                advancedSettings: advancedSettings,
+                extensionTypes: extensionTypes,
+                width: style?.gridHeight ?? ViewStyle.listIconSize,
+                height: style?.gridHeight ?? ViewStyle.listIconSize
             )
+            .scaledToFill()
+            .frame(
+                width: style?.gridHeight ?? ViewStyle.listIconSize,
+                height: style?.gridHeight ?? ViewStyle.listIconSize
+            )
+            .clipped()
+            .id(file.path)
+        } else {
+            Image(systemName: file.isDir
+                  ? Icons.folder
+                  : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
+                .resizable()
+                .scaledToFit()
+                .frame(height: style?.iconSize ?? ViewStyle.listIconSize)
+                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
         }
     }
 
-    func handleFileTap(file: FileItem, index: Int, fileList: [FileItem]) {
-        if selectionMode {
-            toggleSelection(for: file)
-        } else {
-            if file.isDir {
-                pathStack.append(file.name)
-                viewModel.fetchFiles(at: fullPath(for: file))
+    @ViewBuilder
+    func listView(for fileList: [FileItem]) -> some View {
+        ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
+            if selectionMode {
+                HStack {
+                    Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                    thumbnailOrIcon(for: file)
+                        .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
+                    Text(file.name)
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { toggleSelection(for: file) }
             } else {
-                selectedFileIndex = index
-                selectedFileList = fileList
+                if file.isDir {
+                    NavigationLink(value: fullPath(for: file)) {
+                        HStack {
+                            thumbnailOrIcon(for: file)
+                                .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
+                            Text(file.name)
+                        }
+                    }
+                } else {
+                    NavigationLink(destination: detailView(for: file, index: index, sortedFiles: fileList)) {
+                        HStack {
+                            thumbnailOrIcon(for: file)
+                                .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
+                            Text(file.name)
+                        }
+                    }
+                }
             }
         }
     }
 
     @ViewBuilder
-    func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
+    func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
         let style = ViewStyle.gridStyle(module: module)
+
+        let handleFileTap = {
+            if selectionMode {
+                toggleSelection(for: file)
+            } else {
+                selectedFileIndex = index
+                selectedFileList = fileList
+            }
+        }
+
+        let handleFolderTap = {
+            if selectionMode {
+                toggleSelection(for: file)
+            }
+        }
+
+        ZStack(alignment: .topTrailing) {
+            if file.isDir {
+                if selectionMode {
+                    Button(action: handleFolderTap) {
+                        gridContent(file: file, style: style, module: module)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    NavigationLink(value: fullPath(for: file)) {
+                        gridContent(file: file, style: style, module: module)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                Button(action: handleFileTap) {
+                    gridContent(file: file, style: style, module: module)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if selectionMode {
+                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                    .resizable()
+                    .frame(width: style.selectionSize, height: style.selectionSize)
+                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                    .padding(6)
+            }
+        }
+    }
+
+    @ViewBuilder
+    func gridContent(file: FileItem, style: GridStyle, module: Bool) -> some View {
+        VStack(spacing: 2) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray6))
+                    .frame(height: style.gridHeight)
+
+                thumbnailOrIcon(for: file, style: style)
+            }
+
+            Text(file.name)
+                .font(module ? .caption2 : .caption)
+                .multilineTextAlignment(.center)
+                .lineLimit(style.lineLimit)
+                .padding(.horizontal, 2)
+                .foregroundColor(.primary)
+        }
+    }
+
+    @ViewBuilder
+    func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
         ScrollView {
             LazyVGrid(columns: adaptiveColumns(module: module), spacing: 12) {
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
-                    FileCellView(
-                        file: file,
-                        index: index,
-                        style: style,
-                        module: module,
-                        selectionMode: selectionMode,
-                        isSelected: selectedItems.contains(file),
-                        onTap: {
-                            handleFileTap(file: file, index: index, fileList: fileList)
-                        },
-                        extensionTypes: extensionTypes,
-                        advancedSettings: advancedSettings,
-                        serverURL: auth.serverURL ?? "",
-                        token: auth.token ?? ""
-                    )
+                    gridCell(for: file, at: index, in: fileList, module: module)
                 }
             }
             .padding(.horizontal, 16)
