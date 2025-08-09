@@ -616,7 +616,10 @@ struct FileListView: View {
                 .padding(.horizontal, 2)
                 .foregroundColor(.primary)
             if !module {
-                Text(parseDate(from: file.modified))
+                Text(parseGridSize(from: file.isDir ? nil : file.size) ?? "—")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+                Text(parseGridDate(from: file.modified))
                     .font(.caption2)
                     .foregroundColor(.gray)
             }

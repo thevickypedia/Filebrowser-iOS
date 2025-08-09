@@ -101,7 +101,14 @@ func parseDateTime(from dateString: String, defaultResult: Date? = nil) throws -
     return date
 }
 
-func parseDate(from dateString: String?, defaultResult: String = "") -> String {
+func parseGridSize(from fileSize: Int?) -> String? {
+    guard let fileSize = fileSize else {
+        return "—"
+    }
+    return sizeConverter(fileSize)
+}
+
+func parseGridDate(from dateString: String?, defaultResult: String = "") -> String {
     guard let dateString = dateString else {
         return defaultResult
     }
