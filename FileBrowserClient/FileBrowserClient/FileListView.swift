@@ -76,9 +76,12 @@ struct FileListView: View {
     @State private var selectedFileIndex: Int?
     @State private var selectedFileList: [FileItem] = []
 
-    let path: String
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
+    private var currentPath: String {
+        pathStack.last ?? "/"
+    }
+
     let logoutHandler: () -> Void
 
     let extensionTypes: ExtensionTypes
@@ -357,7 +360,7 @@ struct FileListView: View {
                 }
             }
         }
-        .id("filelist-\(path)-\(pathStack.count)")
+        .id("filelist-\(currentPath)-\(pathStack.count)")
         .modifier(StatusMessage(payload: $statusMessage))
         .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
         .modifier(CreateFileAlert(
@@ -381,16 +384,12 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
-            Log.debug("📂 FileListView appeared for path: \(path)")
-            viewModel.fetchFiles(at: path)
+            Log.debug("📂 FileListView appeared for path: \(currentPath)")
+            viewModel.fetchFiles(at: currentPath)
         }
         .onChange(of: pathStack) { newStack in
             let newPath = newStack.last ?? "/"
-            Log.debug("📂 Path changed via navigation: \(newPath)")
-            viewModel.fetchFiles(at: newPath)
-        }
-        .onChange(of: path) { newPath in
-            Log.debug("📂 Path param changed: \(newPath)")
+            Log.debug("📂 Path changed: \(newPath)")
             viewModel.fetchFiles(at: newPath)
         }
         .sheet(isPresented: $showingSettings) {
@@ -678,12 +677,12 @@ struct FileListView: View {
         }
 
         // If pathStack is empty or path is empty, we're at root
-        if pathStack.isEmpty || path == "/" {
+        if pathStack.isEmpty || currentPath == "/" {
             return "Home"
         }
 
         // Fallback: use the current path
-        let components = path.components(separatedBy: "/")
+        let components = currentPath.components(separatedBy: "/")
         return components.last ?? "Home"
     }
 
@@ -726,10 +725,10 @@ struct FileListView: View {
     }
 
     func getUploadURL(serverURL: String, encodedName: String) -> URL? {
-        if path == "/" {
+        if currentPath == "/" {
             return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: encodedName))?override=false")
         }
-        return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: path))/\(encodedName)?override=false")
+        return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: currentPath))/\(encodedName)?override=false")
     }
 
     func initiateTusUpload(for fileURL: URL) {
@@ -824,7 +823,7 @@ struct FileListView: View {
         uploadTask?.cancel()
         uploadTask = nil
         isUploading = false
-        viewModel.fetchFiles(at: path)
+        viewModel.fetchFiles(at: currentPath)
     }
 
     func uploadFileInChunks(
@@ -863,7 +862,7 @@ struct FileListView: View {
                 uploadProgress = 1.0
                 currentUploadSpeed = 0.0
                 uploadNextInQueue()
-                viewModel.fetchFiles(at: path)
+                viewModel.fetchFiles(at: currentPath)
                 statusMessage = StatusPayload(text: "📤 Uploaded \(fileURL.lastPathComponent)")
                 return
             }
@@ -1098,7 +1097,7 @@ struct FileListView: View {
             Log.info("✅ Deleted \(count) items")
             selectedItems.removeAll()
             selectionMode = false
-            viewModel.fetchFiles(at: path)
+            viewModel.fetchFiles(at: currentPath)
             statusMessage = StatusPayload(text: "🗑️ Deleted \(count) \(count == 1 ? "item" : "items")", color: .red, duration: 3)
         }
     }
@@ -1133,7 +1132,7 @@ struct FileListView: View {
                     selectedItems.removeAll()
                     isRenaming = false
                     selectionMode = false
-                    viewModel.fetchFiles(at: path)
+                    viewModel.fetchFiles(at: currentPath)
                     statusMessage = StatusPayload(text: "📝 Renamed \(item.name) → \(renameInput)", color: .yellow, duration: 3)
                 }
             }
@@ -1200,7 +1199,7 @@ struct FileListView: View {
 
                 if http.statusCode == 200 {
                     Log.info("✅ \(resourceType) created successfully")
-                    viewModel.fetchFiles(at: path)
+                    viewModel.fetchFiles(at: currentPath)
                     statusMessage = StatusPayload(text: "\(emoji) \(newResourceName) created")
                 } else {
                     Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")
@@ -1212,14 +1211,14 @@ struct FileListView: View {
     }
 
     func refreshFolder() {
-        viewModel.fetchFiles(at: path)
+        viewModel.fetchFiles(at: currentPath)
     }
 
     private func fullPath(for file: FileItem) -> String {
-        if path == "/" {
+        if currentPath == "/" {
             return "/\(file.name)"
         } else {
-            return "\(path)/\(file.name)"
+            return "\(currentPath)/\(file.name)"
         }
     }
 }

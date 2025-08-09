@@ -66,7 +66,6 @@ struct ContentView: View {
             Group {
                 if isLoggedIn {
                     FileListView(
-                        path: pathStack.last ?? "/",
                         isLoggedIn: $isLoggedIn,
                         pathStack: $pathStack,
                         logoutHandler: handleLogout,
@@ -81,7 +80,6 @@ struct ContentView: View {
             }
             .navigationDestination(for: String.self) { newPath in
                 FileListView(
-                    path: newPath,
                     isLoggedIn: $isLoggedIn,
                     pathStack: $pathStack,
                     logoutHandler: handleLogout,
