@@ -433,6 +433,7 @@ struct FileListView: View {
                 .alert("Are you sure?", isPresented: $showDeleteConfirmation) {
                     Button("Delete", role: .destructive) {
                         KeychainHelper.deleteSession()
+                        // todo: Create a new button to clear known servers' list
                         settingsMessage = StatusPayload(text: "🗑️ Session cleared, logging out...", color: .red, duration: 5)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: logoutHandler)
                     }

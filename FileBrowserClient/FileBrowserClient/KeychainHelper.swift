@@ -11,6 +11,7 @@ import Security
 
 enum KeychainHelper {
     static let key = "savedSession"
+    static let knownServersKey = "knownServers"
     static func saveSession(token: String, username: String, serverURL: String, password: String? = nil) {
         var session: [String: String] = [
             "token": token,
@@ -31,7 +32,7 @@ enum KeychainHelper {
             SecItemAdd(query as CFDictionary, nil)
         }
     }
-
+    
     static func loadSession() -> [String: String]? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -48,7 +49,7 @@ enum KeychainHelper {
         }
         return session
     }
-
+    
     static func deleteSession() {
         Log.info("Deleting session information from keychain")
         let query: [String: Any] = [
@@ -57,7 +58,7 @@ enum KeychainHelper {
         ]
         SecItemDelete(query as CFDictionary)
     }
-
+    
     static func authenticateWithBiometrics(reason: String = "Authenticate to restore session", completion: @escaping (Bool) -> Void) {
         let context = LAContext()
         var error: NSError?
@@ -70,5 +71,43 @@ enum KeychainHelper {
         } else {
             completion(false)
         }
+    }
+
+    static func saveKnownServers(_ servers: [String]) {
+        guard let data = try? JSONEncoder().encode(servers) else { return }
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: knownServersKey,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+        ]
+        SecItemDelete(query as CFDictionary) // overwrite
+        SecItemAdd(query as CFDictionary, nil)
+    }
+
+    static func loadKnownServers() -> [String] {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: knownServersKey,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        var dataTypeRef: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
+        guard status == errSecSuccess,
+              let data = dataTypeRef as? Data,
+              let servers = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        return servers
+    }
+
+    static func deleteKnownServers() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: knownServersKey
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 }

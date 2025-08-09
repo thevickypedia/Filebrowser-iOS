@@ -20,6 +20,9 @@ struct AdvancedSettings {
 }
 
 struct ContentView: View {
+    @State private var knownServers: [String] = []
+    @State private var showAddServerAlert = false
+    @State private var newServerURL = ""
     @AppStorage("serverURL") private var serverURL = ""
     @State private var username = ""
     @State private var password = ""
@@ -105,11 +108,19 @@ struct ContentView: View {
                 .bold()
                 .padding(.top, 1)
 
-            // Server URL is still required
-            TextField("Server URL", text: $serverURL)
-                .keyboardType(.URL)
-                .autocapitalization(.none)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            Picker("Server URL", selection: $serverURL) {
+                ForEach(knownServers, id: \.self) { url in
+                    Text(url).tag(url)
+                }
+                Text("➕ Add new server").tag("add-new-server")
+            }
+            .pickerStyle(MenuPickerStyle())
+            .onChange(of: serverURL) { newValue in
+                if newValue == "add-new-server" {
+                    showAddServerAlert = true
+                    serverURL = knownServers.first ?? ""
+                }
+            }
 
             let hasSavedSession = KeychainHelper.loadSession() != nil
 
@@ -226,6 +237,32 @@ struct ContentView: View {
             .padding(.bottom, 8)
         }
         .padding()
+        .onAppear {
+            knownServers = KeychainHelper.loadKnownServers()
+            if !knownServers.contains(serverURL), let first = knownServers.first {
+                serverURL = first
+            }
+        }
+        .alert("Add New Server", isPresented: $showAddServerAlert, actions: {
+            TextField("Server URL", text: $newServerURL)
+            Button("Add", action: addNewServer)
+            Button("Cancel", role: .cancel) {}
+        }, message: {
+            Text("Enter the full server URL.")
+        })
+    }
+
+    func addNewServer() {
+        let trimmed = newServerURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.hasPrefix("http") else { return }
+
+        if !knownServers.contains(trimmed) {
+            knownServers.insert(trimmed, at: 0)
+            KeychainHelper.saveKnownServers(knownServers)
+        }
+
+        serverURL = trimmed
+        newServerURL = ""
     }
 
     func handleLogout() {
@@ -244,6 +281,7 @@ struct ContentView: View {
         // If neither remember nor useFaceID is enabled, remove any saved session
         if !rememberMe && !useFaceID {
             KeychainHelper.deleteSession()
+            KeychainHelper.deleteKnownServers()
         }
     }
 
@@ -354,6 +392,7 @@ struct ContentView: View {
                         } else {
                             // ensure any existing saved session is removed when the user opts out
                             KeychainHelper.deleteSession()
+                            KeychainHelper.deleteKnownServers()
                         }
                     } else {
                         errorMessage = "Failed to decode token"
