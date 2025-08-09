@@ -50,6 +50,7 @@ enum KeychainHelper {
     }
 
     static func deleteSession() {
+        Log.info("Deleting session information from keychain")
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key

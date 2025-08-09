@@ -44,6 +44,7 @@ struct FileListView: View {
     // This is a required redundancy since the combination is used to show preparation stage
     @State private var isUploading = false
     @State private var isPreparingUpload = false
+    @State private var showDeleteConfirmation = false
 
     @State private var uploadTask: URLSessionUploadTask?
     @State private var isUploadCancelled = false
@@ -421,6 +422,23 @@ struct FileListView: View {
                     } label: {
                         Label("Clear Local Cache", systemImage: "trash")
                     }
+                }
+                Section {
+                    Button(role: .destructive) {
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete Stored Session", systemImage: "trash")
+                    }
+                }
+                .alert("Are you sure?", isPresented: $showDeleteConfirmation) {
+                    Button("Delete", role: .destructive) {
+                        KeychainHelper.deleteSession()
+                        settingsMessage = StatusPayload(text: "🗑️ Session cleared, logging out...", color: .red, duration: 5)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: logoutHandler)
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("This will logout the current session and require password to login again.")
                 }
                 Section(
                     footer: VStack(alignment: .leading) {
