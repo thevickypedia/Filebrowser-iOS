@@ -137,13 +137,21 @@ struct ContentView: View {
                 }
                 .disabled(isLoading)
             } else {
-                // Face ID mode: no credentials shown
+                // Face ID mode with saved session
                 Toggle("Use Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
-
-                Text("Signing in with Face ID...")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
+                Button(action: {
+                    biometricSignIn()
+                }) {
+                    Label("Login with Face ID", systemImage: "faceid")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                        .font(.headline)
+                }
+                .padding(.top, 6)
             }
 
             Section {
