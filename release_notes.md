@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.21.3 (08/09/2025)
+--------------------
+- [978d3b1](https://github.com/thevickypedia/Filebrowser-iOS/commit/978d3b1d8e8ed19213932d21a871941a854113e7) chore: Release ``v1.21.3``
+- [f59bcfa](https://github.com/thevickypedia/Filebrowser-iOS/commit/f59bcfae47c8330883e32206dc7ad80d6231819c) fix: Swipe animation direction for detailed view
+- [d97dd9c](https://github.com/thevickypedia/Filebrowser-iOS/commit/d97dd9ccbf29edf4cfda233ea4755ae9951bd3a6) chore: Update release notes for v1.21.2
+
 v1.21.2 (08/08/2025)
 --------------------
 - [6b6862f](https://github.com/thevickypedia/Filebrowser-iOS/commit/6b6862f56683ecf6b74b28db5d3e75a5964fe286) chore: Release ``v1.21.2``
