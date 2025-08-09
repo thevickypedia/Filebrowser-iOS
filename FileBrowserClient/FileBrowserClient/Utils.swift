@@ -296,3 +296,22 @@ func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> St
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
 }
+
+func deleteSessionMessage(includeKnownServers: Bool) -> Text {
+    if includeKnownServers {
+        return Text("""
+        Continuing will
+
+        1. Clear the list of known servers
+        2. Log out the current session
+        3. Require a password to log in again
+        """)
+    } else {
+        return Text("""
+        Continuing will
+
+        1. Log out the current session
+        2. Require a password to log in again
+        """)
+    }
+}

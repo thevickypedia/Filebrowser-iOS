@@ -461,13 +461,15 @@ struct FileListView: View {
                         }
                     }
                     .padding()
-                    .presentationDetents([.medium]) // Optional: adjusts sheet size
+                    .presentationDetents([.fraction(0.3)]) // 30% of the screen height
                 }
                 .alert("Are you sure?", isPresented: $showDeleteConfirmation) {
                     Button("Delete", role: .destructive) {
                         deleteSession()
                     }
                     Button("Cancel", role: .cancel) { }
+                } message: {
+                    deleteSessionMessage(includeKnownServers: includeKnownServers)
                 }
 
                 Section(
@@ -525,7 +527,7 @@ struct FileListView: View {
     func deleteSession() {
         Log.info("Removing stored session information")
         KeychainHelper.deleteSession()
-        if includeKnownServers {
+        if self.includeKnownServers {
             Log.info("Removing known server list")
             KeychainHelper.deleteKnownServers()
         }
