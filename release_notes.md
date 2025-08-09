@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.22.3 (08/09/2025)
+--------------------
+- [388bc18](https://github.com/thevickypedia/Filebrowser-iOS/commit/388bc18cca671ba4bffb267a4a2f05fad9158336) chore: Release ``v1.22.3``
+- [736e181](https://github.com/thevickypedia/Filebrowser-iOS/commit/736e1810e2a0b51ba34cb890394104bfeb52eb99) style: Include file size in grid view
+- [f74ac4e](https://github.com/thevickypedia/Filebrowser-iOS/commit/f74ac4ee09652613be7fd2c75b58d688ebe19b91) style: Display modified date in grid view
+- [747530c](https://github.com/thevickypedia/Filebrowser-iOS/commit/747530c7bcb31cf4fa9d519054c19e301a8d34ae) perf: Retrieve file information only when required
+- [d5bedbd](https://github.com/thevickypedia/Filebrowser-iOS/commit/d5bedbd6378766f8f9c9bb394fe17eab800774d1) chore: Update release notes for v1.22.2
+
 v1.22.2 (08/09/2025)
 --------------------
 - [83307b3](https://github.com/thevickypedia/Filebrowser-iOS/commit/83307b3e7730bfbc61273d30dd50816fb58edc96) chore: Release ``v1.22.2``
