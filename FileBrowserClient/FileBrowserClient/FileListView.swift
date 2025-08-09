@@ -47,7 +47,7 @@ struct FileListView: View {
 
     @State private var showDeleteOptions = false
     @State private var showDeleteConfirmation = false
-    @State private var includeKnownServers = false
+    @State private var removeKnownServers = false
 
     @State private var uploadTask: URLSessionUploadTask?
     @State private var isUploadCancelled = false
@@ -86,7 +86,7 @@ struct FileListView: View {
         pathStack.last ?? "/"
     }
 
-    let logoutHandler: () -> Void
+    let logoutHandler: (Bool) -> Void
 
     let extensionTypes: ExtensionTypes
     let advancedSettings: AdvancedSettings
@@ -358,7 +358,7 @@ struct FileListView: View {
                 }
                 Button(action: {
                     Log.info("Logged out!")
-                    logoutHandler()
+                    logoutHandler(false)
                 }) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
                 }
@@ -440,7 +440,7 @@ struct FileListView: View {
                             .font(.title2)
                             .bold()
 
-                        Toggle("Include known servers", isOn: $includeKnownServers)
+                        Toggle("Include known servers", isOn: $removeKnownServers)
                             .padding()
 
                         HStack {
@@ -469,7 +469,7 @@ struct FileListView: View {
                     }
                     Button("Cancel", role: .cancel) { }
                 } message: {
-                    deleteSessionMessage(includeKnownServers: includeKnownServers)
+                    deleteSessionMessage(includeKnownServers: removeKnownServers)
                 }
 
                 Section(
@@ -527,12 +527,14 @@ struct FileListView: View {
     func deleteSession() {
         Log.info("Removing stored session information")
         KeychainHelper.deleteSession()
-        if self.includeKnownServers {
+        if self.removeKnownServers {
             Log.info("Removing known server list")
             KeychainHelper.deleteKnownServers()
         }
         settingsMessage = StatusPayload(text: "🗑️ Session cleared, logging out...", color: .red, duration: 5)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: logoutHandler)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            logoutHandler(self.removeKnownServers)
+        }
     }
 
     @ViewBuilder

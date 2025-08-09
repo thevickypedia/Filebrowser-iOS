@@ -254,7 +254,7 @@ struct ContentView: View {
         newServerURL = ""
     }
 
-    func handleLogout() {
+    func handleLogout(_ clearActiveServers: Bool = false) {
         pathStack.removeAll()
 
         isLoggedIn = false
@@ -271,6 +271,14 @@ struct ContentView: View {
         if !rememberMe && !useFaceID {
             KeychainHelper.deleteSession()
             KeychainHelper.deleteKnownServers()
+        }
+        // This is a temporary solution
+        // Clears current serverURL and knownServers immediately
+        // TODO: Move all login instructions to AuthManager or a new module
+        // TODO: To be done only during a major refactor
+        if clearActiveServers {
+            knownServers.removeAll()
+            serverURL = ""
         }
     }
 
