@@ -377,7 +377,6 @@ struct ContentView: View {
                   let serverURL = session["serverURL"] else {
                 DispatchQueue.main.async {
                     // Show error and fall back to credentials form
-                    errorMessage = "Face ID failed or no saved session. Please login with username/password."
                     useFaceID = false // ✅ this ensures credentials are shown again
                 }
                 return
