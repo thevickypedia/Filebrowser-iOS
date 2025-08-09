@@ -25,18 +25,24 @@ struct FileBrowserClientApp: App {
     }
 
     func attemptSessionRestore() {
+        // Only attempt biometric restore if user explicitly enabled it
+        guard UserDefaults.standard.bool(forKey: "useFaceID") else { return }
+
         KeychainHelper.authenticateWithBiometrics { success in
-            guard success, let session = KeychainHelper.loadSession(),
+            guard success,
+                  let session = KeychainHelper.loadSession(),
                   let token = session["token"],
                   let username = session["username"],
                   let serverURL = session["serverURL"] else {
                 return
             }
-            authManager.token = token
-            authManager.username = username
-            authManager.serverURL = serverURL
-            Task {
-                await authManager.fetchPermissions(for: username, token: token, serverURL: serverURL)
+            DispatchQueue.main.async {
+                authManager.token = token
+                authManager.username = username
+                authManager.serverURL = serverURL
+                Task {
+                    await authManager.fetchPermissions(for: username, token: token, serverURL: serverURL)
+                }
             }
         }
     }

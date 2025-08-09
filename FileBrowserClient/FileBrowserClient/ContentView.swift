@@ -25,6 +25,7 @@ struct ContentView: View {
     @State private var password = ""
     @AppStorage("rememberMe") private var rememberMe = false
     @AppStorage("transitProtection") private var transitProtection = false
+    @AppStorage("useFaceID") private var useFaceID: Bool = false
 
     @State private var pathStack: [String] = []
     @State private var isLoading = false
@@ -106,20 +107,57 @@ struct ContentView: View {
                 .bold()
                 .padding(.top, 1)
 
+            // Server URL is still required
             TextField("Server URL", text: $serverURL)
                 .keyboardType(.URL)
                 .autocapitalization(.none)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
-            TextField("Username", text: $username)
-                .autocapitalization(.none)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+            if !useFaceID {
+                // Normal credential-based login
+                TextField("Username", text: $username)
+                    .autocapitalization(.none)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
 
-            SecureField("Password", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+                SecureField("Password", text: $password)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
 
-            Toggle("Remember Me", isOn: $rememberMe)
-            Toggle("Transit Protection", isOn: $transitProtection)
+                Toggle("Remember Me", isOn: $rememberMe)
+                Toggle("Transit Protection", isOn: $transitProtection)
+
+                // existing Login button remains unchanged
+                Button(action: { login() }) {
+                    if isLoading { ProgressView() }
+                    else {
+                        Text("Login").bold().frame(maxWidth: .infinity)
+                            .padding().background(Color.blue).foregroundColor(.white).cornerRadius(8)
+                    }
+                }
+                .disabled(isLoading)
+            } else {
+                // Face ID mode: offer a Face ID button
+                Toggle("Use Face ID", isOn: $useFaceID) // keep toggle visible (on by default now)
+                    .padding(.top, 8)
+
+                Button(action: {
+                    biometricSignIn()
+                }) {
+                    Label("Sign in with Face ID", systemImage: "faceid")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                        .font(.headline)
+                }
+                .padding(.top, 6)
+
+                Text("Face ID will log you in directly if a saved session exists. If you haven't logged in before, toggle Use Face ID off, sign in once, and re-enable it.")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
 
             Section {
                 DisclosureGroup("Advanced Settings", isExpanded: $showAdvancedOptions) {
@@ -152,23 +190,6 @@ struct ContentView: View {
                     .foregroundColor(.red)
                     .multilineTextAlignment(.center)
             }
-
-            Button(action: {
-                login()
-            }) {
-                if isLoading {
-                    ProgressView()
-                } else {
-                    Text("Login")
-                        .bold()
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-            }
-            .disabled(isLoading)
 
             if let statusMessage = statusMessage {
                 Text(statusMessage)
@@ -227,6 +248,10 @@ struct ContentView: View {
         statusMessage = "⚠️ Logout successful!"
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
             statusMessage = nil
+        }
+        // If neither remember nor useFaceID is enabled, remove any saved session
+        if !rememberMe && !useFaceID {
+            KeychainHelper.deleteSession()
         }
     }
 
@@ -327,7 +352,12 @@ struct ContentView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                             statusMessage = nil
                         }
-                        KeychainHelper.saveSession(token: jwt, username: username, serverURL: serverURL)
+                        if rememberMe || useFaceID {
+                            KeychainHelper.saveSession(token: jwt, username: username, serverURL: serverURL)
+                        } else {
+                            // ensure any existing saved session is removed when the user opts out
+                            KeychainHelper.deleteSession()
+                        }
                     } else {
                         errorMessage = "Failed to decode token"
                     }
@@ -336,6 +366,39 @@ struct ContentView: View {
                 }
             }
         }.resume()
+    }
+
+    func biometricSignIn() {
+        KeychainHelper.authenticateWithBiometrics { success in
+            guard success,
+                  let session = KeychainHelper.loadSession(),
+                  var token = session["token"],
+                  let username = session["username"],
+                  let serverURL = session["serverURL"] else {
+                DispatchQueue.main.async {
+                    // keep same error handling pattern you use elsewhere
+                    errorMessage = "Face ID failed or no saved session. Please login once with username/password and enable 'Use Face ID'."
+                }
+                return
+            }
+
+            DispatchQueue.main.async {
+                // set app auth state same as successful login
+                token = token
+                auth.token = token
+                auth.serverURL = serverURL
+                auth.username = username
+                auth.permissions = nil
+                Task {
+                    await auth.fetchUserAccount(for: username, token: token, serverURL: serverURL)
+                    await auth.fetchPermissions(for: username, token: token, serverURL: serverURL)
+                }
+                fileListViewModel.configure(token: token, serverURL: serverURL)
+                isLoggedIn = true
+                statusMessage = "✅ Face ID login successful!"
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { statusMessage = nil }
+            }
+        }
     }
 }
 
