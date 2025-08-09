@@ -397,8 +397,7 @@ struct ContentView: View {
                             self.serverURL = serverURL
                             self.username = username
                             self.password = password
-                            self.login() // reuse your normal login flow
-                            logTokenInfo()
+                            self.login() // reuse normal login flow
                         }
                     } else {
                         // No password stored — fallback to showing login UI
