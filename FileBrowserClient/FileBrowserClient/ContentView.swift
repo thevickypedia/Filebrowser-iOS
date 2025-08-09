@@ -258,8 +258,8 @@ struct ContentView: View {
         isLoggedIn = false
         if !rememberMe {
             username = ""
-            password = ""
         }
+        password = ""
 
         statusMessage = "⚠️ Logout successful!"
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
