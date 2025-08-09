@@ -5,15 +5,6 @@
 //  Created by Vignesh Rao on 8/8/25.
 //
 
-
-//
-//  KeychainHelper.swift
-//  FileBrowserClient
-//
-//  Created by Vignesh Rao on 8/6/25.
-//
-
-
 import Foundation
 import LocalAuthentication
 import Security

@@ -129,8 +129,7 @@ struct ContentView: View {
                 Toggle("Transit Protection", isOn: $transitProtection)
 
                 Button(action: { login() }) {
-                    if isLoading { ProgressView() }
-                    else {
+                    if isLoading { ProgressView() } else {
                         Text("Login").bold().frame(maxWidth: .infinity)
                             .padding().background(Color.blue).foregroundColor(.white).cornerRadius(8)
                     }
@@ -369,6 +368,7 @@ struct ContentView: View {
     }
 
     func biometricSignIn() {
+        // todo: Not sure if reusing session tokens without re-authenticating is the way to go
         KeychainHelper.authenticateWithBiometrics { success in
             guard success,
                   let session = KeychainHelper.loadSession(),
@@ -389,6 +389,13 @@ struct ContentView: View {
                 auth.serverURL = serverURL
                 auth.username = username
                 auth.permissions = nil
+                if let payload = decodeJWT(jwt: token) {
+                    auth.iss = payload["iss"] as? String
+                    auth.exp = payload["exp"] as? TimeInterval
+                    auth.iat = payload["iat"] as? TimeInterval
+                } else {
+                    Log.error("Failed to decode JWT")
+                }
                 Task {
                     await auth.fetchUserAccount(for: username, token: token, serverURL: serverURL)
                     await auth.fetchPermissions(for: username, token: token, serverURL: serverURL)
