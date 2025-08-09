@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.22.1 (08/09/2025)
+--------------------
+- [2199136](https://github.com/thevickypedia/Filebrowser-iOS/commit/219913619165cf73b52396fc80182d1e72953693) chore: Release ``v1.22.1``
+- [04c9c5c](https://github.com/thevickypedia/Filebrowser-iOS/commit/04c9c5cfdc18db7f1bbef4d12757ad9790291c6d) fix: Check for saved session before giving an option for FaceID
+- [0673e8c](https://github.com/thevickypedia/Filebrowser-iOS/commit/0673e8caa3878972c3be7cb1a366f0b6d16b6125) fix: Make Face ID button visible
+- [4dec964](https://github.com/thevickypedia/Filebrowser-iOS/commit/4dec9646d84609926524fd1f963dbfcdd6d37bc6) perf: Improve the usage for Face ID based on a top level var
+- [adfc197](https://github.com/thevickypedia/Filebrowser-iOS/commit/adfc197fbd6a18f5ab0ae63cf56680aa41e3e451) chore: Update release notes for v1.22.0
+
 v1.22.0 (08/09/2025)
 --------------------
 - [594b62f](https://github.com/thevickypedia/Filebrowser-iOS/commit/594b62f3d64b3f9db08c7e5f637be4e1d281d9ce) chore: Release ``v1.22.0``
