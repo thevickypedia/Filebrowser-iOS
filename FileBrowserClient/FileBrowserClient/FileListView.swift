@@ -57,7 +57,12 @@ struct FileListView: View {
     @State private var fileCacheSize: Int64 = 0
 
     @State private var sortOption: SortOption = .nameAsc
-    @State private var viewMode: ViewMode = .list
+    @AppStorage("viewMode") private var viewModeRawValue: String = ViewMode.list.rawValue
+
+    private var viewMode: ViewMode {
+        get { ViewMode(rawValue: viewModeRawValue) ?? .list }
+        set { viewModeRawValue = newValue.rawValue }
+    }
 
     // Display as alerts
     @State private var errorTitle: String?
@@ -270,10 +275,10 @@ struct FileListView: View {
                     }
                     Menu {
                         Menu {
-                            Picker("View mode", selection: $viewMode) {
-                                Label("List", systemImage: "list.bullet").tag(ViewMode.list)
-                                Label("Grid", systemImage: "square.grid.2x2").tag(ViewMode.grid)
-                                Label("Module", systemImage: "square.grid.3x3").tag(ViewMode.module)
+                            Picker("View mode", selection: $viewModeRawValue) {
+                                Label("List", systemImage: "list.bullet").tag(ViewMode.list.rawValue)
+                                Label("Grid", systemImage: "square.grid.2x2").tag(ViewMode.grid.rawValue)
+                                Label("Module", systemImage: "square.grid.3x3").tag(ViewMode.module.rawValue)
                             }
                         } label: {
                             Label("View Options", systemImage: "arrow.up.arrow.down.square")

@@ -54,7 +54,7 @@ struct ViewStyle {
     }
 }
 
-enum ViewMode {
+enum ViewMode: String {
     case list, grid, module
 }
 
