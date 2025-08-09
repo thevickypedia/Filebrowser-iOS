@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.22.2 (08/09/2025)
+--------------------
+- [83307b3](https://github.com/thevickypedia/Filebrowser-iOS/commit/83307b3e7730bfbc61273d30dd50816fb58edc96) chore: Release ``v1.22.2``
+- [259f42d](https://github.com/thevickypedia/Filebrowser-iOS/commit/259f42d2de6c3785bc7ae5a334d8781630b78f0d) fix: Remove redundant logout logic
+- [899d3f4](https://github.com/thevickypedia/Filebrowser-iOS/commit/899d3f4a5866302a019875edff40e741bd1d1801) fix: Remove error message when faceID fails
+- [3ff25cf](https://github.com/thevickypedia/Filebrowser-iOS/commit/3ff25cf65dd2a7b5ea05f2891d88f474e620194d) fix: Avoid automatically logging in when FaceID is registered
+- [9680221](https://github.com/thevickypedia/Filebrowser-iOS/commit/96802218d65f5635dccee048ea57dfcc8b7e5f21) fix: Set a fallback for username and password if FaceID fails
+- [d3b91ac](https://github.com/thevickypedia/Filebrowser-iOS/commit/d3b91ac67affba16ee5a3ef85a2629edf63b46b1) chore: Update release notes for v1.22.1
+
 v1.22.1 (08/09/2025)
 --------------------
 - [2199136](https://github.com/thevickypedia/Filebrowser-iOS/commit/219913619165cf73b52396fc80182d1e72953693) chore: Release ``v1.22.1``
