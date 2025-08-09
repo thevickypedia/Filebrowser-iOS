@@ -127,7 +127,11 @@ struct ContentView: View {
                 SecureField("Password", text: $password)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                Toggle("Remember Me", isOn: $rememberMe)
+                // Conditionally display "Remember Me" Toggle only when Face ID is not being used
+                if !useFaceID {
+                    Toggle("Remember Me", isOn: $rememberMe)
+                }
+
                 Toggle("Use Face ID", isOn: $useFaceID)
 
                 Button(action: { login() }) {
@@ -407,6 +411,8 @@ struct ContentView: View {
     }
 
     func biometricSignIn() {
+        // Force remembering username whenever FaceID is toggled
+        rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
             guard success,
                   let session = KeychainHelper.loadSession(),
