@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.22.4 (08/09/2025)
+--------------------
+- [d6d5af7](https://github.com/thevickypedia/Filebrowser-iOS/commit/d6d5af7740b72581c294a32791cb4049f9312a4d) chore: Release ``v1.22.4``
+- [27279f9](https://github.com/thevickypedia/Filebrowser-iOS/commit/27279f9b3ca0f8ad3fe49c21e18a43d76c9dfb3f) feat: Retain selected view mode in app storage
+- [bfce042](https://github.com/thevickypedia/Filebrowser-iOS/commit/bfce0425f57db1894613eb88d19b0e02bea40003) fix: Restore session information in settings view for FaceID logins
+- [49b331d](https://github.com/thevickypedia/Filebrowser-iOS/commit/49b331d14ac27daf3b4c281c06811dd8b088b7a1) chore: Update release notes for v1.22.3
+
 v1.22.3 (08/09/2025)
 --------------------
 - [388bc18](https://github.com/thevickypedia/Filebrowser-iOS/commit/388bc18cca671ba4bffb267a4a2f05fad9158336) chore: Release ``v1.22.3``
