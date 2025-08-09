@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.23.0 (08/09/2025)
+--------------------
+- [189517a](https://github.com/thevickypedia/Filebrowser-iOS/commit/189517ac621b594c6b7a44b0a493a840c638498a) chore: Release ``v1.23.0``
+- [e6f4305](https://github.com/thevickypedia/Filebrowser-iOS/commit/e6f430590c2a3a79c9e13d98515281c60335adbe) feat: Store a list of known servers and re-use
+- [7595e88](https://github.com/thevickypedia/Filebrowser-iOS/commit/7595e88b865721165cb474c5571809a262e10c8c) fix: Remove logging token info inside an un-awaited async block
+- [f65ba6a](https://github.com/thevickypedia/Filebrowser-iOS/commit/f65ba6a0f70429f1e54ccf616f23e17f23ec0568) fix: Remove automatic session restoration
+- [841f643](https://github.com/thevickypedia/Filebrowser-iOS/commit/841f6431e049a6b3eaf25d47252f884a9cfe9f43) feat: Allow users to clear keychain from within settings view
+- [fade930](https://github.com/thevickypedia/Filebrowser-iOS/commit/fade9309cc1a64ff0e5b581b8809869fcb9a332e) fix: Remove ``onAppear`` login and remembering username
+- [8c671cb](https://github.com/thevickypedia/Filebrowser-iOS/commit/8c671cbc32482c2f5d50dc54862891bdb90a51ef) chore: Update release notes for v1.22.5
+
 v1.22.5 (08/09/2025)
 --------------------
 - [1c5534b](https://github.com/thevickypedia/Filebrowser-iOS/commit/1c5534b168b53e66f069e9de36b6de110945612e) chore: Release ``v1.22.5``
