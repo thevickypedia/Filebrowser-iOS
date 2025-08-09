@@ -11,6 +11,8 @@ struct ServerURLMenu: View {
     @Binding var serverURL: String
     @Binding var showAddServerAlert: Bool
     let knownServers: [String]
+    @Binding var newServerURL: String
+    @State var addNewServer: () -> Void
 
     var body: some View {
         Menu {
@@ -41,5 +43,12 @@ struct ServerURLMenu: View {
                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
             )
         }
+        .alert("Add New Server", isPresented: $showAddServerAlert, actions: {
+            TextField("Server URL", text: $newServerURL)
+            Button("Add", action: addNewServer)
+            Button("Cancel", role: .cancel) {}
+        }, message: {
+            Text("Enter the full server URL.")
+        })
     }
 }

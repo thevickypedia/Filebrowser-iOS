@@ -108,8 +108,13 @@ struct ContentView: View {
                 .bold()
                 .padding(.top, 1)
 
-            ServerURLMenu(serverURL: $serverURL, showAddServerAlert: $showAddServerAlert, knownServers: knownServers)
-                .padding(.top, 1)
+            ServerURLMenu(
+                serverURL: $serverURL,
+                showAddServerAlert: $showAddServerAlert,
+                knownServers: knownServers,
+                newServerURL: $newServerURL,
+                addNewServer: addNewServer
+            ).padding(.top, 1)
 
             let hasSavedSession = KeychainHelper.loadSession() != nil
 
@@ -232,13 +237,6 @@ struct ContentView: View {
                 serverURL = first
             }
         }
-        .alert("Add New Server", isPresented: $showAddServerAlert, actions: {
-            TextField("Server URL", text: $newServerURL)
-            Button("Add", action: addNewServer)
-            Button("Cancel", role: .cancel) {}
-        }, message: {
-            Text("Enter the full server URL.")
-        })
     }
 
     func addNewServer() {
