@@ -384,6 +384,15 @@ struct FileListView: View {
             Log.debug("📂 FileListView appeared for path: \(path)")
             viewModel.fetchFiles(at: path)
         }
+        .onChange(of: pathStack) { newStack in
+            let newPath = newStack.last ?? "/"
+            Log.debug("📂 Path changed via navigation: \(newPath)")
+            viewModel.fetchFiles(at: newPath)
+        }
+        .onChange(of: path) { newPath in
+            Log.debug("📂 Path param changed: \(newPath)")
+            viewModel.fetchFiles(at: newPath)
+        }
         .sheet(isPresented: $showingSettings) {
             Form {
                 Toggle("Hide dotfiles", isOn: $hideDotfiles)
