@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.23.3 (08/09/2025)
+--------------------
+- [c25b300](https://github.com/thevickypedia/Filebrowser-iOS/commit/c25b300af278dbe50b2f693c24ba4e9f8fe12ad1) chore: Release ``v1.23.3``
+- [2355bd9](https://github.com/thevickypedia/Filebrowser-iOS/commit/2355bd9027bb78df61a55ab2850edcf2de7e6af1) fix: Remember me option should retain only the username for best practices
+- [0687df5](https://github.com/thevickypedia/Filebrowser-iOS/commit/0687df56958dfb916b1a63d77084435e75e0c944) style: Distinguish status message between session vs session and known servers cleared
+- [059c66f](https://github.com/thevickypedia/Filebrowser-iOS/commit/059c66f1c902b948b8c0f3bd72b5556409481f8f) style: Replace default alert window with sheet for better user experience
+- [c741517](https://github.com/thevickypedia/Filebrowser-iOS/commit/c74151765288eb835b34abdad5fe53c40d0b3500) refactor: Move server url menu's alert context into it's dedicated module
+- [e8b9fe6](https://github.com/thevickypedia/Filebrowser-iOS/commit/e8b9fe6ecd89899c579123b075dc81dac8463e79) chore: Update release notes for v1.23.2
+
 v1.23.2 (08/09/2025)
 --------------------
 - [ff1250d](https://github.com/thevickypedia/Filebrowser-iOS/commit/ff1250d2adb3bfdad6acc01b91bdad44ad49f685) chore: Release ``v1.23.2``
