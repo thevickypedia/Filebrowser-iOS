@@ -141,9 +141,9 @@ struct FileListView: View {
                             searchFiles(query: searchText)
                         }
                     }
-
+                Spacer()
                 Button(action: {
-                    guard !searchInProgress else { return } // <-- Prevent accidental trigger
+                    guard !searchInProgress else { return }
                     Log.debug("🔙 Search cancelled")
                     searchClicked = false
                     searchInProgress = false
@@ -152,10 +152,9 @@ struct FileListView: View {
                     viewModel.fetchFiles(at: pathStack.last ?? "/")
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .padding(.trailing, 2)
                         .foregroundColor(.red)
                 }
-
+                .padding(.trailing, 0)
             }
             .padding(.horizontal)
         }
