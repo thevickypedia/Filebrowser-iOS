@@ -86,7 +86,8 @@ struct FileListView: View {
     @State private var selectedFileList: [FileItem] = []
 
     // Search functionality
-    @State private var isSearching = false
+    @State private var searchClicked = false
+    @State private var searchInProgress = false
     @State private var searchText = ""
     @State private var previousPathStack: [String] = []
 
@@ -102,7 +103,7 @@ struct FileListView: View {
     let advancedSettings: AdvancedSettings
     let cacheExtensions: [String]
 
-    private var homeAndSearchStack: some View {
+    private var homeStack: some View {
         HStack {
             Button(action: {
                 pathStack = []
@@ -111,15 +112,6 @@ struct FileListView: View {
             }) {
                 Image(systemName: "house")
             }
-
-            Button(action: {
-                previousPathStack = pathStack
-                isSearching = true
-                searchText = ""
-            }) {
-                Image(systemName: "magnifyingglass")
-            }
-            .padding(.leading, 12)
         }
     }
 
@@ -141,28 +133,29 @@ struct FileListView: View {
                 TextField("Search...", text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.vertical, 8)
-
-                Button("Go") {
-                    isSearching = true
-                    Log.debug("🔍 Search started with query: \(searchText)")
-                    searchFiles(query: searchText)
-                }
-                .padding(.leading, 4)
-
-                Button("Back") {
-                    // Ensure the "Back" button is disabled when searching
-                    guard !isSearching else {
-                        Log.debug("🔙 Cannot go back while searching")
-                        return
+                    .submitLabel(.go)  // Changes the return key to 'Go'
+                    .onSubmit {
+                        guard !searchText.isEmpty else { return }
+                        DispatchQueue.main.async {
+                            searchInProgress = true
+                            searchFiles(query: searchText)
+                        }
                     }
-                    
+
+                Button(action: {
+                    guard !searchInProgress else { return } // <-- Prevent accidental trigger
                     Log.debug("🔙 Search cancelled")
-                    isSearching = false
+                    searchClicked = false
+                    searchInProgress = false
+                    viewModel.searchResults.removeAll()
                     pathStack = previousPathStack
                     viewModel.fetchFiles(at: pathStack.last ?? "/")
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .padding(.trailing, 2)
+                        .foregroundColor(.red)
                 }
-                .padding(.leading, 8)
-                .disabled(isSearching)  // Disable the Back button while searching
+
             }
             .padding(.horizontal)
         }
@@ -273,6 +266,16 @@ struct FileListView: View {
                     Label("Select", systemImage: "checkmark.circle")
                 }
             }
+
+            Button(action: {
+                previousPathStack = pathStack
+                searchText = ""
+                searchClicked = true       // show the search UI
+                searchInProgress = false   // not searching yet
+            }) {
+                Label("Search", systemImage: "magnifyingglass")
+            }
+
             Menu {
                 Picker("View mode", selection: $viewModeRawValue) {
                     Label("List", systemImage: "list.bullet").tag(ViewMode.list.rawValue)
@@ -282,7 +285,7 @@ struct FileListView: View {
             } label: {
                 Label("View Options", systemImage: "arrow.up.arrow.down.square")
             }
-            
+
             if viewModel.files.count > 1 {
                 Menu {
                     Picker("Sort by", selection: $sortOption) {
@@ -349,7 +352,7 @@ struct FileListView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
-                if isSearching {
+                if searchClicked {
                     searchingStack
                     if viewModel.isLoading {
                         ProgressView()
@@ -360,6 +363,9 @@ struct FileListView: View {
                     } else {
                         searchListView(for: viewModel.searchResults)
                     }
+                } else if !viewModel.searchResults.isEmpty {
+                    searchingStack
+                    searchListView(for: viewModel.searchResults)
                 } else {
                     if isPreparingUpload {
                         preparingUploadStack
@@ -431,10 +437,10 @@ struct FileListView: View {
                 }
             }
 
-            // Center: Home + Search buttons
+            // Center: Home button
             ToolbarItem(placement: .principal) {
                 if !selectionMode {
-                    homeAndSearchStack
+                    homeStack
                 }
             }
 
@@ -516,13 +522,13 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
-            if !isSearching {
+            if !searchClicked && !searchInProgress {
                 Log.debug("📂 FileListView appeared for path: \(currentPath)")
                 viewModel.fetchFiles(at: currentPath)
             }
         }
         .onChange(of: pathStack) { newStack in
-            if !isSearching {
+            if !searchClicked && !searchInProgress {
                 let newPath = newStack.last ?? "/"
                 Log.debug("📂 Path changed: \(newPath)")
                 viewModel.fetchFiles(at: newPath)
@@ -668,6 +674,73 @@ struct FileListView: View {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
             }
         }
+    }
+
+    func searchFiles(query: String) {
+        Log.debug("🔍 Searching for: \(query)")
+        guard let serverURL = auth.serverURL, let token = auth.token else {
+            DispatchQueue.main.async {
+                errorMessage = "Invalid authorization. Please log out and log back in."
+                searchInProgress = false
+            }
+            return
+        }
+
+        guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "\(serverURL)/api/search/?query=\(encodedQuery)") else {
+            DispatchQueue.main.async {
+                errorMessage = "Invalid search: \(query)"
+                searchInProgress = false
+            }
+            return
+        }
+
+        DispatchQueue.main.async {
+            viewModel.isLoading = true
+            errorMessage = nil
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            DispatchQueue.main.async {
+                viewModel.isLoading = false
+                searchInProgress = false  // ✅ re-enable cancel when done
+            }
+
+            if let error = error {
+                DispatchQueue.main.async {
+                    errorMessage = error.localizedDescription
+                }
+                return
+            }
+
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    errorMessage = "No data received"
+                }
+                return
+            }
+
+            do {
+                let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
+                DispatchQueue.main.async {
+                    if results.isEmpty {
+                        viewModel.errorMessage = "No files found for: \(query)"
+                    } else {
+                        viewModel.searchResults = results
+                        Log.info("🔍 Search returned \(results.count) items")
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    errorMessage = "Failed to parse search results"
+                }
+                Log.error("Search decode error: \(error.localizedDescription)")
+            }
+        }.resume()
     }
 
     func deleteSession() {
@@ -1461,79 +1534,6 @@ struct FileListView: View {
     func refreshFolder() {
         Log.debug("ℹ️ Refresh Directory")
         viewModel.fetchFiles(at: currentPath)
-    }
-
-    func searchFiles(query: String) {
-        Log.debug("🔍 Searching for: \(query)")
-        guard let serverURL = auth.serverURL, let token = auth.token else {
-            Log.error("❌ Invalid URL or auth for /api/usage/")
-            DispatchQueue.main.async {
-                self.errorMessage = "Invalid authorization. Please log out and log back in."
-            }
-            return
-        }
-
-        guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "\(serverURL)/api/search/?query=\(encodedQuery)") else {
-            Log.error("❌ Invalid search: \(query)")
-            DispatchQueue.main.async {
-                self.errorMessage = "Invalid search: \(query)"
-            }
-            return
-        }
-
-        DispatchQueue.main.async {
-            viewModel.isLoading = true
-            errorMessage = nil
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            DispatchQueue.main.async {
-                viewModel.isLoading = false
-            }
-
-            if let error = error {
-                Log.error("Search error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    self.errorMessage = error.localizedDescription
-                }
-                return
-            }
-
-            guard let data = data else {
-                Log.error("Search error: No data received")
-                DispatchQueue.main.async {
-                    self.errorMessage = "No data received"
-                }
-                return
-            }
-
-            do {
-                let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
-                if results.isEmpty {
-                    DispatchQueue.main.async {
-                        viewModel.errorMessage = "No files found for: \(query)"
-                    }
-                    return
-                }
-                DispatchQueue.main.async {
-                    viewModel.searchResults = results
-                    Log.info("🔍 Search returned \(results.count) items")
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.errorMessage = "Failed to parse search results"
-                }
-                Log.error("Search decode error: \(error.localizedDescription)")
-                if let raw = String(data: data, encoding: .utf8) {
-                    Log.error("❌ Raw search response: \(raw)")
-                }
-            }
-        }.resume()
     }
 
     private func fullPath(for file: FileItem) -> String {
