@@ -17,3 +17,8 @@ struct FileItem: Codable, Identifiable, Hashable {
     let size: Int?
     let `extension`: String?
 }
+
+struct FileItemSearch: Decodable {
+    let dir: Bool
+    let path: String
+}

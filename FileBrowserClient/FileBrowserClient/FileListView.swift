@@ -85,6 +85,11 @@ struct FileListView: View {
     @State private var selectedFileIndex: Int?
     @State private var selectedFileList: [FileItem] = []
 
+    // Search functionality
+    @State private var isSearching = false
+    @State private var searchText = ""
+    @State private var previousPathStack: [String] = []
+
     @Binding var isLoggedIn: Bool
     @Binding var pathStack: [String]
     private var currentPath: String {
@@ -97,119 +102,305 @@ struct FileListView: View {
     let advancedSettings: AdvancedSettings
     let cacheExtensions: [String]
 
+    private var homeAndSearchStack: some View {
+        HStack {
+            Button(action: {
+                pathStack = []
+                Log.info("🔙 Dismissing to root directory")
+                viewModel.fetchFiles(at: "/")
+            }) {
+                Image(systemName: "house")
+            }
+
+            Button(action: {
+                previousPathStack = pathStack
+                isSearching = true
+                searchText = ""
+            }) {
+                Image(systemName: "magnifyingglass")
+            }
+            .padding(.leading, 12)
+        }
+    }
+
+    private var preparingUploadStack: some View {
+        ZStack {
+            ProgressView("Preparing for upload...")
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .padding(24)
+                .background(.ultraThinMaterial)
+                .cornerRadius(16)
+                .shadow(radius: 10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var searchingStack: some View {
+        VStack {
+            HStack {
+                TextField("Search...", text: $searchText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.vertical, 8)
+
+                Button("Go") {
+                    isSearching = true
+                    Log.debug("🔍 Search started with query: \(searchText)")
+                    searchFiles(query: searchText)
+                }
+                .padding(.leading, 4)
+
+                Button("Back") {
+                    // Ensure the "Back" button is disabled when searching
+                    guard !isSearching else {
+                        Log.debug("🔙 Cannot go back while searching")
+                        return
+                    }
+                    
+                    Log.debug("🔙 Search cancelled")
+                    isSearching = false
+                    pathStack = previousPathStack
+                    viewModel.fetchFiles(at: pathStack.last ?? "/")
+                }
+                .padding(.leading, 8)
+                .disabled(isSearching)  // Disable the Back button while searching
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private var uploadingStack: some View {
+        VStack(alignment: .leading, spacing: 16) {
+
+            // 🗂️ File Info
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: currentUploadFileIcon ?? "doc.fill")
+                    .foregroundColor(.blue)
+                    .font(.title2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(currentUploadFile ?? "Unknown")
+                        .font(.headline)
+                    Text("\(currentUploadedFileSize ?? "0.0 MB") / \(currentUploadFileSize ?? "0.0 MB")")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+            }
+
+            // 🔄 Queue
+            HStack(spacing: 12) {
+                Image(systemName: "list.number")
+                    .foregroundColor(.indigo)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Queue")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    Text("\(currentUploadIndex + 1) of \(uploadQueue.count)")
+                        .font(.body)
+                }
+            }
+
+            // 🚀 Speed
+            HStack(spacing: 12) {
+                Image(systemName: "speedometer")
+                    .foregroundColor(.green)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Speed")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    Text(String(format: "%.2f MB/s", currentUploadSpeed))
+                        .font(.body)
+                }
+            }
+
+            // 📤 Chunk Size
+            HStack(spacing: 12) {
+                Image(systemName: "square.stack.3d.up")
+                    .foregroundColor(.orange)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Chunk Size")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    Text("\(advancedSettings.chunkSize) MB")
+                        .font(.body)
+                }
+            }
+
+            // 📊 Progress Bar
+            ProgressView(value: uploadProgress, total: 1.0) {
+                EmptyView() // No label
+            } currentValueLabel: {
+                Text("\(uploadProgressPct)%")
+            }
+            .progressViewStyle(LinearProgressViewStyle())
+            .padding(.top, 8)
+        }
+    }
+
+    private var actionsTabStack: some View {
+        return Menu {
+            if auth.permissions?.create == true {
+                Button("Create File", systemImage: "doc.badge.plus", action: {
+                    showCreateFile = true
+                })
+                Button("Create Folder", systemImage: "folder.badge.plus", action: {
+                    showCreateFolder = true
+                })
+            }
+            Button("Settings", systemImage: "gearshape", action: {
+                showingSettings = true
+            })
+            Menu("Upload File", systemImage: "square.and.arrow.up") {
+                Button("From Files", systemImage: Icons.doc, action: {
+                    showFileImporter = true
+                    showPrepareUpload()
+                })
+                Button("From Photos", systemImage: "photo", action: {
+                    showPhotoPicker = true
+                    showPrepareUpload()
+                })
+            }
+        } label: {
+            Label("Actions", systemImage: "person.circle")
+                .padding()
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(8)
+        }
+    }
+
+    private var selectionStack: some View {
+        return Menu {
+            if !viewModel.files.isEmpty {
+                Button(action: { selectionMode = true }) {
+                    Label("Select", systemImage: "checkmark.circle")
+                }
+            }
+            Menu {
+                Picker("View mode", selection: $viewModeRawValue) {
+                    Label("List", systemImage: "list.bullet").tag(ViewMode.list.rawValue)
+                    Label("Grid", systemImage: "square.grid.2x2").tag(ViewMode.grid.rawValue)
+                    Label("Module", systemImage: "square.grid.3x3").tag(ViewMode.module.rawValue)
+                }
+            } label: {
+                Label("View Options", systemImage: "arrow.up.arrow.down.square")
+            }
+            
+            if viewModel.files.count > 1 {
+                Menu {
+                    Picker("Sort by", selection: $sortOption) {
+                        Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
+                        Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
+                        Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
+                        Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
+                        Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
+                        Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
+                    }
+                } label: {
+                    Label("Sort Options", systemImage: "arrow.up.arrow.down.square")
+                }
+            }
+        } label: {
+            Label("Options", systemImage: "ellipsis.circle")
+        }
+    }
+
+    private var deleteOptionsKSStack: some View {
+        VStack(spacing: 20) {
+            Text("Delete Known Servers")
+                .font(.title2)
+                .bold()
+
+            // Wrap the list in a ScrollView to allow scrolling
+            // With current limits scroll bar is not required
+            /* Commit SHAs
+             Scroll: 819e917
+             Limitter: bca5ec2
+             Button disabled: d9b1bc0
+            */
+            ScrollView {
+                ForEach(knownServers, id: \.self) { knownServerURL in
+                    HStack {
+                        // Ensure you don't display the current authenticated server
+                        if knownServerURL != auth.serverURL {
+                            Text(knownServerURL)
+                                .lineLimit(1) // To prevent text from overflowing
+                                .truncationMode(.tail) // Ensure long URLs are truncated
+
+                            Spacer() // Push the trash icon to the right
+
+                            Button(action: {
+                                // Delete the server from the Keychain
+                                KeychainHelper.deleteKnownServer(knownServerURL)
+
+                                // Update the state to reflect the deletion
+                                knownServers.removeAll { $0 == knownServerURL }
+                            }) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red) // Color for trash icon
+                            }
+                            .padding(.trailing, 10) // Trail space on the right
+                        }
+                    }
+                    .padding(.vertical, 4) // Vertical spacing between each element in the list
+                }
+            }
+            .presentationDetents([.fraction(0.3)]) // 30% of the screen height
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
-                if isPreparingUpload {
-                    ZStack {
-                        ProgressView("Preparing for upload...")
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .padding(24)
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(16)
-                            .shadow(radius: 10)
+                if isSearching {
+                    searchingStack
+                    if viewModel.isLoading {
+                        ProgressView()
+                    } else if let error = viewModel.errorMessage {
+                        Text("Error: \(error)").foregroundColor(.red)
+                    } else if viewModel.searchResults.isEmpty {
+                        Text("No results").foregroundColor(.gray)
+                    } else {
+                        searchListView(for: viewModel.searchResults)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
-                if isUploading {
-                    VStack(alignment: .leading, spacing: 16) {
-
-                        // 🗂️ File Info
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: currentUploadFileIcon ?? "doc.fill")
-                                .foregroundColor(.blue)
-                                .font(.title2)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(currentUploadFile ?? "Unknown")
-                                    .font(.headline)
-                                Text("\(currentUploadedFileSize ?? "0.0 MB") / \(currentUploadFileSize ?? "0.0 MB")")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                            }
+                } else {
+                    if isPreparingUpload {
+                        preparingUploadStack
+                    }
+                    if isUploading {
+                        uploadingStack
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                            .shadow(radius: 4)
+                        Button(action: {
+                            isUploadCancelled = true
+                            uploadTask?.cancel()
+                            uploadTask = nil
+                            uploadQueue = []
+                            currentUploadIndex = 0
+                            uploadProgress = 0.0
+                            isUploading = false
+                            Log.info("❌ Upload cancelled by user.")
+                        }) {
+                            Label("Cancel Upload", systemImage: "xmark.circle.fill")
+                                .foregroundColor(.red)
                         }
-
-                        // 🔄 Queue
-                        HStack(spacing: 12) {
-                            Image(systemName: "list.number")
-                                .foregroundColor(.indigo)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Queue")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                Text("\(currentUploadIndex + 1) of \(uploadQueue.count)")
-                                    .font(.body)
-                            }
-                        }
-
-                        // 🚀 Speed
-                        HStack(spacing: 12) {
-                            Image(systemName: "speedometer")
-                                .foregroundColor(.green)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Speed")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                Text(String(format: "%.2f MB/s", currentUploadSpeed))
-                                    .font(.body)
-                            }
-                        }
-
-                        // 📤 Chunk Size
-                        HStack(spacing: 12) {
-                            Image(systemName: "square.stack.3d.up")
-                                .foregroundColor(.orange)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Chunk Size")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                Text("\(advancedSettings.chunkSize) MB")
-                                    .font(.body)
-                            }
-                        }
-
-                        // 📊 Progress Bar
-                        ProgressView(value: uploadProgress, total: 1.0) {
-                            EmptyView() // No label
-                        } currentValueLabel: {
-                            Text("\(uploadProgressPct)%")
-                        }
-                        .progressViewStyle(LinearProgressViewStyle())
                         .padding(.top, 8)
                     }
-                    .padding()
-                    .background(.ultraThinMaterial)
-                    .cornerRadius(12)
-                    .shadow(radius: 4)
-                    Button(action: {
-                        isUploadCancelled = true
-                        uploadTask?.cancel()
-                        uploadTask = nil
-                        uploadQueue = []
-                        currentUploadIndex = 0
-                        uploadProgress = 0.0
-                        isUploading = false
-                        Log.info("❌ Upload cancelled by user.")
-                }) {
-                        Label("Cancel Upload", systemImage: "xmark.circle.fill")
-                            .foregroundColor(.red)
-                    }
-                    .padding(.top, 8)
-                }
-                if viewModel.isLoading {
-                    ProgressView()
-                } else if let error = viewModel.errorMessage {
-                    Text("Error: \(error)").foregroundColor(.red)
-                } else {
-                    let sortedFiles = viewModel.sortedFiles(by: sortOption)
-                    Group {
-                        if viewMode == .list {
-                            listView(for: sortedFiles)
-                        } else {
-                            gridView(for: sortedFiles, module: viewMode == .module)
+                    if viewModel.isLoading {
+                        ProgressView()
+                    } else if let error = viewModel.errorMessage {
+                        Text("Error: \(error)").foregroundColor(.red)
+                    } else {
+                        let sortedFiles = viewModel.sortedFiles(by: sortOption)
+                        Group {
+                            if viewMode == .list {
+                                listView(for: sortedFiles)
+                            } else {
+                                gridView(for: sortedFiles, module: viewMode == .module)
+                            }
                         }
-                    }
-                    if viewModel.files.isEmpty && !viewModel.isLoading {
-                        Text("No files found").foregroundColor(.gray)
+                        if viewModel.files.isEmpty && !viewModel.isLoading {
+                            Text("No files found").foregroundColor(.gray)
+                        }
                     }
                 }
             }
@@ -240,83 +431,18 @@ struct FileListView: View {
                 }
             }
 
-            // Center: Home button
+            // Center: Home + Search buttons
             ToolbarItem(placement: .principal) {
                 if !selectionMode {
-                    Button(action: {
-                        pathStack = []
-                        viewModel.fetchFiles(at: "/")
-                        Log.info("🔙 Dismissing to root directory")
-                    }) {
-                        Image(systemName: "house")
-                    }
+                    homeAndSearchStack
                 }
             }
 
             // Right: Create and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if !selectionMode {
-                    Menu {
-                        if auth.permissions?.create == true {
-                            Button("Create File", systemImage: "doc.badge.plus", action: {
-                                showCreateFile = true
-                            })
-                            Button("Create Folder", systemImage: "folder.badge.plus", action: {
-                                showCreateFolder = true
-                            })
-                        }
-                        Button("Settings", systemImage: "gearshape", action: {
-                            showingSettings = true
-                        })
-                        Menu("Upload File", systemImage: "square.and.arrow.up") {
-                            Button("From Files", systemImage: Icons.doc, action: {
-                                showFileImporter = true
-                                showPrepareUpload()
-                            })
-                            Button("From Photos", systemImage: "photo", action: {
-                                showPhotoPicker = true
-                                showPrepareUpload()
-                            })
-                        }
-                    } label: {
-                        Label("Actions", systemImage: "person.circle")
-                            .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
-                    }
-                    Menu {
-                        if !viewModel.files.isEmpty {
-                            Button(action: { selectionMode = true }) {
-                                Label("Select", systemImage: "checkmark.circle")
-                            }
-                        }
-                        Menu {
-                            Picker("View mode", selection: $viewModeRawValue) {
-                                Label("List", systemImage: "list.bullet").tag(ViewMode.list.rawValue)
-                                Label("Grid", systemImage: "square.grid.2x2").tag(ViewMode.grid.rawValue)
-                                Label("Module", systemImage: "square.grid.3x3").tag(ViewMode.module.rawValue)
-                            }
-                        } label: {
-                            Label("View Options", systemImage: "arrow.up.arrow.down.square")
-                        }
-
-                        if viewModel.files.count > 1 {
-                            Menu {
-                                Picker("Sort by", selection: $sortOption) {
-                                    Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
-                                    Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
-                                    Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)
-                                    Label("Size ↓", systemImage: "arrow.down").tag(SortOption.sizeDesc)
-                                    Label("Modified ↑", systemImage: "arrow.up").tag(SortOption.modifiedAsc)
-                                    Label("Modified ↓", systemImage: "arrow.down").tag(SortOption.modifiedDesc)
-                                }
-                            } label: {
-                                Label("Sort Options", systemImage: "arrow.up.arrow.down.square")
-                            }
-                        }
-                    } label: {
-                        Label("Options", systemImage: "ellipsis.circle")
-                    }
+                    actionsTabStack
+                    selectionStack
                 }
             }
             ToolbarItemGroup(placement: .navigationBarTrailing) {
@@ -390,13 +516,17 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
-            Log.debug("📂 FileListView appeared for path: \(currentPath)")
-            viewModel.fetchFiles(at: currentPath)
+            if !isSearching {
+                Log.debug("📂 FileListView appeared for path: \(currentPath)")
+                viewModel.fetchFiles(at: currentPath)
+            }
         }
         .onChange(of: pathStack) { newStack in
-            let newPath = newStack.last ?? "/"
-            Log.debug("📂 Path changed: \(newPath)")
-            viewModel.fetchFiles(at: newPath)
+            if !isSearching {
+                let newPath = newStack.last ?? "/"
+                Log.debug("📂 Path changed: \(newPath)")
+                viewModel.fetchFiles(at: newPath)
+            }
         }
         .sheet(isPresented: $showingSettings) {
             Form {
@@ -438,48 +568,8 @@ struct FileListView: View {
                     }
                 }
                 .sheet(isPresented: $showDeleteOptionsKS) {
-                    VStack(spacing: 20) {
-                        Text("Delete Known Servers")
-                            .font(.title2)
-                            .bold()
-
-                        // Wrap the list in a ScrollView to allow scrolling
-                        // With current limits scroll bar is not required
-                        /* Commit SHAs
-                         Scroll: 819e917
-                         Limitter: bca5ec2
-                         Button disabled: d9b1bc0
-                        */
-                        ScrollView {
-                            ForEach(knownServers, id: \.self) { knownServerURL in
-                                HStack {
-                                    // Ensure you don't display the current authenticated server
-                                    if knownServerURL != auth.serverURL {
-                                        Text(knownServerURL)
-                                            .lineLimit(1) // To prevent text from overflowing
-                                            .truncationMode(.tail) // Ensure long URLs are truncated
-
-                                        Spacer() // Push the trash icon to the right
-
-                                        Button(action: {
-                                            // Delete the server from the Keychain
-                                            KeychainHelper.deleteKnownServer(knownServerURL)
-
-                                            // Update the state to reflect the deletion
-                                            knownServers.removeAll { $0 == knownServerURL }
-                                        }) {
-                                            Image(systemName: "trash")
-                                                .foregroundColor(.red) // Color for trash icon
-                                        }
-                                        .padding(.trailing, 10) // Trail space on the right
-                                    }
-                                }
-                                .padding(.vertical, 4) // Vertical spacing between each element in the list
-                            }
-                        }
-                        .presentationDetents([.fraction(0.3)]) // 30% of the screen height
-                    }
-                    .padding()
+                    deleteOptionsKSStack
+                        .padding()
                 }
 
                 // Delete Stored Session (will logout)
@@ -774,6 +864,41 @@ struct FileListView: View {
         }
     }
 
+    @ViewBuilder
+    func searchListView(for results: [FileItemSearch]) -> some View {
+        ForEach(results, id: \.path) { result in
+            let name = URL(fileURLWithPath: result.path).lastPathComponent
+            if result.dir {
+                NavigationLink(value: result.path) {
+                    HStack {
+                        Image(systemName: "folder")
+                            .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
+                        Text(name)
+                    }
+                }
+            } else {
+                NavigationLink(destination: {
+                    // Minimal FileItem for detail view
+                    let fileItem = FileItem(
+                        name: name,
+                        path: result.path,
+                        isDir: false,
+                        modified: nil,
+                        size: nil,
+                        extension: name.split(separator: ".").last.map(String.init)
+                    )
+                    detailView(for: fileItem, index: 0, sortedFiles: [fileItem])
+                }) {
+                    HStack {
+                        Image(systemName: "doc")
+                            .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
+                        Text(name)
+                    }
+                }
+            }
+        }
+    }
+
     func showPrepareUpload(after duration: Int = 10) {
         // There is no real way to detect a cancel even from file importer or photo picker
         // This is to make sure "preparing to upload" banner is not shown forever
@@ -945,6 +1070,7 @@ struct FileListView: View {
         uploadTask?.cancel()
         uploadTask = nil
         isUploading = false
+        Log.debug("❌ Upload cancelled")
         viewModel.fetchFiles(at: currentPath)
     }
 
@@ -1333,7 +1459,81 @@ struct FileListView: View {
     }
 
     func refreshFolder() {
+        Log.debug("ℹ️ Refresh Directory")
         viewModel.fetchFiles(at: currentPath)
+    }
+
+    func searchFiles(query: String) {
+        Log.debug("🔍 Searching for: \(query)")
+        guard let serverURL = auth.serverURL, let token = auth.token else {
+            Log.error("❌ Invalid URL or auth for /api/usage/")
+            DispatchQueue.main.async {
+                self.errorMessage = "Invalid authorization. Please log out and log back in."
+            }
+            return
+        }
+
+        guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "\(serverURL)/api/search/?query=\(encodedQuery)") else {
+            Log.error("❌ Invalid search: \(query)")
+            DispatchQueue.main.async {
+                self.errorMessage = "Invalid search: \(query)"
+            }
+            return
+        }
+
+        DispatchQueue.main.async {
+            viewModel.isLoading = true
+            errorMessage = nil
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            DispatchQueue.main.async {
+                viewModel.isLoading = false
+            }
+
+            if let error = error {
+                Log.error("Search error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.errorMessage = error.localizedDescription
+                }
+                return
+            }
+
+            guard let data = data else {
+                Log.error("Search error: No data received")
+                DispatchQueue.main.async {
+                    self.errorMessage = "No data received"
+                }
+                return
+            }
+
+            do {
+                let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
+                if results.isEmpty {
+                    DispatchQueue.main.async {
+                        viewModel.errorMessage = "No files found for: \(query)"
+                    }
+                    return
+                }
+                DispatchQueue.main.async {
+                    viewModel.searchResults = results
+                    Log.info("🔍 Search returned \(results.count) items")
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.errorMessage = "Failed to parse search results"
+                }
+                Log.error("Search decode error: \(error.localizedDescription)")
+                if let raw = String(data: data, encoding: .utf8) {
+                    Log.error("❌ Raw search response: \(raw)")
+                }
+            }
+        }.resume()
     }
 
     private func fullPath(for file: FileItem) -> String {

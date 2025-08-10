@@ -12,6 +12,7 @@ class FileListViewModel: ObservableObject {
     @Published var files: [FileItem] = []
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
+    @Published var searchResults: [FileItemSearch] = []
 
     var token: String?
     var serverURL: String?
