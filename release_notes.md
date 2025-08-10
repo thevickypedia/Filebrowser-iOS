@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.25.1 (08/10/2025)
+--------------------
+- [b302e9e](https://github.com/thevickypedia/Filebrowser-iOS/commit/b302e9e0c75252784a8056a070b31bf83b2a47c8) chore: Release ``v1.25.1``
+- [e5018df](https://github.com/thevickypedia/Filebrowser-iOS/commit/e5018dfaaec228006d7f9b0ef8d9591be8e03966) fix: Prevent loading thumbnails if already in progress or cached
+- [eb4f4a1](https://github.com/thevickypedia/Filebrowser-iOS/commit/eb4f4a1b1fdf54a3fb19938890aaa4ffd7edbd18) chore: Update release notes for v1.25.0
+
 v1.25.0 (08/10/2025)
 --------------------
 - [f72d53b](https://github.com/thevickypedia/Filebrowser-iOS/commit/f72d53b6693a2aa228c2ef89a38ce06e5f81350d) chore: Release ``v1.25.0``
