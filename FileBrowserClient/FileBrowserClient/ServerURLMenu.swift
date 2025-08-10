@@ -22,7 +22,7 @@ struct ServerURLMenu: View {
                 }) {
                     Text(url)
                         .lineLimit(1) // force single line
-                        .truncationMode(.middle) // middle truncation for long URLs
+                        .truncationMode(.tail) // middle truncation for long URLs
                 }
             }
 
@@ -37,7 +37,7 @@ struct ServerURLMenu: View {
                 Text(serverURL.isEmpty ? "Server URL" : serverURL)
                     .foregroundColor(serverURL.isEmpty ? .gray : .primary)
                     .lineLimit(1) // force single line
-                    .truncationMode(.middle)
+                    .truncationMode(.tail)
                 Spacer()
                 Image(systemName: "chevron.down")
                     .foregroundColor(.gray)
