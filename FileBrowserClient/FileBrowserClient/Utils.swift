@@ -113,17 +113,31 @@ func parseGridDate(from dateString: String?, defaultResult: String = "") -> Stri
         return defaultResult
     }
 
+    let formats = [
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX",  // SSSSSS → 6 digits of fractional seconds
+        "yyyy-MM-dd'T'HH:mm:ssXXXXX",         // ISO 8601 with timezone
+        "yyyy-MM-dd'T'HH:mm:ssZ",             // ISO 8601 with Z
+        "yyyy-MM-dd HH:mm:ss",                // Common DB format
+        "yyyy/MM/dd HH:mm:ss",
+        "MM/dd/yyyy HH:mm:ss",
+        "dd-MM-yyyy HH:mm:ss",
+        "yyyy-MM-dd",
+        "MM/dd/yyyy",
+        "dd-MM-yyyy"
+    ]
+
     let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSXXXXX"
     formatter.locale = Locale(identifier: "en_US_POSIX")
 
-    if let date = formatter.date(from: dateString) {
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
-    } else {
-        Log.error("Invalid date format: \(String(describing: dateString))")
-        return defaultResult
+    for format in formats {
+        formatter.dateFormat = format
+        if let date = formatter.date(from: dateString) {
+            formatter.dateFormat = "yyyy-MM-dd"
+            return formatter.string(from: date)
+        }
     }
+    Log.error("Invalid date format: \(String(describing: dateString))")
+    return defaultResult
 }
 
 func calculateTimeDifference(dateString: String?) -> [String: Double] {
