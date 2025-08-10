@@ -45,9 +45,12 @@ struct FileListView: View {
     @State private var isUploading = false
     @State private var isPreparingUpload = false
 
-    @State private var showDeleteOptions = false
-    @State private var showDeleteConfirmation = false
+    @State private var showDeleteOptionsSS = false
+    @State private var showDeleteConfirmationSS = false
     @State private var removeKnownServers = false
+
+    @State private var knownServers: [String] = KeychainHelper.loadKnownServers()
+    @State private var showDeleteOptionsKS = false
 
     @State private var uploadTask: URLSessionUploadTask?
     @State private var isUploadCancelled = false
@@ -97,7 +100,6 @@ struct FileListView: View {
             List {
                 if isPreparingUpload {
                     ZStack {
-                        // todo: Doesn't reset if operation is cancelled without adding files
                         ProgressView("Preparing for upload...")
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             .padding(24)
@@ -425,14 +427,59 @@ struct FileListView: View {
                     }
                 }
 
+                // Delete Known Servers Section
                 Section {
                     Button(role: .destructive) {
-                        showDeleteOptions = true
+                        showDeleteOptionsKS = true
+                    } label: {
+                        Label("Delete Known Servers", systemImage: "trash")
+                    }
+                }
+                .sheet(isPresented: $showDeleteOptionsKS) {
+                    VStack(spacing: 20) {
+                        Text("Delete Known Servers")
+                            .font(.title2)
+                            .bold()
+
+                        // ForEach with the @State array 'knownServers'
+                        ForEach(knownServers, id: \.self) { knownServerURL in
+                            HStack {
+                                // Ensure you don't display the current authenticated server
+                                if knownServerURL != auth.serverURL {
+                                    Text(knownServerURL)
+                                        .lineLimit(1) // To prevent text from overflowing
+                                        .truncationMode(.tail) // Ensure long URLs are truncated
+
+                                    Spacer() // Push the trash icon to the right
+
+                                    Button(action: {
+                                        // Delete the server from the Keychain
+                                        KeychainHelper.deleteKnownServer(knownServerURL)
+
+                                        // Update the state to reflect the deletion
+                                        knownServers.removeAll { $0 == knownServerURL }
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .foregroundColor(.red) // Color for trash icon
+                                    }
+                                }
+                            }
+                            .padding(.vertical, 4) // Optional: for better spacing
+                        }
+                    }
+                    .padding()
+                    .presentationDetents([.fraction(0.3)]) // 30% of the screen height
+                }
+
+                // Delete Stored Session (will logout)
+                Section {
+                    Button(role: .destructive) {
+                        showDeleteOptionsSS = true
                     } label: {
                         Label("Delete Stored Session", systemImage: "trash")
                     }
                 }
-                .sheet(isPresented: $showDeleteOptions) {
+                .sheet(isPresented: $showDeleteOptionsSS) {
                     VStack(spacing: 20) {
                         Text("Delete Session")
                             .font(.title2)
@@ -443,15 +490,15 @@ struct FileListView: View {
 
                         HStack {
                             Button("Cancel") {
-                                showDeleteOptions = false
+                                showDeleteOptionsSS = false
                             }
                             .padding()
 
                             Spacer()
 
                             Button(role: .destructive) {
-                                showDeleteOptions = false
-                                showDeleteConfirmation = true
+                                showDeleteOptionsSS = false
+                                showDeleteConfirmationSS = true
                             } label: {
                                 Text("Continue")
                             }
@@ -461,7 +508,7 @@ struct FileListView: View {
                     .padding()
                     .presentationDetents([.fraction(0.3)]) // 30% of the screen height
                 }
-                .alert("Are you sure?", isPresented: $showDeleteConfirmation) {
+                .alert("Are you sure?", isPresented: $showDeleteConfirmationSS) {
                     Button("Delete", role: .destructive) {
                         deleteSession()
                     }

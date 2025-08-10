@@ -74,16 +74,24 @@ enum KeychainHelper {
     }
 
     static func saveKnownServers(_ servers: [String]) {
-        guard let data = try? JSONEncoder().encode(servers) else { return }
+        let data = try? JSONEncoder().encode(servers)
+        guard let encodedData = data else { return }
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: knownServersKey,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+            kSecValueData as String: encodedData
         ]
-        SecItemDelete(query as CFDictionary) // overwrite
-        SecItemAdd(query as CFDictionary, nil)
+
+        // Delete existing data to replace it with the new data
+        SecItemDelete(query as CFDictionary)
+
+        // Add the new data to the keychain
+        let status = SecItemAdd(query as CFDictionary, nil)
+        guard status == errSecSuccess else {
+            print("Failed to save known servers: \(status)")
+            return
+        }
     }
 
     static func loadKnownServers() -> [String] {
@@ -101,6 +109,17 @@ enum KeychainHelper {
             return []
         }
         return servers
+    }
+
+    static func deleteKnownServer(_ serverURL: String) {
+        // Load the current known servers
+        var knownServers = loadKnownServers()
+
+        // Remove the serverURL from the list
+        knownServers.removeAll { $0 == serverURL }
+
+        // Save the updated list of known servers back to the Keychain
+        saveKnownServers(knownServers)
     }
 
     static func deleteKnownServers() {
