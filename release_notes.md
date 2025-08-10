@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.24.2 (08/10/2025)
+--------------------
+- [6be9921](https://github.com/thevickypedia/Filebrowser-iOS/commit/6be992110301b0d3317691d245359b1b87ed39ce) chore: Release ``v1.24.2``
+- [8a81fca](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a81fca64b7266a3c6a1e110bfce6de95ee5b71a) fix: Ensure credentials are not empty before server connection
+- [7da409f](https://github.com/thevickypedia/Filebrowser-iOS/commit/7da409f14f1989358bbaf88141114586179274b7) fix: Catch invalid URLs when adding a new one
+- [00c9d3e](https://github.com/thevickypedia/Filebrowser-iOS/commit/00c9d3e0439d4b3fcd7818a4b962e6cb70133761) chore: Update release notes for v1.24.1
+
 v1.24.1 (08/10/2025)
 --------------------
 - [412ccfd](https://github.com/thevickypedia/Filebrowser-iOS/commit/412ccfd8b8260e968db760905304fcbc1008316d) chore: Release ``v1.24.1``
