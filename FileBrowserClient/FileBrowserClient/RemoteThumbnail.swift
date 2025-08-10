@@ -15,6 +15,7 @@ struct RemoteThumbnail: View {
     let extensionTypes: ExtensionTypes
     var width: CGFloat = 32
     var height: CGFloat = 32
+    @Binding var loadingFiles: [String: Bool]
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -52,7 +53,16 @@ struct RemoteThumbnail: View {
         )
     }
 
+    func resetLoadingFiles() {
+        self.isLoading = false
+        loadingFiles[file.path] = false
+    }
+
     func loadThumbnail() {
+        // Prevent loading if already in progress or cached
+        guard loadingFiles[file.path] != true else { return }
+        loadingFiles[file.path] = true
+
         // Reset thumbnails
         image = nil
         gifData = nil
@@ -73,14 +83,14 @@ struct RemoteThumbnail: View {
             if isGIF {
                 if let cached = existingCache {
                     self.gifData = cached
-                    isLoading = false
+                    resetLoadingFiles()
                     return
                 }
             } else {
                 if let cached = existingCache,
                    let image = UIImage(data: cached) {
                     self.image = image
-                    isLoading = false
+                    resetLoadingFiles()
                     return
                 }
             }
@@ -89,15 +99,16 @@ struct RemoteThumbnail: View {
         // Step 2: Build URL
         guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let url = URL(string: "\(serverURL)/api/preview/thumb/\(removePrefix(urlPath: encodedPath))?auth=\(token)&inline=true") else {
+            resetLoadingFiles()
             return
         }
 
         // Step 3: Fetch and store
         URLSession.shared.dataTask(with: url) { data, _, _ in
             DispatchQueue.main.async {
-                self.isLoading = false
                 guard let data = data else {
                     self.image = defaultThumbnail(fileName: fileName)
+                    resetLoadingFiles()
                     return
                 }
                 if advancedSettings.cacheThumbnail {
@@ -118,5 +129,7 @@ struct RemoteThumbnail: View {
                 }
             }
         }.resume()
+
+        resetLoadingFiles()
     }
 }

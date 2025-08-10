@@ -66,6 +66,8 @@ struct FileListView: View {
     @State private var sortOption: SortOption = .nameAsc
     @AppStorage("viewMode") private var viewModeRawValue: String = ViewMode.list.rawValue
 
+    @State private var loadingFiles: [String: Bool] = [:] // Track loading state by file path
+
     private var viewMode: ViewMode {
         get { ViewMode(rawValue: viewModeRawValue) ?? .list }
         set { viewModeRawValue = newValue.rawValue }
@@ -625,7 +627,8 @@ struct FileListView: View {
                 advancedSettings: advancedSettings,
                 extensionTypes: extensionTypes,
                 width: style?.gridHeight ?? ViewStyle.listIconSize,
-                height: style?.gridHeight ?? ViewStyle.listIconSize
+                height: style?.gridHeight ?? ViewStyle.listIconSize,
+                loadingFiles: $loadingFiles
             )
             .scaledToFill()
             .frame(
