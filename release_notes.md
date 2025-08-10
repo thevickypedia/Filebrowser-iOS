@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.24.3 (08/10/2025)
+--------------------
+- [5a5fbe3](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a5fbe33873ff150198bde1f2fcacb28a7df5241) chore: Release ``v1.24.3``
+- [8d01a52](https://github.com/thevickypedia/Filebrowser-iOS/commit/8d01a52b23c0692dfdbc2c2aa7a5b1f0464d846c) fix: Support different timestamps to display date in grid view
+- [afd6075](https://github.com/thevickypedia/Filebrowser-iOS/commit/afd6075b15b0e0b1f4f808bb2af2e7fe8b4f7cd9) style: Truncate server URL at tail
+- [8298eee](https://github.com/thevickypedia/Filebrowser-iOS/commit/8298eeedbcfeda9dafc853c8b3b0ef2306ca63e2) refactor: Display last logged in ``serverURL`` as the first option instead of first added
+- [55d8148](https://github.com/thevickypedia/Filebrowser-iOS/commit/55d81480d4c3dd58d017841dccc0a01a1f24dc7f) style: Update server URL drop down to be the same size as text area
+- [1029a2b](https://github.com/thevickypedia/Filebrowser-iOS/commit/1029a2bc4b5d6ee4f29cbf1a2c4fef793a71bae6) refactor: Move select button inside options menu
+- [094b5c0](https://github.com/thevickypedia/Filebrowser-iOS/commit/094b5c0ab4cdce9a1773fe2b23c729461236cfb4) style: Display login errors in alert windows
+- [7f5b75b](https://github.com/thevickypedia/Filebrowser-iOS/commit/7f5b75bfd2e376519c7d77b918dc6b85f69afaf5) chore: Update release notes for v1.24.2
+
 v1.24.2 (08/10/2025)
 --------------------
 - [6be9921](https://github.com/thevickypedia/Filebrowser-iOS/commit/6be992110301b0d3317691d245359b1b87ed39ce) chore: Release ``v1.24.2``
