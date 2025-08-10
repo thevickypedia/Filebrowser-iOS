@@ -38,9 +38,9 @@ struct RemoteThumbnail: View {
                     .frame(width: self.width, height: self.height)
             }
         }
-        .onAppear {
+        .modifier(ViewVisibilityModifier(onVisible: {
             loadThumbnail()
-        }
+        }, threshold: 0)) // Load 0px before the view comes into the viewport
     }
 
     func defaultThumbnail(fileName: String) -> UIImage? {
