@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.24.4 (08/10/2025)
+--------------------
+- [9b2b9df](https://github.com/thevickypedia/Filebrowser-iOS/commit/9b2b9df8bf1f0e81b8efe553d50133afa410007d) chore: Release ``v1.24.4``
+- [dc59552](https://github.com/thevickypedia/Filebrowser-iOS/commit/dc595524c5930ee777d1c449762cc7ccbda1a90c) ci: Disable code coverage, enable parallel testing and skip package updates when running tests in GHA
+- [d9b1bc0](https://github.com/thevickypedia/Filebrowser-iOS/commit/d9b1bc08cc34daf33df4623fc7d842c3aa5a0471) feat: Disable add new server button when limit (5) is reached
+- [bca5ec2](https://github.com/thevickypedia/Filebrowser-iOS/commit/bca5ec22193123ead40e50176ac8f02a522cc177) feat: Limit adding new servers to 5 count
+- [819e917](https://github.com/thevickypedia/Filebrowser-iOS/commit/819e9173d2336d579740f5c609163a3230df6656) style: Make list of known servers under deletion sheet scroll-able
+- [ba04bea](https://github.com/thevickypedia/Filebrowser-iOS/commit/ba04bea8d2aa75afd900df3ebaeae6f8ce528961) feat: Allow deleting known servers individually
+- [6cbb4e4](https://github.com/thevickypedia/Filebrowser-iOS/commit/6cbb4e497605be4d0ffd84e816f8f3b17895519c) chore: Update release notes for v1.24.3
+
 v1.24.3 (08/10/2025)
 --------------------
 - [5a5fbe3](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a5fbe33873ff150198bde1f2fcacb28a7df5241) chore: Release ``v1.24.3``
