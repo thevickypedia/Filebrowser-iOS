@@ -441,34 +441,37 @@ struct FileListView: View {
                             .font(.title2)
                             .bold()
 
-                        // ForEach with the @State array 'knownServers'
-                        ForEach(knownServers, id: \.self) { knownServerURL in
-                            HStack {
-                                // Ensure you don't display the current authenticated server
-                                if knownServerURL != auth.serverURL {
-                                    Text(knownServerURL)
-                                        .lineLimit(1) // To prevent text from overflowing
-                                        .truncationMode(.tail) // Ensure long URLs are truncated
+                        // Wrap the list in a ScrollView to allow scrolling
+                        ScrollView {
+                            ForEach(knownServers, id: \.self) { knownServerURL in
+                                HStack {
+                                    // Ensure you don't display the current authenticated server
+                                    if knownServerURL != auth.serverURL {
+                                        Text(knownServerURL)
+                                            .lineLimit(1) // To prevent text from overflowing
+                                            .truncationMode(.tail) // Ensure long URLs are truncated
 
-                                    Spacer() // Push the trash icon to the right
+                                        Spacer() // Push the trash icon to the right
 
-                                    Button(action: {
-                                        // Delete the server from the Keychain
-                                        KeychainHelper.deleteKnownServer(knownServerURL)
+                                        Button(action: {
+                                            // Delete the server from the Keychain
+                                            KeychainHelper.deleteKnownServer(knownServerURL)
 
-                                        // Update the state to reflect the deletion
-                                        knownServers.removeAll { $0 == knownServerURL }
-                                    }) {
-                                        Image(systemName: "trash")
-                                            .foregroundColor(.red) // Color for trash icon
+                                            // Update the state to reflect the deletion
+                                            knownServers.removeAll { $0 == knownServerURL }
+                                        }) {
+                                            Image(systemName: "trash")
+                                                .foregroundColor(.red) // Color for trash icon
+                                        }
+                                        .padding(.trailing, 10) // Trail space on the right
                                     }
                                 }
+                                .padding(.vertical, 4) // Vertical spacing between each element in the list
                             }
-                            .padding(.vertical, 4) // Optional: for better spacing
                         }
+                        .presentationDetents([.fraction(0.3)]) // 30% of the screen height
                     }
                     .padding()
-                    .presentationDetents([.fraction(0.3)]) // 30% of the screen height
                 }
 
                 // Delete Stored Session (will logout)
