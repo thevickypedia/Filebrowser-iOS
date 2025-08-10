@@ -116,32 +116,9 @@ struct ContentView: View {
                 addNewServer: addNewServer
             ).padding(.top, 1)
 
-            let hasSavedSession = KeychainHelper.loadSession() != nil
-
-            if !(useFaceID && hasSavedSession) {
-                // Normal credential-based login
-                TextField("Username", text: $username)
-                    .autocapitalization(.none)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                SecureField("Password", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-
-                // Conditionally display "Remember Me" Toggle only when Face ID is not being used
-                if !useFaceID {
-                    Toggle("Remember Me", isOn: $rememberMe)
-                }
-
-                Toggle("Use Face ID", isOn: $useFaceID)
-
-                Button(action: { login() }) {
-                    if isLoading { ProgressView() } else {
-                        Text("Login").bold().frame(maxWidth: .infinity)
-                            .padding().background(Color.blue).foregroundColor(.white).cornerRadius(8)
-                    }
-                }
-                .disabled(isLoading)
-            } else {
+            if useFaceID,
+               let existingSession = KeychainHelper.loadSession(),
+               existingSession["serverURL"] == serverURL {
                 // Face ID mode with saved session
                 Toggle("Use Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
@@ -157,6 +134,29 @@ struct ContentView: View {
                         .font(.headline)
                 }
                 .padding(.top, 6)
+            } else {
+                // Normal credential-based login
+                TextField("Username", text: $username)
+                    .autocapitalization(.none)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                SecureField("Password", text: $password)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                // Conditionally display "Remember Me" Toggle only when Face ID is not being used
+                if !useFaceID {
+                    Toggle("Remember Me", isOn: $rememberMe)
+                }
+
+                Toggle("Use Face ID", isOn: $useFaceID)
+
+                Button(action: { self.login() }) {
+                    if isLoading { ProgressView() } else {
+                        Text("Login").bold().frame(maxWidth: .infinity)
+                            .padding().background(Color.blue).foregroundColor(.white).cornerRadius(8)
+                    }
+                }
+                .disabled(isLoading)
             }
             Toggle("Transit Protection", isOn: $transitProtection)
 
@@ -254,6 +254,11 @@ struct ContentView: View {
 
         serverURL = trimmed
         newServerURL = ""
+        // Reset all auth state for better security
+        username = ""
+        password = ""
+        useFaceID = false
+        rememberMe = false
     }
 
     func handleLogout(_ clearActiveServers: Bool = false) {
@@ -418,7 +423,9 @@ struct ContentView: View {
                   let session = KeychainHelper.loadSession(),
                   let token = session["token"],
                   let username = session["username"],
-                  let serverURL = session["serverURL"] else {
+                  let serverURL = session["serverURL"],
+                  serverURL == self.serverURL
+            else {
                 DispatchQueue.main.async {
                     useFaceID = false // fallback to manual login
                 }
