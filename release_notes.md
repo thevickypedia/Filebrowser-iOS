@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.24.1 (08/10/2025)
+--------------------
+- [412ccfd](https://github.com/thevickypedia/Filebrowser-iOS/commit/412ccfd8b8260e968db760905304fcbc1008316d) chore: Release ``v1.24.1``
+- [4a1c021](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a1c0219fe5f79b0c756a33633ceaa554eb4452b) fix: Bug fix on sharing JWT between servers
+- [ccb98e8](https://github.com/thevickypedia/Filebrowser-iOS/commit/ccb98e80613a1c0ff3a8581af85148a01e3d45fe) chore: Update release notes for v1.24.0
+
 v1.24.0 (08/09/2025)
 --------------------
 - [37fb951](https://github.com/thevickypedia/Filebrowser-iOS/commit/37fb95152272d2b999d66ce8e82ef0dacec3ad7b) chore: Release ``v1.24.0``
