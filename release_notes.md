@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.26.0 (08/10/2025)
+--------------------
+- [7140fd1](https://github.com/thevickypedia/Filebrowser-iOS/commit/7140fd1b417937a41aa8de6b73099ae366604fb4) chore: Release ``v1.26.0``
+- [8905a84](https://github.com/thevickypedia/Filebrowser-iOS/commit/8905a8402f32e2edcab28fda268af027431508a8) fix: Redo search functionality to be able to clear search results
+- [5b091de](https://github.com/thevickypedia/Filebrowser-iOS/commit/5b091deceb35f0cc87b3a1e85197547a166f7e5e) feat: Add search functionality and refactor giant body structure
+- [bc2c21e](https://github.com/thevickypedia/Filebrowser-iOS/commit/bc2c21e87ebd8e47585fb0b4cbd630ab6dcd466a) chore: Update release notes for v1.25.1
+
 v1.25.1 (08/10/2025)
 --------------------
 - [b302e9e](https://github.com/thevickypedia/Filebrowser-iOS/commit/b302e9e0c75252784a8056a070b31bf83b2a47c8) chore: Release ``v1.25.1``
