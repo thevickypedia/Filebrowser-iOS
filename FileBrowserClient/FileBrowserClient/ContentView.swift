@@ -247,7 +247,10 @@ struct ContentView: View {
     }
 
     func addNewServer() {
-        // TODO: Limit list of known servers to 3
+        if knownServers.count == 5 {
+            errorMessage = "Server limit reached (5). Delete one to add a new server."
+            return
+        }
         let trimmed = newServerURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed.hasPrefix("http") else {
             if !trimmed.isEmpty { errorMessage = "Invalid URL: \(trimmed)" }
