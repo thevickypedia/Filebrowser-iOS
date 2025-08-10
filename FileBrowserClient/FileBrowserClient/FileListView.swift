@@ -281,6 +281,11 @@ struct FileListView: View {
                             .cornerRadius(8)
                     }
                     Menu {
+                        if !viewModel.files.isEmpty {
+                            Button(action: { selectionMode = true }) {
+                                Label("Select", systemImage: "checkmark.circle")
+                            }
+                        }
                         Menu {
                             Picker("View mode", selection: $viewModeRawValue) {
                                 Label("List", systemImage: "list.bullet").tag(ViewMode.list.rawValue)
@@ -347,13 +352,6 @@ struct FileListView: View {
                         selectionMode = false
                     }) {
                         Image(systemName: "xmark.circle")
-                    }
-
-                } else {
-                    if !viewModel.files.isEmpty {
-                        Button(action: { selectionMode = true }) {
-                            Image(systemName: "checkmark.circle")
-                        }
                     }
                 }
                 Button(action: {
