@@ -186,12 +186,6 @@ struct ContentView: View {
                 }
             }
 
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-            }
-
             if let statusMessage = statusMessage {
                 Text(statusMessage)
                     .font(.caption)
@@ -240,6 +234,13 @@ struct ContentView: View {
             if !knownServers.contains(serverURL), let first = knownServers.first {
                 serverURL = first
             }
+        }
+        .alert("Error", isPresented: .constant(errorMessage != nil), presenting: errorMessage) { _ in
+            Button("OK", role: .cancel) {
+                errorMessage = nil
+            }
+        } message: { error in
+            Text(error)
         }
     }
 
