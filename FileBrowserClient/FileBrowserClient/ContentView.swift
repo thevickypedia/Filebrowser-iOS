@@ -300,6 +300,10 @@ struct ContentView: View {
     }
 
     func login() {
+        if serverURL.isEmpty || username.isEmpty || password.isEmpty {
+            errorMessage = "Credentials are required to login!"
+            return
+        }
         isLoading = true
         errorMessage = nil
         token = nil
