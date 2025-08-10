@@ -442,6 +442,12 @@ struct FileListView: View {
                             .bold()
 
                         // Wrap the list in a ScrollView to allow scrolling
+                        // With current limits scroll bar is not required
+                        /* Commit SHAs
+                         Scroll: 819e917
+                         Limitter: bca5ec2
+                         Button disabled: d9b1bc0
+                        */
                         ScrollView {
                             ForEach(knownServers, id: \.self) { knownServerURL in
                                 HStack {
