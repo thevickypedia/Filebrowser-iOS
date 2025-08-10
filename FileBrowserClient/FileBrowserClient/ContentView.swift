@@ -231,8 +231,10 @@ struct ContentView: View {
         .padding()
         .onAppear {
             knownServers = KeychainHelper.loadKnownServers()
-            if !knownServers.contains(serverURL), let first = knownServers.first {
-                serverURL = first
+            if let session = KeychainHelper.loadSession(), let lastLoggedInURL = session["serverURL"] {
+                serverURL = lastLoggedInURL
+            } else if !knownServers.isEmpty {
+                serverURL = knownServers.first ?? ""
             }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil), presenting: errorMessage) { _ in
