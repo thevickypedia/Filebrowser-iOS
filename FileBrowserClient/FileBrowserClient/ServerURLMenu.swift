@@ -26,11 +26,13 @@ struct ServerURLMenu: View {
                 }
             }
 
-            Button(action: {
-                showAddServerAlert = true
-            }) {
-                Label("Add new server", systemImage: "plus")
-                    .lineLimit(1)
+            if knownServers.count < 5 {
+                Button(action: {
+                    showAddServerAlert = true
+                }) {
+                    Label("Add new server", systemImage: "plus")
+                        .lineLimit(1)
+                }
             }
         } label: {
             HStack {

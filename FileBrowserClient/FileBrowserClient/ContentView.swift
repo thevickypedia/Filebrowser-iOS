@@ -247,6 +247,7 @@ struct ContentView: View {
     }
 
     func addNewServer() {
+        // This should not happen since the button will not be visible (but just in case)
         if knownServers.count == 5 {
             errorMessage = "Server limit reached (5). Delete one to add a new server."
             return
