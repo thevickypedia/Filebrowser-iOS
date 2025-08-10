@@ -420,7 +420,9 @@ struct FileDetailView: View {
 
     func downloadPreview() {
         // Try to load preview from cache
-        if let cached = FileCache.shared.retrieve(
+        let fileName = file.name.lowercased()
+        if cacheExtensions.contains(where: fileName.hasSuffix),
+           let cached = FileCache.shared.retrieve(
             for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
         ) {
             self.content = cached
@@ -449,7 +451,7 @@ struct FileDetailView: View {
                 Log.debug("Fetch preview complete")
                 self.content = data
                 // Store cache-able extensions in FileCache
-                if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
+                if cacheExtensions.contains(where: fileName.hasSuffix),
                    let data = data {
                     FileCache.shared.store(
                         for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
@@ -502,7 +504,9 @@ struct FileDetailView: View {
 
     func downloadRaw(showSave: Bool = false) {
         // Try to load raw file from cache
-        if let cached = FileCache.shared.retrieve(
+        let fileName = file.name.lowercased()
+        if cacheExtensions.contains(where: fileName.hasSuffix),
+           let cached = FileCache.shared.retrieve(
             for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
         ) {
             self.content = cached
@@ -541,7 +545,7 @@ struct FileDetailView: View {
                 self.content = data
 
                 // Store cache-able extensions in FileCache
-                if cacheExtensions.contains(where: file.name.lowercased().hasSuffix),
+                if cacheExtensions.contains(where: fileName.hasSuffix),
                    let data = data {
                     FileCache.shared.store(
                         for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
