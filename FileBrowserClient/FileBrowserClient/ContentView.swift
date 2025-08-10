@@ -245,7 +245,10 @@ struct ContentView: View {
 
     func addNewServer() {
         let trimmed = newServerURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed.hasPrefix("http") else { return }
+        guard !trimmed.isEmpty, trimmed.hasPrefix("http") else {
+            if !trimmed.isEmpty { errorMessage = "Invalid URL: \(trimmed)" }
+            return
+        }
 
         if !knownServers.contains(trimmed) {
             knownServers.insert(trimmed, at: 0)
