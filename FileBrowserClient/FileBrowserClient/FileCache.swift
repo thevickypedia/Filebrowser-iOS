@@ -30,6 +30,11 @@ class FileCache {
         return collapsed
     }
 
+    private func cacheKeyPrefix(for server: String) -> String {
+        let safeServer = sanitize(server.trimmingCharacters(in: CharacterSet(charactersIn: ".")))
+        return "cache-\(safeServer)-"
+    }
+
     private func cacheKey(for server: String, path: String, modified: String?, fileID: String?) -> String {
         let safePath = sanitize(path)
         let safeServer = sanitize(server.trimmingCharacters(in: CharacterSet(charactersIn: ".")))
@@ -71,13 +76,28 @@ class FileCache {
         }
     }
 
-    func clearDiskCache() {
-        // TODO: Instead of deleting all cache, only the logged in server's cache should be cleared
-        guard let urls = try? fileManager.contentsOfDirectory(at: diskCacheURL, includingPropertiesForKeys: nil) else {
+    func clearDiskCache(_ serverURL: String?) {
+        guard let urls = try? fileManager.contentsOfDirectory(at: diskCacheURL, includingPropertiesForKeys: nil),
+              !urls.isEmpty
+        else {
+            Log.info("No stored cache available!")
             return
         }
+        // let cachePrefix = serverURL.map { cacheKeyPrefix(for: $0) } ?? diskCacheURL
+        var cachePrefix: String
+        if let server = serverURL {
+            cachePrefix = cacheKeyPrefix(for: server)
+            Log.info("Clearing local cache for: \(server)")
+        } else {
+            Log.info("Deleting ALL server cache")
+            cachePrefix = ""
+        }
         for url in urls {
-            try? fileManager.removeItem(at: url)
+            // Use ".path" for faster comparison (vs ".absoluteString")
+            let cacheURL = url.path.components(separatedBy: "/").last ?? ""
+            if cacheURL.hasPrefix(cachePrefix) {
+                try? fileManager.removeItem(at: url)
+            }
         }
     }
 

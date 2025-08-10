@@ -419,7 +419,7 @@ struct FileListView: View {
                 }
                 Section {
                     Button(role: .destructive) {
-                        FileCache.shared.clearDiskCache()
+                        FileCache.shared.clearDiskCache(auth.serverURL)
                         fetchClientStorageInfo()
                         settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)
                     } label: {
