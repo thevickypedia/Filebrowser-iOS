@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.24.5 (08/10/2025)
+--------------------
+- [09f1d0f](https://github.com/thevickypedia/Filebrowser-iOS/commit/09f1d0f0dcf040445633ba51ea05a6bc0ee56a7e) chore: Release ``v1.24.5``
+- [62368fb](https://github.com/thevickypedia/Filebrowser-iOS/commit/62368fbc270484d7291c77de9e465e3d9ffdfa5b) fix: Clear cache button clears the cache only for current server
+- [9a79a00](https://github.com/thevickypedia/Filebrowser-iOS/commit/9a79a000a1225ada5a1dba1bb3780601d155f376) fix: Retrieve preview and raw from cache only when caching is enabled
+- [8addf23](https://github.com/thevickypedia/Filebrowser-iOS/commit/8addf23ef899c9b39e0ddede56635bb5d15ceff3) chore: Update release notes for v1.24.4
+
 v1.24.4 (08/10/2025)
 --------------------
 - [9b2b9df](https://github.com/thevickypedia/Filebrowser-iOS/commit/9b2b9df8bf1f0e81b8efe553d50133afa410007d) chore: Release ``v1.24.4``
