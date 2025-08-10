@@ -58,5 +58,10 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone ${{ env.iPhoneVersion }},OS=${{ env.iOSVersion }}' \
             -only-testing:FileBrowserClientTests/testExample \
             -configuration Debug \
-            EXCLUDED_ARCHS=arm64
+            EXCLUDED_ARCHS=arm64 \
+            -parallel-testing-enabled YES \
+            -derivedDataPath ./derivedData \
+            -skipPackageUpdates \
+            -dry-run \
+            -enableCodeCoverage NO
         working-directory: FileBrowserClient
