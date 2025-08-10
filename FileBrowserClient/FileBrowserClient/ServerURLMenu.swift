@@ -21,24 +21,29 @@ struct ServerURLMenu: View {
                     serverURL = url
                 }) {
                     Text(url)
+                        .lineLimit(1) // force single line
+                        .truncationMode(.middle) // middle truncation for long URLs
                 }
             }
 
             Button(action: {
                 showAddServerAlert = true
             }) {
-                Text("➕ Add new server")
+                Label("Add new server", systemImage: "plus")
+                    .lineLimit(1)
             }
         } label: {
             HStack {
                 Text(serverURL.isEmpty ? "Server URL" : serverURL)
                     .foregroundColor(serverURL.isEmpty ? .gray : .primary)
+                    .lineLimit(1) // force single line
+                    .truncationMode(.middle)
                 Spacer()
                 Image(systemName: "chevron.down")
                     .foregroundColor(.gray)
             }
             .padding(10)
-            .overlay(
+            .background(
                 RoundedRectangle(cornerRadius: 5)
                     .stroke(Color.gray.opacity(0.4), lineWidth: 1)
             )
