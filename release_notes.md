@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.28.1 (08/11/2025)
+--------------------
+- [8473178](https://github.com/thevickypedia/Filebrowser-iOS/commit/847317854479feecff1dd7efae1060d94ed7c0a3) chore: Release ``v1.28.1``
+- [a5c2f34](https://github.com/thevickypedia/Filebrowser-iOS/commit/a5c2f34d261cea3ef8171e676fee431be4a1bf4a) style: Add a checkmark against the chosen server URL
+- [b84b07c](https://github.com/thevickypedia/Filebrowser-iOS/commit/b84b07cc730620b06ed077ba4e45639f9947310b) chore: Update release notes for v1.28.0
+
 v1.28.0 (08/11/2025)
 --------------------
 - [0ff29c0](https://github.com/thevickypedia/Filebrowser-iOS/commit/0ff29c0a172fa0b41f4dccbdb65eac8899ed3365) chore: Release ``v1.28.0``
