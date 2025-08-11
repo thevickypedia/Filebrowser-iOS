@@ -213,39 +213,68 @@ struct FileDetailView: View {
             }
             .sheet(isPresented: $showInfo) {
                 let fileInfo = getFileInfo(metadata: metadata, file: file, auth: auth)
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Image(systemName: "doc.text")
-                            .imageScale(.medium)
-                        SelectableTextView(text: "Name: \(fileInfo.name)")
-                    }
-                    HStack {
-                        Image(systemName: "folder")
-                            .imageScale(.medium)
-                        SelectableTextView(text: "Path: \(fileInfo.path)")
-                    }
-                    HStack {
-                        Image(systemName: "clock")
-                        SelectableTextView(text: "Modified: \(fileInfo.modified)")
-                    }
-                    HStack {
-                        Image(systemName: "shippingbox")
-                        SelectableTextView(text: "Size: \(fileInfo.size)")
-                    }
-                    HStack {
-                        Image(systemName: "shippingbox")
-                        SelectableTextView(text: "Extension: \(fileInfo.extension)")
-                    }
-                    if let res = metadata?.resolution {
-                        HStack {
-                            Image(systemName: "ruler")
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "doc.text")
                                 .imageScale(.medium)
-                            SelectableTextView(text: "Resolution: \(res.width)x\(res.height)")
+                                .foregroundColor(.secondary)
+                            SelectableTextView(text: "Name: \(fileInfo.name)")
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
                         }
+
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "folder")
+                                .imageScale(.medium)
+                                .foregroundColor(.secondary)
+                            SelectableTextView(text: "Path: \(fileInfo.path)")
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
+                        }
+
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "clock")
+                                .imageScale(.medium)
+                                .foregroundColor(.secondary)
+                            SelectableTextView(text: "Modified: \(fileInfo.modified)")
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
+                        }
+
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "shippingbox")
+                                .imageScale(.medium)
+                                .foregroundColor(.secondary)
+                            SelectableTextView(text: "Size: \(fileInfo.size)")
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
+                        }
+
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "shippingbox")
+                                .imageScale(.medium)
+                                .foregroundColor(.secondary)
+                            SelectableTextView(text: "Extension: \(fileInfo.extension)")
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
+                        }
+
+                        if let res = metadata?.resolution {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "ruler")
+                                    .imageScale(.medium)
+                                    .foregroundColor(.secondary)
+                                SelectableTextView(text: "Resolution: \(res.width)x\(res.height)")
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 0)
+                            }
+                        }
+
+                        Spacer()
                     }
-                    Spacer()
+                    .padding()
                 }
-                .padding()
             }
             .task(id: currentIndex) {
                 checkContentAndReload(fileName: fileName)

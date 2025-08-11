@@ -13,6 +13,7 @@ struct FileBrowserClientApp: App {
     @StateObject private var themeManager = ThemeManager()
 
     var body: some Scene {
+        // https://emojipedia.org/
         WindowGroup {
             ContentView()
                 .environmentObject(authManager)
