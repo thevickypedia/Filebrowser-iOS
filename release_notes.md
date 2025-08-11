@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.29.2 (08/11/2025)
+--------------------
+- [5d9e715](https://github.com/thevickypedia/Filebrowser-iOS/commit/5d9e715d79616a4fc3e291a1c659ee641d35593b) chore: Release ``v1.29.2``
+- [ce1fdb3](https://github.com/thevickypedia/Filebrowser-iOS/commit/ce1fdb32a9ff76aa5375eaff333dcea2b9ee3437) refactor: Remove condition blocks and switch-cases for enums
+- [bc2100d](https://github.com/thevickypedia/Filebrowser-iOS/commit/bc2100d1780b6c94d8a3f8104120576ef5063a19) chore: Update release notes for v1.29.1
+
 v1.29.1 (08/11/2025)
 --------------------
 - [686dbbc](https://github.com/thevickypedia/Filebrowser-iOS/commit/686dbbcc28f8f424c705112522048d884bd674a2) chore: Release ``v1.29.1``
