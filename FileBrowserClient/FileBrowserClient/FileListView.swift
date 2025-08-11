@@ -153,8 +153,6 @@ struct FileListView: View {
                 Spacer()
 
                 // Cancel button for search
-                // TODO: Instead of disabling cancel button, change the logic to cancel search API call
-                // TODO: Searches can be very expensive, so having a cancel option would be nice
                 Button(action: {
                     if let task = searchTask {
                         Log.debug("🔙 Search cancelled mid request")
@@ -164,11 +162,10 @@ struct FileListView: View {
                             color: .yellow,
                             duration: 3.5
                         )
-                        searchTask = nil
                     } else {
                         Log.debug("🔙 Search cancelled - no task in flight")
                     }
-                    // TODO: Reset searchType and add error handling back
+                    searchType = nil
                     searchClicked = false
                     searchInProgress = false
                     viewModel.searchResults.removeAll()
@@ -671,7 +668,7 @@ struct FileListView: View {
                 }
                 .alert("Are you sure?", isPresented: $showDeleteConfirmationSS) {
                     Button("Delete", role: .destructive) {
-                        deleteSession()
+                        clearSession()
                     }
                     Button("Cancel", role: .cancel) { }
                 } message: {
@@ -783,12 +780,14 @@ struct FileListView: View {
     }
 
     func searchFiles(query: String) async {
+        // "viewModel.isLoading = false" does not have any effect here - TODO: Remove this comment
         Log.debug("🔍 Searching for: \(query)")
         guard let serverURL = auth.serverURL, let token = auth.token else {
             await MainActor.run {
                 errorMessage = "Invalid authorization. Please log out and log back in."
                 searchInProgress = false
             }
+            Log.error("❌ Missing auth credentials")
             return
         }
 
@@ -813,38 +812,73 @@ struct FileListView: View {
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await URLSession.shared.data(for: request)
 
-            guard !Task.isCancelled else { return }
-
-            let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
-
-            await MainActor.run {
-                viewModel.isLoading = false
-                searchInProgress = false
-
-                let typeHead = searchType.map { String(describing: $0) } ?? "files"
-
-                if results.isEmpty {
-                    viewModel.errorMessage = "No \(typeHead) found for: \(query)"
-                } else {
-                    viewModel.searchResults = results
-                    let typeDescription = typeHead == "files" ? typeHead : "\(typeHead) files"
-                    Log.info("🔍 Search returned \(results.count) \(typeDescription)")
+            guard let httpResponse = response as? HTTPURLResponse else {
+                await MainActor.run {
+                    errorMessage = "Invalid server response"
+                    searchInProgress = false
                 }
+                Log.error("❌ Response was not HTTPURLResponse")
+                return
             }
+
+            guard httpResponse.statusCode == 200 else {
+                await MainActor.run {
+                    errorMessage = "Search failed with status code: \(httpResponse.statusCode)"
+                    searchInProgress = false
+                }
+                Log.error("❌ HTTP error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                return
+            }
+
+            guard !Task.isCancelled else {
+                Log.debug("⚠️ Search task was cancelled before decoding")
+                return
+            }
+
+            do {
+                let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
+
+                await MainActor.run {
+                    viewModel.isLoading = false
+                    searchInProgress = false
+
+                    let typeHead = searchType.map { String(describing: $0) } ?? "files"
+
+                    if results.isEmpty {
+                        viewModel.errorMessage = "No \(typeHead) found for: \(query)"
+                        Log.info("🔍 No results for \(typeHead): \(query)")
+                    } else {
+                        viewModel.searchResults = results
+                        let typeDescription = typeHead == "files" ? typeHead : "\(typeHead) files"
+                        Log.info("🔍 Search returned \(results.count) \(typeDescription)")
+                    }
+                }
+            } catch let decodingError as DecodingError {
+                await MainActor.run {
+                    errorMessage = "Failed to parse search results"
+                    viewModel.isLoading = false
+                    searchInProgress = false
+                }
+                Log.error("❌ Search decode error: \(decodingError.localizedDescription)")
+            }
+        } catch is CancellationError {
+            Log.debug("❌ Search was cancelled")
         } catch {
-            guard !Task.isCancelled else { return }
+            // Handles things like timeouts, no internet, etc.
             await MainActor.run {
                 viewModel.isLoading = false
                 searchInProgress = false
-                errorMessage = "Failed to perform search: \(error.localizedDescription)"
             }
-            Log.error("Search error: \(error.localizedDescription)")
+            if error.localizedDescription != "cancelled" {
+                errorMessage = error.localizedDescription
+                Log.error("❌ Search request failed: \(error.localizedDescription)")
+            }
         }
     }
 
-    func deleteSession() {
+    func clearSession() {
         Log.info("Removing stored session information")
         KeychainHelper.deleteSession()
         var message = "🗑️ Session cleared, logging out..."
