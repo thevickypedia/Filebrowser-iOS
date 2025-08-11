@@ -425,18 +425,7 @@ struct FileListView: View {
             .padding(.trailing, 20)
             .padding(.bottom, 30)
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("")
-        .overlay(
-            Text(getNavigationTitle())
-                .textSelection(.enabled)
-                .font(.title)
-                .bold()
-                .foregroundColor(.primary)
-                .padding(.top, 10)
-                .padding(.bottom, 10)
-                .frame(maxWidth: .infinity, alignment: .leading), alignment: .top
-        )
+        .navigationTitle(getNavigationTitle())
         .navigationBarTitleDisplayMode(.large)
         .navigationBarHidden(false)
         .toolbar {
