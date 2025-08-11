@@ -11,10 +11,6 @@ enum SortOption {
     case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
 }
 
-enum SearchType {
-    case image, music, video, pdf
-}
-
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
@@ -94,7 +90,7 @@ struct FileListView: View {
     @State private var searchInProgress = false
     @State private var searchText = ""
     @State private var searchTask: Task<Void, Never>?
-    @State private var searchType: SearchType?
+    @State private var searchType: SearchType = .files
     @State private var previousPathStack: [String] = []
 
     @Binding var isLoggedIn: Bool
@@ -165,7 +161,6 @@ struct FileListView: View {
                     } else {
                         Log.debug("🔙 Search cancelled - no task in flight")
                     }
-                    searchType = nil
                     searchClicked = false
                     searchInProgress = false
                     viewModel.searchResults.removeAll()
@@ -180,17 +175,13 @@ struct FileListView: View {
             }
             .padding(.horizontal)
 
-            // Icon buttons to choose search type
             HStack(spacing: 20) {
-                ForEach([SearchType.image, .music, .video, .pdf], id: \.self) { type in
+                // Display icons only for image, audio, video and pdf
+                ForEach(SearchType.allCases.filter { $0 != .files }, id: \.self) { type in
                     Button(action: {
-                        if searchType == type {
-                            searchType = nil
-                        } else {
-                            searchType = type
-                        }
+                        searchType = (searchType == type) ? .files : type
                     }) {
-                        Image(systemName: iconName(for: type))
+                        Image(systemName: type.iconName)
                             .foregroundColor(searchType == type ? .green : .blue)
                             .font(.system(size: 40))
                             .padding()
@@ -200,15 +191,6 @@ struct FileListView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
             }
-        }
-    }
-
-    private func iconName(for type: SearchType) -> String {
-        switch type {
-        case .image: return "photo"
-        case .music: return "speaker.wave.2"
-        case .video: return "video"
-        case .pdf: return "doc.text.fill"
         }
     }
 
@@ -728,27 +710,10 @@ struct FileListView: View {
     }
 
     func getSearchURL(serverURL: String, query: String) -> URL? {
-        var typeQueryParam = ""
-        if let searchType = searchType {
-            switch searchType {
-            case .image:
-                Log.debug("📷 Search type: image")
-                typeQueryParam = "type:image"
-            case .music:
-                Log.debug("🔈 Search type: audio")
-                typeQueryParam = "type:audio"
-            case .video:
-                Log.debug("📼 Search type: video")
-                typeQueryParam = "type:video"
-            case .pdf:
-                Log.debug("📁 Search type: pdf")
-                typeQueryParam = "type:pdf"
-            }
-        }
-
         var finalQuery = query
-        if !typeQueryParam.isEmpty {
-            finalQuery = typeQueryParam + " " + finalQuery
+        if let prefix = searchType.queryPrefix {
+            Log.debug("🔎 Search type: \(searchType.displayName)")
+            finalQuery = "\(prefix) \(finalQuery)"
         }
 
         guard let encodedQuery = finalQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
@@ -760,7 +725,7 @@ struct FileListView: View {
             return nil
         }
 
-        var searchLocation: String
+        let searchLocation: String
         if pathStack.isEmpty || currentPath == "/" {
             searchLocation = "/"
             statusMessage = StatusPayload(
@@ -776,11 +741,11 @@ struct FileListView: View {
             }
             searchLocation = encodedPath
         }
+
         return URL(string: "\(serverURL)/api/search/\(removePrefix(urlPath: searchLocation))?query=\(encodedQuery)")
     }
 
     func searchFiles(query: String) async {
-        // "viewModel.isLoading = false" does not have any effect here - TODO: Remove this comment
         Log.debug("🔍 Searching for: \(query)")
         guard let serverURL = auth.serverURL, let token = auth.token else {
             await MainActor.run {
@@ -844,15 +809,12 @@ struct FileListView: View {
                     viewModel.isLoading = false
                     searchInProgress = false
 
-                    let typeHead = searchType.map { String(describing: $0) } ?? "files"
-
                     if results.isEmpty {
-                        viewModel.errorMessage = "No \(typeHead) found for: \(query)"
-                        Log.info("🔍 No results for \(typeHead): \(query)")
+                        viewModel.errorMessage = "No \(searchType.displayName) found for: \(query)"
+                        Log.info("🔍 No results for \(searchType.displayName): \(query)")
                     } else {
                         viewModel.searchResults = results
-                        let typeDescription = typeHead == "files" ? typeHead : "\(typeHead) files"
-                        Log.info("🔍 Search returned \(results.count) \(typeDescription)")
+                        Log.info("🔍 Search returned \(results.count) \(searchType.displayName)")
                     }
                 }
             } catch let decodingError as DecodingError {

@@ -17,6 +17,7 @@
 		986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 986F5A762E42BB130058E2C4 /* PhotoPicker.swift */; };
 		987C617E2E47EC0900C5DE8E /* ServerURLMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987C617D2E47EC0900C5DE8E /* ServerURLMenu.swift */; };
 		987C61872E48F97F00C5DE8E /* ViewVisibilityModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */; };
+		987C61892E4A986500C5DE8E /* SearchType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987C61882E4A986500C5DE8E /* SearchType.swift */; };
 		98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */; };
 		98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ED02E1AFADA004CBB11 /* ContentView.swift */; };
 		98823ED32E1AFADC004CBB11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 98823ED22E1AFADC004CBB11 /* Assets.xcassets */; };
@@ -70,6 +71,7 @@
 		986F5A762E42BB130058E2C4 /* PhotoPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPicker.swift; sourceTree = "<group>"; };
 		987C617D2E47EC0900C5DE8E /* ServerURLMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLMenu.swift; sourceTree = "<group>"; };
 		987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewVisibilityModifier.swift; sourceTree = "<group>"; };
+		987C61882E4A986500C5DE8E /* SearchType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchType.swift; sourceTree = "<group>"; };
 		98823ECB2E1AFADA004CBB11 /* FileBrowserClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FileBrowserClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientApp.swift; sourceTree = "<group>"; };
 		98823ED02E1AFADA004CBB11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				987C61882E4A986500C5DE8E /* SearchType.swift */,
 				987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */,
 				987C617D2E47EC0900C5DE8E /* ServerURLMenu.swift */,
 				984F170B2E46D5D5003502DF /* KeychainHelper.swift */,
@@ -364,6 +367,7 @@
 				F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */,
 				986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */,
 				98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */,
+				987C61892E4A986500C5DE8E /* SearchType.swift in Sources */,
 				98D563D52E44DDA800DE0079 /* SelectableTextView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
