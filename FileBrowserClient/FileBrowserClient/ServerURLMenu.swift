@@ -20,9 +20,18 @@ struct ServerURLMenu: View {
                 Button(action: {
                     serverURL = url
                 }) {
-                    Text(url)
-                        .lineLimit(1) // force single line
-                        .truncationMode(.tail) // middle truncation for long URLs
+                    HStack {
+                        Text(url)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(minWidth: 200, maxWidth: 200, alignment: .leading)
+                        Spacer()
+                        if url == serverURL {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                        }
+                    }
                 }
             }
 
