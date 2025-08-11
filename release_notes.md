@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.27.0 (08/11/2025)
+--------------------
+- [19e9ace](https://github.com/thevickypedia/Filebrowser-iOS/commit/19e9acea056c2420b33034a36f04628382c67175) chore: Release ``v1.27.0``
+- [b6f190a](https://github.com/thevickypedia/Filebrowser-iOS/commit/b6f190a2c11bb795d335454b4980a2525e57297d) feat: Include an option to specify file types along with search query
+- [da7eea2](https://github.com/thevickypedia/Filebrowser-iOS/commit/da7eea2edc105a265e2dd2045142f8bd191954f7) chore: Update release notes for v1.26.1
+
 v1.26.1 (08/11/2025)
 --------------------
 - [a2740f0](https://github.com/thevickypedia/Filebrowser-iOS/commit/a2740f0fa53852da38f1cfb650998b39d9743b55) chore: Release ``v1.26.1``
