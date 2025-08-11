@@ -434,45 +434,44 @@ struct ContentView: View {
         // Force remembering username whenever FaceID is toggled
         rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
-            guard success,
-                  let session = KeychainHelper.loadSession(),
-                  let token = session["token"],
-                  let username = session["username"],
-                  let serverURL = session["serverURL"],
-                  serverURL == self.serverURL
-            else {
-                DispatchQueue.main.async {
-                    useFaceID = false // fallback to manual login
-                }
-                return
-            }
-
-            // Decode JWT to check expiration
-            if let payload = decodeJWT(jwt: token),
-               let exp = payload["exp"] as? TimeInterval {
-                let now = Date().timeIntervalSince1970
-                if now >= exp {
-                    Log.info("🔑 Token expired — refreshing via stored credentials.")
-                    // If we stored password securely:
-                    if let password = session["password"] {
-                        DispatchQueue.main.async {
-                            self.serverURL = serverURL
-                            self.username = username
-                            self.password = password
-                            self.login() // reuse normal login flow
-                        }
-                    } else {
-                        // No password stored — fallback to showing login UI
-                        DispatchQueue.main.async {
-                            useFaceID = false
-                        }
+            Task {
+                guard success,
+                      let session = KeychainHelper.loadSession(),
+                      let token = session["token"],
+                      let username = session["username"],
+                      let serverURL = session["serverURL"],
+                      serverURL == self.serverURL
+                else {
+                    DispatchQueue.main.async {
+                        useFaceID = false // fallback to manual login
                     }
                     return
                 }
-            }
 
-            // Token still valid — just use it
-            DispatchQueue.main.async {
+                // Decode JWT to check expiration                
+                if let payload = decodeJWT(jwt: token),
+                   let exp = payload["exp"] as? TimeInterval {
+                    let now = Date().timeIntervalSince1970
+                    if now >= exp {
+                        Log.info("🔑 Token expired — refreshing via stored credentials.")
+                        if let password = session["password"] {
+                            DispatchQueue.main.async {
+                                self.serverURL = serverURL
+                                self.username = username
+                                self.password = password
+                                self.login() // reuse normal login flow
+                            }
+                        } else {
+                            // No password stored — fallback to showing login UI
+                            DispatchQueue.main.async {
+                                useFaceID = false
+                            }
+                        }
+                        return
+                    }
+                }
+
+                // Token still valid — just use it
                 auth.token = token
                 auth.serverURL = serverURL
                 auth.username = username
@@ -485,15 +484,29 @@ struct ContentView: View {
                 } else {
                     Log.error("Failed to decode JWT")
                 }
-                Task {
-                    await auth.fetchUserAccount(for: username, token: token, serverURL: serverURL)
-                    await auth.fetchPermissions(for: username, token: token, serverURL: serverURL)
+
+                // TODO: Change this: Server errors will also get processed as token expired
+                await auth.fetchUserAccount(for: username, token: token, serverURL: serverURL)
+                if auth.userAccount == nil {
+                    DispatchQueue.main.async {
+                        useFaceID = false
+                        errorMessage = "🔐 Face ID session expired or unauthorized. Please log in manually."
+                    }
+                    Log.error("❌ Face ID failed: invalid token or user not found.")
+                    return
                 }
+
+                // TODO: Change this: Server errors will also get processed as token expired
+                await auth.fetchPermissions(for: username, token: token, serverURL: serverURL)
                 fileListViewModel.configure(token: token, serverURL: serverURL)
-                isLoggedIn = true
-                statusMessage = "✅ Face ID login successful!"
+                DispatchQueue.main.async {
+                    isLoggedIn = true
+                    statusMessage = "✅ Face ID login successful!"
+                }
                 Log.info("✅ Face ID login successful")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) { statusMessage = nil }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    statusMessage = nil
+                }
             }
         }
     }
