@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.26.1 (08/11/2025)
+--------------------
+- [a2740f0](https://github.com/thevickypedia/Filebrowser-iOS/commit/a2740f0fa53852da38f1cfb650998b39d9743b55) chore: Release ``v1.26.1``
+- [9fcd10f](https://github.com/thevickypedia/Filebrowser-iOS/commit/9fcd10f20c747db53d80e6afcba19c29bbd9dccd) fix: Overflow beyond screen size in selectable text
+- [ac3638e](https://github.com/thevickypedia/Filebrowser-iOS/commit/ac3638e333a53515e5031dfc1c3e59e47be5fac5) revert: Reset ``navigationTitle``
+- [c7775e5](https://github.com/thevickypedia/Filebrowser-iOS/commit/c7775e5b141a2ad9a80900b4fce8b328ff286fc6) feat: Make navigation title selectable
+- [a6ea8ce](https://github.com/thevickypedia/Filebrowser-iOS/commit/a6ea8ce5401ac389240949d91d176b59657d8bd5) style: Update spacing in search area
+- [8974d22](https://github.com/thevickypedia/Filebrowser-iOS/commit/8974d22181c0e4ddd01c869c20a8b0eb4a172261) chore: Update release notes for v1.26.0
+
 v1.26.0 (08/10/2025)
 --------------------
 - [7140fd1](https://github.com/thevickypedia/Filebrowser-iOS/commit/7140fd1b417937a41aa8de6b73099ae366604fb4) chore: Release ``v1.26.0``
