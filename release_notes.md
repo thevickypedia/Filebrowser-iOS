@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.28.0 (08/11/2025)
+--------------------
+- [0ff29c0](https://github.com/thevickypedia/Filebrowser-iOS/commit/0ff29c0a172fa0b41f4dccbdb65eac8899ed3365) chore: Release ``v1.28.0``
+- [f8c707d](https://github.com/thevickypedia/Filebrowser-iOS/commit/f8c707d0a234449bba6b3e498be349830428872f) feat: Include current location in search functionality
+- [083308d](https://github.com/thevickypedia/Filebrowser-iOS/commit/083308d6f91bf5efee93c579fcabc8472c6cddd4) chore: Update release notes for v1.27.0
+
 v1.27.0 (08/11/2025)
 --------------------
 - [19e9ace](https://github.com/thevickypedia/Filebrowser-iOS/commit/19e9acea056c2420b33034a36f04628382c67175) chore: Release ``v1.27.0``
