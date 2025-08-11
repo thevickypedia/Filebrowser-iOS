@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.29.0 (08/11/2025)
+--------------------
+- [390fa4c](https://github.com/thevickypedia/Filebrowser-iOS/commit/390fa4cbfbfd7150f10140dabc125331947f367c) chore: Release ``v1.29.0``
+- [3de6cea](https://github.com/thevickypedia/Filebrowser-iOS/commit/3de6cea86d2ba51aaf5ca2e6c5a0addd9a047329) feat: Include an option to cancel a search request that's inprogress
+- [e6d961a](https://github.com/thevickypedia/Filebrowser-iOS/commit/e6d961a7c4b61de8a33804a769e1da3e74d0bbac) chore: Update release notes for v1.28.2
+
 v1.28.2 (08/11/2025)
 --------------------
 - [06c0623](https://github.com/thevickypedia/Filebrowser-iOS/commit/06c062309845a5182903453aba93e335c84ae24b) chore: Release ``v1.28.2``
