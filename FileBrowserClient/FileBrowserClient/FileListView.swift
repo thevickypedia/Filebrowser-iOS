@@ -93,6 +93,7 @@ struct FileListView: View {
     @State private var searchClicked = false
     @State private var searchInProgress = false
     @State private var searchText = ""
+    @State private var searchTask: Task<Void, Never>?
     @State private var searchType: SearchType?
     @State private var previousPathStack: [String] = []
 
@@ -142,9 +143,10 @@ struct FileListView: View {
                     .submitLabel(.go)
                     .onSubmit {
                         guard !searchText.isEmpty else { return }
-                        DispatchQueue.main.async {
+                        searchTask = Task {
                             searchInProgress = true
-                            searchFiles(query: searchText)
+                            await searchFiles(query: searchText)
+                            searchTask = nil
                         }
                     }
 
@@ -154,8 +156,19 @@ struct FileListView: View {
                 // TODO: Instead of disabling cancel button, change the logic to cancel search API call
                 // TODO: Searches can be very expensive, so having a cancel option would be nice
                 Button(action: {
-                    guard !searchInProgress else { return }
-                    Log.debug("🔙 Search cancelled")
+                    if let task = searchTask {
+                        Log.debug("🔙 Search cancelled mid request")
+                        task.cancel()
+                        statusMessage = StatusPayload(
+                            text: "✖️ Search cancelled",
+                            color: .yellow,
+                            duration: 3.5
+                        )
+                        searchTask = nil
+                    } else {
+                        Log.debug("🔙 Search cancelled - no task in flight")
+                    }
+                    // TODO: Reset searchType and add error handling back
                     searchClicked = false
                     searchInProgress = false
                     viewModel.searchResults.removeAll()
@@ -163,11 +176,10 @@ struct FileListView: View {
                     viewModel.fetchFiles(at: pathStack.last ?? "/")
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(searchInProgress ? .gray : .red)
+                        .foregroundColor(.red)
                         .font(.system(size: 24))
                 }
                 .padding(.trailing, 0)
-                .disabled(searchInProgress)
             }
             .padding(.horizontal)
 
@@ -770,10 +782,10 @@ struct FileListView: View {
         return URL(string: "\(serverURL)/api/search/\(removePrefix(urlPath: searchLocation))?query=\(encodedQuery)")
     }
 
-    func searchFiles(query: String) {
+    func searchFiles(query: String) async {
         Log.debug("🔍 Searching for: \(query)")
         guard let serverURL = auth.serverURL, let token = auth.token else {
-            DispatchQueue.main.async {
+            await MainActor.run {
                 errorMessage = "Invalid authorization. Please log out and log back in."
                 searchInProgress = false
             }
@@ -781,14 +793,17 @@ struct FileListView: View {
         }
 
         guard let url = getSearchURL(serverURL: serverURL, query: query) else {
-            errorMessage = "Invalid search: \(query)"
-            searchInProgress = false
+            await MainActor.run {
+                errorMessage = "Invalid search: \(query)"
+                searchInProgress = false
+            }
             Log.error("❌ Failed to generate search URL")
             return
         }
+
         Log.debug("🔍 Search URL: \(url.relativePath)")
 
-        DispatchQueue.main.async {
+        await MainActor.run {
             viewModel.isLoading = true
             errorMessage = nil
         }
@@ -797,46 +812,36 @@ struct FileListView: View {
         request.httpMethod = "GET"
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            DispatchQueue.main.async {
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+
+            guard !Task.isCancelled else { return }
+
+            let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
+
+            await MainActor.run {
                 viewModel.isLoading = false
-                searchInProgress = false  // ✅ re-enable cancel when done
-            }
+                searchInProgress = false
 
-            if let error = error {
-                DispatchQueue.main.async {
-                    errorMessage = error.localizedDescription
-                }
-                return
-            }
+                let typeHead = searchType.map { String(describing: $0) } ?? "files"
 
-            guard let data = data else {
-                DispatchQueue.main.async {
-                    errorMessage = "No data received"
+                if results.isEmpty {
+                    viewModel.errorMessage = "No \(typeHead) found for: \(query)"
+                } else {
+                    viewModel.searchResults = results
+                    let typeDescription = typeHead == "files" ? typeHead : "\(typeHead) files"
+                    Log.info("🔍 Search returned \(results.count) \(typeDescription)")
                 }
-                return
             }
-
-            do {
-                let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
-                DispatchQueue.main.async {
-                    // TODO: Too much logic for something simple - just add a new case "files" in the parent enum
-                    let typeHead: String = searchType != nil ? String(describing: searchType!) : "files"
-                    if results.isEmpty {
-                        viewModel.errorMessage = "No \(typeHead) found for: \(query)"
-                    } else {
-                        viewModel.searchResults = results
-                        let typeDescription = typeHead == "files" ? typeHead : "\(typeHead) files"
-                        Log.info("🔍 Search returned \(results.count) \(typeDescription)")
-                    }
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    errorMessage = "Failed to parse search results"
-                }
-                Log.error("Search decode error: \(error.localizedDescription)")
+        } catch {
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                viewModel.isLoading = false
+                searchInProgress = false
+                errorMessage = "Failed to perform search: \(error.localizedDescription)"
             }
-        }.resume()
+            Log.error("Search error: \(error.localizedDescription)")
+        }
     }
 
     func deleteSession() {
