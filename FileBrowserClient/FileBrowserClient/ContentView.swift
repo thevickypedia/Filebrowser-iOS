@@ -485,19 +485,21 @@ struct ContentView: View {
                     Log.error("Failed to decode JWT")
                 }
 
-                // TODO: Change this: Server errors will also get processed as token expired
-                await auth.fetchUserAccount(for: username, token: token, serverURL: serverURL)
-                if auth.userAccount == nil {
+                if let err = await auth.fetchUserAccount(for: username, token: token, serverURL: serverURL) {
                     DispatchQueue.main.async {
                         useFaceID = false
-                        errorMessage = "🔐 Face ID session expired or unauthorized. Please log in manually."
+                        errorMessage = err
                     }
-                    Log.error("❌ Face ID failed: invalid token or user not found.")
                     return
                 }
 
-                // TODO: Change this: Server errors will also get processed as token expired
-                await auth.fetchPermissions(for: username, token: token, serverURL: serverURL)
+                if let err = await auth.fetchPermissions(for: username, token: token, serverURL: serverURL) {
+                    DispatchQueue.main.async {
+                        useFaceID = false
+                        errorMessage = err
+                    }
+                    return
+                }
                 fileListViewModel.configure(token: token, serverURL: serverURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true
