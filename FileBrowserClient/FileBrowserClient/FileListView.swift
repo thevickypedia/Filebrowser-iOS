@@ -11,6 +11,10 @@ enum SortOption {
     case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
 }
 
+enum SearchType {
+    case images, music, video, pdf
+}
+
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
@@ -89,6 +93,7 @@ struct FileListView: View {
     @State private var searchClicked = false
     @State private var searchInProgress = false
     @State private var searchText = ""
+    @State private var searchType: SearchType?
     @State private var previousPathStack: [String] = []
 
     @Binding var isLoggedIn: Bool
@@ -130,10 +135,12 @@ struct FileListView: View {
     private var searchingStack: some View {
         VStack {
             HStack {
+                // Only the search text field should be interactive
+                // TODO: Make the text area bigger
                 TextField("Search...", text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.vertical, 8)
-                    .submitLabel(.go)  // Changes the return key to 'Go'
+                    .submitLabel(.go)
                     .onSubmit {
                         guard !searchText.isEmpty else { return }
                         DispatchQueue.main.async {
@@ -141,7 +148,10 @@ struct FileListView: View {
                             searchFiles(query: searchText)
                         }
                     }
+
                 Spacer()
+
+                // Cancel button for search
                 Button(action: {
                     guard !searchInProgress else { return }
                     Log.debug("🔙 Search cancelled")
@@ -153,10 +163,37 @@ struct FileListView: View {
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.red)
+                        .font(.system(size: 24))
                 }
                 .padding(.trailing, 0)
             }
             .padding(.horizontal)
+
+            // Icon buttons to choose search type
+            HStack(spacing: 20) {
+                ForEach([SearchType.images, .music, .video, .pdf], id: \.self) { type in
+                    Button(action: {
+                        searchType = type
+                    }) {
+                        Image(systemName: iconName(for: type))
+                            .foregroundColor(searchType == type ? .green : .blue)
+                            .font(.system(size: 40))
+                            .padding()
+                            .background(searchType == type ? Color.blue.opacity(0.2) : Color.clear)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+        }
+    }
+
+    private func iconName(for type: SearchType) -> String {
+        switch type {
+        case .images: return "photo"
+        case .music: return "speaker.wave.2"
+        case .video: return "video"
+        case .pdf: return "doc.text.fill"
         }
     }
 
@@ -674,6 +711,41 @@ struct FileListView: View {
             }
         }
     }
+    func getSearchURL(serverURL: String, query: String) -> URL? {
+        var typeQueryParam = ""
+        if let searchType = searchType {
+            switch searchType {
+            case .images:
+                Log.debug("📷 Search type: image")
+                typeQueryParam = "type:image"
+            case .music:
+                Log.debug("🔈 Search type: audio")
+                typeQueryParam = "type:audio"
+            case .video:
+                Log.debug("📼 Search type: video")
+                typeQueryParam = "type:video"
+            case .pdf:
+                Log.debug("📁 Search type: pdf")
+                typeQueryParam = "type:pdf"
+            }
+        }
+
+        var finalQuery = query
+        if !typeQueryParam.isEmpty {
+            finalQuery = typeQueryParam + " " + finalQuery
+        }
+
+        guard let encodedQuery = finalQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            DispatchQueue.main.async {
+                errorMessage = "Invalid search: \(query)"
+                searchInProgress = false
+                Log.error("❌ Search query encoding failed")
+            }
+            return nil
+        }
+
+        return URL(string: "\(serverURL)/api/search/?query=\(encodedQuery)")
+    }
 
     func searchFiles(query: String) {
         Log.debug("🔍 Searching for: \(query)")
@@ -685,12 +757,10 @@ struct FileListView: View {
             return
         }
 
-        guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "\(serverURL)/api/search/?query=\(encodedQuery)") else {
-            DispatchQueue.main.async {
-                errorMessage = "Invalid search: \(query)"
-                searchInProgress = false
-            }
+        guard let url = getSearchURL(serverURL: serverURL, query: query) else {
+            errorMessage = "Invalid search: \(query)"
+            searchInProgress = false
+            Log.error("❌ Failed to generate search URL")
             return
         }
 
@@ -726,11 +796,12 @@ struct FileListView: View {
             do {
                 let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
                 DispatchQueue.main.async {
+                    let typeHead: String = searchType != nil ? String(describing: searchType!) : "files"
                     if results.isEmpty {
-                        viewModel.errorMessage = "No files found for: \(query)"
+                        viewModel.errorMessage = "No \(typeHead) found for: \(query)"
                     } else {
                         viewModel.searchResults = results
-                        Log.info("🔍 Search returned \(results.count) items")
+                        Log.info("🔍 Search returned \(results.count) \(typeHead)")
                     }
                 }
             } catch {
