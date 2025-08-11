@@ -12,7 +12,7 @@ enum SortOption {
 }
 
 enum SearchType {
-    case images, music, video, pdf
+    case image, music, video, pdf
 }
 
 struct FileListView: View {
@@ -136,7 +136,6 @@ struct FileListView: View {
         VStack {
             HStack {
                 // Only the search text field should be interactive
-                // TODO: Make the text area bigger
                 TextField("Search...", text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.vertical, 8)
@@ -152,6 +151,8 @@ struct FileListView: View {
                 Spacer()
 
                 // Cancel button for search
+                // TODO: Instead of disabling cancel button, change the logic to cancel search API call
+                // TODO: Searches can be very expensive, so having a cancel option would be nice
                 Button(action: {
                     guard !searchInProgress else { return }
                     Log.debug("🔙 Search cancelled")
@@ -162,18 +163,23 @@ struct FileListView: View {
                     viewModel.fetchFiles(at: pathStack.last ?? "/")
                 }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.red)
+                        .foregroundColor(searchInProgress ? .gray : .red)
                         .font(.system(size: 24))
                 }
                 .padding(.trailing, 0)
+                .disabled(searchInProgress)
             }
             .padding(.horizontal)
 
             // Icon buttons to choose search type
             HStack(spacing: 20) {
-                ForEach([SearchType.images, .music, .video, .pdf], id: \.self) { type in
+                ForEach([SearchType.image, .music, .video, .pdf], id: \.self) { type in
                     Button(action: {
-                        searchType = type
+                        if searchType == type {
+                            searchType = nil
+                        } else {
+                            searchType = type
+                        }
                     }) {
                         Image(systemName: iconName(for: type))
                             .foregroundColor(searchType == type ? .green : .blue)
@@ -190,7 +196,7 @@ struct FileListView: View {
 
     private func iconName(for type: SearchType) -> String {
         switch type {
-        case .images: return "photo"
+        case .image: return "photo"
         case .music: return "speaker.wave.2"
         case .video: return "video"
         case .pdf: return "doc.text.fill"
@@ -711,11 +717,12 @@ struct FileListView: View {
             }
         }
     }
+
     func getSearchURL(serverURL: String, query: String) -> URL? {
         var typeQueryParam = ""
         if let searchType = searchType {
             switch searchType {
-            case .images:
+            case .image:
                 Log.debug("📷 Search type: image")
                 typeQueryParam = "type:image"
             case .music:
@@ -748,7 +755,7 @@ struct FileListView: View {
         if pathStack.isEmpty || currentPath == "/" {
             searchLocation = "/"
             statusMessage = StatusPayload(
-                text: "⚠️ Searching from the home page may take longer and be inaccurate.",
+                text: "⚠️ Searching from the home page may take longer and be inaccurate",
                 color: .yellow,
                 duration: 3.5
             )
@@ -813,12 +820,14 @@ struct FileListView: View {
             do {
                 let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
                 DispatchQueue.main.async {
+                    // TODO: Too much logic for something simple - just add a new case "files" in the parent enum
                     let typeHead: String = searchType != nil ? String(describing: searchType!) : "files"
                     if results.isEmpty {
                         viewModel.errorMessage = "No \(typeHead) found for: \(query)"
                     } else {
                         viewModel.searchResults = results
-                        Log.info("🔍 Search returned \(results.count) \(typeHead)")
+                        let typeDescription = typeHead == "files" ? typeHead : "\(typeHead) files"
+                        Log.info("🔍 Search returned \(results.count) \(typeDescription)")
                     }
                 }
             } catch {
