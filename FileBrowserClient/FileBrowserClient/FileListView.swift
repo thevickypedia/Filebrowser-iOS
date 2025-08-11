@@ -739,12 +739,28 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 errorMessage = "Invalid search: \(query)"
                 searchInProgress = false
-                Log.error("❌ Search query encoding failed")
+                Log.error("❌ Search init query encoding failed")
             }
             return nil
         }
 
-        return URL(string: "\(serverURL)/api/search/?query=\(encodedQuery)")
+        var searchLocation: String
+        if pathStack.isEmpty || currentPath == "/" {
+            searchLocation = "/"
+            statusMessage = StatusPayload(
+                text: "⚠️ Searching from the home page may take longer and be inaccurate.",
+                color: .yellow,
+                duration: 3.5
+            )
+        } else {
+            guard let encodedPath = currentPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+                errorMessage = "Failed to search from \(currentPath)"
+                Log.error("❌ Search final query encoding failed at \(currentPath)")
+                return nil
+            }
+            searchLocation = encodedPath
+        }
+        return URL(string: "\(serverURL)/api/search/\(removePrefix(urlPath: searchLocation))?query=\(encodedQuery)")
     }
 
     func searchFiles(query: String) {
@@ -763,6 +779,7 @@ struct FileListView: View {
             Log.error("❌ Failed to generate search URL")
             return
         }
+        Log.debug("🔍 Search URL: \(url.relativePath)")
 
         DispatchQueue.main.async {
             viewModel.isLoading = true
