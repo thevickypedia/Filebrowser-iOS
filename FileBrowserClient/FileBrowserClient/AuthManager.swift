@@ -47,50 +47,13 @@ struct UserAccount: Codable {
 
 extension AuthManager {
 
-    func fetchUserAccount(for username: String, token: String, serverURL: String) async -> String? {
+    func fetchPermissions(for username: String, token: String, serverURL: String) async -> String? {
         guard let url = URL(string: "\(serverURL)/api/users") else {
             return "❌ Failed to construct url for: \(serverURL)"
         }
 
         var request = URLRequest(url: url)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            guard let httpResponse = response as? HTTPURLResponse else {
-                let errorMessage = "Response was not HTTPURLResponse"
-                Log.error("❌ \(errorMessage)")
-                return errorMessage
-            }
-
-            guard httpResponse.statusCode == 200 else {
-                let errorMessage = "HTTP error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
-                Log.error("❌ \(errorMessage)")
-                return errorMessage
-            }
-
-            let users = try JSONDecoder().decode([UserAccount].self, from: data)
-            if let current = users.first(where: { $0.username == username }) {
-                await MainActor.run {
-                    self.userAccount = current
-                    Log.info("✅ Loaded user ID: \(current.id)")
-                }
-            }
-        } catch {
-            let errorMessage = "Failed to load user account: \(error.localizedDescription)"
-            Log.error("❌ \(errorMessage)")
-            return errorMessage
-        }
-        return nil
-    }
-
-    func fetchPermissions(for username: String, token: String, serverURL: String) async -> String? {
-        guard let url = URL(string: "\(serverURL)/api/users") else { return nil }
-
-        var request = URLRequest(url: url)
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -119,9 +82,8 @@ extension AuthManager {
                 return errorMessage
             }
         } catch {
-            let errorMessage = "Failed to fetch permissions for \(username): \(error.localizedDescription)"
-            Log.error("❌ \(errorMessage)")
-            return errorMessage
+            Log.error("❌ Failed to fetch permissions for \(username): \(error.localizedDescription)")
+            return error.localizedDescription
         }
         return nil
     }

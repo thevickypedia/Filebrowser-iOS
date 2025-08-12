@@ -388,9 +388,8 @@ struct ContentView: View {
                         auth.serverURL = serverURL
                         auth.permissions = nil // clear any stale value
                         auth.username = username // ✅ Store username
-                        // ✅ Wrap async calls in a Task
+                        // ✅ Wrap async call in a Task
                         Task {
-                            await auth.fetchUserAccount(for: username, token: jwt, serverURL: serverURL)
                             await auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL)
                         }
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
@@ -483,14 +482,6 @@ struct ContentView: View {
                     logTokenInfo()
                 } else {
                     Log.error("Failed to decode JWT")
-                }
-
-                if let err = await auth.fetchUserAccount(for: username, token: token, serverURL: serverURL) {
-                    DispatchQueue.main.async {
-                        useFaceID = false
-                        errorMessage = err
-                    }
-                    return
                 }
 
                 if let err = await auth.fetchPermissions(for: username, token: token, serverURL: serverURL) {
