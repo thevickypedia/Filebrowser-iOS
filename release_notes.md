@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.29.3 (08/12/2025)
+--------------------
+- [03ae13c](https://github.com/thevickypedia/Filebrowser-iOS/commit/03ae13c98272d98001a1bd423efa92a8a7134422) chore: Release ``v1.29.3``
+- [26601a8](https://github.com/thevickypedia/Filebrowser-iOS/commit/26601a8903dbcd75f3d311e76f12674204c042de) perf: Silently re-authenticate if JWT is invalid
+- [a560a5f](https://github.com/thevickypedia/Filebrowser-iOS/commit/a560a5f63a8be4ba45339576f23fc03b7d955117) revert: Rollback keychain storage with primarykeys
+- [f722a72](https://github.com/thevickypedia/Filebrowser-iOS/commit/f722a728ba3453a6f82f840eb0e68504ef535be9) feat: Store sessions in keychain with serverURL and username as primarykeys
+- [89a165c](https://github.com/thevickypedia/Filebrowser-iOS/commit/89a165c6471e7a4e805f38f8f7b0f73cf3b127b2) refactor: Remove redundant function to fetch user account
+- [6e73f5b](https://github.com/thevickypedia/Filebrowser-iOS/commit/6e73f5b0cca6ddad86a3a7e43b8bbce8813476d3) refactor: Handle auth errors more accurately
+- [f6aa852](https://github.com/thevickypedia/Filebrowser-iOS/commit/f6aa852153fe9b6e417326c2c6b28e2a44aa4f21) refactor: Create a hand-shake with the server even when FaceID is still valid
+- [9057d32](https://github.com/thevickypedia/Filebrowser-iOS/commit/9057d323a0e412d4a3ae9a7d4ea3b96d3fdfee90) chore: Update release notes for v1.29.2
+
 v1.29.2 (08/11/2025)
 --------------------
 - [5d9e715](https://github.com/thevickypedia/Filebrowser-iOS/commit/5d9e715d79616a4fc3e291a1c659ee641d35593b) chore: Release ``v1.29.2``
