@@ -117,7 +117,7 @@ struct ContentView: View {
             ).padding(.top, 1)
 
             if useFaceID,
-               let existingSession = KeychainHelper.loadSession(),
+               let existingSession = KeychainHelper.loadSession(username: username, serverURL: serverURL),
                existingSession["serverURL"] == serverURL {
                 // Face ID mode with saved session
                 Toggle("Use Face ID", isOn: $useFaceID)
@@ -231,7 +231,8 @@ struct ContentView: View {
         .padding()
         .onAppear {
             knownServers = KeychainHelper.loadKnownServers()
-            if let session = KeychainHelper.loadSession(), let lastLoggedInURL = session["serverURL"] {
+            if let session = KeychainHelper.loadSession(username: username, serverURL: serverURL),
+               let lastLoggedInURL = session["serverURL"] {
                 serverURL = lastLoggedInURL
             } else if !knownServers.isEmpty {
                 serverURL = knownServers.first ?? ""
@@ -287,7 +288,7 @@ struct ContentView: View {
         }
         // If neither remember nor useFaceID is enabled, remove any saved session
         if !rememberMe && !useFaceID {
-            KeychainHelper.deleteSession()
+            KeychainHelper.deleteSession(username: username, serverURL: serverURL)
             KeychainHelper.deleteKnownServers()
         }
         // This is a temporary solution
@@ -409,7 +410,7 @@ struct ContentView: View {
                             )
                         } else {
                             // ensure any existing saved session is removed when the user opts out
-                            KeychainHelper.deleteSession()
+                            KeychainHelper.deleteSession(username: username, serverURL: serverURL)
                             KeychainHelper.deleteKnownServers()
                         }
                     } else {
@@ -429,13 +430,28 @@ struct ContentView: View {
         Log.info("Time Left: \(timeLeftString(until: auth.exp))")
     }
 
+    func reauth() {
+        if let session = KeychainHelper.loadSession(username: self.username, serverURL: self.serverURL),
+           let savedUsername = session["username"],
+           let savedServerURL = session["serverURL"],
+           let savedPassword = session["password"],
+           savedServerURL == self.serverURL {
+            DispatchQueue.main.async {
+                self.serverURL = savedServerURL
+                self.username = savedUsername
+                self.password = savedPassword
+                self.login() // Reuse the normal login flow
+            }
+        }
+    }
+
     func biometricSignIn() {
         // Force remembering username whenever FaceID is toggled
         rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
             Task {
                 guard success,
-                      let session = KeychainHelper.loadSession(),
+                      let session = KeychainHelper.loadSession(username: username, serverURL: serverURL),
                       let token = session["token"],
                       let username = session["username"],
                       let serverURL = session["serverURL"],
@@ -486,8 +502,11 @@ struct ContentView: View {
 
                 if let err = await auth.fetchPermissions(for: username, token: token, serverURL: serverURL) {
                     DispatchQueue.main.async {
-                        useFaceID = false
-                        errorMessage = err
+                        if err == "HTTP error: [401] - unauthorized" {
+                            reauth()
+                        } else {
+                            errorMessage = err
+                        }
                     }
                     return
                 }
