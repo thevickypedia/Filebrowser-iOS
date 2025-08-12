@@ -765,7 +765,7 @@ struct FileListView: View {
             return
         }
 
-        Log.debug("🔍 Search URL: \(url.relativePath)")
+        Log.debug("🔍 Search URL: \(urlPath(url))")
 
         await MainActor.run {
             viewModel.isLoading = true
@@ -1194,7 +1194,7 @@ struct FileListView: View {
                     return
                 }
 
-                Log.info("✅ Upload session initiated at: \(uploadURL.relativePath)")
+                Log.info("✅ Upload session initiated at: \(urlPath(uploadURL))")
                 getUploadOffset(fileHandle: fileHandle, fileURL: fileURL, uploadURL: uploadURL)
             }
         }.resume()

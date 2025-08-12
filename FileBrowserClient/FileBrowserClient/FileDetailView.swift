@@ -471,7 +471,7 @@ struct FileDetailView: View {
             return
         }
 
-        Log.debug("🔗 Fetching preview from: \(url.relativePath)")
+        Log.debug("🔗 Fetching preview from: \(urlPath(url))")
 
         URLSession.shared.dataTask(with: url) { data, _, error in
             DispatchQueue.main.async {
@@ -563,7 +563,7 @@ struct FileDetailView: View {
         var request = URLRequest(url: url)
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        Log.debug("🔗 Fetching raw content from: \(url.relativePath)")
+        Log.debug("🔗 Fetching raw content from: \(urlPath(url))")
 
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {

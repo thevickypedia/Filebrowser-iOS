@@ -338,3 +338,11 @@ func copyToClipboard(_ text: String) {
     // Replace with your custom alert if needed
     print("Copied text [\(text)] to clipboard!")
 }
+
+func urlPath(_ url: URL) -> String {
+    var result = url.path
+    if let query = url.query, !query.isEmpty {
+        result += "?" + query
+    }
+    return result
+}
