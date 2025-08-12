@@ -64,6 +64,7 @@ extension AuthManager {
             }
 
             guard httpResponse.statusCode == 200 else {
+                // DO NOT CHANGE: Used to validate server hand-shake in biometrics login
                 let errorMessage = "HTTP error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
                 Log.error("❌ \(errorMessage)")
                 return "\(httpResponse.statusCode)"

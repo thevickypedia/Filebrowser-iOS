@@ -513,7 +513,7 @@ struct FileDetailView: View {
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.error = "Metadata fetch failed: \(error.localizedDescription)"
+                    self.error = error.localizedDescription
                     return
                 }
 
@@ -526,7 +526,7 @@ struct FileDetailView: View {
                     self.metadata = try JSONDecoder().decode(ResourceMetadata.self, from: data)
                     Log.debug("✅ Metadata loaded for \(file.name)")
                 } catch {
-                    self.error = "Failed to parse metadata"
+                    self.error = error.localizedDescription
                     Log.error("❌ Metadata decode error: \(error.localizedDescription)")
                 }
             }
@@ -569,7 +569,8 @@ struct FileDetailView: View {
             DispatchQueue.main.async {
                 self.isDownloading = false
                 if let error = error {
-                    self.error = "Raw download failed: \(error.localizedDescription)"
+                    self.error = error.localizedDescription
+                    Log.error("❌ Raw download failed: \(error.localizedDescription)")
                     return
                 }
                 Log.debug("Fetch raw content complete")

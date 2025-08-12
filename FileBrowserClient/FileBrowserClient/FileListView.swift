@@ -781,19 +781,19 @@ struct FileListView: View {
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 await MainActor.run {
-                    errorMessage = "Invalid server response"
-                    searchInProgress = false
+                    self.searchInProgress = false
+                    self.errorMessage = "Server error: Invalid response"
                 }
-                Log.error("❌ Response was not HTTPURLResponse")
+                Log.error("❌ Server error: Response was not HTTPURLResponse")
                 return
             }
 
             guard httpResponse.statusCode == 200 else {
                 await MainActor.run {
-                    errorMessage = "Search failed with status code: \(httpResponse.statusCode)"
-                    searchInProgress = false
+                    self.searchInProgress = false
+                    self.errorMessage = "Server error: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
                 }
-                Log.error("❌ HTTP error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
                 return
             }
 

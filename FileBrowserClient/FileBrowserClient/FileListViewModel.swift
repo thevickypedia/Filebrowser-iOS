@@ -58,8 +58,22 @@ class FileListViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    self.isLoading = false
+                    self.errorMessage = "Server error: Invalid response"
+                    Log.error("❌ Server error: Response was not HTTPURLResponse")
+                    return
+                }
+
+                guard httpResponse.statusCode == 200 else {
+                    self.isLoading = false
+                    self.errorMessage = "Server error: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                    return
+                }
+
                 self.isLoading = false
 
                 if let error = error {
