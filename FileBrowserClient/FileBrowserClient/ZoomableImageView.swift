@@ -19,6 +19,7 @@ struct ZoomableImageView: View {
     @GestureState private var gestureOffset: CGSize = .zero
 
     @State private var isZoomed: Bool = false
+    @State private var showFullScreen: Bool = false // NEW
 
     var body: some View {
         GeometryReader { geometry in
@@ -32,10 +33,16 @@ struct ZoomableImageView: View {
                 .gesture(pinchGesture())
                 .simultaneousGesture(panGesture())
                 .simultaneousGesture(doubleTapGesture())
-                .gesture(
-                    !isZoomed ? swipeGesture() : nil // Only allow swipe when not zoomed
-                )
+                .simultaneousGesture(singleTapGesture()) // NEW
+                .gesture(!isZoomed ? swipeGesture() : nil)
                 .animation(.easeInOut(duration: 0.25), value: scale)
+                .fullScreenCover(isPresented: $showFullScreen) {
+                    FullScreenImageWrapper(
+                        image: image,
+                        onSwipeLeft: onSwipeLeft,
+                        onSwipeRight: onSwipeRight
+                    )
+                }
         }
     }
 
@@ -79,6 +86,15 @@ struct ZoomableImageView: View {
                         scale = 2.5
                         isZoomed = true
                     }
+                }
+            }
+    }
+
+    private func singleTapGesture() -> some Gesture {
+        TapGesture(count: 1)
+            .onEnded {
+                if !isZoomed {
+                    showFullScreen = true
                 }
             }
     }
