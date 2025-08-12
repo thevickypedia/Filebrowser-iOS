@@ -842,9 +842,7 @@ struct FileListView: View {
 
     func clearSession() {
         Log.info("Removing stored session information")
-        if let username = auth.username, let server = auth.serverURL {
-            KeychainHelper.deleteSession(username: username, serverURL: server)
-        }
+        KeychainHelper.deleteSession()
         var message = "🗑️ Session cleared, logging out..."
         if self.removeKnownServers {
             Log.info("Removing known server list")
