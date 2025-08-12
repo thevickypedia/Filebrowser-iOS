@@ -53,8 +53,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
                         guard let data = data else { return }
 
-                        let ext = (suggestedName as NSString).pathExtension.isEmpty ? "jpg" : (suggestedName as NSString).pathExtension
-                        let base = (suggestedName as NSString).deletingPathExtension
+                        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+                        let ext = pathExt.isEmpty ? "jpg" : pathExt
+                        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
 
                         if let url = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
@@ -69,8 +70,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         guard let url = url,
                               let data = try? Data(contentsOf: url) else { return }
 
-                        let ext = (suggestedName as NSString).pathExtension.isEmpty ? "mov" : (suggestedName as NSString).pathExtension
-                        let base = (suggestedName as NSString).deletingPathExtension
+                        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+                        let ext = pathExt.isEmpty ? "mov" : pathExt
+                        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
 
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
