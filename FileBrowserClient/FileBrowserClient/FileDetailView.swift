@@ -251,13 +251,15 @@ struct FileDetailView: View {
                             Spacer(minLength: 0)
                         }
 
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "shippingbox")
-                                .imageScale(.medium)
-                                .foregroundColor(.secondary)
-                            SelectableTextView(text: "Extension: \(fileInfo.extension)")
-                                .fixedSize(horizontal: false, vertical: true)
-                            Spacer(minLength: 0)
+                        if !fileInfo.extension.isEmpty {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "shippingbox")
+                                    .imageScale(.medium)
+                                    .foregroundColor(.secondary)
+                                SelectableTextView(text: "Type: \(fileInfo.extension)")
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 0)
+                            }
                         }
 
                         if let res = metadata?.resolution {
