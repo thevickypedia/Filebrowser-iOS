@@ -66,7 +66,7 @@ extension AuthManager {
             guard httpResponse.statusCode == 200 else {
                 let errorMessage = "HTTP error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
                 Log.error("❌ \(errorMessage)")
-                return errorMessage
+                return "\(httpResponse.statusCode)"
             }
 
             let users = try JSONDecoder().decode([UserAccount].self, from: data)

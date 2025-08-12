@@ -429,6 +429,25 @@ struct ContentView: View {
         Log.info("Time Left: \(timeLeftString(until: auth.exp))")
     }
 
+    func reauth() {
+        if let session = KeychainHelper.loadSession(),
+           let savedUsername = session["username"],
+           let savedServerURL = session["serverURL"],
+           let savedPassword = session["password"],
+           savedServerURL == self.serverURL {
+            DispatchQueue.main.async {
+                self.serverURL = savedServerURL
+                self.username = savedUsername
+                self.password = savedPassword
+                self.login() // Reuse the normal login flow
+            }
+        } else {
+            DispatchQueue.main.async {
+                useFaceID = false // fallback to manual login
+            }
+        }
+    }
+
     func biometricSignIn() {
         // Force remembering username whenever FaceID is toggled
         rememberMe = false
@@ -486,8 +505,14 @@ struct ContentView: View {
 
                 if let err = await auth.fetchPermissions(for: username, token: token, serverURL: serverURL) {
                     DispatchQueue.main.async {
-                        useFaceID = false
-                        errorMessage = err
+                        // FIXME: Find a better way to handle this
+                        if ["401"].contains(err) {
+                            // This indicates a server restart
+                            Log.warn("FaceID passed, but session validation failed.")
+                            reauth()
+                        } else {
+                            errorMessage = err
+                        }
                     }
                     return
                 }
