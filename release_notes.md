@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.30.1 (08/13/2025)
+--------------------
+- [973f986](https://github.com/thevickypedia/Filebrowser-iOS/commit/973f986f5cad7c00e9241a2c5040c12f8a450654) chore: Release ``v1.30.1``
+- [efc8a5b](https://github.com/thevickypedia/Filebrowser-iOS/commit/efc8a5be0b488c19eec172190a06923fecdafe7a) fix: Failing to sync settings with the global auth state
+- [9f5e87e](https://github.com/thevickypedia/Filebrowser-iOS/commit/9f5e87e7820fee90c70eed71471c5b82da668de2) perf: Replace checking auth state in each listing functionality with an init method
+- [f2ea67d](https://github.com/thevickypedia/Filebrowser-iOS/commit/f2ea67dc3e08680f7125c0674c3c44dc89b797f5) chore: Update release notes for v1.30.0
+
 v1.30.0 (08/13/2025)
 --------------------
 - [4371d81](https://github.com/thevickypedia/Filebrowser-iOS/commit/4371d81c871bace226f0e4856901cfc889235a0b) chore: Release ``v1.30.0``
