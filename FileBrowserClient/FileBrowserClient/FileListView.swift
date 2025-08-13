@@ -105,6 +105,45 @@ struct FileListView: View {
     let advancedSettings: AdvancedSettings
     let cacheExtensions: [String]
 
+    @State private var serverURL: String = ""
+    @State private var token: String = ""
+    @State private var userAccount: UserAccount?
+    @State private var isAuthValid: Bool = false
+
+    init(
+        isLoggedIn: Binding<Bool>,
+        pathStack: Binding<[String]>,
+        logoutHandler: @escaping (Bool) -> Void,
+        extensionTypes: ExtensionTypes,
+        advancedSettings: AdvancedSettings,
+        cacheExtensions: [String]
+    ) {
+        self._isLoggedIn = isLoggedIn
+        self._pathStack = pathStack
+        self.logoutHandler = logoutHandler
+        self.extensionTypes = extensionTypes
+        self.advancedSettings = advancedSettings
+        self.cacheExtensions = cacheExtensions
+    }
+
+    // Add this validation function that should be called in onAppear
+    private func validateAuth() {
+        guard let serverURL = auth.serverURL,
+              let token = auth.token,
+              let userAccount = auth.userAccount else {
+            Log.error("❌ Missing authentication credentials")
+            isAuthValid = false
+            errorMessage = "Invalid authorization. Please log out and log back in."
+            return
+        }
+        
+        self.serverURL = serverURL
+        self.token = token
+        self.userAccount = userAccount
+        self.isAuthValid = true
+        Log.info("✅ Auth validation successful")
+    }
+
     private var homeStack: some View {
         HStack {
             Button(action: {
@@ -355,7 +394,7 @@ struct FileListView: View {
                 ForEach(knownServers, id: \.self) { knownServerURL in
                     HStack {
                         // Ensure you don't display the current authenticated server
-                        if knownServerURL != auth.serverURL {
+                        if knownServerURL != self.serverURL {
                             Text(knownServerURL)
                                 .lineLimit(1) // To prevent text from overflowing
                                 .truncationMode(.tail) // Ensure long URLs are truncated
@@ -555,6 +594,8 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
+            validateAuth()
+            guard isAuthValid else { return }
             if !searchClicked && !searchInProgress {
                 Log.debug("📂 FileListView appeared for path: \(currentPath)")
                 viewModel.fetchFiles(at: currentPath)
@@ -590,7 +631,7 @@ struct FileListView: View {
                 }
                 Section {
                     Button(role: .destructive) {
-                        FileCache.shared.clearDiskCache(auth.serverURL)
+                        FileCache.shared.clearDiskCache(self.serverURL)
                         fetchClientStorageInfo()
                         settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)
                     } label: {
@@ -672,12 +713,14 @@ struct FileListView: View {
             }
             .modifier(StatusMessage(payload: $settingsMessage))
             .onAppear {
-                hideDotfiles = auth.userAccount?.hideDotfiles ?? false
-                dateFormatExact = auth.userAccount?.dateFormat ?? false
+                hideDotfiles = self.userAccount?.hideDotfiles ?? false
+                dateFormatExact = self.userAccount?.dateFormat ?? false
                 fetchUsageInfo()
                 fetchClientStorageInfo()
             }
         }
+        // TODO: Takes a long time to load for large files
+        // TODO: Check if PHPickerViewController has stream/buffer options
         .sheet(isPresented: $showPhotoPicker) {
             PhotoPicker { urls in
                 uploadQueue = urls
@@ -745,12 +788,9 @@ struct FileListView: View {
 
     func searchFiles(query: String) async {
         Log.debug("🔍 Searching for: \(query)")
-        guard let serverURL = auth.serverURL, let token = auth.token else {
-            await MainActor.run {
-                errorMessage = "Invalid authorization. Please log out and log back in."
-                searchInProgress = false
-            }
-            Log.error("❌ Missing auth credentials")
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
+            errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
 
@@ -858,8 +898,8 @@ struct FileListView: View {
         FileDetailView(
             currentIndex: index,
             files: sortedFiles,
-            serverURL: auth.serverURL ?? "",
-            token: auth.token ?? "",
+            serverURL: self.serverURL,
+            token: self.token,
             // Pass a callback reference to fetchClientStorageInfo func
             onFileCached: { fetchClientStorageInfo() },
             extensionTypes: extensionTypes,
@@ -880,8 +920,8 @@ struct FileListView: View {
         if useThumbnail {
             RemoteThumbnail(
                 file: file,
-                serverURL: auth.serverURL ?? "",
-                token: auth.token ?? "",
+                serverURL: self.serverURL,
+                token: self.token,
                 advancedSettings: advancedSettings,
                 extensionTypes: extensionTypes,
                 width: style?.gridHeight ?? ViewStyle.listIconSize,
@@ -1068,13 +1108,14 @@ struct FileListView: View {
     }
 
     func showPrepareUpload(after duration: Int = 10) {
+        // MARK: Force isPreparingUpload flag after a static timeout
         // There is no real way to detect a cancel even from file importer or photo picker
         // This is to make sure "preparing to upload" banner is not shown forever
         isPreparingUpload = true
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(duration)) {
             if isPreparingUpload {
                 isPreparingUpload = false
-                Log.debug("Forcing isPreparingUpload flag to false")
+                Log.debug("Time's up! Forcing isPreparingUpload flag to false")
                 statusMessage = StatusPayload(
                     text: "⚠️ Getting things ready... Upload will follow if files were selected.",
                     color: .yellow,
@@ -1106,10 +1147,18 @@ struct FileListView: View {
     }
 
     func fetchUsageInfo() {
-        guard let serverURL = auth.serverURL, let token = auth.token,
-              let url = URL(string: "\(serverURL)/api/usage/") else {
-            Log.error("❌ Invalid URL or auth for /api/usage/")
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
+            return
+        }
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "usage"],
+            queryItems: []
+        ) else {
+            Log.error("❌ Invalid URL")
+            errorMessage = "Invalid usage URL."
             return
         }
 
@@ -1155,8 +1204,8 @@ struct FileListView: View {
     }
 
     func initiateTusUpload(for fileURL: URL) {
-        guard let token = auth.token, let serverURL = auth.serverURL else {
-            Log.error("❌ Missing auth info")
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
@@ -1209,7 +1258,7 @@ struct FileListView: View {
         var request = URLRequest(url: uploadURL)
         request.httpMethod = "HEAD"
         request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+        request.setValue(self.token, forHTTPHeaderField: "X-Auth")
 
         URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
@@ -1301,7 +1350,7 @@ struct FileListView: View {
             request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
             request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
             request.setValue("application/offset+octet-stream", forHTTPHeaderField: "Content-Type")
-            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+            request.setValue(self.token, forHTTPHeaderField: "X-Auth")
 
             uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
@@ -1323,10 +1372,17 @@ struct FileListView: View {
                         return
                     }
 
-                    guard let http = response as? HTTPURLResponse, http.statusCode == 204 else {
-                        Log.error("❌ Unexpected PATCH response: \(response.debugDescription)")
-                        errorTitle = "Server Error"
-                        errorMessage = "[PATCH Failed]: \(String(describing: response?.description))"
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        self.errorTitle = "Server Error"
+                        self.errorMessage = "Invalid response"
+                        Log.error("❌ Server error: Response was not HTTPURLResponse")
+                        return
+                    }
+
+                    guard httpResponse.statusCode == 204 else {
+                        self.errorTitle = "Server Error"
+                        self.errorMessage = "[PATCH Failed]: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                        Log.error("❌ Unexpected PATCH response: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
                         return
                     }
 
@@ -1373,10 +1429,14 @@ struct FileListView: View {
         contentType: String = "application/json",
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) -> URLSessionDataTask? {
-        guard let token = auth.token,
-              let serverURL = auth.serverURL,
-              var components = URLComponents(string: serverURL + endpoint) else {
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
+            return nil
+        }
+        guard var components = URLComponents(string: serverURL + endpoint) else {
+            Log.error("❌ Failed to make URL components for endpoint: \(endpoint)")
+            errorMessage = "Failed to make URL components."
             return nil
         }
 
@@ -1436,21 +1496,28 @@ struct FileListView: View {
     }
 
     func saveSettings() {
-        guard let user = auth.userAccount,
-            let token = auth.token,
-            let serverURL = auth.serverURL else {
-            Log.error("❌ Missing auth or user info")
+        // TODO: Save settings stopped work (likely a problem with self vs updated)
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
 
-        let url = URL(string: "\(serverURL)/api/users/\(user.id)")!
+        // TODO: Not sure why/what is happening here (compare with previous logic)
+        guard var updated = userAccount,
+              let url = buildAPIURL(
+                  base: serverURL,
+                  pathComponents: ["api", "users", String(updated.id)],
+                  queryItems: []
+              ) else {
+            Log.error("❌ Invalid user ID or URL")
+            return
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        var updated = user
         updated.hideDotfiles = hideDotfiles
         updated.dateFormat = dateFormatExact
 
@@ -1469,8 +1536,8 @@ struct FileListView: View {
                 let body = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                     Log.info("✅ Settings saved")
-                    auth.userAccount?.hideDotfiles = hideDotfiles
-                    auth.userAccount?.dateFormat = dateFormatExact
+                    self.userAccount?.hideDotfiles = hideDotfiles
+                    self.userAccount?.dateFormat = dateFormatExact
                     settingsMessage = StatusPayload(text: "✅ Settings saved")
                 } else {
                     Log.error("❌ Settings save failed: \(body)")
@@ -1491,7 +1558,8 @@ struct FileListView: View {
     }
 
     func deleteSelectedItems() {
-        guard let token = auth.token, let baseURL = auth.serverURL else {
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
@@ -1499,7 +1567,7 @@ struct FileListView: View {
         let group = DispatchGroup()
         for item in selectedItems {
             guard let url = buildAPIURL(
-                base: baseURL,
+                base: self.serverURL,
                 pathComponents: ["api", "resources", item.path],
                 queryItems: []
             ) else {
@@ -1574,7 +1642,8 @@ struct FileListView: View {
     }
 
     func createResource(isDirectory: Bool) {
-        guard auth.serverURL != nil, auth.token != nil else {
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
@@ -1599,7 +1668,7 @@ struct FileListView: View {
             return
         }
 
-        // MARK: Condition based path seaparator
+        // MARK: Condition based path seaparator for resource creation
         let separator = isDirectory ? "/?" : "?"
         let resourceType = isDirectory ? "Folder" : "File"
         let emoji = isDirectory ? "📁" : "📄"

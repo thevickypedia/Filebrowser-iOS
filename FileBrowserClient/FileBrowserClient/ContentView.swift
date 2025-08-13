@@ -150,7 +150,11 @@ struct ContentView: View {
 
                 Toggle("Use Face ID", isOn: $useFaceID)
 
-                Button(action: { self.login() }) {
+                Button(action: {
+                    Task {
+                        await login()
+                    }
+                }) {
                     if isLoading { ProgressView() } else {
                         Text("Login").bold().frame(maxWidth: .infinity)
                             .padding().background(Color.blue).foregroundColor(.white).cornerRadius(8)
@@ -307,7 +311,7 @@ struct ContentView: View {
         }.joined(separator: "\\u")
     }
 
-    func login() {
+    func login() async {
         if serverURL.isEmpty || username.isEmpty || password.isEmpty {
             errorMessage = "Credentials are required to login!"
             return
@@ -332,7 +336,7 @@ struct ContentView: View {
         if transitProtection {
             let hexUsername = convertStringToHex(username)
             let hexPassword = convertStringToHex(password)
-            let hexRecaptcha = convertStringToHex("") // assuming no recaptcha for iOS
+            let hexRecaptcha = convertStringToHex("")
 
             let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
 
@@ -343,7 +347,7 @@ struct ContentView: View {
             }
 
             request.setValue(payload, forHTTPHeaderField: "Authorization")
-            request.httpBody = nil // no body needed
+            request.httpBody = nil
         } else {
             let credentials = [
                 "username": username,
@@ -359,67 +363,61 @@ struct ContentView: View {
             }
         }
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                isLoading = false
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
 
-                if let error = error {
-                    errorMessage = error.localizedDescription
-                    return
-                }
+            isLoading = false
 
-                guard let httpResponse = response as? HTTPURLResponse,
-                      let data = data else {
-                    errorMessage = "No response or data"
-                    return
-                }
+            guard let httpResponse = response as? HTTPURLResponse else {
+                errorMessage = "Invalid response"
+                return
+            }
 
-                if httpResponse.statusCode == 200 {
-                    if let jwt = String(data: data, encoding: .utf8) {
-                        if let payload = decodeJWT(jwt: jwt) {
-                            auth.iss = payload["iss"] as? String
-                            auth.exp = payload["exp"] as? TimeInterval
-                            auth.iat = payload["iat"] as? TimeInterval
-                        } else {
-                            Log.error("Failed to decode JWT")
-                        }
-                        token = jwt
-                        auth.token = jwt
-                        auth.serverURL = serverURL
-                        auth.permissions = nil // clear any stale value
-                        auth.username = username // ✅ Store username
-                        // ✅ Wrap async call in a Task
-                        Task {
-                            await auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL)
-                        }
-                        fileListViewModel.configure(token: jwt, serverURL: serverURL)
-                        isLoggedIn = true
+            if httpResponse.statusCode == 200 {
+                if let jwt = String(data: data, encoding: .utf8) {
+                    if let payload = decodeJWT(jwt: jwt) {
+                        auth.iss = payload["iss"] as? String
+                        auth.exp = payload["exp"] as? TimeInterval
+                        auth.iat = payload["iat"] as? TimeInterval
+                    }
+                    token = jwt
+                    auth.token = jwt
+                    auth.serverURL = serverURL
+                    auth.permissions = nil
+                    auth.username = username
+                    // Wait for permissions to finish (to load userAccount)
+                    if let err = await auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL) {
+                        errorMessage = err
+                        return
+                    }
 
-                        // ✅ Show success message
-                        statusMessage = "✅ Login successful!"
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                            statusMessage = nil
-                        }
-                        if rememberMe || useFaceID {
-                            KeychainHelper.saveSession(
-                                token: jwt,
-                                username: username,
-                                serverURL: serverURL,
-                                password: useFaceID ? password : nil
-                            )
-                        } else {
-                            // ensure any existing saved session is removed when the user opts out
-                            KeychainHelper.deleteSession()
-                            KeychainHelper.deleteKnownServers()
-                        }
+                    fileListViewModel.configure(token: jwt, serverURL: serverURL)
+                    isLoggedIn = true
+                    // Show success message
+                    statusMessage = "✅ Login successful!"
+
+                    if rememberMe || useFaceID {
+                        KeychainHelper.saveSession(
+                            token: jwt,
+                            username: username,
+                            serverURL: serverURL,
+                            password: useFaceID ? password : nil
+                        )
                     } else {
-                        errorMessage = "Failed to decode token"
+                        // ensure any existing saved session is removed when the user opts out
+                        KeychainHelper.deleteSession()
+                        KeychainHelper.deleteKnownServers()
                     }
                 } else {
-                    errorMessage = "Login failed: \(httpResponse.statusCode)"
+                    errorMessage = "Failed to decode token"
                 }
+            } else {
+                errorMessage = "Login failed: \(httpResponse.statusCode)"
             }
-        }.resume()
+        } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
+        }
     }
 
     func logTokenInfo() {
@@ -439,7 +437,10 @@ struct ContentView: View {
                 self.serverURL = savedServerURL
                 self.username = savedUsername
                 self.password = savedPassword
-                self.login() // Reuse the normal login flow
+                // Reuse the normal login flow
+                Task {
+                    await login()
+                }
             }
         } else {
             DispatchQueue.main.async {
@@ -477,7 +478,10 @@ struct ContentView: View {
                                 self.serverURL = serverURL
                                 self.username = username
                                 self.password = password
-                                self.login() // reuse normal login flow
+                                // Reuse the normal login flow
+                                Task {
+                                    await login()
+                                }
                             }
                         } else {
                             // No password stored — fallback to showing login UI
