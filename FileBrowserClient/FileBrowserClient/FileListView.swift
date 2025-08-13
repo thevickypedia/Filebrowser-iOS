@@ -716,33 +716,31 @@ struct FileListView: View {
             finalQuery = "\(prefix) \(finalQuery)"
         }
 
-        guard let encodedQuery = finalQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            DispatchQueue.main.async {
-                errorMessage = "Invalid search: \(query)"
-                searchInProgress = false
-                Log.error("❌ Search init query encoding failed")
-            }
-            return nil
-        }
-
         let searchLocation: String
         if pathStack.isEmpty || currentPath == "/" {
-            searchLocation = "/"
+            // No extra path component, search at /api/search
+            searchLocation = ""
             statusMessage = StatusPayload(
                 text: "⚠️ Searching from the home page may take longer and be inaccurate",
                 color: .yellow,
                 duration: 3.5
             )
         } else {
-            guard let encodedPath = currentPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-                errorMessage = "Failed to search from \(currentPath)"
-                Log.error("❌ Search final query encoding failed at \(currentPath)")
-                return nil
-            }
-            searchLocation = encodedPath
+            searchLocation = currentPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         }
 
-        return URL(string: "\(serverURL)/api/search/\(removePrefix(urlPath: searchLocation))?query=\(encodedQuery)")
+        var pathComponents = ["api", "search"]
+        if !searchLocation.isEmpty {
+            pathComponents.append(searchLocation)
+        }
+
+        return buildAPIURL(
+            base: serverURL,
+            pathComponents: pathComponents,
+            queryItems: [
+                URLQueryItem(name: "query", value: finalQuery)  // pass raw query string
+            ]
+        )
     }
 
     func searchFiles(query: String) async {
@@ -1143,9 +1141,17 @@ struct FileListView: View {
 
     func getUploadURL(serverURL: String, encodedName: String) -> URL? {
         if currentPath == "/" {
-            return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: encodedName))?override=false")
+            return buildAPIURL(
+                base: serverURL,
+                pathComponents: ["api", "tus", encodedName],
+                queryItems: [URLQueryItem(name: "override", value: "false")]
+            )
         }
-        return URL(string: "\(serverURL)/api/tus/\(removePrefix(urlPath: currentPath))/\(encodedName)?override=false")
+        return buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "tus", currentPath, encodedName],
+            queryItems: [URLQueryItem(name: "override", value: "false")]
+        )
     }
 
     func initiateTusUpload(for fileURL: URL) {
@@ -1156,8 +1162,7 @@ struct FileListView: View {
         }
 
         let fileName = fileURL.lastPathComponent
-        guard let encodedName = fileName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let uploadURL = getUploadURL(serverURL: serverURL, encodedName: encodedName) else {
+        guard let uploadURL = getUploadURL(serverURL: serverURL, encodedName: fileName) else {
             Log.error("❌ Invalid upload URL")
             errorTitle = "Invalid upload URL"
             errorMessage = "Failed to construct upload URL for: \(fileName)"
@@ -1493,8 +1498,11 @@ struct FileListView: View {
 
         let group = DispatchGroup()
         for item in selectedItems {
-            guard let encodedPath = item.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-                  let url = URL(string: "\(baseURL)/api/resources/\(removePrefix(urlPath: encodedPath))") else {
+            guard let url = buildAPIURL(
+                base: baseURL,
+                pathComponents: ["api", "resources", item.path],
+                queryItems: []
+            ) else {
                 Log.error("❌ Invalid path for \(item.name)")
                 viewModel.errorMessage = "Invalid path for \(item.name)"
                 continue
@@ -1591,6 +1599,7 @@ struct FileListView: View {
             return
         }
 
+        // MARK: Condition based path seaparator
         let separator = isDirectory ? "/?" : "?"
         let resourceType = isDirectory ? "Folder" : "File"
         let emoji = isDirectory ? "📁" : "📄"

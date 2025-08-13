@@ -41,8 +41,11 @@ struct MediaPlayerView: View {
     }
 
     func loadPlayer() {
-        let path = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        if let url = URL(string: "\(serverURL)/api/raw/\(removePrefix(urlPath: path))?auth=\(token)") {
+        if let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "raw", file.path],
+            queryItems: [ URLQueryItem(name: "auth", value: token) ]
+        ) {
             DispatchQueue.global(qos: .userInitiated).async {
                 let asset = AVURLAsset(url: url)
                 let item = AVPlayerItem(asset: asset)

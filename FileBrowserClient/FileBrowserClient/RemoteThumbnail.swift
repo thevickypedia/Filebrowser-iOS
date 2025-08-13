@@ -97,8 +97,14 @@ struct RemoteThumbnail: View {
         }
 
         // Step 2: Build URL
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let url = URL(string: "\(serverURL)/api/preview/thumb/\(removePrefix(urlPath: encodedPath))?auth=\(token)&inline=true") else {
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "preview", "thumb", file.path],
+            queryItems: [
+                URLQueryItem(name: "auth", value: token),
+                URLQueryItem(name: "inline", value: "true")
+            ]
+        ) else {
             resetLoadingFiles()
             return
         }

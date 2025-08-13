@@ -354,16 +354,21 @@ struct FileDetailView: View {
 
     func renameFile() {
         let fromPath = file.path
-        let toPath = URL(fileURLWithPath: file.path).deletingLastPathComponent().appendingPathComponent(newName).path
+        let toPath = URL(fileURLWithPath: file.path)
+            .deletingLastPathComponent()
+            .appendingPathComponent(newName)
+            .path
 
-        guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            self.error = "Failed to encode rename paths"
-            return
-        }
-
-        let urlString = "\(serverURL)/api/resources/\(removePrefix(urlPath: encodedFrom))?action=rename&destination=/\(removePrefix(urlPath: encodedTo))&override=false&rename=false"
-        guard let url = URL(string: urlString) else {
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "resources", fromPath],
+            queryItems: [
+                URLQueryItem(name: "action", value: "rename"),
+                URLQueryItem(name: "destination", value: "/" + toPath),
+                URLQueryItem(name: "override", value: "false"),
+                URLQueryItem(name: "rename", value: "false")
+            ]
+        ) else {
             self.error = "Invalid rename URL"
             return
         }
@@ -460,13 +465,13 @@ struct FileDetailView: View {
             return
         }
 
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
-            self.error = "Failed to encode path for preview"
-            return
-        }
-
-        let urlString = "\(serverURL)/api/preview/big/\(removePrefix(urlPath: encodedPath))?auth=\(token)"
-        guard let url = URL(string: urlString) else {
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "preview", "big", file.path],
+            queryItems: [
+                URLQueryItem(name: "auth", value: token)
+            ]
+        ) else {
             self.error = "Invalid preview URL"
             return
         }
@@ -496,13 +501,13 @@ struct FileDetailView: View {
     }
 
     func fetchMetadata() {
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
-            self.error = "Failed to encode path for metadata"
-            return
-        }
-
-        let urlString = "\(serverURL)/api/resources/\(removePrefix(urlPath: encodedPath))?view=info"
-        guard let url = URL(string: urlString) else {
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "resources", file.path],
+            queryItems: [
+                URLQueryItem(name: "view", value: "info")
+            ]
+        ) else {
             self.error = "Invalid metadata URL"
             return
         }
@@ -547,14 +552,13 @@ struct FileDetailView: View {
             return
         }
 
-        guard let encodedPath = file.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
-            self.error = "Failed to encode path for raw download"
-            isDownloading = false
-            return
-        }
-
-        let urlString = "\(serverURL)/api/raw/\(removePrefix(urlPath: encodedPath))?auth=\(token)"
-        guard let url = URL(string: urlString) else {
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "raw", file.path],
+            queryItems: [
+                URLQueryItem(name: "auth", value: token)
+            ]
+        ) else {
             self.error = "Invalid raw URL"
             isDownloading = false
             return

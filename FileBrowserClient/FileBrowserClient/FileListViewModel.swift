@@ -45,8 +45,11 @@ class FileListViewModel: ObservableObject {
             return
         }
 
-        guard let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "\(serverURL)/api/resources/\(removePrefix(urlPath: encodedPath))") else {
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "resources", path],
+            queryItems: []
+        ) else {
             errorMessage = "Invalid URL"
             return
         }

@@ -346,3 +346,16 @@ func urlPath(_ url: URL) -> String {
     }
     return result
 }
+
+func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryItem]) -> URL? {
+    guard var url = URL(string: base) else { return nil }
+
+    for component in pathComponents {
+        url = url.appendingPathComponent(component.trimmingCharacters(in: CharacterSet(charactersIn: "/")))
+    }
+
+    var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+    components?.queryItems = queryItems
+
+    return components?.url
+}
