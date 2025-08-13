@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v1.30.0 (08/13/2025)
+--------------------
+- [4371d81](https://github.com/thevickypedia/Filebrowser-iOS/commit/4371d81c871bace226f0e4856901cfc889235a0b) chore: Release ``v1.30.0``
+- [724954e](https://github.com/thevickypedia/Filebrowser-iOS/commit/724954e50d21e0c251dffff4dd8d23065dc03f70) perf: Create a centralized url builder and remove double/inconsistent encoding
+- [2e753ae](https://github.com/thevickypedia/Filebrowser-iOS/commit/2e753ae44f9b837c960fb26ede0a380ed01c993e) perf: Improved logging for server requests
+- [ff3cb75](https://github.com/thevickypedia/Filebrowser-iOS/commit/ff3cb75ca7e4f2fa4727325366e2c72e7570280c) perf: Make server errors more explicit
+- [3d34729](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d347295dfda365229620b407b08ccc72883a9b1) perf: Increase stability in file extension checkers
+- [b20340b](https://github.com/thevickypedia/Filebrowser-iOS/commit/b20340b2a1a0e44adba9fa8fb86cf823a0dbdd38) style: Display file extension as type only when available
+- [d02013a](https://github.com/thevickypedia/Filebrowser-iOS/commit/d02013a9f7093270eaa4d8fe1cac9606dc568a93) revert: Rollback fullscreen images for single tap gesture
+- [5f0f6a1](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f0f6a1c93a95af73d0c3e388ddc04a445bce103) feat: Allow full screen mode on images for single tap gesture
+- [1e762c8](https://github.com/thevickypedia/Filebrowser-iOS/commit/1e762c8979ed04166a5b07e637f70d01f472d8a7) chore: Update release notes for v1.29.3
+
 v1.29.3 (08/12/2025)
 --------------------
 - [03ae13c](https://github.com/thevickypedia/Filebrowser-iOS/commit/03ae13c98272d98001a1bd423efa92a8a7134422) chore: Release ``v1.29.3``
