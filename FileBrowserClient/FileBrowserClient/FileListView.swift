@@ -136,7 +136,7 @@ struct FileListView: View {
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
-        
+
         self.serverURL = serverURL
         self.token = token
         self.userAccount = userAccount
@@ -1496,32 +1496,37 @@ struct FileListView: View {
     }
 
     func saveSettings() {
-        // TODO: Save settings stopped work (likely a problem with self vs updated)
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
 
-        // TODO: Not sure why/what is happening here (compare with previous logic)
-        guard var updated = userAccount,
+        guard let currentSettings = userAccount,
               let url = buildAPIURL(
                   base: serverURL,
-                  pathComponents: ["api", "users", String(updated.id)],
+                  pathComponents: ["api", "users", String(currentSettings.id)],
                   queryItems: []
               ) else {
             Log.error("❌ Invalid user ID or URL")
             return
         }
+        Log.debug("⚙️ Current settings: \(currentSettings)")
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        updated.hideDotfiles = hideDotfiles
-        updated.dateFormat = dateFormatExact
+        var updatedSettings = currentSettings
+        updatedSettings.hideDotfiles = hideDotfiles
+        updatedSettings.dateFormat = dateFormatExact
 
-        let dataDict = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(updated))) ?? [:]
+        // MARK: Set both current state, and auth state (since self is overriden with auth in init)
+        self.userAccount = updatedSettings
+        auth.userAccount = updatedSettings
+        Log.debug("🔄 Updated settings: \(updatedSettings)")
+
+        let dataDict = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(updatedSettings))) ?? [:]
 
         let payload: [String: Any] = [
             "what": "user",
