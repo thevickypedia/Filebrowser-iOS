@@ -4,10 +4,49 @@
 //
 //  Created by Vignesh Rao on 7/28/25.
 //
-
 import SwiftUI
 import AVFoundation
 
+// MARK: - Global thumbnail loader
+final class GlobalThumbnailLoader {
+    static let shared = GlobalThumbnailLoader()
+
+    private var inFlight: Set<String> = []
+    private var subscribers: [String: [(UIImage?, Data?) -> Void]] = [:]
+    private let queue = DispatchQueue(label: "GlobalThumbnailLoaderQueue", attributes: .concurrent)
+
+    func load(filePath: String, start: () -> Void, completion: @escaping (UIImage?, Data?) -> Void) {
+        var shouldStart = false
+
+        queue.sync(flags: .barrier) {
+            if !inFlight.contains(filePath) {
+                inFlight.insert(filePath)
+                shouldStart = true
+            }
+            subscribers[filePath, default: []].append(completion)
+        }
+
+        if shouldStart {
+            start()
+        }
+    }
+
+    func finish(filePath: String, image: UIImage?, gifData: Data?) {
+        var completions: [(UIImage?, Data?) -> Void] = []
+
+        queue.sync(flags: .barrier) {
+            inFlight.remove(filePath)
+            completions = subscribers[filePath] ?? []
+            subscribers[filePath] = nil
+        }
+
+        for callback in completions {
+            callback(image, gifData)
+        }
+    }
+}
+
+// MARK: - RemoteThumbnail View
 struct RemoteThumbnail: View {
     let file: FileItem
     let serverURL: String
@@ -27,18 +66,18 @@ struct RemoteThumbnail: View {
         Group {
             if let gifData = gifData, advancedSettings.animateGIF {
                 AnimatedImageView(data: gifData)
-                    .frame(width: self.width, height: self.height)
+                    .frame(width: width, height: height)
             } else if let image = image {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: self.width, height: self.height)
+                    .frame(width: width, height: height)
             } else if isLoading {
                 ProgressView()
-                    .frame(width: self.width, height: self.height)
+                    .frame(width: width, height: height)
             } else {
                 Color.clear
-                    .frame(width: self.width, height: self.height)
+                    .frame(width: width, height: height)
             }
         }
         .modifier(ViewVisibilityModifier(onVisible: {
@@ -53,13 +92,6 @@ struct RemoteThumbnail: View {
                 extensionTypes: ExtensionTypes()
             ) ?? "doc"
         )
-    }
-
-    func resetLoadingFiles(delayFactor: Float = 0.1) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.isLoading = false
-            loadingFiles[file.path] = false
-        }
     }
 
     func overlayPlayIcon(on image: UIImage) -> UIImage {
@@ -81,21 +113,37 @@ struct RemoteThumbnail: View {
         }
     }
 
-    func loadThumbnail() {
-        // Prevent loading if already in progress or cached
-        guard loadingFiles[file.path] != true else { return }
-        loadingFiles[file.path] = true
+    private func loadThumbnail() {
+        GlobalThumbnailLoader.shared.load(filePath: file.path, start: {
+            // Start actual loading
+            DispatchQueue.main.async {
+                loadingFiles[file.path] = true
+                image = nil
+                gifData = nil
+                isLoading = true
+            }
+            actuallyLoadThumbnail()
+        }, completion: { image, gifData in
+            DispatchQueue.main.async {
+                if let gif = gifData {
+                    self.gifData = gif
+                } else if let img = image {
+                    self.image = img
+                } else {
+                    self.image = defaultThumbnail(fileName: file.name.lowercased())
+                }
+                self.isLoading = false
+                self.loadingFiles[file.path] = false
+            }
+        })
+    }
 
-        // Reset state
-        image = nil
-        gifData = nil
-        isLoading = true
-
+    private func actuallyLoadThumbnail() {
         let fileName = file.name.lowercased()
         let isGIF = fileName.hasSuffix(".gif")
         let isVideo = extensionTypes.videoExtensions.contains { fileName.hasSuffix($0) }
 
-        // Check cache
+        // Step 1: Cache check
         if advancedSettings.cacheThumbnail {
             let existingCache = FileCache.shared.retrieve(
                 for: serverURL,
@@ -103,36 +151,24 @@ struct RemoteThumbnail: View {
                 modified: file.modified,
                 fileID: "thumb"
             )
-
-            if isGIF {
-                if let cached = existingCache {
-                    self.gifData = cached
-                    resetLoadingFiles(delayFactor: 0.5)
-                    return
+            if let cached = existingCache {
+                if isGIF {
+                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: cached)
+                } else if let img = UIImage(data: cached) {
+                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: img, gifData: nil)
                 }
-            } else {
-                if let cached = existingCache,
-                   let image = UIImage(data: cached) {
-                    self.image = image
-                    resetLoadingFiles(delayFactor: isVideo ? 0.5 : 0.25)
-                    return
-                }
+                return
             }
         }
 
-        // Step 2: Build URL
-
-        // TODO: Display a small play icon to indicate that it is a video
-        // Step 2a: Handle video thumbnail
+        // Step 2: Videos
         if isVideo {
             guard let videoURL = buildAPIURL(
                 base: serverURL,
                 pathComponents: ["api", "raw", file.path],
-                queryItems: [
-                    URLQueryItem(name: "auth", value: token)
-                ]
+                queryItems: [URLQueryItem(name: "auth", value: token)]
             ) else {
-                resetLoadingFiles()
+                GlobalThumbnailLoader.shared.finish(filePath: file.path, image: defaultThumbnail(fileName: fileName), gifData: nil)
                 return
             }
 
@@ -154,8 +190,7 @@ struct RemoteThumbnail: View {
                         Log.warn("Video thumbnail compression failed — falling back to PNG.")
                         imageData = thumbImage.pngData()
                     }
-
-                    DispatchQueue.main.async {
+                    if advancedSettings.cacheThumbnail {
                         if let data = imageData, advancedSettings.cacheThumbnail {
                             FileCache.shared.store(
                                 for: serverURL,
@@ -165,22 +200,16 @@ struct RemoteThumbnail: View {
                                 fileID: "thumb"
                             )
                         }
-                        self.image = thumbImage
-                        resetLoadingFiles(delayFactor: 0.5)
                     }
+                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: thumbImage, gifData: nil)
                 } catch {
-                    Log.error("Video thumbnail generation failed: \(error.localizedDescription)")
-                    DispatchQueue.main.async {
-                        self.image = defaultThumbnail(fileName: fileName)
-                        resetLoadingFiles()
-                    }
+                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: defaultThumbnail(fileName: fileName), gifData: nil)
                 }
             }
-            // Don't continue to image/gif fetch
             return
         }
 
-        // Step 2b: Image or GIF fetch
+        // Step 3: Images & GIFs
         guard let url = buildAPIURL(
             base: serverURL,
             pathComponents: ["api", "preview", "thumb", file.path],
@@ -189,18 +218,12 @@ struct RemoteThumbnail: View {
                 URLQueryItem(name: "inline", value: "true")
             ]
         ) else {
-            resetLoadingFiles()
+            GlobalThumbnailLoader.shared.finish(filePath: file.path, image: defaultThumbnail(fileName: fileName), gifData: nil)
             return
         }
 
-        // Step 3: Fetch and store
         URLSession.shared.dataTask(with: url) { data, _, _ in
-            DispatchQueue.main.async {
-                guard let data = data else {
-                    self.image = defaultThumbnail(fileName: fileName)
-                    resetLoadingFiles()
-                    return
-                }
+            if let data = data {
                 if advancedSettings.cacheThumbnail {
                     FileCache.shared.store(
                         for: serverURL,
@@ -211,15 +234,15 @@ struct RemoteThumbnail: View {
                     )
                 }
                 if isGIF {
-                    self.gifData = data
-                } else if let image = UIImage(data: data) {
-                    self.image = image
+                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: data)
+                } else if let img = UIImage(data: data) {
+                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: img, gifData: nil)
                 } else {
-                    self.image = defaultThumbnail(fileName: fileName)
+                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: defaultThumbnail(fileName: fileName), gifData: nil)
                 }
+            } else {
+                GlobalThumbnailLoader.shared.finish(filePath: file.path, image: defaultThumbnail(fileName: fileName), gifData: nil)
             }
         }.resume()
-
-        resetLoadingFiles()
     }
 }
