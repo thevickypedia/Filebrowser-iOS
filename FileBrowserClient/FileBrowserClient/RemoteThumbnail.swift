@@ -62,6 +62,25 @@ struct RemoteThumbnail: View {
         }
     }
 
+    func overlayPlayIcon(on image: UIImage) -> UIImage {
+        let size = image.size
+        let renderer = UIGraphicsImageRenderer(size: size)
+        Log.debug("▶️ Adding icon overlay for image")
+
+        return renderer.image { _ in
+            // Draw the original thumbnail
+            image.draw(in: CGRect(origin: .zero, size: size))
+
+            // Configure the play icon (adjust size and position)
+            if let playIcon = UIImage(systemName: "play.circle.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal) {
+                let iconSize = CGSize(width: size.width * 0.3, height: size.width * 0.3)
+                let iconOrigin = CGPoint(x: (size.width - iconSize.width) / 2,
+                                         y: (size.height - iconSize.height) / 2)
+                playIcon.draw(in: CGRect(origin: iconOrigin, size: iconSize))
+            }
+        }
+    }
+
     func loadThumbnail() {
         // Prevent loading if already in progress or cached
         guard loadingFiles[file.path] != true else { return }
@@ -126,13 +145,14 @@ struct RemoteThumbnail: View {
                 do {
                     let cgImage = try imageGenerator.copyCGImage(at: time, actualTime: nil)
                     let uiImage = UIImage(cgImage: cgImage)
+                    let thumbImage = overlayPlayIcon(on: uiImage)
                     var imageData: Data?
-                    if let compressed = uiImage.jpegData(compressionQuality: thumbnailQuality) {
+                    if let compressed = thumbImage.jpegData(compressionQuality: thumbnailQuality) {
                         imageData = compressed
-                        Log.debug("📦 Compressed thumbnail size: \(sizeConverter(compressed.count))")
+                        Log.debug("🗜️ Compressed thumbnail size: \(sizeConverter(compressed.count))")
                     } else {
                         Log.warn("Video thumbnail compression failed — falling back to PNG.")
-                        imageData = uiImage.pngData()
+                        imageData = thumbImage.pngData()
                     }
 
                     DispatchQueue.main.async {
@@ -145,7 +165,7 @@ struct RemoteThumbnail: View {
                                 fileID: "thumb"
                             )
                         }
-                        self.image = uiImage
+                        self.image = thumbImage
                         resetLoadingFiles(delayFactor: 0.5)
                     }
                 } catch {
