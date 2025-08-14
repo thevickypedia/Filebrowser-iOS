@@ -289,10 +289,16 @@ struct FileDetailView: View {
                     .onEnded { value in
                         let threshold: CGFloat = 100
                         withAnimation(.interactiveSpring()) {
-                            if value.translation.width < -threshold && !files[currentIndex + 1].isDir {
-                                goToNext()
-                            } else if value.translation.width > threshold && !files[currentIndex - 1].isDir {
-                                goToPrevious()
+                            if value.translation.width < -threshold {
+                                let nextIndex = currentIndex + 1
+                                if nextIndex < files.count && !files[nextIndex].isDir {
+                                    goToNext()
+                                }
+                            } else if value.translation.width > threshold {
+                                let previousIndex = currentIndex - 1
+                                if previousIndex >= 0 && !files[previousIndex].isDir {
+                                    goToPrevious()
+                                }
                             }
                         }
                     }
