@@ -16,6 +16,7 @@ struct RemoteThumbnail: View {
     let extensionTypes: ExtensionTypes
     var width: CGFloat = 32
     var height: CGFloat = 32
+    var thumbnailQuality: CGFloat = 0.1
     @Binding var loadingFiles: [String: Bool]
 
     @State private var image: UIImage?
@@ -54,9 +55,11 @@ struct RemoteThumbnail: View {
         )
     }
 
-    func resetLoadingFiles() {
-        self.isLoading = false
-        loadingFiles[file.path] = false
+    func resetLoadingFiles(delayFactor: Float = 0.1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.isLoading = false
+            loadingFiles[file.path] = false
+        }
     }
 
     func loadThumbnail() {
@@ -85,14 +88,14 @@ struct RemoteThumbnail: View {
             if isGIF {
                 if let cached = existingCache {
                     self.gifData = cached
-                    resetLoadingFiles()
+                    resetLoadingFiles(delayFactor: 0.5)
                     return
                 }
             } else {
                 if let cached = existingCache,
                    let image = UIImage(data: cached) {
                     self.image = image
-                    resetLoadingFiles()
+                    resetLoadingFiles(delayFactor: isVideo ? 0.5 : 0.25)
                     return
                 }
             }
@@ -101,7 +104,6 @@ struct RemoteThumbnail: View {
         // Step 2: Build URL
 
         // TODO: Display a small play icon to indicate that it is a video
-        // TODO: Include some sort of compression logic
         // Step 2a: Handle video thumbnail
         if isVideo {
             guard let videoURL = buildAPIURL(
@@ -124,7 +126,14 @@ struct RemoteThumbnail: View {
                 do {
                     let cgImage = try imageGenerator.copyCGImage(at: time, actualTime: nil)
                     let uiImage = UIImage(cgImage: cgImage)
-                    let imageData = uiImage.pngData()
+                    var imageData: Data?
+                    if let compressed = uiImage.jpegData(compressionQuality: thumbnailQuality) {
+                        imageData = compressed
+                        Log.debug("📦 Compressed thumbnail size: \(sizeConverter(compressed.count))")
+                    } else {
+                        Log.warn("Video thumbnail compression failed — falling back to PNG.")
+                        imageData = uiImage.pngData()
+                    }
 
                     DispatchQueue.main.async {
                         if let data = imageData, advancedSettings.cacheThumbnail {
@@ -137,7 +146,7 @@ struct RemoteThumbnail: View {
                             )
                         }
                         self.image = uiImage
-                        resetLoadingFiles()
+                        resetLoadingFiles(delayFactor: 0.5)
                     }
                 } catch {
                     Log.error("Video thumbnail generation failed: \(error.localizedDescription)")
