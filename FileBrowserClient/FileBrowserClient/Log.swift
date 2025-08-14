@@ -15,7 +15,7 @@ enum LogLevel: Int {
 }
 
 struct Log {
-    static var currentLevel: LogLevel = .info
+    static var currentLevel: LogLevel = .warning
 
     private static func log(_ message: String, level: LogLevel, label: String) {
         guard level.rawValue >= currentLevel.rawValue else { return }

@@ -719,8 +719,6 @@ struct FileListView: View {
                 fetchClientStorageInfo()
             }
         }
-        // TODO: Takes a long time to load for large files
-        // TODO: Check if PHPickerViewController has stream/buffer options
         .sheet(isPresented: $showPhotoPicker) {
             PhotoPicker { urls in
                 uploadQueue = urls
@@ -900,7 +898,7 @@ struct FileListView: View {
             files: sortedFiles,
             serverURL: self.serverURL,
             token: self.token,
-            // Pass a callback reference to fetchClientStorageInfo func
+            // MARK: Pass a callback reference to fetchClientStorageInfo func
             onFileCached: { fetchClientStorageInfo() },
             extensionTypes: extensionTypes,
             cacheExtensions: getCacheExtensions(
