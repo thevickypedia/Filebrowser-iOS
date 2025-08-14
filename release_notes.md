@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.31.2 (08/14/2025)
+--------------------
+- [2b48210](https://github.com/thevickypedia/Filebrowser-iOS/commit/2b482107aaf2c5bbc67332ecb7beb657c1ff970c) chore: Release ``v1.31.2``
+- [9f610fd](https://github.com/thevickypedia/Filebrowser-iOS/commit/9f610fd06d4f02caa4459bfbebdff7fd1f1347a6) chore: Set default log level to warning and remove stale todo
+- [8ba79f4](https://github.com/thevickypedia/Filebrowser-iOS/commit/8ba79f415264b4deb2aa1a0bfd18ed7619d9d34c) fix: Avoid array index out of bounds error during drag gesture in detail view
+- [51219d5](https://github.com/thevickypedia/Filebrowser-iOS/commit/51219d5d41ebe8fba90fed9a8184096552486789) fix: Create a ``GlobalThumbnailLoader`` to avoid repeated I/O operations for thumbnails
+- [a7c4b05](https://github.com/thevickypedia/Filebrowser-iOS/commit/a7c4b05e46a5dd94a4201e22251476b5df445625) style: Overlay play icon for video thumbnails
+- [a4c71ad](https://github.com/thevickypedia/Filebrowser-iOS/commit/a4c71ad1f99f5771f44e4993948644ce4abf26ee) chore: Update release notes for v1.31.1
+
 v1.31.1 (08/14/2025)
 --------------------
 - [1fd2c5d](https://github.com/thevickypedia/Filebrowser-iOS/commit/1fd2c5d7af96b6558b2de3a1a236dd172fa97520) chore: Release ``v1.31.1``
