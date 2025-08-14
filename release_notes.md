@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.31.1 (08/14/2025)
+--------------------
+- [1fd2c5d](https://github.com/thevickypedia/Filebrowser-iOS/commit/1fd2c5d7af96b6558b2de3a1a236dd172fa97520) chore: Release ``v1.31.1``
+- [af53301](https://github.com/thevickypedia/Filebrowser-iOS/commit/af53301f910199736470fef72495f0aeef6132a0) perf: Compress video thumbnails as JPEG with fallback logic to PNG
+
+v1.31.0 (08/14/2025)
+--------------------
+- [6a76aea](https://github.com/thevickypedia/Filebrowser-iOS/commit/6a76aea533fe05a518d9c28ea9e72343b071286b) chore: Release ``v1.31.0``
+- [3dcd4c5](https://github.com/thevickypedia/Filebrowser-iOS/commit/3dcd4c51d0b6cddca783efa372bb3f298cca4682) feat: Add thumbnail for video files in listing page
+- [69d7e25](https://github.com/thevickypedia/Filebrowser-iOS/commit/69d7e25401e663a73b79432b0b1c1683ed4423e2) chore: Update release notes for v1.30.1
+
 v1.30.1 (08/13/2025)
 --------------------
 - [973f986](https://github.com/thevickypedia/Filebrowser-iOS/commit/973f986f5cad7c00e9241a2c5040c12f8a450654) chore: Release ``v1.30.1``
