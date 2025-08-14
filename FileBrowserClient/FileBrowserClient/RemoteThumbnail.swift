@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct RemoteThumbnail: View {
     let file: FileItem
@@ -63,14 +64,16 @@ struct RemoteThumbnail: View {
         guard loadingFiles[file.path] != true else { return }
         loadingFiles[file.path] = true
 
-        // Reset thumbnails
+        // Reset state
         image = nil
         gifData = nil
         isLoading = true
 
         let fileName = file.name.lowercased()
         let isGIF = fileName.hasSuffix(".gif")
+        let isVideo = extensionTypes.videoExtensions.contains { fileName.hasSuffix($0) }
 
+        // Check cache
         if advancedSettings.cacheThumbnail {
             let existingCache = FileCache.shared.retrieve(
                 for: serverURL,
@@ -79,7 +82,6 @@ struct RemoteThumbnail: View {
                 fileID: "thumb"
             )
 
-            // Step 1: Load from memory or disk
             if isGIF {
                 if let cached = existingCache {
                     self.gifData = cached
@@ -97,6 +99,59 @@ struct RemoteThumbnail: View {
         }
 
         // Step 2: Build URL
+
+        // TODO: Display a small play icon to indicate that it is a video
+        // TODO: Include some sort of compression logic
+        // Step 2a: Handle video thumbnail
+        if isVideo {
+            guard let videoURL = buildAPIURL(
+                base: serverURL,
+                pathComponents: ["api", "raw", file.path],
+                queryItems: [
+                    URLQueryItem(name: "auth", value: token)
+                ]
+            ) else {
+                resetLoadingFiles()
+                return
+            }
+
+            DispatchQueue.global(qos: .userInitiated).async {
+                let asset = AVURLAsset(url: videoURL)
+                let imageGenerator = AVAssetImageGenerator(asset: asset)
+                imageGenerator.appliesPreferredTrackTransform = true
+                let time = CMTime(seconds: 1, preferredTimescale: 600)
+
+                do {
+                    let cgImage = try imageGenerator.copyCGImage(at: time, actualTime: nil)
+                    let uiImage = UIImage(cgImage: cgImage)
+                    let imageData = uiImage.pngData()
+
+                    DispatchQueue.main.async {
+                        if let data = imageData, advancedSettings.cacheThumbnail {
+                            FileCache.shared.store(
+                                for: serverURL,
+                                data: data,
+                                path: file.path,
+                                modified: file.modified,
+                                fileID: "thumb"
+                            )
+                        }
+                        self.image = uiImage
+                        resetLoadingFiles()
+                    }
+                } catch {
+                    Log.error("Video thumbnail generation failed: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        self.image = defaultThumbnail(fileName: fileName)
+                        resetLoadingFiles()
+                    }
+                }
+            }
+            // Don't continue to image/gif fetch
+            return
+        }
+
+        // Step 2b: Image or GIF fetch
         guard let url = buildAPIURL(
             base: serverURL,
             pathComponents: ["api", "preview", "thumb", file.path],

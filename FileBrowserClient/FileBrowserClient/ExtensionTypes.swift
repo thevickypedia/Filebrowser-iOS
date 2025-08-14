@@ -26,10 +26,12 @@ struct ExtensionTypes {
 
     let mediaExtensions: [String]
     let previewExtensions: [String]
+    let thumbnailExtensions: [String]
 
     // Custom initializer to safely combine properties
     init() {
         self.mediaExtensions = self.videoExtensions + self.audioExtensions
         self.previewExtensions = self.textExtensions + self.imageExtensions + [".pdf"]
+        self.thumbnailExtensions = self.imageExtensions + self.videoExtensions
     }
 }

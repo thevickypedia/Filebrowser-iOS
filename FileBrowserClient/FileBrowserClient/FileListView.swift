@@ -915,7 +915,7 @@ struct FileListView: View {
     func thumbnailOrIcon(for file: FileItem, style: GridStyle? = nil) -> some View {
         let fileName = file.name.lowercased()
         let useThumbnail = advancedSettings.displayThumbnail &&
-            extensionTypes.imageExtensions.contains(where: fileName.hasSuffix)
+            extensionTypes.thumbnailExtensions.contains(where: fileName.hasSuffix)
 
         if useThumbnail {
             RemoteThumbnail(
