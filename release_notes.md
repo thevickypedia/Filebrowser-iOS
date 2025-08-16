@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.32.1 (08/16/2025)
+--------------------
+- [961eed1](https://github.com/thevickypedia/Filebrowser-iOS/commit/961eed1b3dee51607578956e40e0e2c1e6aad201) chore: Release ``v1.32.1``
+- [8a89a40](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a89a40f6ad9e4d5364da69a0cc671a4e4ea0f70) style: Display a warning message for empty passwords when generating share links
+- [331743a](https://github.com/thevickypedia/Filebrowser-iOS/commit/331743a0165d84dd8a2512ecbd7e0257f17c8a9e) style: Show feedback when share links are copied to clipboard
+- [2185b31](https://github.com/thevickypedia/Filebrowser-iOS/commit/2185b31d07c5bca33fead28958fe138703bd7793) chore: Update release notes for v1.32.0
+
 v1.32.0 (08/16/2025)
 --------------------
 - [57789f3](https://github.com/thevickypedia/Filebrowser-iOS/commit/57789f388e579dc5598e10fa3aea97c655afc77c) chore: Release ``v1.32.0``
