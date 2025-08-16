@@ -432,6 +432,208 @@ struct FileListView: View {
         }
     }
 
+    private var deleteStoredSessionSheet: some View {
+        VStack(spacing: 20) {
+            Text("Delete Session")
+                .font(.title2)
+                .bold()
+
+            Toggle("Include known servers", isOn: $removeKnownServers)
+                .padding()
+
+            HStack {
+                Button("Cancel") {
+                    showDeleteOptionsSS = false
+                }
+                .padding()
+
+                Spacer()
+
+                Button(role: .destructive) {
+                    showDeleteOptionsSS = false
+                    showDeleteConfirmationSS = true
+                } label: {
+                    Text("Continue")
+                }
+                .padding()
+            }
+        }
+        .padding()
+        .presentationDetents([.fraction(0.3)]) // 30% of the screen height
+    }
+
+    private var resourceSharingSheet: some View {
+        NavigationView {
+            Form {
+                if isShareInProgress {
+                    ProgressView("Generating link...")
+                }
+                // MARK: Generated Links
+                if let sharedPath = sharePath,
+                   let shareLink = sharedObjects[sharedPath.path],
+                   let unsigned = shareLink.unsigned,
+                   let preSigned = shareLink.presigned {
+                    Section(header: Text("Links")) {
+                        ShareLinkRow(title: "Unsigned URL", url: unsigned) { payload in
+                            shareMessage = payload
+                        }
+                        ShareLinkRow(title: "Pre-Signed URL", url: preSigned) { payload in
+                            shareMessage = payload
+                        }
+                    }
+                    Button("Delete") {
+                        deleteShared(deleteHash: shareLink.hash)
+                    }
+                    .foregroundColor(.red)
+                } else {
+                    Section(header: Text("Share Duration")) {
+                        HStack {
+                            TextField("0", text: $durationDigit)
+                                .keyboardType(.numbersAndPunctuation)
+                                .frame(width: 80)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            Picker(selection: $shareDuration, label: Text("")) {
+                                ForEach(shareDurationOptions, id: \.self) { duration in
+                                    Text(duration.capitalized).tag(duration)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
+                    }
+                    Section(header: Text("Password")) {
+                        SecureField("Enter password", text: $sharePassword)
+                        if sharePassword.trimmingCharacters(in: .whitespaces).isEmpty {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.yellow)
+                                Text("You are about to generate a **public** share link. It is recommended to add a password for additional security.")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.top, 4)
+                        }
+                    }
+                    Section {
+                        HStack {
+                            Spacer()
+                            Button("Cancel") {
+                                isSharing = false
+                            }
+                            .foregroundColor(.red)
+                            .disabled(isShareInProgress)
+                            Spacer()
+                            Button("Share") {
+                                if let time = Int(durationDigit), time > 0 {
+                                    submitShare()
+                                    isSharing = true
+                                } else {
+                                    isSharing = true
+                                    shareMessage = StatusPayload(
+                                        text: "Input time should be more than 0",
+                                        color: .red,
+                                        duration: 3
+                                    )
+                                }
+                            }
+                            .disabled(isShareInProgress)
+                            Spacer()
+                        }
+                    }
+                }
+            }
+            .navigationBarTitle("Share", displayMode: .inline)
+            // MARK: Messages within share sheet
+            .modifier(StatusMessage(payload: $shareMessage))
+        }
+    }
+
+    private var showSettingsSheet: some View {
+        Form {
+            Toggle("Hide dotfiles", isOn: $hideDotfiles)
+            Toggle("Set exact date format", isOn: $dateFormatExact)
+            Button("Save", action: saveSettings)
+            if let usage = usageInfo {
+                Section(header: Text("Server Capacity")) {
+                    VStack(alignment: .leading) {
+                        SelectableTextView(text: "Used: \(formatBytes(usage.used))")
+                        SelectableTextView(text: "Total: \(formatBytes(usage.total))")
+                        ProgressView(value: Double(usage.used), total: Double(usage.total))
+                    }
+                }
+            } else {
+                Section(header: Text("Server Capacity")) {
+                    Text("Loading...")
+                }
+            }
+            Section(header: Text("Client Storage")) {
+                SelectableTextView(text: "File Cache: \(formatBytes(fileCacheSize))")
+            }
+            Section {
+                Button(role: .destructive) {
+                    FileCache.shared.clearDiskCache(self.serverURL)
+                    fetchClientStorageInfo()
+                    settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)
+                } label: {
+                    Label("Clear Local Cache", systemImage: "trash")
+                }
+            }
+
+            // Delete Known Servers Section
+            Section {
+                Button(role: .destructive) {
+                    showDeleteOptionsKS = true
+                } label: {
+                    Label("Delete Known Servers", systemImage: "trash")
+                }
+            }
+            .sheet(isPresented: $showDeleteOptionsKS) {
+                deleteOptionsKSStack
+                    .padding()
+            }
+
+            // Delete Stored Session (will logout)
+            Section {
+                Button(role: .destructive) {
+                    showDeleteOptionsSS = true
+                } label: {
+                    Label("Delete Stored Session", systemImage: "trash")
+                }
+            }
+            .sheet(isPresented: $showDeleteOptionsSS) {
+                deleteStoredSessionSheet
+            }
+            .alert("Are you sure?", isPresented: $showDeleteConfirmationSS) {
+                Button("Delete", role: .destructive) {
+                    clearSession()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                deleteSessionMessage(includeKnownServers: removeKnownServers)
+            }
+
+            Section(
+                footer: VStack(alignment: .leading) {
+                    Text("Issuer: \(auth.iss ?? "Unknown")").textSelection(.enabled)
+                    Text("Issued: \(timeStampToString(from: auth.iat))").textSelection(.enabled)
+                    Text("Expiration: \(timeStampToString(from: auth.exp))").textSelection(.enabled)
+                    Text("Time Left: \(timeLeftString(until: auth.exp))").textSelection(.enabled)
+                }
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity, alignment: .center)
+            ) {
+                EmptyView()
+            }
+        }
+        // MARK: Messages within the settings sheet
+        .modifier(StatusMessage(payload: $settingsMessage))
+        .onAppear {
+            hideDotfiles = self.userAccount?.hideDotfiles ?? false
+            dateFormatExact = self.userAccount?.dateFormat ?? false
+            fetchUsageInfo()
+            fetchClientStorageInfo()
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
@@ -638,200 +840,10 @@ struct FileListView: View {
             }
         }
         .sheet(isPresented: $isSharing) {
-            NavigationView {
-                Form {
-                    if isShareInProgress {
-                        ProgressView("Generating link...")
-                    }
-                    // MARK: Generated Links
-                    if let sharedPath = sharePath,
-                       let shareLink = sharedObjects[sharedPath.path],
-                       let unsigned = shareLink.unsigned,
-                       let preSigned = shareLink.presigned {
-                        Section(header: Text("Links")) {
-                            ShareLinkRow(title: "Unsigned URL", url: unsigned) { payload in
-                                shareMessage = payload
-                            }
-                            ShareLinkRow(title: "Pre-Signed URL", url: preSigned) { payload in
-                                shareMessage = payload
-                            }
-                        }
-                        Button("Delete") {
-                            deleteShared(deleteHash: shareLink.hash)
-                        }
-                        .foregroundColor(.red)
-                    } else {
-                        Section(header: Text("Share Duration")) {
-                            HStack {
-                                TextField("0", text: $durationDigit)
-                                    .keyboardType(.numbersAndPunctuation)
-                                    .frame(width: 80)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                Picker(selection: $shareDuration, label: Text("")) {
-                                    ForEach(shareDurationOptions, id: \.self) { duration in
-                                        Text(duration.capitalized).tag(duration)
-                                    }
-                                }
-                                .pickerStyle(MenuPickerStyle())
-                            }
-                        }
-                        Section(header: Text("Password")) {
-                            SecureField("Enter password", text: $sharePassword)
-                            if sharePassword.trimmingCharacters(in: .whitespaces).isEmpty {
-                                HStack(alignment: .top, spacing: 8) {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundColor(.yellow)
-                                    Text("You are about to generate a **public** share link. It is recommended to add a password for additional security.")
-                                        .font(.footnote)
-                                        .foregroundColor(.secondary)
-                                }
-                                .padding(.top, 4)
-                            }
-                        }
-                        Section {
-                            HStack {
-                                Spacer()
-                                Button("Cancel") {
-                                    isSharing = false
-                                }
-                                .foregroundColor(.red)
-                                .disabled(isShareInProgress)
-                                Spacer()
-                                Button("Share") {
-                                    if let time = Int(durationDigit), time > 0 {
-                                        submitShare()
-                                        isSharing = true
-                                    } else {
-                                        isSharing = true
-                                        shareMessage = StatusPayload(
-                                            text: "Input time should be more than 0",
-                                            color: .red,
-                                            duration: 3
-                                        )
-                                    }
-                                }
-                                .disabled(isShareInProgress)
-                                Spacer()
-                            }
-                        }
-                    }
-                }
-                .navigationBarTitle("Share", displayMode: .inline)
-                // MARK: Messages within share sheet
-                .modifier(StatusMessage(payload: $shareMessage))
-            }
+            resourceSharingSheet
         }
         .sheet(isPresented: $showingSettings) {
-            Form {
-                Toggle("Hide dotfiles", isOn: $hideDotfiles)
-                Toggle("Set exact date format", isOn: $dateFormatExact)
-                Button("Save", action: saveSettings)
-                if let usage = usageInfo {
-                    Section(header: Text("Server Capacity")) {
-                        VStack(alignment: .leading) {
-                            SelectableTextView(text: "Used: \(formatBytes(usage.used))")
-                            SelectableTextView(text: "Total: \(formatBytes(usage.total))")
-                            ProgressView(value: Double(usage.used), total: Double(usage.total))
-                        }
-                    }
-                } else {
-                    Section(header: Text("Server Capacity")) {
-                        Text("Loading...")
-                    }
-                }
-                Section(header: Text("Client Storage")) {
-                    SelectableTextView(text: "File Cache: \(formatBytes(fileCacheSize))")
-                }
-                Section {
-                    Button(role: .destructive) {
-                        FileCache.shared.clearDiskCache(self.serverURL)
-                        fetchClientStorageInfo()
-                        settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)
-                    } label: {
-                        Label("Clear Local Cache", systemImage: "trash")
-                    }
-                }
-
-                // Delete Known Servers Section
-                Section {
-                    Button(role: .destructive) {
-                        showDeleteOptionsKS = true
-                    } label: {
-                        Label("Delete Known Servers", systemImage: "trash")
-                    }
-                }
-                .sheet(isPresented: $showDeleteOptionsKS) {
-                    deleteOptionsKSStack
-                        .padding()
-                }
-
-                // Delete Stored Session (will logout)
-                Section {
-                    Button(role: .destructive) {
-                        showDeleteOptionsSS = true
-                    } label: {
-                        Label("Delete Stored Session", systemImage: "trash")
-                    }
-                }
-                .sheet(isPresented: $showDeleteOptionsSS) {
-                    VStack(spacing: 20) {
-                        Text("Delete Session")
-                            .font(.title2)
-                            .bold()
-
-                        Toggle("Include known servers", isOn: $removeKnownServers)
-                            .padding()
-
-                        HStack {
-                            Button("Cancel") {
-                                showDeleteOptionsSS = false
-                            }
-                            .padding()
-
-                            Spacer()
-
-                            Button(role: .destructive) {
-                                showDeleteOptionsSS = false
-                                showDeleteConfirmationSS = true
-                            } label: {
-                                Text("Continue")
-                            }
-                            .padding()
-                        }
-                    }
-                    .padding()
-                    .presentationDetents([.fraction(0.3)]) // 30% of the screen height
-                }
-                .alert("Are you sure?", isPresented: $showDeleteConfirmationSS) {
-                    Button("Delete", role: .destructive) {
-                        clearSession()
-                    }
-                    Button("Cancel", role: .cancel) { }
-                } message: {
-                    deleteSessionMessage(includeKnownServers: removeKnownServers)
-                }
-
-                Section(
-                    footer: VStack(alignment: .leading) {
-                        Text("Issuer: \(auth.iss ?? "Unknown")").textSelection(.enabled)
-                        Text("Issued: \(timeStampToString(from: auth.iat))").textSelection(.enabled)
-                        Text("Expiration: \(timeStampToString(from: auth.exp))").textSelection(.enabled)
-                        Text("Time Left: \(timeLeftString(until: auth.exp))").textSelection(.enabled)
-                    }
-                    .padding(.top, 8)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                ) {
-                    EmptyView()
-                }
-            }
-            // MARK: Messages within the settings sheet
-            .modifier(StatusMessage(payload: $settingsMessage))
-            .onAppear {
-                hideDotfiles = self.userAccount?.hideDotfiles ?? false
-                dateFormatExact = self.userAccount?.dateFormat ?? false
-                fetchUsageInfo()
-                fetchClientStorageInfo()
-            }
+            showSettingsSheet
         }
         .sheet(isPresented: $showPhotoPicker) {
             PhotoPicker { urls in
