@@ -64,6 +64,18 @@ struct FileDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var auth: AuthManager
 
+    @State private var isSharing = false
+    @State private var isShareInProgress = false
+    @State private var durationDigit = ""
+    @State private var shareDuration = "hours"
+    @State private var sharePassword = ""
+    let shareDurationOptions = ["seconds", "minutes", "hours", "days"]
+    @State private var sharedObjects: [String: ShareLinks] = [:]
+    @State private var shareMessage: StatusPayload?
+    // Display as alerts
+    @State private var errorTitle: String?
+    @State private var errorMessage: String?
+
     @ViewBuilder
     private var fileContentView: some View {
         let fileName = file.name.lowercased()
@@ -144,6 +156,89 @@ struct FileDetailView: View {
         }
     }
 
+    private var resourceSharingSheet: some View {
+        NavigationView {
+            Form {
+                if isShareInProgress {
+                    ProgressView("Generating link...")
+                }
+                // MARK: Generated Links
+                if let shareLink = sharedObjects[file.path],
+                   let unsigned = shareLink.unsigned,
+                   let preSigned = shareLink.presigned {
+                    Section(header: Text("Links")) {
+                        ShareLinkRow(title: "Unsigned URL", url: unsigned) { payload in
+                            shareMessage = payload
+                        }
+                        ShareLinkRow(title: "Pre-Signed URL", url: preSigned) { payload in
+                            shareMessage = payload
+                        }
+                    }
+                    Button("Delete") {
+                        deleteShared(deleteHash: shareLink.hash)
+                    }
+                    .foregroundColor(.red)
+                } else {
+                    Section(header: Text("Share Duration")) {
+                        HStack {
+                            TextField("0", text: $durationDigit)
+                                .keyboardType(.numbersAndPunctuation)
+                                .frame(width: 80)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            Picker(selection: $shareDuration, label: Text("")) {
+                                ForEach(shareDurationOptions, id: \.self) { duration in
+                                    Text(duration.capitalized).tag(duration)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
+                    }
+                    Section(header: Text("Password")) {
+                        SecureField("Enter password", text: $sharePassword)
+                        if sharePassword.trimmingCharacters(in: .whitespaces).isEmpty {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.yellow)
+                                Text("You are about to generate a **public** share link. It is recommended to add a password for additional security.")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.top, 4)
+                        }
+                    }
+                    Section {
+                        HStack {
+                            Spacer()
+                            Button("Cancel") {
+                                isSharing = false
+                            }
+                            .foregroundColor(.red)
+                            .disabled(isShareInProgress)
+                            Spacer()
+                            Button("Share") {
+                                isSharing = true
+                                if let time = Int(durationDigit), time > 0 {
+                                    submitShare()
+                                } else {
+                                    shareMessage = StatusPayload(
+                                        text: "Input time should be more than 0",
+                                        color: .red,
+                                        duration: 3
+                                    )
+                                }
+                            }
+                            .disabled(isShareInProgress)
+                            Spacer()
+                        }
+                    }
+                }
+            }
+            .navigationBarTitle("Share", displayMode: .inline)
+            // MARK: Messages within share sheet
+            .modifier(StatusMessage(payload: $shareMessage))
+        }
+    }
+
     var body: some View {
         let fileName = file.name.lowercased()
 
@@ -178,6 +273,19 @@ struct FileDetailView: View {
                                 Button("Download", systemImage: "arrow.down.circle", action: {
                                     downloadAndSave()
                                 })
+                                Button(action: {
+                                    isSharing = true
+                                }) {
+                                    HStack {
+                                        Image("material_share_icon")
+                                            .renderingMode(.template)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 24, height: 24)
+                                            .foregroundColor(.blue)
+                                        Text("Sharable Links")
+                                    }
+                                }
                             }
 
                             if auth.permissions?.share == true {
@@ -210,6 +318,10 @@ struct FileDetailView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Are you sure you want to delete \(file.name)?")
+            }
+            .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
+            .sheet(isPresented: $isSharing) {
+                resourceSharingSheet
             }
             .sheet(isPresented: $showInfo) {
                 let fileInfo = getFileInfo(metadata: metadata, file: file, auth: auth)
@@ -303,6 +415,186 @@ struct FileDetailView: View {
                         }
                     }
             )
+    }
+
+    func deleteShared(deleteHash: String?) {
+        guard let hash = deleteHash else {
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Hash missing for shared link."
+            return
+        }
+        guard let deleteURL = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "share", hash]
+        ) else {
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to construct shared link"
+            return
+        }
+        Log.debug("Delete share URL: \(deleteURL)")
+        var request = URLRequest(url: deleteURL)
+        request.httpMethod = "DELETE"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            DispatchQueue.main.async {
+                self.errorTitle = "Server Error"
+                guard error == nil else {
+                    Log.error("❌ Request failed: \(error?.localizedDescription ?? "Unknown error")")
+                    self.errorMessage = error?.localizedDescription ?? "Unknown error"
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    Log.error("❌ Server error: Response was not HTTPURLResponse")
+                    self.errorMessage = "Response was not HTTPURLResponse"
+                    return
+                }
+
+                guard httpResponse.statusCode == 200 else {
+                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                    self.errorMessage = "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    return
+                }
+                sharedObjects.removeValue(forKey: file.path)
+                shareMessage = StatusPayload(text: "🗑️ Share link for \(file.name) has been removed", color: .red)
+            }
+        }.resume()
+    }
+
+    func submitShare() {
+        if let existing = sharedObjects[file.path],
+           existing.unsigned != nil,
+           existing.presigned != nil {
+            shareMessage = StatusPayload(
+                text: "⚠️ A share for \(file.name) already exists!",
+                color: .yellow
+            )
+            return
+        }
+        isShareInProgress = true
+        guard let expiryTime = Int(durationDigit), expiryTime > 0 else {
+            shareMessage = StatusPayload(
+                text: "Input time should be more than 0",
+                color: .red
+            )
+            return
+        }
+
+        guard let shareURL = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "share", file.path],
+            queryItems: [
+                URLQueryItem(name: "expires", value: String(expiryTime)),
+                URLQueryItem(name: "unit", value: shareDuration)
+            ]
+        ) else {
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to construct shared link"
+            return
+        }
+        Log.debug("Share URL: \(shareURL)")
+
+        var request = URLRequest(url: shareURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        let body: [String: String] = [
+            "password": sharePassword,
+            "expires": String(expiryTime),
+            "unit": shareDuration
+        ]
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            Log.error("❌ Failed to encode JSON body: \(error.localizedDescription)")
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to encode JSON body: \(error.localizedDescription)"
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                defer {
+                    isShareInProgress = false  // ✅ re-enable buttons after response
+                }
+                self.errorTitle = "Server Error"
+                guard error == nil, let data = data else {
+                    Log.error("❌ Request failed: \(error?.localizedDescription ?? "Unknown error")")
+                    self.errorMessage = error?.localizedDescription ?? "Unknown error"
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    Log.error("❌ Server error: Response was not HTTPURLResponse")
+                    self.errorMessage = "Response was not HTTPURLResponse"
+                    return
+                }
+
+                guard httpResponse.statusCode == 200 else {
+                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                    self.errorMessage = "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    return
+                }
+
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        Log.info("✅ JSON Data: \(json)")
+                        let sharedLink = try JSONDecoder().decode(ShareResponse.self, from: data)
+                        let unsigned = buildAPIURL(
+                            base: serverURL,
+                            pathComponents: ["share", sharedLink.hash]
+                        )
+                        var preSigned: URL?
+                        if let token = sharedLink.token {
+                            preSigned = buildAPIURL(
+                                base: serverURL,
+                                pathComponents: ["api", "public", "dl", sharedLink.hash, file.path],
+                                queryItems: [URLQueryItem(name: "token", value: token)]
+                            )
+                        } else {
+                            preSigned = buildAPIURL(
+                                base: serverURL,
+                                pathComponents: ["api", "public", "dl", sharedLink.hash, file.path]
+                            )
+                        }
+                        self.sharedObjects[file.path] = ShareLinks(
+                            unsigned: unsigned,
+                            presigned: preSigned,
+                            hash: sharedLink.hash
+                        )
+                        let delay = Double(sharedLink.expire) - Date().timeIntervalSince1970
+                        if delay > 0 {
+                            Log.info("Shared link will be cleared after \(expiryTime) \(shareDuration) [\(delay)s]")
+                            shareMessage = StatusPayload(
+                                text: "🔗 Share link for \(file.name) has been created", color: .green
+                            )
+                            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                                shareMessage = StatusPayload(
+                                    text: "⚠️ Shared link for \(file.name) has expired",
+                                    color: .yellow,
+                                    duration: 3
+                                )
+                                self.sharedObjects.removeValue(forKey: file.path)
+                            }
+                        } else {
+                            // If the expiration time is in the past, remove it immediately
+                            self.sharedObjects.removeValue(forKey: file.path)
+                        }
+                    } else {
+                        Log.error("❌ Malformed /api/share/ response")
+                        self.errorTitle = "Internal Error"
+                        self.errorMessage = "❌ Malformed /api/share/ response"
+                    }
+                } catch {
+                    Log.error("❌ JSON parse error for share: \(error.localizedDescription)")
+                    self.errorTitle = "Internal Error"
+                    self.errorMessage = "❌ JSON parse error for share: \(error.localizedDescription)"
+                }
+            }
+        }.resume()
     }
 
     func checkContentAndReload(fileName: String) {
