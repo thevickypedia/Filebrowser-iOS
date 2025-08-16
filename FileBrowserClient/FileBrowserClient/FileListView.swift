@@ -527,13 +527,15 @@ struct FileListView: View {
                 }
             }
 
-            // Right: Create and Logout buttons
+            // Right: Actions (person icon) and Selection (three dot) buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if !selectionMode {
                     actionsTabStack
                     selectionStack
                 }
             }
+
+            // Selection mode and Logout buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if selectionMode {
                     // 🗑️ Delete
@@ -560,7 +562,12 @@ struct FileListView: View {
                                 isSharing = true
                             }
                         }) {
-                            Image(systemName: "square.and.arrow.up")
+                            Image("material_share_icon")
+                                .renderingMode(.template)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.blue)
                         }
                     }
 
@@ -581,6 +588,8 @@ struct FileListView: View {
                         Image(systemName: "xmark.circle")
                     }
                 }
+
+                // ⏏ 🔚 Logout
                 Button(action: {
                     Log.info("Logged out!")
                     logoutHandler(false)
