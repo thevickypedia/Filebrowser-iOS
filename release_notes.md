@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.32.0 (08/16/2025)
+--------------------
+- [57789f3](https://github.com/thevickypedia/Filebrowser-iOS/commit/57789f388e579dc5598e10fa3aea97c655afc77c) chore: Release ``v1.32.0``
+- [d945755](https://github.com/thevickypedia/Filebrowser-iOS/commit/d945755dd577a9d7c82650adb4158fae5c7b186a) feat: Allow users to share a selected item from ``FileListView``
+- [9f49322](https://github.com/thevickypedia/Filebrowser-iOS/commit/9f493222c2719d55fa4282d84761a7e2e4f14309) chore: Update release notes for v1.31.2
+
 v1.31.2 (08/14/2025)
 --------------------
 - [2b48210](https://github.com/thevickypedia/Filebrowser-iOS/commit/2b482107aaf2c5bbc67332ecb7beb657c1ff970c) chore: Release ``v1.31.2``
