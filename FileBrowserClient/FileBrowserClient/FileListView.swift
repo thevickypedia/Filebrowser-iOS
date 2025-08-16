@@ -35,10 +35,9 @@ struct FileListView: View {
     @State private var shareDuration = "hours"
     @State private var sharePassword = ""
     // TODO: Redundant - can be replaced with selectedItems
-    @State private var sharePath: String?
+    @State private var sharePath: String = ""
     let shareDurationOptions = ["seconds", "minutes", "hours", "days"]
-    @State private var unsignedURL: URL?
-    @State private var preSignedURL: URL?
+    @State private var sharedObjects: [String: ShareLinks] = [:]
 
     @State private var hideDotfiles = false
     @State private var showingSettings = false
@@ -183,7 +182,7 @@ struct FileListView: View {
     private var searchingStack: some View {
         VStack {
             HStack {
-                // Only the search text field should be interactive
+                // MARK: Keyboard with "go" button
                 TextField("Search...", text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.vertical, 8)
@@ -636,7 +635,9 @@ struct FileListView: View {
                         ProgressView("Generating link...")
                     }
                     // MARK: - Generated Links
-                    if let unsigned = unsignedURL, let preSigned = preSignedURL {
+                    if let shareLinks = sharedObjects[sharePath],
+                       let unsigned = shareLinks.unsigned,
+                       let preSigned = shareLinks.presigned {
                         Section(header: Text("Links")) {
                             ShareLinkRow(title: "Unsigned URL", url: unsigned) { payload in
                                 shareMessage = payload
@@ -649,7 +650,7 @@ struct FileListView: View {
                     Section(header: Text("Share Duration")) {
                         HStack {
                             TextField("0", text: $durationDigit)
-                                .keyboardType(.numberPad)
+                                .keyboardType(.numbersAndPunctuation)
                                 .frame(width: 80)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                             Picker(selection: $shareDuration, label: Text("")) {
@@ -684,7 +685,6 @@ struct FileListView: View {
                             Spacer()
                             Button("Share") {
                                 if let time = Int(durationDigit), time > 0 {
-                                    isSharing = true
                                     submitShare()
                                     isSharing = true
                                 } else {
@@ -850,6 +850,20 @@ struct FileListView: View {
     }
 
     func submitShare() {
+        guard !sharePath.isEmpty else {
+            errorMessage = "Share object not registered!!"
+            return
+        }
+        if let existing = sharedObjects[sharePath],
+           existing.unsigned != nil,
+           existing.presigned != nil {
+            shareMessage = StatusPayload(
+                text: "⚠️ A share for \(sharePath) already exists!",
+                color: .yellow,
+                duration: 3
+            )
+            return
+        }
         isShareInProgress = true
         guard let expiryTime = Int(durationDigit), expiryTime > 0 else {
             shareMessage = StatusPayload(
@@ -860,10 +874,9 @@ struct FileListView: View {
             return
         }
 
-        guard let shareTarget = sharePath,
-              let shareURL = buildAPIURL(
+        guard let shareURL = buildAPIURL(
             base: serverURL,
-            pathComponents: ["api", "share", shareTarget],
+            pathComponents: ["api", "share", sharePath],
             queryItems: [
                 URLQueryItem(name: "expires", value: String(expiryTime)),
                 URLQueryItem(name: "unit", value: shareDuration)
@@ -927,17 +940,16 @@ struct FileListView: View {
                         if let token = sharedLink.token {
                             preSigned = buildAPIURL(
                                 base: serverURL,
-                                pathComponents: ["api", "public", "dl", sharedLink.hash, shareTarget],
+                                pathComponents: ["api", "public", "dl", sharedLink.hash, sharePath],
                                 queryItems: [URLQueryItem(name: "token", value: token)]
                             )
                         } else {
                             preSigned = buildAPIURL(
                                 base: serverURL,
-                                pathComponents: ["api", "public", "dl", sharedLink.hash, shareTarget]
+                                pathComponents: ["api", "public", "dl", sharedLink.hash, sharePath]
                             )
                         }
-                        self.unsignedURL = unsigned
-                        self.preSignedURL = preSigned
+                        self.sharedObjects[sharePath] = ShareLinks(unsigned: unsigned, presigned: preSigned)
                     } else {
                         Log.error("❌ Malformed /api/share/ response")
                     }
