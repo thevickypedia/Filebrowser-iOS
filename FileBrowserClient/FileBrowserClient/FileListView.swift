@@ -878,18 +878,21 @@ struct FileListView: View {
 
     func deleteShared(deleteHash: String?) {
         guard let hash = deleteHash else {
-            errorMessage = "Hash missing for shared link."
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Hash missing for shared link."
             return
         }
         guard let sharedPath = sharePath else {
-            errorMessage = "Share path missing"
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Share path missing"
             return
         }
         guard let deleteURL = buildAPIURL(
             base: serverURL,
             pathComponents: ["api", "share", hash]
         ) else {
-            errorMessage = "Failed to construct shared link"
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to construct shared link"
             return
         }
         Log.debug("Delete share URL: \(deleteURL)")
@@ -926,7 +929,8 @@ struct FileListView: View {
 
     func submitShare() {
         guard let sharedPath = sharePath else {
-            errorMessage = "Share object not registered!!"
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Share path not registered"
             return
         }
         if let existing = sharedObjects[sharedPath.path],
@@ -955,7 +959,8 @@ struct FileListView: View {
                 URLQueryItem(name: "unit", value: shareDuration)
             ]
         ) else {
-            Log.error("❌ Failed to determine share item")
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to construct shared link"
             return
         }
         Log.debug("Share URL: \(shareURL)")
@@ -973,7 +978,9 @@ struct FileListView: View {
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
         } catch {
-            Log.error("❌ Failed to encode JSON body: \(error)")
+            Log.error("❌ Failed to encode JSON body: \(error.localizedDescription)")
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to encode JSON body: \(error.localizedDescription)"
             return
         }
 
@@ -1047,9 +1054,13 @@ struct FileListView: View {
                         }
                     } else {
                         Log.error("❌ Malformed /api/share/ response")
+                        self.errorTitle = "Internal Error"
+                        self.errorMessage = "❌ Malformed /api/share/ response"
                     }
                 } catch {
                     Log.error("❌ JSON parse error for share: \(error.localizedDescription)")
+                    self.errorTitle = "Internal Error"
+                    self.errorMessage = "❌ JSON parse error for share: \(error.localizedDescription)"
                 }
             }
         }.resume()
