@@ -347,7 +347,7 @@ func urlPath(_ url: URL) -> String {
     return result
 }
 
-func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryItem]) -> URL? {
+func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryItem]? = nil) -> URL? {
     guard var url = URL(string: base) else { return nil }
 
     for component in pathComponents {
@@ -355,7 +355,9 @@ func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryIt
     }
 
     var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-    components?.queryItems = queryItems
+    if let qItems = queryItems {
+        components?.queryItems = qItems
+    }
 
     return components?.url
 }

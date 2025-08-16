@@ -29,6 +29,17 @@ struct FileListView: View {
     @State private var isRenaming = false
     @State private var renameInput = ""
 
+    @State private var isSharing = false
+    @State private var isShareInProgress = false
+    @State private var durationDigit = ""
+    @State private var shareDuration = "hours"
+    @State private var sharePassword = ""
+    // TODO: Redundant - can be replaced with selectedItems
+    @State private var sharePath: String?
+    let shareDurationOptions = ["seconds", "minutes", "hours", "days"]
+    @State private var unsignedURL: URL?
+    @State private var preSignedURL: URL?
+
     @State private var hideDotfiles = false
     @State private var showingSettings = false
     @State private var dateFormatExact = false
@@ -80,6 +91,7 @@ struct FileListView: View {
     // Display as disappearing labels
     @State private var statusMessage: StatusPayload?
     @State private var settingsMessage: StatusPayload?
+    @State private var shareMessage: StatusPayload?
 
     // Specific for Grid view
     @State private var selectedFileIndex: Int?
@@ -543,6 +555,14 @@ struct FileListView: View {
                         }) {
                             Image(systemName: "pencil")
                         }
+                        Button(action: {
+                            if let item = selectedItems.first {
+                                sharePath = item.name
+                                isSharing = true
+                            }
+                        }) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
                     }
 
                     // ✅ Select All / Deselect All
@@ -571,6 +591,7 @@ struct FileListView: View {
             }
         }
         .id("filelist-\(currentPath)-\(pathStack.count)")
+        // MARK: Messages on any listing page (behind all sheets)
         .modifier(StatusMessage(payload: $statusMessage))
         .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
         .modifier(CreateFileAlert(
@@ -606,6 +627,69 @@ struct FileListView: View {
                 let newPath = newStack.last ?? "/"
                 Log.debug("📂 Path changed: \(newPath)")
                 viewModel.fetchFiles(at: newPath)
+            }
+        }
+        .sheet(isPresented: $isSharing) {
+            NavigationView {
+                Form {
+                    if isShareInProgress {
+                        ProgressView("Generating link...")
+                    }
+                    // MARK: - Generated Links
+                    if let unsigned = unsignedURL, let preSigned = preSignedURL {
+                        Section(header: Text("Links")) {
+                            ShareLinkRow(title: "Unsigned URL", url: unsigned)
+                            ShareLinkRow(title: "Pre-Signed URL", url: preSigned)
+                        }
+                    }
+                    Section(header: Text("Share Duration")) {
+                        HStack {
+                            TextField("0", text: $durationDigit)
+                                .keyboardType(.numberPad)
+                                .frame(width: 80)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            Picker(selection: $shareDuration, label: Text("")) {
+                                ForEach(shareDurationOptions, id: \.self) { duration in
+                                    Text(duration.capitalized).tag(duration)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
+                    }
+                    Section(header: Text("Optional Password")) {
+                        SecureField("Enter password", text: $sharePassword)
+                    }
+                    Section {
+                        HStack {
+                            Spacer()
+                            Button("Cancel") {
+                                isSharing = false
+                            }
+                            .foregroundColor(.red)
+                            .disabled(isShareInProgress)
+                            Spacer()
+                            Button("Share") {
+                                if let time = Int(durationDigit), time > 0 {
+                                    isSharing = true
+                                    submitShare()
+                                    isSharing = true
+                                } else {
+                                    isSharing = true
+                                    shareMessage = StatusPayload(
+                                        text: "Input time should be more than 0",
+                                        color: .red,
+                                        duration: 3
+                                    )
+                                }
+                            }
+                            .disabled(isShareInProgress)
+                            Spacer()
+                        }
+                    }
+                }
+                .navigationBarTitle("Share", displayMode: .inline)
+                // MARK: Messages within share sheet
+                .modifier(StatusMessage(payload: $shareMessage))
             }
         }
         .sheet(isPresented: $showingSettings) {
@@ -711,6 +795,7 @@ struct FileListView: View {
                     EmptyView()
                 }
             }
+            // MARK: Messages within the settings sheet
             .modifier(StatusMessage(payload: $settingsMessage))
             .onAppear {
                 hideDotfiles = self.userAccount?.hideDotfiles ?? false
@@ -748,6 +833,105 @@ struct FileListView: View {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
             }
         }
+    }
+
+    func submitShare() {
+        isShareInProgress = true
+        guard let expiryTime = Int(durationDigit), expiryTime > 0 else {
+            shareMessage = StatusPayload(
+                text: "Input time should be more than 0",
+                color: .red,
+                duration: 3
+            )
+            return
+        }
+
+        guard let shareTarget = sharePath,
+              let shareURL = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "share", shareTarget],
+            queryItems: [
+                URLQueryItem(name: "expires", value: String(expiryTime)),
+                URLQueryItem(name: "unit", value: shareDuration)
+            ]
+        ) else {
+            Log.error("❌ Failed to determine share item")
+            return
+        }
+        Log.debug("Share URL: \(shareURL)")
+
+        var request = URLRequest(url: shareURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        let body: [String: String] = [
+            "password": sharePassword,
+            "expires": String(expiryTime),
+            "unit": shareDuration
+        ]
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            Log.error("❌ Failed to encode JSON body: \(error)")
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                defer {
+                    isShareInProgress = false  // ✅ re-enable buttons after response
+                }
+                self.errorTitle = "Server Error"
+                guard error == nil, let data = data else {
+                    Log.error("❌ Request failed: \(error?.localizedDescription ?? "Unknown error")")
+                    self.errorMessage = error?.localizedDescription ?? "Unknown error"
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    Log.error("❌ Server error: Response was not HTTPURLResponse")
+                    self.errorMessage = "Response was not HTTPURLResponse"
+                    return
+                }
+
+                guard httpResponse.statusCode == 200 else {
+                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                    self.errorMessage = "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    return
+                }
+
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        Log.info("✅ JSON Data: \(json)")
+                        let sharedLink = try JSONDecoder().decode(ShareResponse.self, from: data)
+                        let unsigned = buildAPIURL(
+                            base: serverURL,
+                            pathComponents: ["share", sharedLink.hash]
+                        )
+                        var preSigned: URL?
+                        if let token = sharedLink.token {
+                            preSigned = buildAPIURL(
+                                base: serverURL,
+                                pathComponents: ["api", "public", "dl", sharedLink.hash, shareTarget],
+                                queryItems: [URLQueryItem(name: "token", value: token)]
+                            )
+                        } else {
+                            preSigned = buildAPIURL(
+                                base: serverURL,
+                                pathComponents: ["api", "public", "dl", sharedLink.hash, shareTarget]
+                            )
+                        }
+                        self.unsignedURL = unsigned
+                        self.preSignedURL = preSigned
+                    } else {
+                        Log.error("❌ Malformed /api/share/ response")
+                    }
+                } catch {
+                    Log.error("❌ JSON parse error for share: \(error.localizedDescription)")
+                }
+            }
+        }.resume()
     }
 
     func getSearchURL(serverURL: String, query: String) -> URL? {
