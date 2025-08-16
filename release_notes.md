@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.32.2 (08/16/2025)
+--------------------
+- [a8ee9ab](https://github.com/thevickypedia/Filebrowser-iOS/commit/a8ee9abb93b7e8763db1f5a470c191de7efa5224) chore: Release ``v1.32.2``
+- [51a3e3c](https://github.com/thevickypedia/Filebrowser-iOS/commit/51a3e3c02347abd11573e27811fae0e863393466) style: Improve error messages in the UI
+- [6a951e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/6a951e060e6ee2728c39c94e9e1be16392be24c8) refactor: Extract sheets into private views to reduce body size
+- [9a080fa](https://github.com/thevickypedia/Filebrowser-iOS/commit/9a080fa53d739a7821aedd106e5787157e6e814a) style: Change share image to material icon
+- [2abd349](https://github.com/thevickypedia/Filebrowser-iOS/commit/2abd34939bcbb620ef60be54d90b37c8bea50a03) feat: Allow users to delete shared links, along with auto-deletion
+- [ce64975](https://github.com/thevickypedia/Filebrowser-iOS/commit/ce6497526d8ab82cc0c8a848d7b56bda964325e6) fix: Prevent creating multiple share links for the same resource
+- [4c475ed](https://github.com/thevickypedia/Filebrowser-iOS/commit/4c475ed9c6450dfb6a1b4596a47781379e432a9a) chore: Update release notes for v1.32.1
+
 v1.32.1 (08/16/2025)
 --------------------
 - [961eed1](https://github.com/thevickypedia/Filebrowser-iOS/commit/961eed1b3dee51607578956e40e0e2c1e6aad201) chore: Release ``v1.32.1``
