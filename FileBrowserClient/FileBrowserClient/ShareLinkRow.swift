@@ -33,6 +33,7 @@ struct ShareLinks {
 struct ShareLinkRow: View {
     var title: String
     var url: URL
+    var onCopy: (StatusPayload) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -47,7 +48,11 @@ struct ShareLinkRow: View {
                 Spacer()
                 Button(action: {
                     UIPasteboard.general.string = url.absoluteString
-                    // TODO: Display a TOAST message here
+                    onCopy(StatusPayload(
+                        text: "📋 \(title) copied to clipboard",
+                        color: .green,
+                        duration: 3
+                    ))
                 }) {
                     Image(systemName: "doc.on.doc")
                         .foregroundColor(.blue)

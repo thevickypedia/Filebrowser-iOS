@@ -638,8 +638,12 @@ struct FileListView: View {
                     // MARK: - Generated Links
                     if let unsigned = unsignedURL, let preSigned = preSignedURL {
                         Section(header: Text("Links")) {
-                            ShareLinkRow(title: "Unsigned URL", url: unsigned)
-                            ShareLinkRow(title: "Pre-Signed URL", url: preSigned)
+                            ShareLinkRow(title: "Unsigned URL", url: unsigned) { payload in
+                                shareMessage = payload
+                            }
+                            ShareLinkRow(title: "Pre-Signed URL", url: preSigned) { payload in
+                                shareMessage = payload
+                            }
                         }
                     }
                     Section(header: Text("Share Duration")) {
