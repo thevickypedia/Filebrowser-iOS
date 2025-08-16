@@ -28,6 +28,7 @@ struct ShareResponse: Codable {
 struct ShareLinks {
     let unsigned: URL?
     let presigned: URL?
+    let hash: String?
 }
 
 struct ShareLinkRow: View {
