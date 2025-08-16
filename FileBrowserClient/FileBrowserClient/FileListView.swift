@@ -660,8 +660,18 @@ struct FileListView: View {
                             .pickerStyle(MenuPickerStyle())
                         }
                     }
-                    Section(header: Text("Optional Password")) {
+                    Section(header: Text("Password")) {
                         SecureField("Enter password", text: $sharePassword)
+                        if sharePassword.trimmingCharacters(in: .whitespaces).isEmpty {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundColor(.yellow)
+                                Text("You are about to generate a **public** share link. It is recommended to add a password for additional security.")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.top, 4)
+                        }
                     }
                     Section {
                         HStack {
