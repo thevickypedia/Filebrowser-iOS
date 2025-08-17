@@ -27,6 +27,7 @@
 		98823EEC2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */; };
 		988D9DE82E43915400C37B15 /* FileListAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988D9DE72E43915000C37B15 /* FileListAlerts.swift */; };
 		98B600272E50B1F900F24FB8 /* ShareLinkRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B600262E50B1F900F24FB8 /* ShareLinkRow.swift */; };
+		98B600352E5149AC00F24FB8 /* ShareSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B600342E5149AC00F24FB8 /* ShareSheetView.swift */; };
 		98D563D12E44354700DE0079 /* FileExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D02E44354400DE0079 /* FileExtensions.swift */; };
 		98D563D52E44DDA800DE0079 /* SelectableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D42E44DDA800DE0079 /* SelectableTextView.swift */; };
 		98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */; };
@@ -85,6 +86,7 @@
 		98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		988D9DE72E43915000C37B15 /* FileListAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListAlerts.swift; sourceTree = "<group>"; };
 		98B600262E50B1F900F24FB8 /* ShareLinkRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareLinkRow.swift; sourceTree = "<group>"; };
+		98B600342E5149AC00F24FB8 /* ShareSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetView.swift; sourceTree = "<group>"; };
 		98D563D02E44354400DE0079 /* FileExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileExtensions.swift; sourceTree = "<group>"; };
 		98D563D42E44DDA800DE0079 /* SelectableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextView.swift; sourceTree = "<group>"; };
 		98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableTextView.swift; sourceTree = "<group>"; };
@@ -152,6 +154,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				98B600342E5149AC00F24FB8 /* ShareSheetView.swift */,
 				98B600262E50B1F900F24FB8 /* ShareLinkRow.swift */,
 				987C61882E4A986500C5DE8E /* SearchType.swift */,
 				987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */,
@@ -364,6 +367,7 @@
 				987C617E2E47EC0900C5DE8E /* ServerURLMenu.swift in Sources */,
 				98D563D12E44354700DE0079 /* FileExtensions.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
+				98B600352E5149AC00F24FB8 /* ShareSheetView.swift in Sources */,
 				98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */,
 				986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */,
 				F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */,
