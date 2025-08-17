@@ -235,7 +235,8 @@ struct FileDetailView: View {
                 ShareSheetView(
                     serverURL: serverURL,
                     token: token,
-                    file: file
+                    file: file,
+                    onDismiss: { isSharing = false }
                 )
             }
             .sheet(isPresented: $showInfo) {

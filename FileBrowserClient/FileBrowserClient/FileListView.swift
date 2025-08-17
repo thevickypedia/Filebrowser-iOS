@@ -337,7 +337,7 @@ struct FileListView: View {
 
     private var selectionStack: some View {
         return Menu {
-            if !viewModel.files.isEmpty {
+            if !viewModel.files.isEmpty && hasModifyPermissions {
                 Button(action: { selectionMode = true }) {
                     Label("Select", systemImage: "checkmark.circle")
                 }
@@ -453,6 +453,11 @@ struct FileListView: View {
         }
         .padding()
         .presentationDetents([.fraction(0.3)]) // 30% of the screen height
+    }
+
+    private var hasModifyPermissions: Bool {
+        let permissions = auth.userAccount?.perm
+        return permissions?.rename == true || permissions?.delete == true || permissions?.share == true
     }
 
     private var showSettingsSheet: some View {
@@ -639,81 +644,68 @@ struct FileListView: View {
 
             // Right: Actions (person icon) and Selection (three dot) buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
-                if !selectionMode {
+                if selectionMode {
+                    if auth.userAccount?.perm.delete == true {
+                        // 🗑️ Delete
+                        Button(action: {
+                            if selectedItems.isEmpty { return }
+                            showingDeleteConfirm = true
+                        }) {
+                            Image(systemName: "trash")
+                        }
+                    }
+
+                    // 📝 Rename and Share links only when exactly 1 item is selected
+                    if selectedItems.count == 1 {
+                        if auth.userAccount?.perm.rename == true {
+                            Button(action: {
+                                if let item = selectedItems.first {
+                                    renameInput = item.name
+                                    isRenaming = true
+                                }
+                            }) {
+                                Image(systemName: "pencil")
+                            }
+                        }
+                        if auth.userAccount?.perm.share == true {
+                            Button(action: {
+                                if let item = selectedItems.first {
+                                    sharePath = item
+                                    DispatchQueue.main.async {
+                                        isSharing = true
+                                    }
+                                }
+                            }) {
+                                Image("material_share_icon")
+                                    .renderingMode(.template)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+
+                    // ✅ Select All / Deselect All
+                    Button(action: toggleSelectAll) {
+                        Image(systemName:
+                                selectedItems.count == viewModel.files.count
+                              ? "square.dashed"
+                              : "checkmark.square"
+                        )
+                    }
+
+                    // ❌ Cancel
+                    Button(action: {
+                        selectedItems.removeAll()
+                        selectionMode = false
+                    }) {
+                        Image(systemName: "xmark.circle")
+                    }
+                } else {
                     actionsTabStack
                     selectionStack
                 }
-            }
-
-            var hasAnyActionPermission: Bool {
-                let permissions = auth.userAccount?.perm
-                return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
-            }
-
-            if hasAnyActionPermission {
-                // Selection mode
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    if selectionMode {
-                        if auth.userAccount?.perm.delete == true {
-                            // 🗑️ Delete
-                            Button(action: {
-                                if selectedItems.isEmpty { return }
-                                showingDeleteConfirm = true
-                            }) {
-                                Image(systemName: "trash")
-                            }
-                        }
-                        
-                        // 📝 Rename and Share links only when exactly 1 item is selected
-                        if selectedItems.count == 1 {
-                            if auth.userAccount?.perm.rename == true {
-                                Button(action: {
-                                    if let item = selectedItems.first {
-                                        renameInput = item.name
-                                        isRenaming = true
-                                    }
-                                }) {
-                                    Image(systemName: "pencil")
-                                }
-                            }
-                            if auth.userAccount?.perm.share == true {
-                                Button(action: {
-                                    if let item = selectedItems.first {
-                                        sharePath = item
-                                        DispatchQueue.main.async {
-                                            isSharing = true
-                                        }
-                                    }
-                                }) {
-                                    Image("material_share_icon")
-                                        .renderingMode(.template)
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 24, height: 24)
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                        }
-                        
-                        // ✅ Select All / Deselect All
-                        Button(action: toggleSelectAll) {
-                            Image(systemName:
-                                    selectedItems.count == viewModel.files.count
-                                  ? "square.dashed"
-                                  : "checkmark.square"
-                            )
-                        }
-                        
-                        // ❌ Cancel
-                        Button(action: {
-                            selectedItems.removeAll()
-                            selectionMode = false
-                        }) {
-                            Image(systemName: "xmark.circle")
-                        }
-                    }
-                }
-
                 // ⏏ 🔚 Logout
                 Button(action: {
                     Log.info("Logged out!")
@@ -767,7 +759,8 @@ struct FileListView: View {
                 ShareSheetView(
                     serverURL: serverURL,
                     token: token,
-                    file: sp
+                    file: sp,
+                    onDismiss: { isSharing = false }
                 )
             } else {
                 // sharePath is nil

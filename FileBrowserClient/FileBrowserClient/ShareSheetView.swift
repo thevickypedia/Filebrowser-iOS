@@ -18,7 +18,9 @@ struct ShareSheetView: View {
     let token: String
     let file: FileItem
 
-    @State private var isPresented = false
+    // Add this closure for dismissing the sheet
+    let onDismiss: () -> Void
+
     @State private var isShareInProgress = false
     @State private var durationDigit = ""
     @State private var shareDuration = "hours"
@@ -89,9 +91,8 @@ struct ShareSheetView: View {
                 // ✅ Buttons moved outside Form
                 if sharedObjects[file.path] == nil {
                     HStack(spacing: 16) {
-                        // FIXME: isPresented is currently a use-less since list view and detail view don't honor change here
                         Button(action: {
-                            isPresented = false
+                            onDismiss()
                         }) {
                             Text("Cancel")
                                 .frame(maxWidth: .infinity)
