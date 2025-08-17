@@ -116,17 +116,17 @@ struct ContentView: View {
                 addNewServer: addNewServer
             ).padding(.top, 1)
 
-            if useFaceID, // Check FaceID toggle
-               let existingSession = KeychainHelper.loadSession(), // Load existing session
-               existingSession["serverURL"] == serverURL {  // serverURL matches
+            if useFaceID,
+               let existingSession = KeychainHelper.loadSession(),
+               existingSession["serverURL"] == serverURL,
+               let username = existingSession["username"] {
                 // Face ID mode with saved session
-                Toggle("Use Face ID", isOn: $useFaceID)
+                Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
                 Button(action: {
                     biometricSignIn()
                 }) {
-                    // TODO: Display username here (probably static text box)
-                    Label("Login with Face ID", systemImage: "faceid")
+                    Label("Login as \(username)", systemImage: "faceid")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.blue)
@@ -158,8 +158,14 @@ struct ContentView: View {
                     }
                 }) {
                     if isLoading { ProgressView() } else {
-                        Text("Login").bold().frame(maxWidth: .infinity)
-                            .padding().background(Color.blue).foregroundColor(.white).cornerRadius(8)
+                        // key.fill || person.badge.key.fill
+                        Label("Login", systemImage: "person.badge.key.fill")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                            .font(.headline)
                     }
                 }
                 .disabled(isLoading)
@@ -297,8 +303,6 @@ struct ContentView: View {
         }
         // This is a temporary solution
         // Clears current serverURL and knownServers immediately
-        // TODO: Move all login instructions to AuthManager or a new module
-        // TODO: To be done only during a major refactor
         if clearActiveServers {
             knownServers.removeAll()
             serverURL = ""
