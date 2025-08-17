@@ -645,58 +645,72 @@ struct FileListView: View {
                 }
             }
 
-            // Selection mode and Logout buttons
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                if selectionMode {
-                    // 🗑️ Delete
-                    Button(action: {
-                        if selectedItems.isEmpty { return }
-                        showingDeleteConfirm = true
-                    }) {
-                        Image(systemName: "trash")
-                    }
+            var hasAnyActionPermission: Bool {
+                let permissions = auth.userAccount?.perm
+                return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
+            }
 
-                    // 📝 Rename — only when exactly 1 item is selected
-                    if selectedItems.count == 1 {
-                        Button(action: {
-                            if let item = selectedItems.first {
-                                renameInput = item.name
-                                isRenaming = true
+            if hasAnyActionPermission {
+                // Selection mode
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    if selectionMode {
+                        if auth.userAccount?.perm.delete == true {
+                            // 🗑️ Delete
+                            Button(action: {
+                                if selectedItems.isEmpty { return }
+                                showingDeleteConfirm = true
+                            }) {
+                                Image(systemName: "trash")
                             }
-                        }) {
-                            Image(systemName: "pencil")
                         }
-                        Button(action: {
-                            // FIXME: sharePath is not registered intermittently
-                            if let item = selectedItems.first {
-                                sharePath = item
-                                isSharing = true
+                        
+                        // 📝 Rename and Share links only when exactly 1 item is selected
+                        if selectedItems.count == 1 {
+                            if auth.userAccount?.perm.rename == true {
+                                Button(action: {
+                                    if let item = selectedItems.first {
+                                        renameInput = item.name
+                                        isRenaming = true
+                                    }
+                                }) {
+                                    Image(systemName: "pencil")
+                                }
                             }
-                        }) {
-                            Image("material_share_icon")
-                                .renderingMode(.template)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 24, height: 24)
-                                .foregroundColor(.blue)
+                            if auth.userAccount?.perm.share == true {
+                                Button(action: {
+                                    if let item = selectedItems.first {
+                                        sharePath = item
+                                        DispatchQueue.main.async {
+                                            isSharing = true
+                                        }
+                                    }
+                                }) {
+                                    Image("material_share_icon")
+                                        .renderingMode(.template)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 24, height: 24)
+                                        .foregroundColor(.blue)
+                                }
+                            }
                         }
-                    }
-
-                    // ✅ Select All / Deselect All
-                    Button(action: toggleSelectAll) {
-                        Image(systemName:
-                            selectedItems.count == viewModel.files.count
-                            ? "square.dashed"
-                            : "checkmark.square"
-                        )
-                    }
-
-                    // ❌ Cancel
-                    Button(action: {
-                        selectedItems.removeAll()
-                        selectionMode = false
-                    }) {
-                        Image(systemName: "xmark.circle")
+                        
+                        // ✅ Select All / Deselect All
+                        Button(action: toggleSelectAll) {
+                            Image(systemName:
+                                    selectedItems.count == viewModel.files.count
+                                  ? "square.dashed"
+                                  : "checkmark.square"
+                            )
+                        }
+                        
+                        // ❌ Cancel
+                        Button(action: {
+                            selectedItems.removeAll()
+                            selectionMode = false
+                        }) {
+                            Image(systemName: "xmark.circle")
+                        }
                     }
                 }
 

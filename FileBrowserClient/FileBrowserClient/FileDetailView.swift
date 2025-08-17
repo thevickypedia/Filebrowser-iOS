@@ -183,12 +183,13 @@ struct FileDetailView: View {
                                 Button("Download", systemImage: "arrow.down.circle", action: {
                                     downloadAndSave()
                                 })
-                            }
 
-                            if auth.userAccount?.perm.share == true {
                                 Button("Share", systemImage: "square.and.arrow.up", action: {
                                     downloadAndSave()
                                 })
+                            }
+
+                            if auth.userAccount?.perm.share == true {
                                 Button(action: {
                                     isSharing = true
                                 }) {
