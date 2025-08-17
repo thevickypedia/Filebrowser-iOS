@@ -306,7 +306,7 @@ struct FileListView: View {
 
     private var actionsTabStack: some View {
         return Menu {
-            if auth.permissions?.create == true {
+            if auth.userAccount?.perm.create == true {
                 Button("Create File", systemImage: "doc.badge.plus", action: {
                     showCreateFile = true
                 })
@@ -521,10 +521,10 @@ struct FileListView: View {
 
             Section(
                 footer: VStack(alignment: .leading) {
-                    Text("Issuer: \(auth.iss ?? "Unknown")").textSelection(.enabled)
-                    Text("Issued: \(timeStampToString(from: auth.iat))").textSelection(.enabled)
-                    Text("Expiration: \(timeStampToString(from: auth.exp))").textSelection(.enabled)
-                    Text("Time Left: \(timeLeftString(until: auth.exp))").textSelection(.enabled)
+                    Text("Issuer: \(auth.jwtWrapper?.iss ?? "Unknown")").textSelection(.enabled)
+                    Text("Issued: \(timeStampToString(from: auth.jwtWrapper?.iat))").textSelection(.enabled)
+                    Text("Expiration: \(timeStampToString(from: auth.jwtWrapper?.exp))").textSelection(.enabled)
+                    Text("Time Left: \(timeLeftString(until: auth.jwtWrapper?.exp))").textSelection(.enabled)
                 }
                 .padding(.top, 8)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -667,6 +667,7 @@ struct FileListView: View {
                             Image(systemName: "pencil")
                         }
                         Button(action: {
+                            // FIXME: sharePath is not registered intermittently
                             if let item = selectedItems.first {
                                 sharePath = item
                                 isSharing = true

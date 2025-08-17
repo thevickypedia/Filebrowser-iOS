@@ -248,37 +248,22 @@ func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager)
     )
 }
 
-func decodeJWT(jwt: String) -> [String: Any]? {
+func decodeJWT(jwt: String) -> Data? {
     let segments = jwt.split(separator: ".")
     guard segments.count == 3 else {
         Log.error("Invalid JWT")
         return nil
     }
 
-    let payloadSegment = segments[1]
-
-    // Pad the base64 string if needed
-    var base64String = String(payloadSegment)
+    var base64String = String(segments[1])
         .replacingOccurrences(of: "-", with: "+")
         .replacingOccurrences(of: "_", with: "/")
 
-    // Pad with '=' if needed
     while base64String.count % 4 != 0 {
         base64String += "="
     }
 
-    guard let payloadData = Data(base64Encoded: base64String) else {
-        Log.error("Invalid base64 payload")
-        return nil
-    }
-
-    do {
-        let jsonObject = try JSONSerialization.jsonObject(with: payloadData, options: [])
-        return jsonObject as? [String: Any]
-    } catch {
-        Log.error("Error decoding JSON: \(error)")
-        return nil
-    }
+    return Data(base64Encoded: base64String)
 }
 
 func timeStampToString(from timestamp: TimeInterval?) -> String {
@@ -360,4 +345,23 @@ func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryIt
     }
 
     return components?.url
+}
+
+func logJsonData(data: Data, parseJSON: Bool = false) -> Bool {
+    if let jsonString = String(data: data, encoding: .utf8) {
+        Log.info("JSON string: \(jsonString)")
+        if parseJSON {
+            do {
+                let jsonObject = try JSONSerialization.jsonObject(with: data, options: [])
+                Log.info("Parsed JSON: \(jsonObject)")
+            } catch {
+                Log.error("Failed to parse JSON: \(error)")
+                return false
+            }
+        }
+        return true
+    } else {
+        Log.error("Failed to convert data to UTF-8 string")
+        return false
+    }
 }

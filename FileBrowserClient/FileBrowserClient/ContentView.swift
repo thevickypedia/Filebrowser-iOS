@@ -116,15 +116,16 @@ struct ContentView: View {
                 addNewServer: addNewServer
             ).padding(.top, 1)
 
-            if useFaceID,
-               let existingSession = KeychainHelper.loadSession(),
-               existingSession["serverURL"] == serverURL {
+            if useFaceID, // Check FaceID toggle
+               let existingSession = KeychainHelper.loadSession(), // Load existing session
+               existingSession["serverURL"] == serverURL {  // serverURL matches
                 // Face ID mode with saved session
                 Toggle("Use Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
                 Button(action: {
                     biometricSignIn()
                 }) {
+                    // TODO: Display username here (probably static text box)
                     Label("Login with Face ID", systemImage: "faceid")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -149,6 +150,7 @@ struct ContentView: View {
                 }
 
                 Toggle("Use Face ID", isOn: $useFaceID)
+                Toggle("Transit Protection", isOn: $transitProtection)
 
                 Button(action: {
                     Task {
@@ -162,7 +164,6 @@ struct ContentView: View {
                 }
                 .disabled(isLoading)
             }
-            Toggle("Transit Protection", isOn: $transitProtection)
 
             Section {
                 DisclosureGroup("Advanced Settings", isExpanded: $showAdvancedOptions) {
@@ -311,6 +312,14 @@ struct ContentView: View {
         }.joined(separator: "\\u")
     }
 
+    func setAuth(jwt: String, jwtPayload: JWTUserWrapper) async {
+        token = jwt
+        auth.token = jwt
+        auth.serverURL = serverURL
+        auth.jwtWrapper = jwtPayload
+        auth.userAccount = jwtPayload.user
+    }
+
     func login() async {
         if serverURL.isEmpty || username.isEmpty || password.isEmpty {
             errorMessage = "Credentials are required to login!"
@@ -374,20 +383,15 @@ struct ContentView: View {
             }
 
             if httpResponse.statusCode == 200 {
-                if let jwt = String(data: data, encoding: .utf8) {
-                    if let payload = decodeJWT(jwt: jwt) {
-                        auth.iss = payload["iss"] as? String
-                        auth.exp = payload["exp"] as? TimeInterval
-                        auth.iat = payload["iat"] as? TimeInterval
-                    }
-                    token = jwt
-                    auth.token = jwt
-                    auth.serverURL = serverURL
-                    auth.permissions = nil
-                    auth.username = username
-                    // Wait for permissions to finish (to load userAccount)
-                    if let err = await auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL) {
-                        errorMessage = err
+                Log.debug("Authentication successful")
+                if let jwt = String(data: data, encoding: .utf8),
+                   let payloadData = decodeJWT(jwt: jwt) {
+                    // guard logJsonData(data: payloadData) else { return }
+                    do {
+                        let jwtPayload = try JSONDecoder().decode(JWTUserWrapper.self, from: payloadData)
+                        await setAuth(jwt: jwt, jwtPayload: jwtPayload)
+                    } catch {
+                        Log.error("Decoding error: \(error)")
                         return
                     }
 
@@ -421,10 +425,14 @@ struct ContentView: View {
     }
 
     func logTokenInfo() {
-        Log.info("Issuer: \(auth.iss ?? "Unknown")")
-        Log.info("Issued: \(timeStampToString(from: auth.iat))")
-        Log.info("Expiration: \(timeStampToString(from: auth.exp))")
-        Log.info("Time Left: \(timeLeftString(until: auth.exp))")
+        guard let jwtWrapper = auth.jwtWrapper else {
+            Log.error("JWT token wrapper not found!")
+            return
+        }
+        Log.info("Issuer: \(jwtWrapper.iss)")
+        Log.info("Issued: \(timeStampToString(from: jwtWrapper.iat))")
+        Log.info("Expiration: \(timeStampToString(from: jwtWrapper.exp))")
+        Log.info("Time Left: \(timeLeftString(until: jwtWrapper.exp))")
     }
 
     func reauth() {
@@ -462,70 +470,76 @@ struct ContentView: View {
                       serverURL == self.serverURL
                 else {
                     DispatchQueue.main.async {
+                        Log.debug("Biometric failed. Falling back to manual login.")
                         useFaceID = false // fallback to manual login
                     }
                     return
                 }
 
-                // Decode JWT to check expiration                
-                if let payload = decodeJWT(jwt: token),
-                   let exp = payload["exp"] as? TimeInterval {
-                    let now = Date().timeIntervalSince1970
-                    if now >= exp {
-                        Log.info("🔑 Token expired — refreshing via stored credentials.")
-                        if let password = session["password"] {
-                            DispatchQueue.main.async {
-                                self.serverURL = serverURL
-                                self.username = username
-                                self.password = password
-                                // Reuse the normal login flow
-                                Task {
-                                    await login()
+                // Decode JWT to check expiration
+                Log.debug("Biometric successful. Checking token expiration.")
+                if let payload = decodeJWT(jwt: token) {
+                    // guard logJsonData(data: payload) else { return }
+                    do {
+                        let jwtPayload = try JSONDecoder().decode(JWTUserWrapper.self, from: payload)
+                        let now = Date().timeIntervalSince1970
+                        if now >= jwtPayload.exp {
+                            Log.info("🔑 Token expired — refreshing via stored credentials.")
+                            if let password = session["password"] {
+                                DispatchQueue.main.async {
+                                    self.serverURL = serverURL
+                                    self.username = username
+                                    self.password = password
+                                    // Reuse the normal login flow
+                                    Task {
+                                        await login()
+                                    }
+                                }
+                            } else {
+                                // No password stored — fallback to showing login UI
+                                DispatchQueue.main.async {
+                                    useFaceID = false
                                 }
                             }
+                            return
                         } else {
-                            // No password stored — fallback to showing login UI
-                            DispatchQueue.main.async {
-                                useFaceID = false
+                            Log.info("🔑 Token is still valid — initiating server hand-shake.")
+                            await setAuth(jwt: token, jwtPayload: jwtPayload)
+                            guard let userID = auth.userAccount?.id else {
+                                Log.error("Failed to setAuth")
+                                return
+                            }
+                            if let err = await auth.fetchPermissions(
+                                for: userID,
+                                token: token,
+                                serverURL: serverURL
+                               ) {
+                                DispatchQueue.main.async {
+                                    // FIXME: Find a better way to handle this
+                                    if ["401"].contains(err) {
+                                        // This indicates a server restart
+                                        Log.warn("FaceID passed, but session validation failed.")
+                                        reauth()
+                                    } else {
+                                        errorMessage = err
+                                    }
+                                }
+                            } else {
+                                // Token still valid — just use it
+                                Log.info("✅ Face ID login successful. Proceed to landing page.")
                             }
                         }
+                    } catch {
+                        Log.error("Decoding error: \(error)")
                         return
                     }
                 }
 
-                // Token still valid — just use it
-                auth.token = token
-                auth.serverURL = serverURL
-                auth.username = username
-                auth.permissions = nil
-                if let payload = decodeJWT(jwt: token) {
-                    auth.iss = payload["iss"] as? String
-                    auth.exp = payload["exp"] as? TimeInterval
-                    auth.iat = payload["iat"] as? TimeInterval
-                    logTokenInfo()
-                } else {
-                    Log.error("Failed to decode JWT")
-                }
-
-                if let err = await auth.fetchPermissions(for: username, token: token, serverURL: serverURL) {
-                    DispatchQueue.main.async {
-                        // FIXME: Find a better way to handle this
-                        if ["401"].contains(err) {
-                            // This indicates a server restart
-                            Log.warn("FaceID passed, but session validation failed.")
-                            reauth()
-                        } else {
-                            errorMessage = err
-                        }
-                    }
-                    return
-                }
                 fileListViewModel.configure(token: token, serverURL: serverURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true
                     statusMessage = "✅ Face ID login successful!"
                 }
-                Log.info("✅ Face ID login successful")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     statusMessage = nil
                 }

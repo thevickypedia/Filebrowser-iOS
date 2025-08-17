@@ -166,26 +166,26 @@ struct FileDetailView: View {
                     }
 
                     var hasAnyActionPermission: Bool {
-                        let permissions = auth.permissions
+                        let permissions = auth.userAccount?.perm
                         return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
                     }
 
                     if hasAnyActionPermission {
                         Menu {
-                            if auth.permissions?.rename == true {
+                            if auth.userAccount?.perm.rename == true {
                                 Button("Rename", systemImage: "pencil", action: {
                                     newName = metadata?.name ?? file.name
                                     isRenaming = true
                                 })
                             }
 
-                            if auth.permissions?.download == true {
+                            if auth.userAccount?.perm.download == true {
                                 Button("Download", systemImage: "arrow.down.circle", action: {
                                     downloadAndSave()
                                 })
                             }
 
-                            if auth.permissions?.share == true {
+                            if auth.userAccount?.perm.share == true {
                                 Button("Share", systemImage: "square.and.arrow.up", action: {
                                     downloadAndSave()
                                 })
@@ -204,7 +204,7 @@ struct FileDetailView: View {
                                 }
                             }
 
-                            if auth.permissions?.delete == true {
+                            if auth.userAccount?.perm.delete == true {
                                 Button("Delete", systemImage: "trash", role: .destructive, action: {
                                     showingDeleteConfirm = true
                                 })
