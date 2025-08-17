@@ -32,73 +32,92 @@ struct ShareSheetView: View {
 
     var body: some View {
         NavigationView {
-            Form {
-                if isShareInProgress {
-                    ProgressView("Generating link...")
+            VStack {
+                Form {
+                    if isShareInProgress {
+                        ProgressView("Generating link...")
+                    }
+
+                    if let shareLink = sharedObjects[file.path],
+                       let unsigned = shareLink.unsigned,
+                       let presigned = shareLink.presigned {
+                        Section(header: Text("Links")) {
+                            ShareLinkRow(title: "Unsigned URL", url: unsigned) { payload in
+                                shareMessage = payload
+                            }
+                            ShareLinkRow(title: "Pre-Signed URL", url: presigned) { payload in
+                                shareMessage = payload
+                            }
+                        }
+
+                        Button("Delete") {
+                            deleteShared(deleteHash: shareLink.hash)
+                        }
+                        .foregroundColor(.red)
+
+                    } else {
+                        Section(header: Text("Share Duration")) {
+                            HStack {
+                                TextField("0", text: $durationDigit)
+                                    .keyboardType(.numbersAndPunctuation)
+                                    .frame(width: 80)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                Picker(selection: $shareDuration, label: Text("")) {
+                                    ForEach(shareDurationOptions, id: \.self) { duration in
+                                        Text(duration.capitalized).tag(duration)
+                                    }
+                                }
+                                .pickerStyle(MenuPickerStyle())
+                            }
+                        }
+
+                        Section(header: Text("Password")) {
+                            SecureField("Enter password", text: $sharePassword)
+                            if sharePassword.trimmingCharacters(in: .whitespaces).isEmpty {
+                                HStack(alignment: .top, spacing: 8) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.yellow)
+                                    Text("You are about to generate a **public** share link. It is recommended to add a password for additional security.")
+                                        .font(.footnote)
+                                        .foregroundColor(.secondary)
+                                }.padding(.top, 4)
+                            }
+                        }
+                    }
                 }
 
-                if let shareLink = sharedObjects[file.path],
-                   let unsigned = shareLink.unsigned,
-                   let presigned = shareLink.presigned {
-                    Section(header: Text("Links")) {
-                        ShareLinkRow(title: "Unsigned URL", url: unsigned) { payload in
-                            shareMessage = payload
+                // ✅ Buttons moved outside Form
+                if sharedObjects[file.path] == nil {
+                    HStack(spacing: 16) {
+                        // FIXME: isPresented is currently a use-less since list view and detail view don't honor change here
+                        Button(action: {
+                            isPresented = false
+                        }) {
+                            Text("Cancel")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.red)
+                                .background(Color(UIColor.secondarySystemBackground))
+                                .cornerRadius(8)
                         }
-                        ShareLinkRow(title: "Pre-Signed URL", url: presigned) { payload in
-                            shareMessage = payload
-                        }
-                    }
-                    Button("Delete") {
-                        deleteShared(deleteHash: shareLink.hash)
-                    }
-                    .foregroundColor(.red)
-                } else {
-                    Section(header: Text("Share Duration")) {
-                        HStack {
-                            TextField("0", text: $durationDigit)
-                                .keyboardType(.numbersAndPunctuation)
-                                .frame(width: 80)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            Picker(selection: $shareDuration, label: Text("")) {
-                                ForEach(shareDurationOptions, id: \.self) { duration in
-                                    Text(duration.capitalized).tag(duration)
-                                }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                        }
-                    }
 
-                    Section(header: Text("Password")) {
-                        SecureField("Enter password", text: $sharePassword)
-                        if sharePassword.trimmingCharacters(in: .whitespaces).isEmpty {
-                            HStack(alignment: .top, spacing: 8) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.yellow)
-                                Text("You are about to generate a **public** share link. It is recommended to add a password for additional security.")
-                                    .font(.footnote)
-                                    .foregroundColor(.secondary)
-                            }.padding(.top, 4)
-                        }
-                    }
-
-                    Section {
-                        HStack {
-                            Spacer()
-                            Button("Cancel") {
-                                isPresented = false
-                            }.foregroundColor(.red)
-                            Spacer()
-                            Button("Share") {
-                                guard let expiry = Int(durationDigit), expiry > 0 else {
-                                    shareMessage = StatusPayload(text: "Input time should be more than 0", color: .red, duration: 3)
-                                    return
-                                }
-                                submitShare()
+                        Button(action: {
+                            guard let expiry = Int(durationDigit), expiry > 0 else {
+                                shareMessage = StatusPayload(text: "❌ Input time should be more than 0", color: .red, duration: 3)
+                                return
                             }
-                            .disabled(isShareInProgress)
-                            Spacer()
+                            submitShare()
+                        }) {
+                            Text("Share")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(isShareInProgress ? Color.gray : Color.blue)
+                                .cornerRadius(8)
                         }
+                        .disabled(isShareInProgress)
                     }
+                    .padding()
                 }
             }
             .navigationBarTitle("Share", displayMode: .inline)
@@ -166,7 +185,7 @@ struct ShareSheetView: View {
         isShareInProgress = true
         guard let expiryTime = Int(durationDigit), expiryTime > 0 else {
             shareMessage = StatusPayload(
-                text: "Input time should be more than 0",
+                text: "❌ Input time should be more than 0",
                 color: .red
             )
             return
