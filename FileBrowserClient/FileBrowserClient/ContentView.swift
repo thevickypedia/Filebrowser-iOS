@@ -85,6 +85,7 @@ struct ContentView: View {
         }
     }
 
+    // FIXME: loadSession is being called redundantly
     var loginView: some View {
         VStack(spacing: 20) {
             Image("logo")
@@ -108,18 +109,32 @@ struct ContentView: View {
 
             if useFaceID,
                let existingSession = KeychainHelper.loadSession(),
-               existingSession["serverURL"] == serverURL,
-               let username = existingSession["username"] {
+               existingSession["serverURL"] == serverURL {
                 // Face ID mode with saved session
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
                 Button(action: {
                     biometricSignIn()
                 }) {
-                    Label("Login as \(username)", systemImage: "faceid")
+                    let username = existingSession["username"]
+                    let labelText = (username?.isEmpty == false) ? "Login as \(username!)" : "Login with FaceID"
+                    Label(labelText, systemImage: "faceid")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                        .font(.headline)
+                }
+                .padding(.top, 6)
+                Button(action: {
+                    KeychainHelper.deleteSession()
+                    useFaceID = false
+                }) {
+                    Label("Switch User", systemImage: "person.crop.circle.badge.checkmark")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.gray)
                         .foregroundColor(.white)
                         .cornerRadius(8)
                         .font(.headline)
@@ -276,7 +291,7 @@ struct ContentView: View {
             statusMessage = nil
         }
         // If neither remember nor useFaceID is enabled, remove any saved session
-        if !rememberMe && !useFaceID {
+        if !(rememberMe || useFaceID) {
             KeychainHelper.deleteSession()
             KeychainHelper.deleteKnownServers()
         }
@@ -372,6 +387,7 @@ struct ContentView: View {
                     // guard logJsonData(data: payloadData) else { return }
                     do {
                         let jwtPayload = try JSONDecoder().decode(JWTUserWrapper.self, from: payloadData)
+                        // MARK: Entered credentials are valid, store auth params
                         await setAuth(jwt: jwt, jwtPayload: jwtPayload)
                     } catch {
                         Log.error("Decoding error: \(error)")
@@ -445,14 +461,14 @@ struct ContentView: View {
         rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
             Task {
+                // MARK: Extract stored credentials from keychain
                 guard success,
                       let session = KeychainHelper.loadSession(),
-                      let token = session["token"],
-                      let username = session["username"],
-                      let serverURL = session["serverURL"],
-                      serverURL == self.serverURL
+                      let keyChainToken = session["token"],
+                      let keyChainServerURL = session["serverURL"]
                 else {
                     DispatchQueue.main.async {
+                        errorMessage = "❌ Biometric failed. Login with credentials."
                         Log.debug("Biometric failed. Falling back to manual login.")
                         useFaceID = false // fallback to manual login
                     }
@@ -461,56 +477,23 @@ struct ContentView: View {
 
                 // Decode JWT to check expiration
                 Log.debug("Biometric successful. Checking token expiration.")
-                if let payload = decodeJWT(jwt: token) {
+                if let payload = decodeJWT(jwt: keyChainToken) {
                     // guard logJsonData(data: payload) else { return }
                     do {
                         let jwtPayload = try JSONDecoder().decode(JWTUserWrapper.self, from: payload)
                         let now = Date().timeIntervalSince1970
                         if now >= jwtPayload.exp {
-                            Log.info("🔑 Token expired — refreshing via stored credentials.")
-                            if let password = session["password"] {
-                                DispatchQueue.main.async {
-                                    self.serverURL = serverURL
-                                    self.username = username
-                                    self.password = password
-                                    // Reuse the normal login flow
-                                    Task {
-                                        await login()
-                                    }
-                                }
-                            } else {
-                                // No password stored — fallback to showing login UI
-                                DispatchQueue.main.async {
-                                    useFaceID = false
+                            Log.info("🔑 Token expired — quietly re-authenticating.")
+                            DispatchQueue.main.async {
+                                // Reuse the normal login flow
+                                Task {
+                                    await login()
                                 }
                             }
                             return
                         } else {
-                            Log.info("🔑 Token is still valid — initiating server hand-shake.")
-                            await setAuth(jwt: token, jwtPayload: jwtPayload)
-                            guard let userID = auth.userAccount?.id else {
-                                Log.error("Failed to setAuth")
-                                return
-                            }
-                            if let err = await auth.fetchPermissions(
-                                for: userID,
-                                token: token,
-                                serverURL: serverURL
-                               ) {
-                                DispatchQueue.main.async {
-                                    // FIXME: Find a better way to handle this
-                                    if ["401"].contains(err) {
-                                        // This indicates a server restart
-                                        Log.warn("FaceID passed, but session validation failed.")
-                                        reauth()
-                                    } else {
-                                        errorMessage = err
-                                    }
-                                }
-                            } else {
-                                // Token still valid — just use it
-                                Log.info("✅ Face ID login successful. Proceed to landing page.")
-                            }
+                            // MARK: Stored credentials in keychain are valid, store auth params
+                            await setAuth(jwt: keyChainToken, jwtPayload: jwtPayload)
                         }
                     } catch {
                         Log.error("Decoding error: \(error)")
@@ -518,7 +501,31 @@ struct ContentView: View {
                     }
                 }
 
-                fileListViewModel.configure(token: token, serverURL: serverURL)
+                Log.info("🔑 Token is still valid — initiating server hand-shake.")
+                guard let userID = auth.userAccount?.id else {
+                    Log.error("Failed to setAuth")
+                    return
+                }
+                if let err = await auth.fetchPermissions(
+                    for: userID,
+                    token: keyChainToken,
+                    serverURL: keyChainServerURL
+                   ) {
+                    DispatchQueue.main.async {
+                        // FIXME: Find a better way to handle this
+                        if ["401"].contains(err) {
+                            // This indicates a server restart
+                            Log.warn("FaceID passed, but session validation failed.")
+                            reauth()
+                        } else {
+                            errorMessage = err
+                        }
+                    }
+                } else {
+                    // Token still valid — just use it
+                    Log.info("✅ Face ID login successful. Proceed to landing page.")
+                }
+                fileListViewModel.configure(token: keyChainToken, serverURL: keyChainServerURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true
                     statusMessage = "✅ Face ID login successful!"
