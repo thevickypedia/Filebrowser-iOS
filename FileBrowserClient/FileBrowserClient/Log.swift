@@ -17,25 +17,43 @@ enum LogLevel: Int {
 struct Log {
     static var currentLevel: LogLevel = .warning
 
-    private static func log(_ message: String, level: LogLevel, label: String) {
+    private static func log(_ message: String,
+                            level: LogLevel,
+                            label: String,
+                            file: String = #fileID,
+                            line: Int = #line,
+                            function: String = #function) {
         guard level.rawValue >= currentLevel.rawValue else { return }
-        print("\(label) [\(timestamp())] \(message)")
+        let location = "\(file):\(line) \(function)"
+        print("\(label) [\(timestamp())] [\(location)] \(message)")
     }
 
-    static func debug(_ message: String) {
-        log(message, level: .debug, label: "🐛 DEBUG")
+    static func debug(_ message: String,
+                      file: String = #fileID,
+                      line: Int = #line,
+                      function: String = #function) {
+        log(message, level: .debug, label: "🐛 DEBUG", file: file, line: line, function: function)
     }
 
-    static func info(_ message: String) {
-        log(message, level: .info, label: "ℹ️ INFO")
+    static func info(_ message: String,
+                     file: String = #fileID,
+                     line: Int = #line,
+                     function: String = #function) {
+        log(message, level: .info, label: "ℹ️ INFO", file: file, line: line, function: function)
     }
 
-    static func warn(_ message: String) {
-        log(message, level: .warning, label: "⚠️ WARNING")
+    static func warn(_ message: String,
+                     file: String = #fileID,
+                     line: Int = #line,
+                     function: String = #function) {
+        log(message, level: .warning, label: "⚠️ WARNING", file: file, line: line, function: function)
     }
 
-    static func error(_ message: String) {
-        log(message, level: .error, label: "❌ ERROR")
+    static func error(_ message: String,
+                      file: String = #fileID,
+                      line: Int = #line,
+                      function: String = #function) {
+        log(message, level: .error, label: "❌ ERROR", file: file, line: line, function: function)
     }
 
     private static func timestamp() -> String {
