@@ -7,18 +7,6 @@
 
 import SwiftUI
 
-struct AdvancedSettings {
-    // Controlled with file extensions
-    let cacheImage: Bool
-    let cachePDF: Bool
-    let cacheText: Bool
-    // Controlled with individual condition blocks
-    let displayThumbnail: Bool
-    let cacheThumbnail: Bool
-    let animateGIF: Bool
-    let chunkSize: Int
-}
-
 struct ContentView: View {
     @State private var knownServers: [String] = []
     @State private var showAddServerAlert = false
@@ -53,6 +41,20 @@ struct ContentView: View {
     @AppStorage("chunkSize") private var chunkSize = 1
     @State private var chunkSizeText: String = "1"
 
+    private func fileListView(advancedSettings: AdvancedSettings,
+                              extensionTypes: ExtensionTypes,
+                              cacheExtensions: [String]) -> some View {
+        FileListView(
+            isLoggedIn: $isLoggedIn,
+            pathStack: $pathStack,
+            logoutHandler: handleLogout,
+            extensionTypes: extensionTypes,
+            advancedSettings: advancedSettings,
+            cacheExtensions: cacheExtensions
+        )
+        .environmentObject(fileListViewModel)
+    }
+
     var body: some View {
         let extensionTypes = ExtensionTypes()
         let advancedSettings = AdvancedSettings(
@@ -68,29 +70,17 @@ struct ContentView: View {
         NavigationStack(path: $pathStack) {
             Group {
                 if isLoggedIn {
-                    FileListView(
-                        isLoggedIn: $isLoggedIn,
-                        pathStack: $pathStack,
-                        logoutHandler: handleLogout,
-                        extensionTypes: extensionTypes,
-                        advancedSettings: advancedSettings,
-                        cacheExtensions: cacheExtensions
-                    )
-                    .environmentObject(fileListViewModel)
+                    fileListView(advancedSettings: advancedSettings,
+                                 extensionTypes: extensionTypes,
+                                 cacheExtensions: cacheExtensions)
                 } else {
                     loginView
                 }
             }
             .navigationDestination(for: String.self) { _ in
-                FileListView(
-                    isLoggedIn: $isLoggedIn,
-                    pathStack: $pathStack,
-                    logoutHandler: handleLogout,
-                    extensionTypes: extensionTypes,
-                    advancedSettings: advancedSettings,
-                    cacheExtensions: cacheExtensions
-                )
-                .environmentObject(fileListViewModel)
+                fileListView(advancedSettings: advancedSettings,
+                             extensionTypes: extensionTypes,
+                             cacheExtensions: cacheExtensions)
             }
         }
     }
@@ -172,26 +162,15 @@ struct ContentView: View {
             }
 
             Section {
-                DisclosureGroup("Advanced Settings", isExpanded: $showAdvancedOptions) {
-                    HStack {
-                        Text("Chunk Size (MB)")
-                        Spacer()
-                        Picker(selection: $chunkSize, label: Text("\(chunkSize)")) {
-                            ForEach([1, 2, 5, 10, 20], id: \.self) { size in
-                                Text("\(size)").tag(size)
-                            }
-                        }
-                        // WheelPickerStyle takes too much space
-                        .pickerStyle(MenuPickerStyle())
-                        .frame(width: 80)
-                    }
-                    Toggle("Cache Images", isOn: $cacheImage)
-                    Toggle("Cache PDFs", isOn: $cachePDF)
-                    Toggle("Cache Text Files", isOn: $cacheText)
-                    Toggle("Display Thumbnails", isOn: $displayThumbnail)
-                    Toggle("Cache Thumbnails", isOn: $cacheThumbnail)
-                    Toggle("Animate GIF Files", isOn: $animateGIF)
-                }
+                AdvancedSettingsView(
+                    cacheImage: $cacheImage,
+                    cachePDF: $cachePDF,
+                    cacheText: $cacheText,
+                    displayThumbnail: $displayThumbnail,
+                    cacheThumbnail: $cacheThumbnail,
+                    animateGIF: $animateGIF,
+                    chunkSize: $chunkSize
+                )
                 .onAppear {
                     chunkSizeText = String(chunkSize)
                 }
@@ -550,8 +529,4 @@ struct ContentView: View {
             }
         }
     }
-}
-
-struct Folder: Hashable {
-    let name: String
 }

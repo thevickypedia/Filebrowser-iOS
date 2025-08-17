@@ -61,7 +61,7 @@ extension AuthManager {
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await URLSession.shared.data(for: request)
 
             // guard logJsonData(data: data) else { return "Failed to parse server response" }
             guard let httpResponse = response as? HTTPURLResponse else {
