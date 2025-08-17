@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.32.4 (08/17/2025)
+--------------------
+- [e966a9d](https://github.com/thevickypedia/Filebrowser-iOS/commit/e966a9db4b33d31e50cb4de1c29243aaf1bce810) chore: Release ``v1.32.4``
+- [1298bf2](https://github.com/thevickypedia/Filebrowser-iOS/commit/1298bf21cfad4e66e287d06ef9f7c820634f8ac0) perf: Include optional verbose logging
+- [3e7e910](https://github.com/thevickypedia/Filebrowser-iOS/commit/3e7e910dcdcbf521e51632433d964dcbef09de92) feat: Include a new button to switch user after logout
+- [19d0b53](https://github.com/thevickypedia/Filebrowser-iOS/commit/19d0b53e28d6cad15c63d32b1377ffd2dc816456) chore: Update release notes for v1.32.3
+
 v1.32.3 (08/17/2025)
 --------------------
 - [39b3305](https://github.com/thevickypedia/Filebrowser-iOS/commit/39b33058ebb9080910fffc470a0f49c48bb65f47) chore: Release ``v1.32.3``
