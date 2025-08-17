@@ -49,7 +49,6 @@ struct UserPermission: Codable {
     var download: Bool
 }
 
-
 extension AuthManager {
 
     func fetchPermissions(for userID: Int, token: String, serverURL: String) async -> String? {

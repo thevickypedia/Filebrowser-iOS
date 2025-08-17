@@ -5,8 +5,6 @@
 //  Created by Vignesh Rao on 8/17/25.
 //
 
-
-
 import SwiftUI
 
 struct AdvancedSettings {
@@ -20,7 +18,6 @@ struct AdvancedSettings {
     let animateGIF: Bool
     let chunkSize: Int
 }
-
 
 struct AdvancedSettingsView: View {
     @Binding var cacheImage: Bool

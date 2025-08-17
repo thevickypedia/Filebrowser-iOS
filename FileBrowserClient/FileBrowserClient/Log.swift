@@ -15,7 +15,8 @@ enum LogLevel: Int {
 }
 
 struct Log {
-    static var currentLevel: LogLevel = .info
+    static var currentLevel: LogLevel = .debug
+    static var verboseMode: Bool = false
 
     private static func log(_ message: String,
                             level: LogLevel,
@@ -24,7 +25,7 @@ struct Log {
                             line: Int = #line,
                             function: String = #function) {
         guard level.rawValue >= currentLevel.rawValue else { return }
-        if currentLevel == .debug {
+        if verboseMode {
             let location = "\(file):\(line) \(function)"
             print("\(label) [\(timestamp())] [\(location)] \(message)")
         } else {
