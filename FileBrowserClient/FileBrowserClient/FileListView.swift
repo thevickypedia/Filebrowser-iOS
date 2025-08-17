@@ -30,7 +30,7 @@ struct FileListView: View {
     @State private var renameInput = ""
 
     @State private var isSharing = false
-    @State private var sharePath: FileItem? = nil
+    @State private var sharePath: FileItem?
 
     @State private var hideDotfiles = false
     @State private var showingSettings = false
