@@ -248,37 +248,44 @@ func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager)
     )
 }
 
-func decodeJWT(jwt: String) -> [String: Any]? {
-    let segments = jwt.split(separator: ".")
+func decodeJWT(jwt: String) -> JWTPayload? {
+    let segments = jwt.components(separatedBy: ".")
     guard segments.count == 3 else {
-        Log.error("Invalid JWT")
+        Log.error("Invalid JWT token")
         return nil
     }
 
     let payloadSegment = segments[1]
 
-    // Pad the base64 string if needed
-    var base64String = String(payloadSegment)
+    // Add padding if necessary
+    var base64 = payloadSegment
         .replacingOccurrences(of: "-", with: "+")
         .replacingOccurrences(of: "_", with: "/")
 
-    // Pad with '=' if needed
-    while base64String.count % 4 != 0 {
-        base64String += "="
-    }
+    let requiredLength = 4 * ((base64.count + 3) / 4)
+    base64 = base64.padding(toLength: requiredLength, withPad: "=", startingAt: 0)
 
-    guard let payloadData = Data(base64Encoded: base64String) else {
-        Log.error("Invalid base64 payload")
+    guard let payloadData = Data(base64Encoded: base64) else {
+        Log.error("Failed to decode base64")
         return nil
     }
 
     do {
-        let jsonObject = try JSONSerialization.jsonObject(with: payloadData, options: [])
-        return jsonObject as? [String: Any]
+        let decoder = JSONDecoder()
+        let payload = try decoder.decode(JWTPayload.self, from: payloadData)
+        return payload
     } catch {
-        Log.error("Error decoding JSON: \(error)")
+        Log.error("Failed to parse JWT: \(error.localizedDescription)")
         return nil
     }
+
+//    guard let json = try? JSONSerialization.jsonObject(with: payloadData, options: []),
+//          let payload = json as? [String: Any] else {
+//        print("Failed to parse JSON")
+//        return nil
+//    }
+//
+//    return payload
 }
 
 func timeStampToString(from timestamp: TimeInterval?) -> String {

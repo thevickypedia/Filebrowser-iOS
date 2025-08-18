@@ -7,17 +7,6 @@
 
 import Foundation
 
-struct UserPermission: Codable {
-    var admin: Bool
-    var execute: Bool
-    var create: Bool
-    var rename: Bool
-    var modify: Bool
-    var delete: Bool
-    var share: Bool
-    var download: Bool
-}
-
 class AuthManager: ObservableObject {
     @Published var token: String?
     @Published var serverURL: String?
@@ -33,22 +22,41 @@ class AuthManager: ObservableObject {
     }
 }
 
+struct JWTPayload: Codable {
+    let iat: TimeInterval
+    let iss: String
+    let exp: TimeInterval
+    let user: UserAccount
+}
+
 struct UserAccount: Codable {
+    let lockPassword: Bool
+    let locale: String
+    let perm: UserPermission
+    let singleClick: Bool
     let id: Int
-    let username: String
-    var locale: String
-    var viewMode: String
+    let commands: [String]?
+    let viewMode: String
+    // MARK: Updated by settings page
     var hideDotfiles: Bool
-    var dateFormat: Bool?
-    var lockPassword: Bool
-    var perm: UserPermission
-    var commands: [String]?
+    var dateFormat: Bool
+}
+
+struct UserPermission: Codable {
+    let share: Bool
+    let admin: Bool
+    let rename: Bool
+    let modify: Bool
+    let delete: Bool
+    let execute: Bool
+    let download: Bool
+    let create: Bool
 }
 
 extension AuthManager {
 
-    func fetchPermissions(for username: String, token: String, serverURL: String) async -> String? {
-        guard let url = URL(string: "\(serverURL)/api/users") else {
+    func fetchPermissions(for userID: String, token: String, serverURL: String) async -> String? {
+        guard let url = URL(string: "\(serverURL)/api/users/\(userID)") else {
             return "❌ Failed to construct url for: \(serverURL)"
         }
 
@@ -56,7 +64,7 @@ extension AuthManager {
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 Log.error("❌ Response was not HTTPURLResponse")
@@ -69,21 +77,8 @@ extension AuthManager {
                 Log.error("❌ \(errorMessage)")
                 return "\(httpResponse.statusCode)"
             }
-
-            let users = try JSONDecoder().decode([UserAccount].self, from: data)
-            if let current = users.first(where: { $0.username == username }) {
-                await MainActor.run {
-                    self.permissions = current.perm
-                    self.userAccount = current
-                    Log.debug("✅ Permissions + user loaded for \(username)")
-                }
-            } else {
-                let errorMessage = "User [\(username)] not found in /api/users"
-                Log.error("❌ \(errorMessage)")
-                return errorMessage
-            }
         } catch {
-            Log.error("❌ Failed to fetch permissions for \(username): \(error.localizedDescription)")
+            Log.error("❌ Failed to fetch permissions for UserID \(userID): \(error.localizedDescription)")
             return error.localizedDescription
         }
         return nil
