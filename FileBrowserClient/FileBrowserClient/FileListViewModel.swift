@@ -13,9 +13,14 @@ class FileListViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isLoading: Bool = false
     @Published var searchResults: [FileItemSearch] = []
+    private var currentTask: Task<Void, Never>?
 
     var token: String?
     var serverURL: String?
+
+    func cancelCurrentFetch() {
+        currentTask?.cancel()
+    }
 
     func configure(token: String, serverURL: String) {
         self.token = token
@@ -39,9 +44,18 @@ class FileListViewModel: ObservableObject {
     }
 
     func fetchFiles(at path: String) {
+        currentTask?.cancel()
+        currentTask = Task {
+            performFetch(at: path)
+        }
+    }
+
+    func performFetch(at path: String) {
         Log.debug("📡 Fetching files at path: \(path)")
         guard let token = token, let serverURL = serverURL else {
-            errorMessage = "Missing auth"
+            DispatchQueue.main.async {
+                self.errorMessage = "Missing auth"
+            }
             return
         }
 
@@ -50,7 +64,9 @@ class FileListViewModel: ObservableObject {
             pathComponents: ["api", "resources", path],
             queryItems: []
         ) else {
-            errorMessage = "Invalid URL"
+            DispatchQueue.main.async {
+                self.errorMessage = "Invalid URL"
+            }
             return
         }
 
@@ -58,8 +74,10 @@ class FileListViewModel: ObservableObject {
         request.httpMethod = "GET"
         request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        isLoading = true
-        errorMessage = nil
+        DispatchQueue.main.async {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
