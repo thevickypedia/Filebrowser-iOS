@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+v1.33.0 (08/18/2025)
+--------------------
+- [3015f59](https://github.com/thevickypedia/Filebrowser-iOS/commit/3015f5936db075751c4eff9385e63c03ed85c28e) chore: Release ``v1.33.0``
+- [41e6bc3](https://github.com/thevickypedia/Filebrowser-iOS/commit/41e6bc3267ad174d377fc556b08897f9fc4f5eaa) fix: False positive on server handshake due to username rendering HTML content
+- [04b1055](https://github.com/thevickypedia/Filebrowser-iOS/commit/04b1055f69adb75e5604eb71a029c9ccde94eecc) perf: Remove navigation glitches by replacing debounced fetch with immediate state updates
+- [83b01f5](https://github.com/thevickypedia/Filebrowser-iOS/commit/83b01f5b7383a1cf33aa5d000e2c54ec4042654c) lint: Fix line breaks
+- [5f8135a](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f8135af048a86dd3f707612e02a8b0acc8b840b) perf: Simplify permission validation in file list view
+- [643c940](https://github.com/thevickypedia/Filebrowser-iOS/commit/643c94008852c84b399ddc6a57ade4bff83f0fa8) perf: Manage auth params and server hand shake more efficiently
+- [3697be0](https://github.com/thevickypedia/Filebrowser-iOS/commit/3697be001654a7d7fb4ca177d036be325a4528fa) fix: Failing to get permissions for non-admin users
+- [43e6e28](https://github.com/thevickypedia/Filebrowser-iOS/commit/43e6e28d75387d85db2783098e3ff4859446b2fb) perf: Onboard a ``JWTPayload`` struct for proper serialization
+- [00fc06d](https://github.com/thevickypedia/Filebrowser-iOS/commit/00fc06daccf0c64edf3a49a0dbee67ee6286d1c0) revert: Rollback ``78e468e``:  Failing to get permissions for non-admin users
+- [e6a8894](https://github.com/thevickypedia/Filebrowser-iOS/commit/e6a889426a6a20b2933cbdb536fafd17bbdb541c) style: Make switch user button smaller and padded
+- [a325ca6](https://github.com/thevickypedia/Filebrowser-iOS/commit/a325ca64fd21d37c6b714e7dd6076f5290366bb2) perf: Prevent multiple ``NavigationRequestObserver`` updates per frame
+- [7cc2d5c](https://github.com/thevickypedia/Filebrowser-iOS/commit/7cc2d5c65c546758aa1deeaa7dccab0b750b03ae) chore: Update release notes for v1.32.4
+
 v1.32.4 (08/17/2025)
 --------------------
 - [e966a9d](https://github.com/thevickypedia/Filebrowser-iOS/commit/e966a9db4b33d31e50cb4de1c29243aaf1bce810) chore: Release ``v1.32.4``
