@@ -150,7 +150,18 @@ struct FileListView: View {
         self.token = token
         self.tokenPayload = tokenPayload
         self.isAuthValid = true
+        // TODO: Edge case - server hand shake passed but token was not authorized for listing
+        //  - Happened only once, but should be caught here or during debounce
         Log.info("✅ Auth validation successful")
+    }
+
+    var userPermissions: UserPermission? {
+        return auth.tokenPayload?.user.perm
+    }
+
+    private var hasModifyPermissions: Bool {
+        let permissions = userPermissions
+        return permissions?.rename == true || permissions?.delete == true || permissions?.share == true
     }
 
     // Debounced fetch function
@@ -335,7 +346,7 @@ struct FileListView: View {
 
     private var actionsTabStack: some View {
         return Menu {
-            if auth.tokenPayload?.user.perm.create == true {
+            if userPermissions?.create == true {
                 Button("Create File", systemImage: "doc.badge.plus", action: {
                     showCreateFile = true
                 })
@@ -482,11 +493,6 @@ struct FileListView: View {
         }
         .padding()
         .presentationDetents([.fraction(0.3)]) // 30% of the screen height
-    }
-
-    private var hasModifyPermissions: Bool {
-        let permissions = auth.tokenPayload?.user.perm
-        return permissions?.rename == true || permissions?.delete == true || permissions?.share == true
     }
 
     private var showSettingsSheet: some View {
@@ -674,7 +680,7 @@ struct FileListView: View {
             // Right: Actions (person icon) and Selection (three dot) buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if selectionMode {
-                    if auth.tokenPayload?.user.perm.delete == true {
+                    if userPermissions?.delete == true {
                         // 🗑️ Delete
                         Button(action: {
                             if selectedItems.isEmpty { return }
@@ -686,7 +692,7 @@ struct FileListView: View {
 
                     // 📝 Rename and Share links only when exactly 1 item is selected
                     if selectedItems.count == 1 {
-                        if auth.tokenPayload?.user.perm.rename == true {
+                        if userPermissions?.rename == true {
                             Button(action: {
                                 if let item = selectedItems.first {
                                     renameInput = item.name
@@ -696,7 +702,7 @@ struct FileListView: View {
                                 Image(systemName: "pencil")
                             }
                         }
-                        if auth.tokenPayload?.user.perm.share == true {
+                        if userPermissions?.share == true {
                             Button(action: {
                                 if let item = selectedItems.first {
                                     sharePath = item

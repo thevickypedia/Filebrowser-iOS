@@ -73,6 +73,7 @@ extension AuthManager {
                 Log.error("❌ \(errorMessage)")
                 return "\(httpResponse.statusCode)"
             }
+            Log.debug("✅ Server hand shake successful: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
         } catch {
             Log.error("❌ Failed to fetch permissions for UserID \(userID): \(error.localizedDescription)")
             return error.localizedDescription
