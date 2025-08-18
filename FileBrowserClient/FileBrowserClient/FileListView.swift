@@ -71,6 +71,11 @@ struct FileListView: View {
 
     @State private var loadingFiles: [String: Bool] = [:] // Track loading state by file path
 
+    // Add debounce state
+    @State private var fetchTask: Task<Void, Never>?
+    @State private var lastFetchPath: String = ""
+    @State private var hasInitialLoad = false
+
     private var viewMode: ViewMode {
         get { ViewMode(rawValue: viewModeRawValue) ?? .list }
         set { viewModeRawValue = newValue.rawValue }
@@ -148,12 +153,36 @@ struct FileListView: View {
         Log.info("✅ Auth validation successful")
     }
 
+    // Debounced fetch function
+    private func debouncedFetchFiles(at path: String, delay: Double = 0.1) {
+        // Cancel existing fetch task
+        fetchTask?.cancel()
+
+        // Skip if same path and not initial load
+        if path == lastFetchPath && hasInitialLoad && !searchClicked {
+            return
+        }
+
+        fetchTask = Task {
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard isAuthValid else { return }
+                lastFetchPath = path
+                hasInitialLoad = true
+                viewModel.fetchFiles(at: path)
+            }
+        }
+    }
+
     private var homeStack: some View {
         HStack {
             Button(action: {
                 pathStack = []
                 Log.info("🔙 Dismissing to root directory")
-                viewModel.fetchFiles(at: "/")
+                debouncedFetchFiles(at: "/")
             }) {
                 Image(systemName: "house")
             }
@@ -208,7 +237,7 @@ struct FileListView: View {
                     searchInProgress = false
                     viewModel.searchResults.removeAll()
                     pathStack = previousPathStack
-                    viewModel.fetchFiles(at: pathStack.last ?? "/")
+                    debouncedFetchFiles(at: pathStack.last ?? "/")
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.red)
@@ -740,19 +769,23 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
+            guard !hasInitialLoad else { return }
             validateAuth()
             guard isAuthValid else { return }
             if !searchClicked && !searchInProgress {
                 Log.debug("📂 FileListView appeared for path: \(currentPath)")
-                viewModel.fetchFiles(at: currentPath)
+                debouncedFetchFiles(at: currentPath, delay: 0.2)
             }
         }
         .onChange(of: pathStack) { newStack in
             if !searchClicked && !searchInProgress {
                 let newPath = newStack.last ?? "/"
                 Log.debug("📂 Path changed: \(newPath)")
-                viewModel.fetchFiles(at: newPath)
+                debouncedFetchFiles(at: newPath)
             }
+        }
+        .onDisappear {
+            fetchTask?.cancel()
         }
         .sheet(isPresented: $isSharing) {
             if let sp = sharePath {
@@ -1344,7 +1377,7 @@ struct FileListView: View {
         uploadTask = nil
         isUploading = false
         Log.debug("❌ Upload cancelled")
-        viewModel.fetchFiles(at: currentPath)
+        debouncedFetchFiles(at: currentPath)
     }
 
     func uploadFileInChunks(
@@ -1383,7 +1416,7 @@ struct FileListView: View {
                 uploadProgress = 1.0
                 currentUploadSpeed = 0.0
                 uploadNextInQueue()
-                viewModel.fetchFiles(at: currentPath)
+                debouncedFetchFiles(at: currentPath)
                 statusMessage = StatusPayload(text: "📤 Uploaded \(fileURL.lastPathComponent)")
                 return
             }
@@ -1645,7 +1678,7 @@ struct FileListView: View {
             Log.info("✅ Deleted \(count) items")
             selectedItems.removeAll()
             selectionMode = false
-            viewModel.fetchFiles(at: currentPath)
+            debouncedFetchFiles(at: currentPath)
             statusMessage = StatusPayload(text: "🗑️ Deleted \(count) \(count == 1 ? "item" : "items")", color: .red, duration: 3)
         }
     }
@@ -1680,7 +1713,7 @@ struct FileListView: View {
                     selectedItems.removeAll()
                     isRenaming = false
                     selectionMode = false
-                    viewModel.fetchFiles(at: currentPath)
+                    debouncedFetchFiles(at: currentPath)
                     statusMessage = StatusPayload(text: "📝 Renamed \(item.name) → \(renameInput)", color: .yellow, duration: 3)
                 }
             }
@@ -1731,7 +1764,7 @@ struct FileListView: View {
             URLQueryItem(name: "override", value: "false")
         ]
 
-        Log.info("🔄 Creating \(resourceType) at path: \(fullPath)")
+        Log.info("📄 Creating \(resourceType) at path: \(fullPath)")
 
         makeRequest(endpoint: endpoint, method: "POST", queryItems: query) { _, response, error in
             DispatchQueue.main.async {
@@ -1749,7 +1782,7 @@ struct FileListView: View {
 
                 if http.statusCode == 200 {
                     Log.info("✅ \(resourceType) created successfully")
-                    viewModel.fetchFiles(at: currentPath)
+                    debouncedFetchFiles(at: currentPath)
                     statusMessage = StatusPayload(text: "\(emoji) \(newResourceName) created")
                 } else {
                     Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")
@@ -1762,7 +1795,7 @@ struct FileListView: View {
 
     func refreshFolder() {
         Log.debug("ℹ️ Refresh Directory")
-        viewModel.fetchFiles(at: currentPath)
+        debouncedFetchFiles(at: currentPath, delay: 0)
     }
 
     private func fullPath(for file: FileItem) -> String {
