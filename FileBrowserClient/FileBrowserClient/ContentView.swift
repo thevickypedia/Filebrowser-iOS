@@ -311,14 +311,6 @@ struct ContentView: View {
         }.joined(separator: "\\u")
     }
 
-    func setAuth(jwt: String, jwtPayload: JWTUserWrapper) async {
-        token = jwt
-        auth.token = jwt
-        auth.serverURL = serverURL
-        auth.jwtWrapper = jwtPayload
-        auth.userAccount = jwtPayload.user
-    }
-
     func login() async {
         if serverURL.isEmpty || username.isEmpty || password.isEmpty {
             errorMessage = "Credentials are required to login!"
@@ -382,16 +374,20 @@ struct ContentView: View {
             }
 
             if httpResponse.statusCode == 200 {
-                Log.debug("Authentication successful")
-                if let jwt = String(data: data, encoding: .utf8),
-                   let payloadData = decodeJWT(jwt: jwt) {
-                    // guard logJsonData(data: payloadData) else { return }
-                    do {
-                        let jwtPayload = try JSONDecoder().decode(JWTUserWrapper.self, from: payloadData)
-                        // MARK: Entered credentials are valid, store auth params
-                        await setAuth(jwt: jwt, jwtPayload: jwtPayload)
-                    } catch {
-                        Log.error("Decoding error: \(error)")
+                if let jwt = String(data: data, encoding: .utf8) {
+                    if let payload = decodeJWT(jwt: jwt) {
+                        auth.iss = payload["iss"] as? String
+                        auth.exp = payload["exp"] as? TimeInterval
+                        auth.iat = payload["iat"] as? TimeInterval
+                    }
+                    token = jwt
+                    auth.token = jwt
+                    auth.serverURL = serverURL
+                    auth.permissions = nil
+                    auth.username = username
+                    // Wait for permissions to finish (to load userAccount)
+                    if let err = await auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL) {
+                        errorMessage = err
                         return
                     }
 
@@ -425,14 +421,10 @@ struct ContentView: View {
     }
 
     func logTokenInfo() {
-        guard let jwtWrapper = auth.jwtWrapper else {
-            Log.error("JWT token wrapper not found!")
-            return
-        }
-        Log.info("Issuer: \(jwtWrapper.iss)")
-        Log.info("Issued: \(timeStampToString(from: jwtWrapper.iat))")
-        Log.info("Expiration: \(timeStampToString(from: jwtWrapper.exp))")
-        Log.info("Time Left: \(timeLeftString(until: jwtWrapper.exp))")
+        Log.info("Issuer: \(auth.iss ?? "Unknown")")
+        Log.info("Issued: \(timeStampToString(from: auth.iat))")
+        Log.info("Expiration: \(timeStampToString(from: auth.exp))")
+        Log.info("Time Left: \(timeLeftString(until: auth.exp))")
     }
 
     func reauth() {
@@ -462,56 +454,60 @@ struct ContentView: View {
         rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
             Task {
-                // MARK: Extract stored credentials from keychain
                 guard success,
                       let session = KeychainHelper.loadSession(),
-                      let keyChainToken = session["token"],
-                      let keyChainServerURL = session["serverURL"]
+                      let token = session["token"],
+                      let username = session["username"],
+                      let serverURL = session["serverURL"],
+                      serverURL == self.serverURL
                 else {
                     DispatchQueue.main.async {
-                        errorMessage = "❌ Biometric failed. Login with credentials."
-                        Log.debug("Biometric failed. Falling back to manual login.")
                         useFaceID = false // fallback to manual login
                     }
                     return
                 }
 
                 // Decode JWT to check expiration
-                Log.debug("Biometric successful. Checking token expiration.")
-                if let payload = decodeJWT(jwt: keyChainToken) {
-                    // guard logJsonData(data: payload) else { return }
-                    do {
-                        let jwtPayload = try JSONDecoder().decode(JWTUserWrapper.self, from: payload)
-                        let now = Date().timeIntervalSince1970
-                        if now >= jwtPayload.exp {
-                            Log.info("🔑 Token expired — quietly re-authenticating.")
+                if let payload = decodeJWT(jwt: token),
+                   let exp = payload["exp"] as? TimeInterval {
+                    let now = Date().timeIntervalSince1970
+                    if now >= exp {
+                        Log.info("🔑 Token expired — refreshing via stored credentials.")
+                        if let password = session["password"] {
                             DispatchQueue.main.async {
+                                self.serverURL = serverURL
+                                self.username = username
+                                self.password = password
                                 // Reuse the normal login flow
                                 Task {
                                     await login()
                                 }
                             }
-                            return
                         } else {
-                            // MARK: Stored credentials in keychain are valid, store auth params
-                            await setAuth(jwt: keyChainToken, jwtPayload: jwtPayload)
+                            // No password stored — fallback to showing login UI
+                            DispatchQueue.main.async {
+                                useFaceID = false
+                            }
                         }
-                    } catch {
-                        Log.error("Decoding error: \(error)")
                         return
                     }
                 }
 
-                Log.info("🔑 Token is still valid — initiating server hand-shake.")
-                guard let userID = auth.userAccount?.id else {
-                    Log.error("Failed to setAuth")
-                    return
+                // Token still valid — just use it
+                auth.token = token
+                auth.serverURL = serverURL
+                auth.username = username
+                auth.permissions = nil
+                if let payload = decodeJWT(jwt: token) {
+                    auth.iss = payload["iss"] as? String
+                    auth.exp = payload["exp"] as? TimeInterval
+                    auth.iat = payload["iat"] as? TimeInterval
+                    logTokenInfo()
+                } else {
+                    Log.error("Failed to decode JWT")
                 }
-                if let err = await auth.fetchPermissions(
-                    for: userID,
-                    token: keyChainToken,
-                    serverURL: keyChainServerURL
-                   ) {
+
+                if let err = await auth.fetchPermissions(for: username, token: token, serverURL: serverURL) {
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
                         if ["401"].contains(err) {
@@ -522,15 +518,14 @@ struct ContentView: View {
                             errorMessage = err
                         }
                     }
-                } else {
-                    // Token still valid — just use it
-                    Log.info("✅ Face ID login successful. Proceed to landing page.")
+                    return
                 }
-                fileListViewModel.configure(token: keyChainToken, serverURL: keyChainServerURL)
+                fileListViewModel.configure(token: token, serverURL: serverURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true
                     statusMessage = "✅ Face ID login successful!"
                 }
+                Log.info("✅ Face ID login successful")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     statusMessage = nil
                 }

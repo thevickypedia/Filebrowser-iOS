@@ -248,22 +248,37 @@ func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager)
     )
 }
 
-func decodeJWT(jwt: String) -> Data? {
+func decodeJWT(jwt: String) -> [String: Any]? {
     let segments = jwt.split(separator: ".")
     guard segments.count == 3 else {
         Log.error("Invalid JWT")
         return nil
     }
 
-    var base64String = String(segments[1])
+    let payloadSegment = segments[1]
+
+    // Pad the base64 string if needed
+    var base64String = String(payloadSegment)
         .replacingOccurrences(of: "-", with: "+")
         .replacingOccurrences(of: "_", with: "/")
 
+    // Pad with '=' if needed
     while base64String.count % 4 != 0 {
         base64String += "="
     }
 
-    return Data(base64Encoded: base64String)
+    guard let payloadData = Data(base64Encoded: base64String) else {
+        Log.error("Invalid base64 payload")
+        return nil
+    }
+
+    do {
+        let jsonObject = try JSONSerialization.jsonObject(with: payloadData, options: [])
+        return jsonObject as? [String: Any]
+    } catch {
+        Log.error("Error decoding JSON: \(error)")
+        return nil
+    }
 }
 
 func timeStampToString(from timestamp: TimeInterval?) -> String {
