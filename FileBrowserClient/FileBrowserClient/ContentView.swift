@@ -127,19 +127,20 @@ struct ContentView: View {
                         .font(.headline)
                 }
                 .padding(.top, 6)
+                Spacer().frame(height: 8)
                 Button(action: {
                     KeychainHelper.deleteSession()
                     useFaceID = false
                 }) {
                     Label("Switch User", systemImage: "person.crop.circle.badge.checkmark")
-                        .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
                         .background(.gray)
                         .foregroundColor(.white)
-                        .cornerRadius(8)
+                        .cornerRadius(6)
                         .font(.headline)
                 }
-                .padding(.top, 6)
+                .padding(.top, 4)
             } else {
                 // Normal credential-based login
                 TextField("Username", text: $username)
