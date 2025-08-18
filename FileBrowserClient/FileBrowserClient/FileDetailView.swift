@@ -174,7 +174,6 @@ struct FileDetailView: View {
                         Image(systemName: "info.circle")
                     }
 
-
                     if hasAnyActionPermission {
                         Menu {
                             if userPermissions?.rename == true {

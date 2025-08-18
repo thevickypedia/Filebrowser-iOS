@@ -388,12 +388,12 @@ struct ContentView: View {
                             errorMessage = err
                             return
                         }
-                        
+
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
                         // Show success message
                         statusMessage = "✅ Login successful!"
-                        
+
                         if rememberMe || useFaceID {
                             KeychainHelper.saveSession(
                                 token: jwt,
