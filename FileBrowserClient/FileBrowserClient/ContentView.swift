@@ -376,14 +376,16 @@ struct ContentView: View {
             if httpResponse.statusCode == 200 {
                 if let jwt = String(data: data, encoding: .utf8) {
                     if let payload = decodeJWT(jwt: jwt) {
-                        auth.iss = payload["iss"] as? String
-                        auth.exp = payload["exp"] as? TimeInterval
-                        auth.iat = payload["iat"] as? TimeInterval
+                        auth.iss = payload.iss
+                        auth.exp = payload.exp
+                        auth.iat = payload.iat
+                        // TODO: redundant and should be at top-level
+                        auth.permissions = payload.user.perm
+                        auth.userAccount = payload.user
                     }
                     token = jwt
                     auth.token = jwt
                     auth.serverURL = serverURL
-                    auth.permissions = nil
                     auth.username = username
                     // Wait for permissions to finish (to load userAccount)
                     if let err = await auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL) {
@@ -468,10 +470,9 @@ struct ContentView: View {
                 }
 
                 // Decode JWT to check expiration
-                if let payload = decodeJWT(jwt: token),
-                   let exp = payload["exp"] as? TimeInterval {
+                if let payload = decodeJWT(jwt: token) {
                     let now = Date().timeIntervalSince1970
-                    if now >= exp {
+                    if now >= payload.exp {
                         Log.info("🔑 Token expired — refreshing via stored credentials.")
                         if let password = session["password"] {
                             DispatchQueue.main.async {
@@ -491,17 +492,19 @@ struct ContentView: View {
                         }
                         return
                     }
+                    // TODO: redundant and should be at top-level
+                    auth.permissions = payload.user.perm
+                    auth.userAccount = payload.user
                 }
 
                 // Token still valid — just use it
                 auth.token = token
                 auth.serverURL = serverURL
                 auth.username = username
-                auth.permissions = nil
                 if let payload = decodeJWT(jwt: token) {
-                    auth.iss = payload["iss"] as? String
-                    auth.exp = payload["exp"] as? TimeInterval
-                    auth.iat = payload["iat"] as? TimeInterval
+                    auth.iss = payload.iss
+                    auth.exp = payload.exp
+                    auth.iat = payload.iat
                     logTokenInfo()
                 } else {
                     Log.error("Failed to decode JWT")
