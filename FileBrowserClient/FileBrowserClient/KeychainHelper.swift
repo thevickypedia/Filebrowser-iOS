@@ -89,7 +89,7 @@ enum KeychainHelper {
         // Add the new data to the keychain
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {
-            print("Failed to save known servers: \(status)")
+            Log.error("Failed to save known servers: \(status)")
             return
         }
     }

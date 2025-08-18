@@ -384,7 +384,7 @@ struct ContentView: View {
                         auth.tokenPayload = payload
                         // Wait for permissions to finish (to load userAccount)
                         // TODO: Can run in background or doesn't need to
-                        if let err = await auth.serverHandShake(for: username, token: jwt, serverURL: serverURL) {
+                        if let err = await auth.serverHandShake(for: String(payload.user.id), token: jwt, serverURL: serverURL) {
                             errorMessage = err
                             return
                         }
@@ -506,7 +506,7 @@ struct ContentView: View {
                     Log.error("Failed to decode JWT")
                 }
 
-                if let err = await auth.serverHandShake(for: username, token: token, serverURL: serverURL) {
+                if let err = await auth.serverHandShake(for: String(tokenPayload.user.id), token: token, serverURL: serverURL) {
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
                         if ["401"].contains(err) {
