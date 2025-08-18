@@ -116,7 +116,7 @@ struct FileListView: View {
 
     @State private var serverURL: String = ""
     @State private var token: String = ""
-    @State private var userAccount: UserAccount?
+    @State private var tokenPayload: JWTPayload?
     @State private var isAuthValid: Bool = false
 
     init(
@@ -139,7 +139,7 @@ struct FileListView: View {
     private func validateAuth() {
         guard let serverURL = auth.serverURL,
               let token = auth.token,
-              let userAccount = auth.userAccount else {
+              let tokenPayload = auth.tokenPayload else {
             Log.error("❌ Missing authentication credentials")
             isAuthValid = false
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -148,7 +148,7 @@ struct FileListView: View {
 
         self.serverURL = serverURL
         self.token = token
-        self.userAccount = userAccount
+        self.tokenPayload = tokenPayload
         self.isAuthValid = true
         Log.info("✅ Auth validation successful")
     }
@@ -335,7 +335,7 @@ struct FileListView: View {
 
     private var actionsTabStack: some View {
         return Menu {
-            if auth.userAccount?.perm.create == true {
+            if auth.tokenPayload?.user.perm.create == true {
                 Button("Create File", systemImage: "doc.badge.plus", action: {
                     showCreateFile = true
                 })
@@ -485,7 +485,7 @@ struct FileListView: View {
     }
 
     private var hasModifyPermissions: Bool {
-        let permissions = auth.userAccount?.perm
+        let permissions = auth.tokenPayload?.user.perm
         return permissions?.rename == true || permissions?.delete == true || permissions?.share == true
     }
 
@@ -555,10 +555,10 @@ struct FileListView: View {
 
             Section(
                 footer: VStack(alignment: .leading) {
-                    Text("Issuer: \(auth.iss ?? "Unknown")").textSelection(.enabled)
-                    Text("Issued: \(timeStampToString(from: auth.iat))").textSelection(.enabled)
-                    Text("Expiration: \(timeStampToString(from: auth.exp))").textSelection(.enabled)
-                    Text("Time Left: \(timeLeftString(until: auth.exp))").textSelection(.enabled)
+                    Text("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")").textSelection(.enabled)
+                    Text("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))").textSelection(.enabled)
+                    Text("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))").textSelection(.enabled)
+                    Text("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))").textSelection(.enabled)
                 }
                 .padding(.top, 8)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -569,8 +569,8 @@ struct FileListView: View {
         // MARK: Messages within the settings sheet
         .modifier(StatusMessage(payload: $settingsMessage))
         .onAppear {
-            hideDotfiles = self.userAccount?.hideDotfiles ?? false
-            dateFormatExact = self.userAccount?.dateFormat ?? false
+            hideDotfiles = self.tokenPayload?.user.hideDotfiles ?? false
+            dateFormatExact = self.tokenPayload?.user.dateFormat ?? false
             fetchUsageInfo()
             fetchClientStorageInfo()
         }
@@ -674,7 +674,7 @@ struct FileListView: View {
             // Right: Actions (person icon) and Selection (three dot) buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 if selectionMode {
-                    if auth.userAccount?.perm.delete == true {
+                    if auth.tokenPayload?.user.perm.delete == true {
                         // 🗑️ Delete
                         Button(action: {
                             if selectedItems.isEmpty { return }
@@ -686,7 +686,7 @@ struct FileListView: View {
 
                     // 📝 Rename and Share links only when exactly 1 item is selected
                     if selectedItems.count == 1 {
-                        if auth.userAccount?.perm.rename == true {
+                        if auth.tokenPayload?.user.perm.rename == true {
                             Button(action: {
                                 if let item = selectedItems.first {
                                     renameInput = item.name
@@ -696,7 +696,7 @@ struct FileListView: View {
                                 Image(systemName: "pencil")
                             }
                         }
-                        if auth.userAccount?.perm.share == true {
+                        if auth.tokenPayload?.user.perm.share == true {
                             Button(action: {
                                 if let item = selectedItems.first {
                                     sharePath = item
@@ -1584,7 +1584,7 @@ struct FileListView: View {
             return
         }
 
-        guard let currentSettings = userAccount,
+        guard let currentSettings = tokenPayload?.user,
               let url = buildAPIURL(
                   base: serverURL,
                   pathComponents: ["api", "users", String(currentSettings.id)],
@@ -1604,8 +1604,8 @@ struct FileListView: View {
         updatedSettings.dateFormat = dateFormatExact
 
         // MARK: Set both current state, and auth state (since self is overriden with auth in init)
-        self.userAccount = updatedSettings
-        auth.userAccount = updatedSettings
+        self.tokenPayload?.user = updatedSettings
+        auth.tokenPayload?.user = updatedSettings
         Log.debug("🔄 Updated settings: \(updatedSettings)")
 
         let dataDict = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(updatedSettings))) ?? [:]
@@ -1623,8 +1623,8 @@ struct FileListView: View {
                 let body = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                     Log.info("✅ Settings saved")
-                    self.userAccount?.hideDotfiles = hideDotfiles
-                    self.userAccount?.dateFormat = dateFormatExact
+                    self.tokenPayload?.user.hideDotfiles = hideDotfiles
+                    self.tokenPayload?.user.dateFormat = dateFormatExact
                     settingsMessage = StatusPayload(text: "✅ Settings saved")
                 } else {
                     Log.error("❌ Settings save failed: \(body)")

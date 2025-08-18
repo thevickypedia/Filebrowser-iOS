@@ -376,39 +376,36 @@ struct ContentView: View {
             if httpResponse.statusCode == 200 {
                 if let jwt = String(data: data, encoding: .utf8) {
                     if let payload = decodeJWT(jwt: jwt) {
-                        auth.iss = payload.iss
-                        auth.exp = payload.exp
-                        auth.iat = payload.iat
-                        // TODO: redundant and should be at top-level
-                        auth.permissions = payload.user.perm
-                        auth.userAccount = payload.user
-                    }
-                    token = jwt
-                    auth.token = jwt
-                    auth.serverURL = serverURL
-                    auth.username = username
-                    // Wait for permissions to finish (to load userAccount)
-                    if let err = await auth.fetchPermissions(for: username, token: jwt, serverURL: serverURL) {
-                        errorMessage = err
-                        return
-                    }
-
-                    fileListViewModel.configure(token: jwt, serverURL: serverURL)
-                    isLoggedIn = true
-                    // Show success message
-                    statusMessage = "✅ Login successful!"
-
-                    if rememberMe || useFaceID {
-                        KeychainHelper.saveSession(
-                            token: jwt,
-                            username: username,
-                            serverURL: serverURL,
-                            password: useFaceID ? password : nil
-                        )
-                    } else {
-                        // ensure any existing saved session is removed when the user opts out
-                        KeychainHelper.deleteSession()
-                        KeychainHelper.deleteKnownServers()
+                        token = jwt
+                        // MARK: Set auth params
+                        auth.token = jwt
+                        auth.username = username
+                        auth.serverURL = serverURL
+                        auth.tokenPayload = payload
+                        // Wait for permissions to finish (to load userAccount)
+                        // TODO: Can run in background or doesn't need to
+                        if let err = await auth.serverHandShake(for: username, token: jwt, serverURL: serverURL) {
+                            errorMessage = err
+                            return
+                        }
+                        
+                        fileListViewModel.configure(token: jwt, serverURL: serverURL)
+                        isLoggedIn = true
+                        // Show success message
+                        statusMessage = "✅ Login successful!"
+                        
+                        if rememberMe || useFaceID {
+                            KeychainHelper.saveSession(
+                                token: jwt,
+                                username: username,
+                                serverURL: serverURL,
+                                password: useFaceID ? password : nil
+                            )
+                        } else {
+                            // ensure any existing saved session is removed when the user opts out
+                            KeychainHelper.deleteSession()
+                            KeychainHelper.deleteKnownServers()
+                        }
                     }
                 } else {
                     errorMessage = "Failed to decode token"
@@ -423,10 +420,10 @@ struct ContentView: View {
     }
 
     func logTokenInfo() {
-        Log.info("Issuer: \(auth.iss ?? "Unknown")")
-        Log.info("Issued: \(timeStampToString(from: auth.iat))")
-        Log.info("Expiration: \(timeStampToString(from: auth.exp))")
-        Log.info("Time Left: \(timeLeftString(until: auth.exp))")
+        Log.info("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")")
+        Log.info("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))")
+        Log.info("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))")
+        Log.info("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))")
     }
 
     func reauth() {
@@ -470,47 +467,46 @@ struct ContentView: View {
                 }
 
                 // Decode JWT to check expiration
-                if let payload = decodeJWT(jwt: token) {
-                    let now = Date().timeIntervalSince1970
-                    if now >= payload.exp {
-                        Log.info("🔑 Token expired — refreshing via stored credentials.")
-                        if let password = session["password"] {
-                            DispatchQueue.main.async {
-                                self.serverURL = serverURL
-                                self.username = username
-                                self.password = password
-                                // Reuse the normal login flow
-                                Task {
-                                    await login()
-                                }
-                            }
-                        } else {
-                            // No password stored — fallback to showing login UI
-                            DispatchQueue.main.async {
-                                useFaceID = false
+                guard let tokenPayload = decodeJWT(jwt: token) else {
+                    errorMessage = "❌ Failed to decode server token"
+                    return
+                }
+                let now = Date().timeIntervalSince1970
+                if now >= tokenPayload.exp {
+                    Log.info("🔑 Token expired — refreshing via stored credentials.")
+                    if let password = session["password"] {
+                        DispatchQueue.main.async {
+                            self.serverURL = serverURL
+                            self.username = username
+                            self.password = password
+                            // Reuse the normal login flow
+                            Task {
+                                await login()
                             }
                         }
-                        return
+                    } else {
+                        // No password stored — fallback to showing login UI
+                        DispatchQueue.main.async {
+                            useFaceID = false
+                        }
                     }
-                    // TODO: redundant and should be at top-level
-                    auth.permissions = payload.user.perm
-                    auth.userAccount = payload.user
+                    return
                 }
 
                 // Token still valid — just use it
+                // MARK: Set auth params
                 auth.token = token
-                auth.serverURL = serverURL
                 auth.username = username
+                auth.serverURL = serverURL
+                auth.tokenPayload = tokenPayload
                 if let payload = decodeJWT(jwt: token) {
-                    auth.iss = payload.iss
-                    auth.exp = payload.exp
-                    auth.iat = payload.iat
+                    auth.tokenPayload = payload
                     logTokenInfo()
                 } else {
                     Log.error("Failed to decode JWT")
                 }
 
-                if let err = await auth.fetchPermissions(for: username, token: token, serverURL: serverURL) {
+                if let err = await auth.serverHandShake(for: username, token: token, serverURL: serverURL) {
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
                         if ["401"].contains(err) {

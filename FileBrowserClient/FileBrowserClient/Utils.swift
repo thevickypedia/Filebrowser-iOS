@@ -230,7 +230,7 @@ func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager)
     let fileNameMeta = metadata?.name ?? file.name
     let filePathMeta = metadata?.path ?? file.path
     let modified = metadata?.modified ?? file.modified
-    let dateFormatExact = auth.userAccount?.dateFormat ?? false
+    let dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
     let fileModifiedMeta = dateFormatExact
         ? (modified ?? "Unknown")
         : timeAgoString(from: calculateTimeDifference(dateString: modified))

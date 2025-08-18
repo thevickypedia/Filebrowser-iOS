@@ -149,6 +149,15 @@ struct FileDetailView: View {
         }
     }
 
+    var userPermissions: UserPermission? {
+        return auth.tokenPayload?.user.perm
+    }
+
+    var hasAnyActionPermission: Bool {
+        let permissions = userPermissions
+        return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
+    }
+
     var body: some View {
         let fileName = file.name.lowercased()
 
@@ -165,31 +174,23 @@ struct FileDetailView: View {
                         Image(systemName: "info.circle")
                     }
 
-                    var hasAnyActionPermission: Bool {
-                        let permissions = auth.userAccount?.perm
-                        return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
-                    }
 
                     if hasAnyActionPermission {
                         Menu {
-                            if auth.userAccount?.perm.rename == true {
+                            if userPermissions?.rename == true {
                                 Button("Rename", systemImage: "pencil", action: {
                                     newName = metadata?.name ?? file.name
                                     isRenaming = true
                                 })
                             }
 
-                            if auth.userAccount?.perm.download == true {
+                            if userPermissions?.download == true {
                                 Button("Download", systemImage: "arrow.down.circle", action: {
-                                    downloadAndSave()
-                                })
-
-                                Button("Share", systemImage: "square.and.arrow.up", action: {
                                     downloadAndSave()
                                 })
                             }
 
-                            if auth.userAccount?.perm.share == true {
+                            if userPermissions?.share == true {
                                 Button(action: {
                                     isSharing = true
                                 }) {
@@ -205,7 +206,7 @@ struct FileDetailView: View {
                                 }
                             }
 
-                            if auth.userAccount?.perm.delete == true {
+                            if userPermissions?.delete == true {
                                 Button("Delete", systemImage: "trash", role: .destructive, action: {
                                     showingDeleteConfirm = true
                                 })

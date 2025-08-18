@@ -10,12 +10,8 @@ import Foundation
 class AuthManager: ObservableObject {
     @Published var token: String?
     @Published var serverURL: String?
-    @Published var iss: String?
-    @Published var iat: TimeInterval?
-    @Published var exp: TimeInterval?
-    @Published var permissions: UserPermission?
     @Published var username: String?
-    @Published var userAccount: UserAccount?
+    @Published var tokenPayload: JWTPayload?
 
     var isAuthenticated: Bool {
         return token != nil && serverURL != nil
@@ -26,7 +22,7 @@ struct JWTPayload: Codable {
     let iat: TimeInterval
     let iss: String
     let exp: TimeInterval
-    let user: UserAccount
+    var user: UserAccount
 }
 
 struct UserAccount: Codable {
@@ -55,7 +51,7 @@ struct UserPermission: Codable {
 
 extension AuthManager {
 
-    func fetchPermissions(for userID: String, token: String, serverURL: String) async -> String? {
+    func serverHandShake(for userID: String, token: String, serverURL: String) async -> String? {
         guard let url = URL(string: "\(serverURL)/api/users/\(userID)") else {
             return "❌ Failed to construct url for: \(serverURL)"
         }
