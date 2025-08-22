@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.33.1 (08/22/2025)
+--------------------
+- [f9f6a44](https://github.com/thevickypedia/Filebrowser-iOS/commit/f9f6a448ea7f75fa1351d3079dd6e0a2685d317e) chore: Release ``v1.33.1``
+- [a75dbfe](https://github.com/thevickypedia/Filebrowser-iOS/commit/a75dbfea389e479977bc11e536c1599ab99f2acb) ci: Pin GHA runners to ``macOS-14``
+- [6d2f00b](https://github.com/thevickypedia/Filebrowser-iOS/commit/6d2f00b13da58a898887747d5b639184e6f05b8e) perf: Remove temp files after upload without waiting for automatic system cleanup
+- [4ed4234](https://github.com/thevickypedia/Filebrowser-iOS/commit/4ed4234158d650f549a23fb1ff3876b214d3f3d5) chore: Add a CLI deployment dev script
+- [f4038d0](https://github.com/thevickypedia/Filebrowser-iOS/commit/f4038d0b2d7f45a6035fc6ad449360d43d8eaaab) chore: Update release notes for v1.33.0
+
 v1.33.0 (08/18/2025)
 --------------------
 - [3015f59](https://github.com/thevickypedia/Filebrowser-iOS/commit/3015f5936db075751c4eff9385e63c03ed85c28e) chore: Release ``v1.33.0``
