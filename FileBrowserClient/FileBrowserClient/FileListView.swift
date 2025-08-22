@@ -1400,6 +1400,7 @@ struct FileListView: View {
             guard currentOffset < fileSize else {
                 fileHandle.closeFile()
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
+                FileCache.shared.removeTempFile(at: fileURL)
                 currentUploadIndex += 1
                 uploadTask = nil
                 uploadProgress = 1.0

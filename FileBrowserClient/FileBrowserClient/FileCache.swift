@@ -111,4 +111,17 @@ class FileCache {
             return nil
         }
     }
+
+    func removeTempFile(at fileURL: URL) {
+        Task(priority: .low) {
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                do {
+                    try FileManager.default.removeItem(at: fileURL)
+                    Log.info("🗑️ Deleted temp file: \(fileURL.lastPathComponent)")
+                } catch {
+                    Log.warn("⚠️ Failed to delete file: \(error)")
+                }
+            }
+        }
+    }
 }
