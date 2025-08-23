@@ -26,5 +26,7 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>AVInitialRouteSharingPolicy</key>
+    <string>LongFormAudio</string>
 </dict>
 </plist>
