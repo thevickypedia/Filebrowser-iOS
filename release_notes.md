@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.33.2 (08/23/2025)
+--------------------
+- [00c7efb](https://github.com/thevickypedia/Filebrowser-iOS/commit/00c7efbc3eb40a36451cac09908b5fb06cc8c2ea) chore: Release ``v1.33.2``
+- [df4e0ff](https://github.com/thevickypedia/Filebrowser-iOS/commit/df4e0ff18d9751c3674284ee6a1c8eb83325923a) perf: Include a full-screen mode for media player
+- [8659b78](https://github.com/thevickypedia/Filebrowser-iOS/commit/8659b78c69c537253f375cec63fc5eaba5fa8ef0) fix: Infinite thumbnail fetch loop for invalid media files
+- [dc9c321](https://github.com/thevickypedia/Filebrowser-iOS/commit/dc9c321519847bce46761efa88c941ed1cbd826c) style: Include username in the footer section of settings page
+- [5b04e25](https://github.com/thevickypedia/Filebrowser-iOS/commit/5b04e2546cdbbac638c57a378ecf080e96252c21) chore: Update release notes for v1.33.1
+
 v1.33.1 (08/22/2025)
 --------------------
 - [f9f6a44](https://github.com/thevickypedia/Filebrowser-iOS/commit/f9f6a448ea7f75fa1351d3079dd6e0a2685d317e) chore: Release ``v1.33.1``
