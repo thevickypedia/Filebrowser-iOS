@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVKit
+import MediaPlayer
 
 struct MediaPlayerView: View {
     let file: FileItem
@@ -16,12 +17,18 @@ struct MediaPlayerView: View {
     @State private var player: AVPlayer?
     @State private var isVisible: Bool = false
     @State private var isFullScreen: Bool = false
-
+    @State private var playerItem: AVPlayerItem?
+    @State private var timeObserver: Any?
+    
     var body: some View {
         ZStack {
             if let player = player {
                 VideoPlayer(player: player)
                     .ignoresSafeArea(edges: self.isFullScreen ? .all : [])
+                    .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
+                        // Handle playback completion
+                        setupNowPlayingInfo()
+                    }
             } else {
                 ProgressView("Loading media player...")
             }
@@ -51,12 +58,12 @@ struct MediaPlayerView: View {
             if player == nil && isVisible {
                 loadPlayer()
             }
+            setupRemoteTransportControls()
         }
         .onDisappear {
             isVisible = false
-            player?.pause()
-            player?.replaceCurrentItem(with: nil)
-            player = nil
+            cleanupPlayer()
+            clearNowPlayingInfo()
         }
         .navigationTitle(file.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -64,20 +71,243 @@ struct MediaPlayerView: View {
     }
 
     func loadPlayer() {
-        if let url = buildAPIURL(
+        guard let url = buildAPIURL(
             base: serverURL,
             pathComponents: ["api", "raw", file.path],
-            queryItems: [ URLQueryItem(name: "auth", value: token) ]
-        ) {
-            DispatchQueue.global(qos: .userInitiated).async {
-                let asset = AVURLAsset(url: url)
-                let item = AVPlayerItem(asset: asset)
-                let loadedPlayer = AVPlayer(playerItem: item)
+            queryItems: [URLQueryItem(name: "auth", value: token)]
+        ) else { return }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            let asset = AVURLAsset(url: url)
+            let item = AVPlayerItem(asset: asset)
+            let loadedPlayer = AVPlayer(playerItem: item)
+            
+            DispatchQueue.main.async {
+                self.playerItem = item
+                self.player = loadedPlayer
+                
+                // Setup audio session for background playback
+                setupAudioSession()
+                
+                // Setup Now Playing info
+                setupNowPlayingInfo()
+                
+                // Add time observer for updating Now Playing info
+                addPeriodicTimeObserver()
+                
+                // Auto-pause initially
+                loadedPlayer.pause()
+            }
+        }
+    }
+    
+    private func setupAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            
+            // Set category for background audio with specific options
+            try audioSession.setCategory(
+                .playback,
+                mode: .moviePlayback,
+                options: [.allowAirPlay, .allowBluetooth, .allowBluetoothA2DP]
+            )
+            
+            try audioSession.setActive(true)
+            print("🎵 Audio session configured for background playback")
+            
+        } catch {
+            print("❌ Failed to set up audio session: \(error)")
+        }
+    }
+    
+    private func setupRemoteTransportControls() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        
+        // Play command
+        commandCenter.playCommand.addTarget { [player] event in
+            player?.play()
+            return .success
+        }
+        
+        // Pause command
+        commandCenter.pauseCommand.addTarget { [player] event in
+            player?.pause()
+            return .success
+        }
+        
+        // Skip forward command
+        commandCenter.skipForwardCommand.addTarget { [player] event in
+            guard let player = player else { return .commandFailed }
+            
+            let currentTime = player.currentTime()
+            let skipInterval = CMTime(seconds: 15, preferredTimescale: 1)
+            let newTime = CMTimeAdd(currentTime, skipInterval)
+            player.seek(to: newTime)
+            return .success
+        }
+        
+        // Skip backward command
+        commandCenter.skipBackwardCommand.addTarget { [player] event in
+            guard let player = player else { return .commandFailed }
+            
+            let currentTime = player.currentTime()
+            let skipInterval = CMTime(seconds: 15, preferredTimescale: 1)
+            let newTime = CMTimeSubtract(currentTime, skipInterval)
+            player.seek(to: newTime)
+            return .success
+        }
+        
+        // Seek command
+        commandCenter.changePlaybackPositionCommand.addTarget { [player] event in
+            guard let player = player,
+                  let seekEvent = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            
+            let time = CMTime(seconds: seekEvent.positionTime, preferredTimescale: 1)
+            player.seek(to: time)
+            return .success
+        }
+        
+        // Configure skip intervals
+        commandCenter.skipForwardCommand.preferredIntervals = [15]
+        commandCenter.skipBackwardCommand.preferredIntervals = [15]
+    }
+    
+    private func setupNowPlayingInfo() {
+        guard let player = player,
+              let playerItem = playerItem else { return }
+        
+        var nowPlayingInfo = [String: Any]()
+        
+        // Basic metadata
+        nowPlayingInfo[MPMediaItemPropertyTitle] = file.name
+        nowPlayingInfo[MPMediaItemPropertyArtist] = "FileBrowser"
+        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Media Files"
+        
+        // Playback info
+        let currentTime = CMTimeGetSeconds(player.currentTime())
+        let duration = CMTimeGetSeconds(playerItem.duration)
+        
+        if duration.isFinite && !duration.isNaN {
+            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
+        }
+        
+        if currentTime.isFinite && !currentTime.isNaN {
+            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
+        }
+        
+        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
+        
+        // Try to extract artwork for video files
+        if let asset = playerItem.asset as? AVURLAsset {
+            extractArtwork(from: asset) { artwork in
                 DispatchQueue.main.async {
-                    self.player = loadedPlayer
-                    loadedPlayer.pause()
+                    if let artwork = artwork {
+                        nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
+                    }
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+                }
+            }
+        } else {
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+        }
+    }
+    
+    private func extractArtwork(from asset: AVURLAsset, completion: @escaping (MPMediaItemArtwork?) -> Void) {
+        // For video files, try to generate a thumbnail
+        let imageGenerator = AVAssetImageGenerator(asset: asset)
+        imageGenerator.appliesPreferredTrackTransform = true
+        imageGenerator.maximumSize = CGSize(width: 400, height: 400)
+        
+        let time = CMTime(seconds: 1, preferredTimescale: 1) // Get frame at 1 second
+        
+        imageGenerator.generateCGImagesAsynchronously(forTimes: [NSValue(time: time)]) { _, cgImage, _, result, error in
+            if let cgImage = cgImage, result == .succeeded {
+                let uiImage = UIImage(cgImage: cgImage)
+                let artwork = MPMediaItemArtwork(boundsSize: uiImage.size) { _ in uiImage }
+                completion(artwork)
+            } else {
+                // For audio files or if video thumbnail fails, use a default icon
+                self.createDefaultArtwork { defaultArtwork in
+                    completion(defaultArtwork)
                 }
             }
         }
+    }
+    
+    private func createDefaultArtwork(completion: @escaping (MPMediaItemArtwork?) -> Void) {
+        // Create a simple default artwork
+        let size = CGSize(width: 200, height: 200)
+        UIGraphicsBeginImageContextWithOptions(size, false, 0)
+        
+        // Draw a simple background
+        UIColor.systemBlue.setFill()
+        UIRectFill(CGRect(origin: .zero, size: size))
+        
+        // Add a play icon
+        let playIcon = UIImage(systemName: "play.circle.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        let iconSize: CGFloat = 80
+        let iconRect = CGRect(
+            x: (size.width - iconSize) / 2,
+            y: (size.height - iconSize) / 2,
+            width: iconSize,
+            height: iconSize
+        )
+        playIcon?.draw(in: iconRect)
+        
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        if let image = image {
+            let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            completion(artwork)
+        } else {
+            completion(nil)
+        }
+    }
+    
+    private func addPeriodicTimeObserver() {
+        guard let player = player else { return }
+        
+        // Remove existing observer
+        if let timeObserver = timeObserver {
+            player.removeTimeObserver(timeObserver)
+        }
+        
+        // Add new observer that updates every second
+        timeObserver = player.addPeriodicTimeObserver(
+            forInterval: CMTime(seconds: 1, preferredTimescale: 1),
+            queue: .main
+        ) { _ in
+            // Update Now Playing info periodically
+            DispatchQueue.main.async {
+                self.setupNowPlayingInfo()
+            }
+        }
+    }
+    
+    private func cleanupPlayer() {
+        // Remove time observer
+        if let timeObserver = timeObserver, let player = player {
+            player.removeTimeObserver(timeObserver)
+            self.timeObserver = nil
+        }
+        
+        // Pause and cleanup player
+        player?.pause()
+        player?.replaceCurrentItem(with: nil)
+        player = nil
+        playerItem = nil
+        
+        // Clear remote control targets
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.skipForwardCommand.removeTarget(nil)
+        commandCenter.skipBackwardCommand.removeTarget(nil)
+        commandCenter.changePlaybackPositionCommand.removeTarget(nil)
+    }
+    
+    private func clearNowPlayingInfo() {
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
     }
 }
