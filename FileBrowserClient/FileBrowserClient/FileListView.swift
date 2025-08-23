@@ -548,6 +548,7 @@ struct FileListView: View {
 
             Section(
                 footer: VStack(alignment: .leading) {
+                    Text("Username: \(auth.username ?? "Unknown")").textSelection(.enabled)
                     Text("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")").textSelection(.enabled)
                     Text("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))").textSelection(.enabled)
                     Text("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))").textSelection(.enabled)
