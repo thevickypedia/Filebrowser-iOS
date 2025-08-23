@@ -12,49 +12,47 @@ struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
     let token: String
-    @State private var player: AVPlayer?
-    @State private var isVisible = false
+    @EnvironmentObject var mediaManager: MediaPlayerManager
 
     var body: some View {
-        Group {
-            if let player = player {
+        ZStack {
+            if let player = mediaManager.player {
                 VideoPlayer(player: player)
-                    .ignoresSafeArea() // ✅ Fullscreen under status/nav bar
+                    .ignoresSafeArea(edges: mediaManager.isFullscreen ? .all : [])
             } else {
                 ProgressView("Loading media player...")
             }
+
+            // Fullscreen toggle
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: { mediaManager.isFullscreen.toggle() }) {
+                        Image(systemName: mediaManager.isFullscreen
+                              ? "arrow.down.right.and.arrow.up.left"
+                              : "arrow.up.left.and.arrow.down.right")
+                            .padding()
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                            .foregroundColor(.white)
+                    }
+                }
+                .padding()
+                Spacer()
+            }
         }
         .onAppear {
-            isVisible = true
-            if player == nil && isVisible {
-                loadPlayer()
+            if let url = buildAPIURL(
+                base: serverURL,
+                pathComponents: ["api", "raw", file.path],
+                queryItems: [ URLQueryItem(name: "auth", value: token) ]
+            ) {
+                mediaManager.load(url: url, title: file.name)
             }
         }
         .onDisappear {
-            isVisible = false
-            player?.pause()
-            player?.replaceCurrentItem(with: nil)
-            player = nil
+            mediaManager.stop() // ✅ stop playback when leaving video
         }
-        .navigationTitle(file.name)
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    func loadPlayer() {
-        if let url = buildAPIURL(
-            base: serverURL,
-            pathComponents: ["api", "raw", file.path],
-            queryItems: [ URLQueryItem(name: "auth", value: token) ]
-        ) {
-            DispatchQueue.global(qos: .userInitiated).async {
-                let asset = AVURLAsset(url: url)
-                let item = AVPlayerItem(asset: asset)
-                let loadedPlayer = AVPlayer(playerItem: item)
-                DispatchQueue.main.async {
-                    self.player = loadedPlayer
-                    loadedPlayer.pause()
-                }
-            }
-        }
+        .navigationBarHidden(mediaManager.isFullscreen)
     }
 }
