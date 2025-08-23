@@ -87,7 +87,12 @@ struct FileDetailView: View {
             Text("Error: \(error)").foregroundColor(.red)
 
         } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
-            MediaPlayerView(file: file, serverURL: serverURL, token: token)
+            MediaPlayerView(
+                file: file,
+                serverURL: serverURL,
+                token: token,
+                displayFullScreen: extensionTypes.videoExtensions.contains(where: fileName.hasSuffix)
+            )
 
         } else if let content = self.content {
             if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {

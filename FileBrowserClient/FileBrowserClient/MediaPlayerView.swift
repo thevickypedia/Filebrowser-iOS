@@ -12,16 +12,38 @@ struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
     let token: String
+    let displayFullScreen: Bool
     @State private var player: AVPlayer?
-    @State private var isVisible = false
+    @State private var isVisible: Bool = false
+    @State private var isFullScreen: Bool = false
 
     var body: some View {
-        Group {
+        ZStack {
             if let player = player {
                 VideoPlayer(player: player)
-                    .ignoresSafeArea() // ✅ Fullscreen under status/nav bar
+                    .ignoresSafeArea(edges: self.isFullScreen ? .all : [])
             } else {
                 ProgressView("Loading media player...")
+            }
+
+            // Fullscreen toggle
+            if displayFullScreen {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: { self.isFullScreen.toggle() }) {
+                            Image(systemName: self.isFullScreen
+                                  ? "arrow.down.right.and.arrow.up.left"
+                                  : "arrow.up.left.and.arrow.down.right")
+                            .padding()
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                            .foregroundColor(.white)
+                        }
+                    }
+                    .padding()
+                    Spacer()
+                }
             }
         }
         .onAppear {
@@ -38,6 +60,7 @@ struct MediaPlayerView: View {
         }
         .navigationTitle(file.name)
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(self.isFullScreen)
     }
 
     func loadPlayer() {
