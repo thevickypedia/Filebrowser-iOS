@@ -67,6 +67,7 @@ struct MediaPlayerView: View {
                 if let player = player, player.timeControlStatus != .playing {
                     print("▶️ Resuming playback on background entry")
                     player.play()
+                    self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
                 }
             }
             NotificationCenter.default.addObserver(
@@ -132,6 +133,8 @@ struct MediaPlayerView: View {
                 self.playerItem = item
                 self.player = loadedPlayer
 
+                self.setupRemoteTransportControls()   // <-- rebind targets now that player exists
+
                 // Setup Now Playing info
                 setupNowPlayingInfo()
 
@@ -154,53 +157,68 @@ struct MediaPlayerView: View {
         commandCenter.skipBackwardCommand.removeTarget(nil)
         commandCenter.changePlaybackPositionCommand.removeTarget(nil)
 
-        // Play command
-        commandCenter.playCommand.addTarget { [player] _ in
-            player?.play()
+        // Play
+        commandCenter.playCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            player.play()
+            self.updateNowPlayingPlaybackState(isPlaying: true)
             return .success
         }
 
-        // Pause command
-        commandCenter.pauseCommand.addTarget { [player] _ in
-            player?.pause()
+        // Pause
+        commandCenter.pauseCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            player.pause()
+            self.updateNowPlayingPlaybackState(isPlaying: false)
             return .success
         }
 
-        // Skip forward command
-        commandCenter.skipForwardCommand.addTarget { [player] _ in
-            guard let player = player else { return .commandFailed }
-
-            let currentTime = player.currentTime()
-            let skipInterval = CMTime(seconds: 15, preferredTimescale: 1)
-            let newTime = CMTimeAdd(currentTime, skipInterval)
-            player.seek(to: newTime)
+        // Skip forward 15s
+        commandCenter.skipForwardCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            let current = player.currentTime()
+            let newTime = CMTimeAdd(current, CMTime(seconds: 15, preferredTimescale: 1))
+            player.seek(to: newTime) { _ in
+                self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
+            }
             return .success
         }
 
-        // Skip backward command
-        commandCenter.skipBackwardCommand.addTarget { [player] _ in
-            guard let player = player else { return .commandFailed }
-
-            let currentTime = player.currentTime()
-            let skipInterval = CMTime(seconds: 15, preferredTimescale: 1)
-            let newTime = CMTimeSubtract(currentTime, skipInterval)
-            player.seek(to: newTime)
+        // Skip back 15s
+        commandCenter.skipBackwardCommand.addTarget { _ in
+            guard let player = self.player else { return .commandFailed }
+            let current = player.currentTime()
+            let newTime = CMTimeSubtract(current, CMTime(seconds: 15, preferredTimescale: 1))
+            player.seek(to: newTime) { _ in
+                self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
+            }
             return .success
         }
 
-        // Seek command
-        commandCenter.changePlaybackPositionCommand.addTarget { [player] event in
-            guard let player = player,
-                  let seekEvent = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
-
-            let time = CMTime(seconds: seekEvent.positionTime, preferredTimescale: 1)
-            player.seek(to: time)
+        // Scrub to position
+        commandCenter.changePlaybackPositionCommand.addTarget { event in
+            guard let player = self.player,
+                  let e = event as? MPChangePlaybackPositionCommandEvent else {
+                return .commandFailed
+            }
+            let time = CMTime(seconds: e.positionTime, preferredTimescale: 1)
+            player.seek(to: time) { _ in
+                self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
+            }
             return .success
         }
 
         // Configure skip intervals
         commandCenter.skipForwardCommand.preferredIntervals = [15]
         commandCenter.skipBackwardCommand.preferredIntervals = [15]
+    }
+
+    private func updateNowPlayingPlaybackState(isPlaying: Bool) {
+        guard let player = self.player else { return }
+        var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(player.currentTime())
+        info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
 
     private func setupNowPlayingInfo() {

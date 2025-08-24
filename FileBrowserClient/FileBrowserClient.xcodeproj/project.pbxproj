@@ -545,6 +545,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FileBrowserClient/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FileBrowserClient/Info.plist;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to authenticate securely.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -574,6 +575,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FileBrowserClient/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FileBrowserClient/Info.plist;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to authenticate securely.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

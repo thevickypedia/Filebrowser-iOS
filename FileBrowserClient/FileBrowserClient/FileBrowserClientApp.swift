@@ -35,15 +35,16 @@ struct FileBrowserClientApp: App {
             // Configure for background audio playback
             try audioSession.setCategory(
                 .playback,
+                mode: .moviePlayback,
                 options: [
                     .allowAirPlay,
                     .allowBluetooth,
-                    .allowBluetoothA2DP,
-                    .mixWithOthers
+                    .allowBluetoothA2DP
                 ]
             )
 
             try audioSession.setActive(true)
+            UIApplication.shared.beginReceivingRemoteControlEvents()
             print("🎵 Global audio session configured for background playback")
             print("🔊 Category: \(audioSession.category.rawValue)")
             print("🔊 Mode: \(audioSession.mode.rawValue)")
