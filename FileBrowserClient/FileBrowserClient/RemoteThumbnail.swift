@@ -82,6 +82,7 @@ struct RemoteThumbnail: View {
     var height: CGFloat = 32
     var thumbnailQuality: CGFloat = 0.1
     @Binding var loadingFiles: [String: Bool]
+    var iconSize: CGFloat
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -103,17 +104,13 @@ struct RemoteThumbnail: View {
                 ProgressView()
                     .frame(width: width, height: height)
             } else {
-                // Show default thumbnail
-                if let defaultImg = defaultThumbnail(fileName: file.name) {
-                    Image(uiImage: defaultImg)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: width, height: height)
-                        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-                } else {
-                    Color.clear
-                        .frame(width: width, height: height)
-                }
+                // Show default thumbnail (match other system icons)
+                let symbol = systemIcon(for: file.name, extensionTypes: extensionTypes) ?? "doc"
+                Image(systemName: symbol)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: iconSize, height: iconSize)
+                    .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
             }
         }
         .modifier(ViewVisibilityModifier(onVisible: {
@@ -128,15 +125,6 @@ struct RemoteThumbnail: View {
             }
         }, threshold: 0))
         .id(file.path) // Ensure view resets when file changes
-    }
-
-    func defaultThumbnail(fileName: String) -> UIImage? {
-        return UIImage(
-            systemName: systemIcon(
-                for: fileName,
-                extensionTypes: extensionTypes
-            ) ?? "doc"
-        )
     }
 
     func overlayPlayIcon(on image: UIImage) -> UIImage {

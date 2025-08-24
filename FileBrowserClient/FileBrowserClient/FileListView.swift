@@ -991,6 +991,7 @@ struct FileListView: View {
         let fileName = file.name.lowercased()
         let useThumbnail = advancedSettings.displayThumbnail &&
             extensionTypes.thumbnailExtensions.contains(where: fileName.hasSuffix)
+        let iconSize = style?.iconSize ?? ViewStyle.listIconSize
 
         if useThumbnail {
             RemoteThumbnail(
@@ -1001,7 +1002,8 @@ struct FileListView: View {
                 extensionTypes: extensionTypes,
                 width: style?.gridHeight ?? ViewStyle.listIconSize,
                 height: style?.gridHeight ?? ViewStyle.listIconSize,
-                loadingFiles: $loadingFiles
+                loadingFiles: $loadingFiles,
+                iconSize: iconSize
             )
             .scaledToFill()
             .frame(
@@ -1016,7 +1018,7 @@ struct FileListView: View {
                   : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
                 .resizable()
                 .scaledToFit()
-                .frame(height: style?.iconSize ?? ViewStyle.listIconSize)
+                .frame(width: iconSize, height: iconSize)
                 .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
         }
     }
