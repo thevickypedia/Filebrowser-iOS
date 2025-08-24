@@ -117,9 +117,13 @@ struct RemoteThumbnail: View {
             }
         }
         .modifier(ViewVisibilityModifier(onVisible: {
-            // Only attempt load once per view lifecycle
+            // MARK: Only attempt load once per view lifecycle
+            // Keep threshold [0] as tight as possible to avoid loading anything outside current view
             if !loadAttempted {
                 loadAttempted = true
+                // Show spinner immediately for first-frame visibility
+                isLoading = true
+                loadingFiles[file.path] = true
                 loadThumbnail()
             }
         }, threshold: 0))
