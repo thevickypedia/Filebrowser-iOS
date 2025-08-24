@@ -198,10 +198,10 @@ struct MediaPlayerView: View {
         // Scrub to position
         commandCenter.changePlaybackPositionCommand.addTarget { event in
             guard let player = self.player,
-                  let e = event as? MPChangePlaybackPositionCommandEvent else {
+                  let commandEvent = event as? MPChangePlaybackPositionCommandEvent else {
                 return .commandFailed
             }
-            let time = CMTime(seconds: e.positionTime, preferredTimescale: 1)
+            let time = CMTime(seconds: commandEvent.positionTime, preferredTimescale: 1)
             player.seek(to: time) { _ in
                 self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
             }

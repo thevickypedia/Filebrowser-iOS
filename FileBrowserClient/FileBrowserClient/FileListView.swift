@@ -781,11 +781,11 @@ struct FileListView: View {
             }
         }
         .sheet(isPresented: $isSharing) {
-            if let sp = sharePath {
+            if let filePath = sharePath {
                 ShareSheetView(
                     serverURL: serverURL,
                     token: token,
-                    file: sp,
+                    file: filePath,
                     onDismiss: { isSharing = false }
                 )
             } else {
