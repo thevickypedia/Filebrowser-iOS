@@ -20,7 +20,7 @@ struct MediaPlayerView: View {
     @State private var playerItem: AVPlayerItem?
     @State private var timeObserver: Any?
     @State private var npSeeded = false                  // seed only once per item
-    @State private var npTitle: String? = nil            // stable title (in memory only)
+    @State private var npTitle: String?            // stable title (in memory only)
     @State private var npArtwork: MPMediaItemArtwork?    // stable artwork (in memory only)
     @State private var npBaseInfo: [String: Any] = [:]   // stable Now Playing bas
     @State private var notifTokens: [NSObjectProtocol] = []
@@ -71,7 +71,7 @@ struct MediaPlayerView: View {
                 queue: .main
             ) { _ in
                 if let player = player, player.timeControlStatus != .playing {
-                    print("▶️ Resuming playback on background entry")
+                    Log.info("▶️ Resuming playback on background entry")
                     player.play()
                     self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
                 }
@@ -104,37 +104,47 @@ struct MediaPlayerView: View {
         info[MPMediaItemPropertyArtist] = "FileBrowser"
         info[MPMediaItemPropertyAlbumTitle] = "Media Files"
 
-        if let asset = playerItem.asset as? AVAsset {
-            let hasVideo = !asset.tracks(withMediaType: .video).isEmpty
+        let asset = playerItem.asset
+        asset.loadTracks(withMediaType: .video) { tracks, error in
+            guard error == nil else { return }
+
+            var info: [String: Any] = [:]
+            info[MPMediaItemPropertyTitle] = self.npTitle ?? self.file.name
+            info[MPMediaItemPropertyArtist] = "FileBrowser"
+            info[MPMediaItemPropertyAlbumTitle] = "Media Files"
+
+            let hasVideo = !(tracks?.isEmpty ?? true)
             info[MPNowPlayingInfoPropertyMediaType] = hasVideo
                 ? MPNowPlayingInfoMediaType.video.rawValue
                 : MPNowPlayingInfoMediaType.audio.rawValue
-        }
 
-        let current = CMTimeGetSeconds(player.currentTime())
-        if current.isFinite && !current.isNaN {
-            info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = current
-        }
-        let dur = CMTimeGetSeconds(playerItem.duration)
-        if dur.isFinite && !dur.isNaN {
-            info[MPMediaItemPropertyPlaybackDuration] = dur
-        }
-        info[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
+            let current = CMTimeGetSeconds(player.currentTime())
+            if current.isFinite && !current.isNaN {
+                info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = current
+            }
 
-        if let art = npArtwork {
-            info[MPMediaItemPropertyArtwork] = art
-        }
+            let dur = CMTimeGetSeconds(playerItem.duration)
+            if dur.isFinite && !dur.isNaN {
+                info[MPMediaItemPropertyPlaybackDuration] = dur
+            }
 
-        npBaseInfo = info
-        npSeeded = true
-        publishNowPlaying(forceRate: player.timeControlStatus == .playing ? 1.0 : 0.0)
+            info[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
 
-        if npArtwork == nil, let urlAsset = playerItem.asset as? AVURLAsset {
-            extractArtwork(from: urlAsset) { art in
-                guard let art = art else { return }
-                self.npArtwork = art
-                self.npBaseInfo[MPMediaItemPropertyArtwork] = art
-                self.publishNowPlaying() // republish full dict with artwork
+            if let art = self.npArtwork {
+                info[MPMediaItemPropertyArtwork] = art
+            }
+
+            self.npBaseInfo = info
+            self.npSeeded = true
+            self.publishNowPlaying(forceRate: player.timeControlStatus == .playing ? 1.0 : 0.0)
+
+            if self.npArtwork == nil, let urlAsset = playerItem.asset as? AVURLAsset {
+                self.extractArtwork(from: urlAsset) { art in
+                    guard let art = art else { return }
+                    self.npArtwork = art
+                    self.npBaseInfo[MPMediaItemPropertyArtwork] = art
+                    self.publishNowPlaying()
+                }
             }
         }
     }
@@ -179,8 +189,8 @@ struct MediaPlayerView: View {
     }
 
     private func unregisterItemObservers() {
-        for t in notifTokens {
-            NotificationCenter.default.removeObserver(t)
+        for token in notifTokens {
+            NotificationCenter.default.removeObserver(token)
         }
         notifTokens.removeAll()
     }
@@ -195,15 +205,15 @@ struct MediaPlayerView: View {
 
         switch type {
         case .began:
-            print("🔇 Audio session interruption began - pausing playback")
+            Log.info("🔇 Audio session interruption began - pausing playback")
             player.pause()
 
         case .ended:
-            print("🔊 Audio session interruption ended")
+            Log.info("🔊 Audio session interruption ended")
             if let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt {
                 let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                 if options.contains(.shouldResume) {
-                    print("🎵 Resuming playback after interruption")
+                    Log.info("🎵 Resuming playback after interruption")
                     player.play()
                 }
             }
@@ -228,7 +238,7 @@ struct MediaPlayerView: View {
 
             DispatchQueue.main.async {
                 self.playerItem = item
-                
+
                 self.registerItemObservers(for: item)
 
                 self.player = loadedPlayer
@@ -275,14 +285,14 @@ struct MediaPlayerView: View {
 
         // TOGGLE (some UIs send only toggle)
         commandCenter.togglePlayPauseCommand.addTarget { _ in
-            guard let p = self.player else { return .commandFailed }
-            if p.timeControlStatus == .playing {
+            guard let player = self.player else { return .commandFailed }
+            if player.timeControlStatus == .playing {
                 self.publishNowPlaying(forceRate: 0.0)
-                p.pause()
+                player.pause()
                 self.publishNowPlaying(forceRate: 0.0)
             } else {
                 self.publishNowPlaying(forceRate: 1.0)
-                p.play()
+                player.play()
                 self.publishNowPlaying(forceRate: 1.0)
             }
             return .success
@@ -291,12 +301,12 @@ struct MediaPlayerView: View {
         // SKIP FORWARD 15s
         commandCenter.skipForwardCommand.preferredIntervals = [15]
         commandCenter.skipForwardCommand.addTarget { _ in
-            guard let p = self.player else { return .commandFailed }
-            let current = p.currentTime()
+            guard let playerLocal = self.player else { return .commandFailed }
+            let current = playerLocal.currentTime()
             let target = CMTimeAdd(current, CMTime(seconds: 15, preferredTimescale: 1))
             self.publishNowPlaying(overrideElapsed: CMTimeGetSeconds(target)) // immediately reflect target
-            p.seek(to: target) { _ in
-                self.publishNowPlaying(forceRate: p.timeControlStatus == .playing ? 1.0 : 0.0)
+            playerLocal.seek(to: target) { _ in
+                self.publishNowPlaying(forceRate: playerLocal.timeControlStatus == .playing ? 1.0 : 0.0)
             }
             return .success
         }
@@ -304,24 +314,24 @@ struct MediaPlayerView: View {
         // SKIP BACKWARD 15s
         commandCenter.skipBackwardCommand.preferredIntervals = [15]
         commandCenter.skipBackwardCommand.addTarget { _ in
-            guard let p = self.player else { return .commandFailed }
-            let current = p.currentTime()
+            guard let playerLocal = self.player else { return .commandFailed }
+            let current = playerLocal.currentTime()
             let target = CMTimeSubtract(current, CMTime(seconds: 15, preferredTimescale: 1))
             self.publishNowPlaying(overrideElapsed: CMTimeGetSeconds(target))
-            p.seek(to: target) { _ in
-                self.publishNowPlaying(forceRate: p.timeControlStatus == .playing ? 1.0 : 0.0)
+            playerLocal.seek(to: target) { _ in
+                self.publishNowPlaying(forceRate: playerLocal.timeControlStatus == .playing ? 1.0 : 0.0)
             }
             return .success
         }
 
         // SCRUB TO POSITION
         commandCenter.changePlaybackPositionCommand.addTarget { event in
-            guard let p = self.player,
-                  let e = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
-            let target = CMTime(seconds: e.positionTime, preferredTimescale: 1)
-            self.publishNowPlaying(overrideElapsed: e.positionTime)  // reflect instantly
-            p.seek(to: target) { _ in
-                self.publishNowPlaying(forceRate: p.timeControlStatus == .playing ? 1.0 : 0.0)
+            guard let playerLocal = self.player,
+                  let eventLocal = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            let target = CMTime(seconds: eventLocal.positionTime, preferredTimescale: 1)
+            self.publishNowPlaying(overrideElapsed: eventLocal.positionTime)  // reflect instantly
+            playerLocal.seek(to: target) { _ in
+                self.publishNowPlaying(forceRate: playerLocal.timeControlStatus == .playing ? 1.0 : 0.0)
             }
             return .success
         }

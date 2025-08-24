@@ -281,7 +281,7 @@ func decodeJWT(jwt: String) -> JWTPayload? {
 
 //    guard let json = try? JSONSerialization.jsonObject(with: payloadData, options: []),
 //          let payload = json as? [String: Any] else {
-//        print("Failed to parse JSON")
+//        Log.error("Failed to parse JSON")
 //        return nil
 //    }
 //

@@ -45,21 +45,21 @@ struct FileBrowserClientApp: App {
 
             try audioSession.setActive(true)
             UIApplication.shared.beginReceivingRemoteControlEvents()
-            print("🎵 Global audio session configured for background playback")
-            print("🔊 Category: \(audioSession.category.rawValue)")
-            print("🔊 Mode: \(audioSession.mode.rawValue)")
-            print("🔊 Active: \(audioSession.isOtherAudioPlaying ? "Other audio playing" : "None")")
+            Log.info("🎵 Global audio session configured for background playback")
+            Log.info("🔊 Category: \(audioSession.category.rawValue)")
+            Log.info("🔊 Mode: \(audioSession.mode.rawValue)")
+            Log.info("🔊 Active: \(audioSession.isOtherAudioPlaying ? "Other audio playing" : "None")")
 
         } catch {
-            print("❌ Failed to set up global audio session: \(error)")
+            Log.warn("⚠️ Failed to set up global audio session: \(error)")
 
             // Fallback: try the most basic setup
             do {
                 try AVAudioSession.sharedInstance().setCategory(.playback)
                 try AVAudioSession.sharedInstance().setActive(true)
-                print("🎵 Basic audio session configured as fallback")
+                Log.info("🎵 Basic audio session configured as fallback")
             } catch {
-                print("❌ Even basic audio session failed: \(error)")
+                Log.error("❌ Even basic audio session failed: \(error)")
             }
         }
     }
@@ -93,17 +93,17 @@ struct FileBrowserClientApp: App {
 
         switch type {
         case .began:
-            print("🔇 Audio session interruption began")
-            // The system automatically pauses audio, but you might want to update UI
+            Log.info("🔇 Audio session interruption began")
+            // The system automatically pauses audio, but we might want to update UI
 
         case .ended:
-            print("🔊 Audio session interruption ended")
+            Log.info("🔊 Audio session interruption ended")
 
             if let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt {
                 let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
                 if options.contains(.shouldResume) {
-                    print("🎵 Should resume playback after interruption")
-                    // You might want to resume playback here or let the user decide
+                    Log.info("🎵 Should resume playback after interruption")
+                    // We might want to resume playback here or let the user decide
                 }
             }
 
@@ -121,14 +121,14 @@ struct FileBrowserClientApp: App {
 
         switch reason {
         case .oldDeviceUnavailable:
-            print("🎧 Audio device disconnected (e.g., headphones unplugged)")
-            // You might want to pause playback when headphones are unplugged
+            Log.info("🎧 Audio device disconnected (e.g., headphones unplugged)")
+            // We might want to pause playback when headphones are unplugged
 
         case .newDeviceAvailable:
-            print("🎧 New audio device connected")
+            Log.info("🎧 New audio device connected")
 
         default:
-            print("🔄 Audio route changed: \(reason)")
+            Log.info("🔄 Audio route changed: \(reason)")
         }
     }
 }
