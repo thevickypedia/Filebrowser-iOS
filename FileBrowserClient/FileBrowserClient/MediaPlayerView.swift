@@ -19,6 +19,11 @@ struct MediaPlayerView: View {
     @State private var isFullScreen: Bool = false
     @State private var playerItem: AVPlayerItem?
     @State private var timeObserver: Any?
+    @State private var npSeeded = false                  // seed only once per item
+    @State private var npTitle: String? = nil            // stable title (in memory only)
+    @State private var npArtwork: MPMediaItemArtwork?    // stable artwork (in memory only)
+    @State private var npBaseInfo: [String: Any] = [:]   // stable Now Playing bas
+    @State private var notifTokens: [NSObjectProtocol] = []
 
     var body: some View {
         ZStack {
@@ -26,8 +31,8 @@ struct MediaPlayerView: View {
                 VideoPlayer(player: player)
                     .ignoresSafeArea(edges: self.isFullScreen ? .all : [])
                     .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
-                        // Handle playback completion
-                        setupNowPlayingInfo()
+                        // No metadata rebuild; just ensure rate is 0 and time is final
+                        self.updateNowPlayingPlaybackState(isPlaying: false)
                     }
             } else {
                 ProgressView("Loading media player...")
@@ -55,6 +60,7 @@ struct MediaPlayerView: View {
         }
         .onAppear {
             isVisible = true
+            npTitle = file.name
             if player == nil && isVisible {
                 loadPlayer()
             }
@@ -86,6 +92,97 @@ struct MediaPlayerView: View {
         .navigationTitle(file.name)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(self.isFullScreen)
+    }
+
+    private func seedNowPlayingIfNeeded() {
+        guard let player = player,
+              let playerItem = playerItem,
+              npSeeded == false else { return }
+
+        var info: [String: Any] = [:]
+        info[MPMediaItemPropertyTitle] = npTitle ?? file.name
+        info[MPMediaItemPropertyArtist] = "FileBrowser"
+        info[MPMediaItemPropertyAlbumTitle] = "Media Files"
+
+        if let asset = playerItem.asset as? AVAsset {
+            let hasVideo = !asset.tracks(withMediaType: .video).isEmpty
+            info[MPNowPlayingInfoPropertyMediaType] = hasVideo
+                ? MPNowPlayingInfoMediaType.video.rawValue
+                : MPNowPlayingInfoMediaType.audio.rawValue
+        }
+
+        let current = CMTimeGetSeconds(player.currentTime())
+        if current.isFinite && !current.isNaN {
+            info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = current
+        }
+        let dur = CMTimeGetSeconds(playerItem.duration)
+        if dur.isFinite && !dur.isNaN {
+            info[MPMediaItemPropertyPlaybackDuration] = dur
+        }
+        info[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
+
+        if let art = npArtwork {
+            info[MPMediaItemPropertyArtwork] = art
+        }
+
+        npBaseInfo = info
+        npSeeded = true
+        publishNowPlaying(forceRate: player.timeControlStatus == .playing ? 1.0 : 0.0)
+
+        if npArtwork == nil, let urlAsset = playerItem.asset as? AVURLAsset {
+            extractArtwork(from: urlAsset) { art in
+                guard let art = art else { return }
+                self.npArtwork = art
+                self.npBaseInfo[MPMediaItemPropertyArtwork] = art
+                self.publishNowPlaying() // republish full dict with artwork
+            }
+        }
+    }
+
+    private func publishNowPlaying(forceRate: Double? = nil, overrideElapsed: Double? = nil) {
+        guard let player = self.player else { return }
+
+        // Start from our in‑memory base (title/artwork are stable here)
+        var info = self.npBaseInfo
+
+        // Elapsed/time
+        let elapsed = overrideElapsed ?? CMTimeGetSeconds(player.currentTime())
+        if elapsed.isFinite && !elapsed.isNaN {
+            info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = elapsed
+        }
+
+        // Playback rate
+        if let forceRate = forceRate {
+            info[MPNowPlayingInfoPropertyPlaybackRate] = forceRate
+        } else {
+            info[MPNowPlayingInfoPropertyPlaybackRate] = (player.timeControlStatus == .playing) ? 1.0 : 0.0
+        }
+
+        // Publish full dict each time to avoid transient UI clears
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    }
+    private func registerItemObservers(for item: AVPlayerItem) {
+        // Clear previous
+        unregisterItemObservers()
+
+        // Time jumped (seek), playback stalled, access log entries → immediately republish full info
+        let n1 = NotificationCenter.default.addObserver(forName: .AVPlayerItemTimeJumped, object: item, queue: .main) { _ in
+            self.publishNowPlaying()
+        }
+        let n2 = NotificationCenter.default.addObserver(forName: .AVPlayerItemPlaybackStalled, object: item, queue: .main) { _ in
+            self.publishNowPlaying()
+        }
+        let n3 = NotificationCenter.default.addObserver(forName: .AVPlayerItemNewAccessLogEntry, object: item, queue: .main) { _ in
+            self.publishNowPlaying()
+        }
+        notifTokens = [n1, n2, n3]
+    }
+
+    private func unregisterItemObservers() {
+        for t in notifTokens {
+            NotificationCenter.default.removeObserver(t)
+        }
+        notifTokens.removeAll()
     }
 
     private func handleAudioSessionInterruption(_ notification: Notification) {
@@ -131,17 +228,19 @@ struct MediaPlayerView: View {
 
             DispatchQueue.main.async {
                 self.playerItem = item
+                
+                self.registerItemObservers(for: item)
+
                 self.player = loadedPlayer
 
-                self.setupRemoteTransportControls()   // <-- rebind targets now that player exists
+                self.setupRemoteTransportControls()
 
-                // Setup Now Playing info
-                setupNowPlayingInfo()
+                // Seed NP ONCE (title/artwork/mediaType stable in-memory)
+                self.seedNowPlayingIfNeeded()
 
-                // Add time observer for updating Now Playing info
-                addPeriodicTimeObserver()
+                // Only update time/rate periodically (no rebuilding)
+                self.addPeriodicTimeObserver()
 
-                // Auto-pause initially
                 loadedPlayer.pause()
             }
         }
@@ -153,112 +252,88 @@ struct MediaPlayerView: View {
         // Remove previous targets to prevent duplicates
         commandCenter.playCommand.removeTarget(nil)
         commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.togglePlayPauseCommand.removeTarget(nil)
         commandCenter.skipForwardCommand.removeTarget(nil)
         commandCenter.skipBackwardCommand.removeTarget(nil)
         commandCenter.changePlaybackPositionCommand.removeTarget(nil)
 
-        // Play
+        // PLAY
         commandCenter.playCommand.addTarget { _ in
-            guard let player = self.player else { return .commandFailed }
-            player.play()
-            self.updateNowPlayingPlaybackState(isPlaying: true)
+            self.publishNowPlaying(forceRate: 1.0)      // publish BEFORE action (no gap)
+            self.player?.play()
+            self.publishNowPlaying(forceRate: 1.0)      // publish AFTER action
             return .success
         }
 
-        // Pause
+        // PAUSE
         commandCenter.pauseCommand.addTarget { _ in
-            guard let player = self.player else { return .commandFailed }
-            player.pause()
-            self.updateNowPlayingPlaybackState(isPlaying: false)
+            self.publishNowPlaying(forceRate: 0.0)
+            self.player?.pause()
+            self.publishNowPlaying(forceRate: 0.0)
             return .success
         }
 
-        // Skip forward 15s
-        commandCenter.skipForwardCommand.addTarget { _ in
-            guard let player = self.player else { return .commandFailed }
-            let current = player.currentTime()
-            let newTime = CMTimeAdd(current, CMTime(seconds: 15, preferredTimescale: 1))
-            player.seek(to: newTime) { _ in
-                self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
+        // TOGGLE (some UIs send only toggle)
+        commandCenter.togglePlayPauseCommand.addTarget { _ in
+            guard let p = self.player else { return .commandFailed }
+            if p.timeControlStatus == .playing {
+                self.publishNowPlaying(forceRate: 0.0)
+                p.pause()
+                self.publishNowPlaying(forceRate: 0.0)
+            } else {
+                self.publishNowPlaying(forceRate: 1.0)
+                p.play()
+                self.publishNowPlaying(forceRate: 1.0)
             }
             return .success
         }
 
-        // Skip back 15s
-        commandCenter.skipBackwardCommand.addTarget { _ in
-            guard let player = self.player else { return .commandFailed }
-            let current = player.currentTime()
-            let newTime = CMTimeSubtract(current, CMTime(seconds: 15, preferredTimescale: 1))
-            player.seek(to: newTime) { _ in
-                self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
-            }
-            return .success
-        }
-
-        // Scrub to position
-        commandCenter.changePlaybackPositionCommand.addTarget { event in
-            guard let player = self.player,
-                  let commandEvent = event as? MPChangePlaybackPositionCommandEvent else {
-                return .commandFailed
-            }
-            let time = CMTime(seconds: commandEvent.positionTime, preferredTimescale: 1)
-            player.seek(to: time) { _ in
-                self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
-            }
-            return .success
-        }
-
-        // Configure skip intervals
+        // SKIP FORWARD 15s
         commandCenter.skipForwardCommand.preferredIntervals = [15]
+        commandCenter.skipForwardCommand.addTarget { _ in
+            guard let p = self.player else { return .commandFailed }
+            let current = p.currentTime()
+            let target = CMTimeAdd(current, CMTime(seconds: 15, preferredTimescale: 1))
+            self.publishNowPlaying(overrideElapsed: CMTimeGetSeconds(target)) // immediately reflect target
+            p.seek(to: target) { _ in
+                self.publishNowPlaying(forceRate: p.timeControlStatus == .playing ? 1.0 : 0.0)
+            }
+            return .success
+        }
+
+        // SKIP BACKWARD 15s
         commandCenter.skipBackwardCommand.preferredIntervals = [15]
+        commandCenter.skipBackwardCommand.addTarget { _ in
+            guard let p = self.player else { return .commandFailed }
+            let current = p.currentTime()
+            let target = CMTimeSubtract(current, CMTime(seconds: 15, preferredTimescale: 1))
+            self.publishNowPlaying(overrideElapsed: CMTimeGetSeconds(target))
+            p.seek(to: target) { _ in
+                self.publishNowPlaying(forceRate: p.timeControlStatus == .playing ? 1.0 : 0.0)
+            }
+            return .success
+        }
+
+        // SCRUB TO POSITION
+        commandCenter.changePlaybackPositionCommand.addTarget { event in
+            guard let p = self.player,
+                  let e = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
+            let target = CMTime(seconds: e.positionTime, preferredTimescale: 1)
+            self.publishNowPlaying(overrideElapsed: e.positionTime)  // reflect instantly
+            p.seek(to: target) { _ in
+                self.publishNowPlaying(forceRate: p.timeControlStatus == .playing ? 1.0 : 0.0)
+            }
+            return .success
+        }
     }
 
     private func updateNowPlayingPlaybackState(isPlaying: Bool) {
-        guard let player = self.player else { return }
-        var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
-        info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(player.currentTime())
-        info[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        publishNowPlaying(forceRate: isPlaying ? 1.0 : 0.0)
     }
 
     private func setupNowPlayingInfo() {
-        guard let player = player,
-              let playerItem = playerItem else { return }
-
-        var nowPlayingInfo = [String: Any]()
-
-        // Basic metadata
-        nowPlayingInfo[MPMediaItemPropertyTitle] = file.name
-        nowPlayingInfo[MPMediaItemPropertyArtist] = "FileBrowser"
-        nowPlayingInfo[MPMediaItemPropertyAlbumTitle] = "Media Files"
-
-        // Playback info
-        let currentTime = CMTimeGetSeconds(player.currentTime())
-        let duration = CMTimeGetSeconds(playerItem.duration)
-
-        if duration.isFinite && !duration.isNaN {
-            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
-        }
-
-        if currentTime.isFinite && !currentTime.isNaN {
-            nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
-        }
-
-        nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = player.rate
-
-        // Try to extract artwork for video files
-        if let asset = playerItem.asset as? AVURLAsset {
-            extractArtwork(from: asset) { artwork in
-                DispatchQueue.main.async {
-                    if let artwork = artwork {
-                        nowPlayingInfo[MPMediaItemPropertyArtwork] = artwork
-                    }
-                    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-                }
-            }
-        } else {
-            MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
-        }
+        // Backward-compat shim — just seed once
+        seedNowPlayingIfNeeded()
     }
 
     private func extractArtwork(from asset: AVURLAsset, completion: @escaping (MPMediaItemArtwork?) -> Void) {
@@ -317,19 +392,27 @@ struct MediaPlayerView: View {
     private func addPeriodicTimeObserver() {
         guard let player = player else { return }
 
-        // Remove existing observer
         if let timeObserver = timeObserver {
             player.removeTimeObserver(timeObserver)
         }
 
-        // Add new observer that updates every second
         timeObserver = player.addPeriodicTimeObserver(
             forInterval: CMTime(seconds: 1, preferredTimescale: 1),
             queue: .main
         ) { _ in
-            // Update Now Playing info periodically
-            DispatchQueue.main.async {
-                self.setupNowPlayingInfo()
+            self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
+
+            // If duration was unknown at seed time, fill it in once it becomes finite.
+            if let item = self.playerItem {
+                let dur = CMTimeGetSeconds(item.duration)
+                if dur.isFinite && !dur.isNaN && self.npBaseInfo[MPMediaItemPropertyPlaybackDuration] == nil {
+                    self.npBaseInfo[MPMediaItemPropertyPlaybackDuration] = dur
+                    // Re-publish full dict to make lock screen show proper time instead of -:--
+                    var full = self.npBaseInfo
+                    full[MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(player.currentTime())
+                    full[MPNowPlayingInfoPropertyPlaybackRate] = player.timeControlStatus == .playing ? 1.0 : 0.0
+                    MPNowPlayingInfoCenter.default().nowPlayingInfo = full
+                }
             }
         }
     }
@@ -344,8 +427,14 @@ struct MediaPlayerView: View {
         // Pause and cleanup player
         player?.pause()
         player?.replaceCurrentItem(with: nil)
+        unregisterItemObservers()
         player = nil
         playerItem = nil
+
+        npSeeded = false
+        npTitle = nil
+        npArtwork = nil
+        npBaseInfo = [:]
 
         // Clear remote control targets
         let commandCenter = MPRemoteCommandCenter.shared()
