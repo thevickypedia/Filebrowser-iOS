@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.34.1 (08/24/2025)
+--------------------
+- [bcff90b](https://github.com/thevickypedia/Filebrowser-iOS/commit/bcff90b1c3a5f4bf43c181607a483ff65863e001) chore: Release ``v1.34.1``
+- [7ed2040](https://github.com/thevickypedia/Filebrowser-iOS/commit/7ed2040d3932bcd3566bf63acc31b9f8741b59f1) perf: Optimize logging with ``@autoclosure`` to defer message evaluation
+- [3721017](https://github.com/thevickypedia/Filebrowser-iOS/commit/37210170e326ec8188b64099909f55054c2dcc7a) style: Maintain consistency in icon size for default thumbnail image
+- [23c3b0b](https://github.com/thevickypedia/Filebrowser-iOS/commit/23c3b0b7f3d4b8c3c3d54945519e1cc50c8bd351) fix: Case sensitivity bug in ``systemIcon`` util function
+- [23fbeef](https://github.com/thevickypedia/Filebrowser-iOS/commit/23fbeefc9ba3551098c0281ec851d9ce7989cf4b) style: Show thumbnail spinner immediately on visibility
+- [fe8fd37](https://github.com/thevickypedia/Filebrowser-iOS/commit/fe8fd37d3da16057e1edaa83c5e264ab2dac65d7) chore: Update release notes for v1.34.0
+
 v1.34.0 (08/24/2025)
 --------------------
 - [cb5f5bf](https://github.com/thevickypedia/Filebrowser-iOS/commit/cb5f5bf56b2a36b490b71a6fc0116dfa9370d5b4) chore: Release ``v1.34.0``
