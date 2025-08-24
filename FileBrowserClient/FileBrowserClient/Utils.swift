@@ -177,23 +177,22 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
 }
 
 func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String? {
-    let ext = "." + URL(fileURLWithPath: fileName).pathExtension.lowercased()
+    let lower = fileName.lowercased()
+    let ext = "." + URL(fileURLWithPath: lower).pathExtension
 
-    // Direct lookup from dictionary
-    if let icon = fileExtensionToIconMap[ext] {
-        return icon
-    }
+    // 1) Exact map hit first
+    if let icon = fileExtensionToIconMap[ext] { return icon }
 
-    // Match against audio/video/image extensions in ExtensionTypes
-    if extensionTypes.audioExtensions.contains(where: fileName.hasSuffix) {
+    // 2) Match against audio/video/image extensions in ExtensionTypes
+    if extensionTypes.audioExtensions.contains(where: lower.hasSuffix) {
         return "waveform"
     }
 
-    if extensionTypes.videoExtensions.contains(where: fileName.hasSuffix) {
+    if extensionTypes.videoExtensions.contains(where: lower.hasSuffix) {
         return "film"
     }
 
-    if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
+    if extensionTypes.imageExtensions.contains(where: lower.hasSuffix) {
         return "photo"
     }
 
