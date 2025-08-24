@@ -5,7 +5,7 @@
 	<key>CFBundleName</key>
 	<string>FileBrowserClient</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.33.2</string>
+	<string>1.34.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>NSFaceIDUsageDescription</key>
@@ -24,6 +24,6 @@
 		<true/>
 	</dict>
 	<key>AVInitialRouteSharingPolicy</key>
-    <string>LongFormAudio</string>
+	<string>LongFormAudio</string>
 </dict>
 </plist>
