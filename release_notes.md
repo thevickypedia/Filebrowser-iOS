@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.34.0 (08/24/2025)
+--------------------
+- [cb5f5bf](https://github.com/thevickypedia/Filebrowser-iOS/commit/cb5f5bf56b2a36b490b71a6fc0116dfa9370d5b4) chore: Release ``v1.34.0``
+- [fe25914](https://github.com/thevickypedia/Filebrowser-iOS/commit/fe25914c392de800ed58c7155c9ad69b83ffc6b2) perf: Remove unnecessary casting, replace all print statements with logging and replace ``tracks(withMediaType:)`` with ``loadTracks(withMediaType:)``
+- [494d02d](https://github.com/thevickypedia/Filebrowser-iOS/commit/494d02d76e2af1a7af76f9e5a03cb540e2ac1f68) perf: Avoid fetching media metadata for any action on lock screen or centrol center
+- [bf44fe4](https://github.com/thevickypedia/Filebrowser-iOS/commit/bf44fe40c068dfcc2bae520670cba440f860dc16) chore: Include background processing and fetch
+- [0fce37f](https://github.com/thevickypedia/Filebrowser-iOS/commit/0fce37f5c75388ec3f32ae19de038a15de73509b) lint: Fix linting errors
+- [58381bc](https://github.com/thevickypedia/Filebrowser-iOS/commit/58381bc4d4dda80c59b2107cc32eece28d97c5e4) fix: Background media player on lock screen after adding a new capability
+- [a960231](https://github.com/thevickypedia/Filebrowser-iOS/commit/a960231df65d615751c27e6ef7e1cf3494f471d8) fix: Handle session interruption for background video
+- [78108aa](https://github.com/thevickypedia/Filebrowser-iOS/commit/78108aaa97998eaae3b5d0843208acd9e2e2c8e4) fix: Resolve ``Domain=NSOSStatusErrorDomain Code=-50``  caused by redundant ``setupAudioSession``
+- [4ad4beb](https://github.com/thevickypedia/Filebrowser-iOS/commit/4ad4beb324a6d8af145331fd2f5a12d64176e6e4) feat: Add background compatibility for media player
+- [c308ae2](https://github.com/thevickypedia/Filebrowser-iOS/commit/c308ae27c7397c8e2f803c0feefb4756b3d49f56) chore: Update release notes for v1.33.2
+
 v1.33.2 (08/23/2025)
 --------------------
 - [00c7efb](https://github.com/thevickypedia/Filebrowser-iOS/commit/00c7efbc3eb40a36451cac09908b5fb06cc8c2ea) chore: Release ``v1.33.2``
