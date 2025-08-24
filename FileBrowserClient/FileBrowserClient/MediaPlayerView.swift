@@ -69,6 +69,13 @@ struct MediaPlayerView: View {
                     player.play()
                 }
             }
+            NotificationCenter.default.addObserver(
+                forName: AVAudioSession.interruptionNotification,
+                object: nil,
+                queue: .main
+            ) { notification in
+                handleAudioSessionInterruption(notification)
+            }
         }
         .onDisappear {
             isVisible = false
@@ -78,6 +85,34 @@ struct MediaPlayerView: View {
         .navigationTitle(file.name)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(self.isFullScreen)
+    }
+
+    private func handleAudioSessionInterruption(_ notification: Notification) {
+        guard let info = notification.userInfo,
+              let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue),
+              let player = player else {
+            return
+        }
+
+        switch type {
+        case .began:
+            print("🔇 Audio session interruption began - pausing playback")
+            player.pause()
+
+        case .ended:
+            print("🔊 Audio session interruption ended")
+            if let optionsValue = info[AVAudioSessionInterruptionOptionKey] as? UInt {
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) {
+                    print("🎵 Resuming playback after interruption")
+                    player.play()
+                }
+            }
+
+        @unknown default:
+            break
+        }
     }
 
     func loadPlayer() {
@@ -111,6 +146,13 @@ struct MediaPlayerView: View {
 
     private func setupRemoteTransportControls() {
         let commandCenter = MPRemoteCommandCenter.shared()
+
+        // Remove previous targets to prevent duplicates
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.skipForwardCommand.removeTarget(nil)
+        commandCenter.skipBackwardCommand.removeTarget(nil)
+        commandCenter.changePlaybackPositionCommand.removeTarget(nil)
 
         // Play command
         commandCenter.playCommand.addTarget { [player] _ in
