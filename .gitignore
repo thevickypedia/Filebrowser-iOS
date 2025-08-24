@@ -84,3 +84,4 @@ Package.resolved
 # User-specific
 *.swp
 *.orig
+*.log

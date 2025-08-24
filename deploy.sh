@@ -1,44 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-set -e
+PROJECT_DIR="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
+WORKSPACE_PATH="${PROJECT_DIR}/FileBrowserClient/FileBrowserClient.xcodeproj/project.xcworkspace"
+TARGET_DEVICE="Vignesh's iPhone"
+SCRIPT_PATH="${PROJECT_DIR}/deploy.scpt"
+LOG_FILE="${PROJECT_DIR}/deploy.log"
 
-# Configuration
-PROJECT_NAME="FileBrowserClient"
-if [ -z "$DEVICE_ID" ]; then
-    echo "Error: DEVICE_ID is not set. Please set it to the device's UDID."
-    # List run destinations
-    # xcrun xctrace list devices
-    # xcrun simctl list devices (only for simulators)
-    exit 1
+log() { echo "[ $(date '+%Y-%m-%d %H:%M:%S') ] $1" >> "$LOG_FILE"; }
+
+echo "***************************************[ START ]***************************************" >> "$LOG_FILE"
+git pull origin main
+
+log "Starting wireless deployment"
+osascript "$SCRIPT_PATH" "$WORKSPACE_PATH" "$TARGET_DEVICE"
+
+if [[ $? -eq 0 ]]; then
+    log "Deployment completed successfully"
+else
+    log "Deployment failed"
 fi
-
-cd "$PROJECT_NAME" || { echo "Project directory not found!"; exit 1; }
-
-# Build the project
-xcodebuild \
-  -project "$PROJECT_NAME.xcodeproj" \
-  -scheme "$PROJECT_NAME" \
-  -configuration Debug \
-  -derivedDataPath build \
-  -allowProvisioningUpdates
-
-# Find the app bundle
-APP_PATH=$(find build -name "*.app" | head -n 1)
-
-# Check if build succeeded
-if [ -z "$APP_PATH" ]; then
-    echo "Build failed!"
-    exit 1
-fi
-
-# List available signing identities
-# security find-identity -p codesigning -v
-
-# Deploy to device
-# TODO: Device needs to be physically connected and trusted
-ios-deploy \
-  --bundle "$APP_PATH" \
-  --id "$DEVICE_ID" \
-  --timeout 120
-
-echo "Deployment completed at $(date)"
+echo "****************************************[ END ]****************************************" >> "$LOG_FILE"
