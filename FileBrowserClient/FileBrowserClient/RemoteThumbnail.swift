@@ -90,6 +90,12 @@ struct RemoteThumbnail: View {
     // Prevent multiple load attempts
     @State private var loadAttempted = false
 
+    private let thumbnailQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 4
+        return queue
+    }()
+
     var body: some View {
         Group {
             if let gifData = gifData, advancedSettings.animateGIF {
@@ -155,7 +161,9 @@ struct RemoteThumbnail: View {
                 gifData = nil
                 isLoading = true
             }
-            actuallyLoadThumbnail()
+            thumbnailQueue.addOperation {
+                self.actuallyLoadThumbnail()
+            }
         }, completion: { image, gifData in
             DispatchQueue.main.async {
                 if let gif = gifData {
@@ -275,9 +283,11 @@ struct RemoteThumbnail: View {
                 } else if let img = UIImage(data: data) {
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: img, gifData: nil, failed: false)
                 } else {
+                    Log.error("❌ Failed to decode image thumbnail for file: \(file.name) — data size: \(data.count) bytes")
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
                 }
             } else {
+                Log.error("❌ Image thumbnail request failed for file: \(file.name) — error: \(error?.localizedDescription ?? "Unknown error")")
                 GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
             }
         }.resume()
