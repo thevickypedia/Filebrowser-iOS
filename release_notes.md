@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.34.2 (08/28/2025)
+--------------------
+- [8498dce](https://github.com/thevickypedia/Filebrowser-iOS/commit/8498dce39055c9d102b60bf05018052d0a2c9c7a) chore: Release ``v1.34.2``
+- [764ab37](https://github.com/thevickypedia/Filebrowser-iOS/commit/764ab3733fe3c9cccdc22578886b8473d757e825) perf: Wrap thumbnail processing for images and GIFs in ``autoreleasepool`` to reduce memory usage
+- [e18e460](https://github.com/thevickypedia/Filebrowser-iOS/commit/e18e460d6ec2cf7ec4e961c93768e6231aedfcd0) fix: Remove async dispatch to load thumbnails that bypassed queue concurrency limit
+- [2d8903e](https://github.com/thevickypedia/Filebrowser-iOS/commit/2d8903e6b52d2c4420f3f110b172395790ccacf5) perf: Implement a queue functionality to avoid crashing when too many video thumbnails are rendered
+- [7232bd7](https://github.com/thevickypedia/Filebrowser-iOS/commit/7232bd7c8cc46e1b5ff31e735706515dcbebd51f) dev: Create a dev script to automatically deploy XCode project to iPhone via network
+- [2265abb](https://github.com/thevickypedia/Filebrowser-iOS/commit/2265abbc245b263ecf586b4254fe4f990d4b6e19) chore: Update release notes for v1.34.1
+
 v1.34.1 (08/24/2025)
 --------------------
 - [bcff90b](https://github.com/thevickypedia/Filebrowser-iOS/commit/bcff90b1c3a5f4bf43c181607a483ff65863e001) chore: Release ``v1.34.1``
