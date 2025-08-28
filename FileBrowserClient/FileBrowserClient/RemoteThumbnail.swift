@@ -4,6 +4,7 @@
 //
 //  Created by Vignesh Rao on 7/28/25.
 //
+
 import SwiftUI
 import AVFoundation
 
@@ -205,7 +206,7 @@ struct RemoteThumbnail: View {
             }
         }
 
-        // Step 2: Videos
+        // Step 2: Video thumbnail generation
         if isVideo {
             guard let videoURL = buildAPIURL(
                 base: serverURL,
@@ -216,10 +217,13 @@ struct RemoteThumbnail: View {
                 return
             }
 
-            DispatchQueue.global(qos: .userInitiated).async {
+            // ⚠️ No extra DispatchQueue here since it's already on the thumbnailQueue
+            autoreleasepool {
                 let asset = AVURLAsset(url: videoURL)
                 let imageGenerator = AVAssetImageGenerator(asset: asset)
                 imageGenerator.appliesPreferredTrackTransform = true
+                // Downscale thumbnails to reduce memory
+                imageGenerator.maximumSize = CGSize(width: 320, height: 320)
                 let time = CMTime(seconds: 1, preferredTimescale: 600)
 
                 do {
@@ -234,16 +238,14 @@ struct RemoteThumbnail: View {
                         Log.warn("Video thumbnail compression failed - falling back to PNG.")
                         imageData = thumbImage.pngData()
                     }
-                    if advancedSettings.cacheThumbnail {
-                        if let data = imageData {
-                            FileCache.shared.store(
-                                for: serverURL,
-                                data: data,
-                                path: file.path,
-                                modified: file.modified,
-                                fileID: "thumb"
-                            )
-                        }
+                    if let data = imageData, advancedSettings.cacheThumbnail {
+                        FileCache.shared.store(
+                            for: serverURL,
+                            data: data,
+                            path: file.path,
+                            modified: file.modified,
+                            fileID: "thumb"
+                        )
                     }
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: thumbImage, gifData: nil, failed: false)
                 } catch {
