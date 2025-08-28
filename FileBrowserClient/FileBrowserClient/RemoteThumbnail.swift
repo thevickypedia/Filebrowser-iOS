@@ -91,6 +91,8 @@ struct RemoteThumbnail: View {
     // Prevent multiple load attempts
     @State private var loadAttempted = false
 
+    // MARK: Set max concurrent thumbnail rendering to 4
+    // TODO: Add an advancedSettings option to allow user to control
     private let thumbnailQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 4
@@ -207,6 +209,7 @@ struct RemoteThumbnail: View {
         }
 
         // Step 2: Video thumbnail generation
+        // TODO: Add an advancedSettings option to load video thumbnails
         if isVideo {
             guard let videoURL = buildAPIURL(
                 base: serverURL,
@@ -270,7 +273,14 @@ struct RemoteThumbnail: View {
         }
 
         URLSession.shared.dataTask(with: url) { data, _, error in
-            if let data = data, error == nil {
+            guard let data = data, error == nil else {
+                Log.error(
+                    "❌ Image thumbnail request failed for file: \(file.name) — error: \(error?.localizedDescription ?? "Unknown error")"
+                )
+                GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
+                return
+            }
+            autoreleasepool {
                 if advancedSettings.cacheThumbnail {
                     FileCache.shared.store(
                         for: serverURL,
@@ -288,9 +298,6 @@ struct RemoteThumbnail: View {
                     Log.error("❌ Failed to decode image thumbnail for file: \(file.name) — data size: \(data.count) bytes")
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
                 }
-            } else {
-                Log.error("❌ Image thumbnail request failed for file: \(file.name) — error: \(error?.localizedDescription ?? "Unknown error")")
-                GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
             }
         }.resume()
     }
