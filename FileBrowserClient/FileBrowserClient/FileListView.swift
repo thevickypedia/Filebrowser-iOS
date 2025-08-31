@@ -414,13 +414,13 @@ struct FileListView: View {
 
     private var selectedStack: some View {
         return Menu {
-            if userPermissions?.delete == true {
-                // 🗑️ Delete
+            if userPermissions?.modify == true {
+                // ➡️ Move
                 Button(action: {
-                    if selectedItems.isEmpty { return }
-                    showingDeleteConfirm = true
+                    Log.info("Move Icon clicked")
+                    showMove = true
                 }) {
-                    Label("Delete", systemImage: "trash")
+                    Label("Move", systemImage: "arrow.right")
                 }
             }
 
@@ -431,16 +431,6 @@ struct FileListView: View {
                     showCopy = true
                 }) {
                     Label("Copy", systemImage: "doc.on.doc")
-                }
-            }
-
-            if userPermissions?.modify == true {
-                // ➡️ Move
-                Button(action: {
-                    Log.info("Move Icon clicked")
-                    showMove = true
-                }) {
-                    Label("Move", systemImage: "arrow.right")
                 }
             }
 
@@ -456,6 +446,7 @@ struct FileListView: View {
                         Label("Rename", systemImage: "pencil")
                     }
                 }
+
                 if userPermissions?.share == true {
                     Button(action: {
                         if let item = selectedItems.first {
@@ -478,6 +469,17 @@ struct FileListView: View {
                         }
                     }
                 }
+            }
+            if userPermissions?.delete == true {
+                // 🗑️ Delete
+                Button(role: .destructive, action: {
+                    if selectedItems.isEmpty { return }
+                    showingDeleteConfirm = true
+                }) {
+                    Label("Delete", systemImage: "trash")
+                        .foregroundStyle(.red)
+                }
+                .foregroundStyle(.red)
             }
         } label: {
             Image(systemName: "ellipsis.circle")
@@ -686,12 +688,13 @@ struct FileListView: View {
 
                     Spacer()
 
+                    let icon = action == ModifyItem.move ? "arrow.right.circle.fill" : "doc.on.doc"
                     Button(action: {
                         modifyItem(to: currentSheetPath, action: action)
                     }) {
                         HStack {
                             Text(action.rawValue).bold()
-                            Image(systemName: "arrow.right.circle.fill")
+                            Image(systemName: icon)
                         }
                     }
                 }
