@@ -15,6 +15,9 @@ class FileListViewModel: ObservableObject {
     @Published var searchResults: [FileItemSearch] = []
     private var currentTask: Task<Void, Never>?
 
+    @Published var sheetItems: [FileItem] = []
+    @Published var sheetIsLoading: Bool = false
+
     var token: String?
     var serverURL: String?
 
@@ -116,6 +119,83 @@ class FileListViewModel: ObservableObject {
                     // }
                     self.files = fileItems
                     self.isLoading = false
+                } catch {
+                    self.errorMessage = "Failed to parse files"
+                    Log.error("Failed to decode JSON: \(error.localizedDescription)")
+                    if let raw = String(data: data, encoding: .utf8) {
+                        Log.error("❌ Raw response: \(raw)")
+                    }
+                }
+            }
+        }.resume()
+    }
+
+    func getFiles(at path: String) {
+        Log.debug("📡 Fetching files at path: \(path)")
+        guard let token = token, let serverURL = serverURL else {
+            DispatchQueue.main.async {
+                self.errorMessage = "Missing auth"
+            }
+            return
+        }
+
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "resources", path],
+            queryItems: []
+        ) else {
+            DispatchQueue.main.async {
+                self.errorMessage = "Invalid URL"
+            }
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        DispatchQueue.main.async {
+            self.sheetIsLoading = true
+            self.errorMessage = nil
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    self.sheetIsLoading = false
+                    self.errorMessage = "Server error: Invalid response"
+                    Log.error("❌ Server error: Response was not HTTPURLResponse")
+                    return
+                }
+
+                guard httpResponse.statusCode == 200 else {
+                    self.sheetIsLoading = false
+                    self.errorMessage = "Server error: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                    return
+                }
+
+                self.sheetIsLoading = false
+
+                if let error = error {
+                    self.errorMessage = error.localizedDescription
+                    return
+                }
+
+                guard let data = data else {
+                    self.errorMessage = "No data received"
+                    return
+                }
+
+                do {
+                    let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
+                    let fileItems = result.items
+                    Log.info("Loaded \(fileItems.count) items at path: \(path)")
+                    // for file in fileItems {
+                    //    Log.debug(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
+                    // }
+                    self.sheetItems = fileItems
+                    self.sheetIsLoading = false
                 } catch {
                     self.errorMessage = "Failed to parse files"
                     Log.error("Failed to decode JSON: \(error.localizedDescription)")

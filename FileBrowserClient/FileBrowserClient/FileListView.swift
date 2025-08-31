@@ -36,6 +36,10 @@ struct FileListView: View {
     @State private var showingSettings = false
     @State private var dateFormatExact = false
 
+    @State private var showCopy = false
+    @State private var showMove = false
+    @State private var sheetPathStack: [FileItem] = []
+
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
 
@@ -424,6 +428,7 @@ struct FileListView: View {
                 // 📋 Copy
                 Button(action: {
                     Log.info("Copy Icon clicked")
+                    showCopy = true
                 }) {
                     Label("Copy", systemImage: "doc.on.doc")
                 }
@@ -433,6 +438,7 @@ struct FileListView: View {
                 // ➡️ Move
                 Button(action: {
                     Log.info("Move Icon clicked")
+                    showMove = true
                 }) {
                     Label("Move", systemImage: "arrow.right")
                 }
@@ -641,6 +647,104 @@ struct FileListView: View {
         }
     }
 
+    private var currentSheetPath: String {
+        let base = currentPath.hasSuffix("/") ? String(currentPath.dropLast()) : currentPath
+        let relative = sheetPathStack.map { $0.name }.joined(separator: "/")
+
+        if relative.isEmpty {
+            return base
+        } else {
+            return base + "/" + relative
+        }
+    }
+
+    private var showCopyOrMoveSheet: some View {
+        NavigationStack {
+            VStack {
+                // MARK: - Toolbar
+                HStack {
+                    Button(action: {
+                        if !sheetPathStack.isEmpty {
+                            sheetPathStack.removeLast()
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                    }
+
+                    Spacer()
+
+                    Button(action: {
+                        sheetPathStack.removeAll()
+                    }) {
+                        VStack {
+                            Image(systemName: "house")
+                            Text("Home")
+                        }
+                    }
+
+                    Spacer()
+
+                    Button(action: {
+                        moveItems(to: currentSheetPath)
+                    }) {
+                        HStack {
+                            Text("Move").bold()
+                            Image(systemName: "arrow.right.circle.fill")
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top)
+
+                Divider()
+
+                // MARK: - Spinner or Folder List
+                if viewModel.sheetIsLoading {
+                    Spacer()
+                    ProgressView("Loading folders...")
+                        .padding()
+                    Spacer()
+                } else {
+                    if viewModel.sheetItems.isEmpty {
+                        Text("No items loaded").foregroundColor(.gray).padding()
+                    } else {
+                        List {
+                            ForEach(viewModel.sheetItems.filter { $0.isDir }, id: \.id) { file in
+                                Button(action: {
+                                    sheetPathStack.append(file)
+                                }) {
+                                    HStack {
+                                        Image(systemName: Icons.folder)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
+                                            .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+                                        Text(file.name)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle(currentSheetPath == currentPath ? "/" : sheetPathStack.last?.name ?? "/")
+            .navigationBarTitleDisplayMode(.inline)
+
+            // Load folders when path changes
+            .task(id: currentSheetPath) {
+                viewModel.getFiles(at: currentSheetPath)
+            }
+        }
+    }
+
+    private func moveItems(to destinationPath: String) {
+        // TODO: Implement move or copy logic
+        Log.info("Move to path: \(destinationPath)")
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
@@ -741,7 +845,7 @@ struct FileListView: View {
                 // Buttons to display when something is selected
                 if selectionMode {
                     selectedStack
-                    
+
                     // ✅ Select All / Deselect All
                     Button(action: toggleSelectAll) {
                         Image(systemName:
@@ -750,7 +854,7 @@ struct FileListView: View {
                               : "checkmark.square"
                         )
                     }
-                    
+
                     // ❌ Cancel
                     Button(action: {
                         selectedItems.removeAll()
@@ -825,6 +929,12 @@ struct FileListView: View {
                 // sharePath is nil
                 Text("No item selected to share").padding()
             }
+        }
+        .sheet(isPresented: $showCopy) {
+            showCopyOrMoveSheet
+        }
+        .sheet(isPresented: $showMove) {
+            showCopyOrMoveSheet
         }
         .sheet(isPresented: $showingSettings) {
             showSettingsSheet
