@@ -408,6 +408,59 @@ struct FileListView: View {
         }
     }
 
+    private var selectedStack: some View {
+        return Menu {
+            if userPermissions?.delete == true {
+                // 🗑️ Delete
+                Button(action: {
+                    if selectedItems.isEmpty { return }
+                    showingDeleteConfirm = true
+                }) {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+
+            // 📝 Rename and Share links only when exactly 1 item is selected
+            if selectedItems.count == 1 {
+                if userPermissions?.rename == true {
+                    Button(action: {
+                        if let item = selectedItems.first {
+                            renameInput = item.name
+                            isRenaming = true
+                        }
+                    }) {
+                        Label("Rename", systemImage: "pencil")
+                    }
+                }
+                if userPermissions?.share == true {
+                    Button(action: {
+                        if let item = selectedItems.first {
+                            sharePath = item
+                            DispatchQueue.main.async {
+                                isSharing = true
+                            }
+                        }
+                    }) {
+                        Label {
+                            Text("Share")
+                                .foregroundColor(.blue)
+                        } icon: {
+                            Image("material_share_icon")
+                                .renderingMode(.template)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "person.circle")
+                .imageScale(.large)
+        }
+    }
+
     private var deleteOptionsKSStack: some View {
         VStack(spacing: 20) {
             Text("Delete Known Servers")
@@ -667,48 +720,10 @@ struct FileListView: View {
 
             // Right: Actions (person icon) and Selection (three dot) buttons
             ToolbarItemGroup(placement: .navigationBarTrailing) {
+                // Buttons to display when something is selected
                 if selectionMode {
-                    if userPermissions?.delete == true {
-                        // 🗑️ Delete
-                        Button(action: {
-                            if selectedItems.isEmpty { return }
-                            showingDeleteConfirm = true
-                        }) {
-                            Image(systemName: "trash")
-                        }
-                    }
-
-                    // 📝 Rename and Share links only when exactly 1 item is selected
-                    if selectedItems.count == 1 {
-                        if userPermissions?.rename == true {
-                            Button(action: {
-                                if let item = selectedItems.first {
-                                    renameInput = item.name
-                                    isRenaming = true
-                                }
-                            }) {
-                                Image(systemName: "pencil")
-                            }
-                        }
-                        if userPermissions?.share == true {
-                            Button(action: {
-                                if let item = selectedItems.first {
-                                    sharePath = item
-                                    DispatchQueue.main.async {
-                                        isSharing = true
-                                    }
-                                }
-                            }) {
-                                Image("material_share_icon")
-                                    .renderingMode(.template)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                    }
-
+                    selectedStack
+                    
                     // ✅ Select All / Deselect All
                     Button(action: toggleSelectAll) {
                         Image(systemName:
@@ -717,7 +732,7 @@ struct FileListView: View {
                               : "checkmark.square"
                         )
                     }
-
+                    
                     // ❌ Cancel
                     Button(action: {
                         selectedItems.removeAll()
