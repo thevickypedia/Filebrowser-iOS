@@ -27,11 +27,20 @@ struct Log {
         guard level.rawValue >= currentLevel.rawValue else { return }
         // MARK: Only evaluated if level check passes
         let msg = message()
+        let paddedLabel = label.padding(toLength: 10, withPad: " ", startingAt: 0)
         if verboseMode {
-            let location = "\(file):\(line) \(function)"
-            print("\(label) [\(timestamp())] [\(location)] \(msg)")
+            let fileName = URL(fileURLWithPath: file).deletingPathExtension().lastPathComponent
+            let functionName: String = {
+                let pattern = #"^(\w+)"#
+                if let match = function.range(of: pattern, options: .regularExpression) {
+                    return String(function[match])
+                }
+                return function // fallback
+            }()
+            let location = "[\(fileName):\(line)] - \(functionName)"
+            print("\(paddedLabel) - \(timestamp()) - \(location) - \(msg)")
         } else {
-            print("\(label) [\(timestamp())] \(msg)")
+            print("\(paddedLabel) - \(timestamp()) - \(msg)")
         }
     }
 
