@@ -480,7 +480,7 @@ struct FileListView: View {
                 }
             }
         } label: {
-            Image(systemName: "person.circle")
+            Image(systemName: "ellipsis.circle")
                 .imageScale(.large)
         }
     }
@@ -740,15 +740,63 @@ struct FileListView: View {
     }
 
     private func modifyItem(to destinationPath: String, action: ModifyItem) {
-        // TODO: Implement move or copy logic
         let logAction = action.rawValue.lowercased()
-        if selectedItems.isEmpty {
+        guard !selectedItems.isEmpty else {
             Log.warn("No items selected to \(logAction)")
             return
         }
         let selectedNames = selectedItems.map { $0.name }
         Log.info("Selected items [\(selectedItems.count)] for \(logAction): \(selectedNames)")
-        Log.info("\(action.rawValue) to path: \(destinationPath)")
+        Log.info("\(action.rawValue.capitalized) to path: \(destinationPath)")
+
+        // TODO: Add new message pop up for statusMessage here
+        // TODO: Check if file exists at destination before loop
+        // TODO: After copy or move - go back to source destination
+        // TODO: Reset sheetPathStack, and other boolean flags
+        for item in selectedItems {
+            let itemName = item.name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? item.name
+            let encodedDestination = destinationPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? destinationPath
+
+            let urlAction = action == ModifyItem.move ? "rename" : "copy"
+            let urlString = "\(serverURL)/api/resources/\(itemName)?action=\(urlAction)&destination=\(encodedDestination)/\(itemName)&override=false&rename=false"
+
+            Log.debug("\(action.rawValue): \(urlString)")
+            guard let url = URL(string: urlString) else {
+                Log.error("Invalid URL for \(item.name)")
+                statusMessage = StatusPayload(text: "❌ Invalid URL for \(item.name)", color: .red, duration: 3)
+                continue
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "PATCH"
+            request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    let msg = "Failed to \(logAction) \(item.name): \(error.localizedDescription)"
+                    Log.error(msg)
+                    statusMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    let msg = "Invalid response received when trying to \(logAction) \(item.name)"
+                    Log.error(msg)
+                    statusMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    return
+                }
+
+                if (200...299).contains(httpResponse.statusCode) {
+                    Log.info("\(item.name) \(logAction)d successfully to \(destinationPath)")
+                } else {
+                    let msg = "Failed to \(logAction) \(item.name). HTTP Status: \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    Log.error(msg)
+                    statusMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                }
+            }
+
+            task.resume()
+        }
     }
 
     var body: some View {
