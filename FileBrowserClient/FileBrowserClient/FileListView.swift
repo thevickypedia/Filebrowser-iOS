@@ -420,6 +420,24 @@ struct FileListView: View {
                 }
             }
 
+            if userPermissions?.execute == true {
+                // 📋 Copy
+                Button(action: {
+                    Log.info("Copy Icon clicked")
+                }) {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
+            }
+
+            if userPermissions?.modify == true {
+                // ➡️ Move
+                Button(action: {
+                    Log.info("Move Icon clicked")
+                }) {
+                    Label("Move", systemImage: "arrow.right")
+                }
+            }
+
             // 📝 Rename and Share links only when exactly 1 item is selected
             if selectedItems.count == 1 {
                 if userPermissions?.rename == true {
