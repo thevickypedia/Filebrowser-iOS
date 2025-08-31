@@ -8,6 +8,11 @@
 import Foundation
 import SwiftUI
 
+enum ModifyItem: String {
+    case copy = "Copy"
+    case move = "Move"
+}
+
 class FileListViewModel: ObservableObject {
     @Published var files: [FileItem] = []
     @Published var errorMessage: String?

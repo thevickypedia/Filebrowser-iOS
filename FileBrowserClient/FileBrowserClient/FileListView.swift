@@ -658,10 +658,9 @@ struct FileListView: View {
         }
     }
 
-    private var showCopyOrMoveSheet: some View {
+    private func modifySheet(action: ModifyItem) -> some View {
         NavigationStack {
             VStack {
-                // MARK: - Toolbar
                 HStack {
                     Button(action: {
                         if !sheetPathStack.isEmpty {
@@ -688,10 +687,10 @@ struct FileListView: View {
                     Spacer()
 
                     Button(action: {
-                        moveItems(to: currentSheetPath)
+                        modifyItem(to: currentSheetPath, action: action)
                     }) {
                         HStack {
-                            Text("Move").bold()
+                            Text(action.rawValue).bold()
                             Image(systemName: "arrow.right.circle.fill")
                         }
                     }
@@ -740,9 +739,16 @@ struct FileListView: View {
         }
     }
 
-    private func moveItems(to destinationPath: String) {
+    private func modifyItem(to destinationPath: String, action: ModifyItem) {
         // TODO: Implement move or copy logic
-        Log.info("Move to path: \(destinationPath)")
+        let logAction = action.rawValue.lowercased()
+        if selectedItems.isEmpty {
+            Log.warn("No items selected to \(logAction)")
+            return
+        }
+        let selectedNames = selectedItems.map { $0.name }
+        Log.info("Selected items [\(selectedItems.count)] for \(logAction): \(selectedNames)")
+        Log.info("\(action.rawValue) to path: \(destinationPath)")
     }
 
     var body: some View {
@@ -931,10 +937,10 @@ struct FileListView: View {
             }
         }
         .sheet(isPresented: $showCopy) {
-            showCopyOrMoveSheet
+            modifySheet(action: ModifyItem.copy)
         }
         .sheet(isPresented: $showMove) {
-            showCopyOrMoveSheet
+            modifySheet(action: ModifyItem.move)
         }
         .sheet(isPresented: $showingSettings) {
             showSettingsSheet
