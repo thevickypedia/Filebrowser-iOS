@@ -650,14 +650,12 @@ struct FileListView: View {
     }
 
     private var currentSheetPath: String {
-        let base = currentPath.hasSuffix("/") ? String(currentPath.dropLast()) : currentPath
-        let relative = sheetPathStack.map { $0.name }.joined(separator: "/")
-
-        if relative.isEmpty {
-            return base
-        } else {
-            return base + "/" + relative
+        if sheetPathStack.isEmpty {
+            return "/"
         }
+
+        let relativePath = sheetPathStack.map { $0.name }.joined(separator: "/")
+        return "/" + relativePath
     }
 
     private func modifySheet(action: ModifyItem) -> some View {
@@ -679,6 +677,8 @@ struct FileListView: View {
 
                     Button(action: {
                         sheetPathStack.removeAll()
+                        // Force refresh to root directory
+                        viewModel.getFiles(at: "/")
                     }) {
                         VStack {
                             Image(systemName: "house")
@@ -732,13 +732,21 @@ struct FileListView: View {
                     }
                 }
             }
-            .navigationTitle(currentSheetPath == currentPath ? "/" : sheetPathStack.last?.name ?? "/")
+            .navigationTitle(getSheetNavigationTitle())
             .navigationBarTitleDisplayMode(.inline)
 
             // Load folders when path changes
             .task(id: currentSheetPath) {
                 viewModel.getFiles(at: currentSheetPath)
             }
+        }
+    }
+
+    private func getSheetNavigationTitle() -> String {
+        if sheetPathStack.isEmpty {
+            return "/"
+        } else {
+            return sheetPathStack.last?.name ?? "/"
         }
     }
 
@@ -757,11 +765,19 @@ struct FileListView: View {
         // TODO: After copy or move - go back to source destination
         // TODO: Reset sheetPathStack, and other boolean flags
         for item in selectedItems {
-            let itemName = item.name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? item.name
-            let encodedDestination = destinationPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? destinationPath
-
+            let sourcePath = item.path.hasPrefix("/") ? item.path : "/" + item.path
+            let encodedSource = sourcePath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sourcePath
+            let destinationFullPath: String
+            if destinationPath == "/" {
+                destinationFullPath = "/" + item.name
+            } else {
+                destinationFullPath = destinationPath + "/" + item.name
+            }
+            let encodedDestination = destinationFullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? destinationFullPath
             let urlAction = action == ModifyItem.move ? "rename" : "copy"
-            let urlString = "\(serverURL)/api/resources/\(itemName)?action=\(urlAction)&destination=\(encodedDestination)/\(itemName)&override=false&rename=false"
+
+            let sourceForURL = encodedSource.hasPrefix("/") ? String(encodedSource.dropFirst()) : encodedSource
+            let urlString = "\(serverURL)/api/resources/\(sourceForURL)?action=\(urlAction)&destination=\(encodedDestination)&override=false&rename=false"
 
             Log.debug("\(action.rawValue): \(urlString)")
             guard let url = URL(string: urlString) else {
