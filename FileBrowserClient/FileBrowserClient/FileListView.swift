@@ -651,11 +651,17 @@ struct FileListView: View {
 
     private var currentSheetPath: String {
         if sheetPathStack.isEmpty {
-            return "/"
+            return currentPath
         }
 
-        let relativePath = sheetPathStack.map { $0.name }.joined(separator: "/")
-        return "/" + relativePath
+        let base = currentPath == "/" ? "" : currentPath
+        let relative = sheetPathStack.map { $0.name }.joined(separator: "/")
+
+        if base.isEmpty {
+            return "/" + relative
+        } else {
+            return base + "/" + relative
+        }
     }
 
     private func modifySheet(action: ModifyItem) -> some View {
@@ -744,7 +750,11 @@ struct FileListView: View {
 
     private func getSheetNavigationTitle() -> String {
         if sheetPathStack.isEmpty {
-            return "/"
+            if currentPath == "/" {
+                return "/"
+            } else {
+                return URL(fileURLWithPath: currentPath).lastPathComponent
+            }
         } else {
             return sheetPathStack.last?.name ?? "/"
         }
@@ -790,7 +800,7 @@ struct FileListView: View {
             request.httpMethod = "PATCH"
             request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-            let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            let task = URLSession.shared.dataTask(with: request) { _, response, error in
                 if let error = error {
                     let msg = "Failed to \(logAction) \(item.name): \(error.localizedDescription)"
                     Log.error(msg)
