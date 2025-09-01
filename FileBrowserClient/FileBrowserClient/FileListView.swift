@@ -90,7 +90,6 @@ struct FileListView: View {
     // Display as disappearing labels
     @State private var settingsMessage: StatusPayload?
     @State private var statusMessage: StatusPayload?
-    @State private var modifyMessage: StatusPayload?
     @State private var shareMessage: StatusPayload?
 
     // Specific for Grid view
@@ -649,19 +648,19 @@ struct FileListView: View {
             fetchClientStorageInfo()
         }
     }
-
+    // Fixed modifySheet implementation
     private var currentSheetPath: String {
+        // Build path from sheetPathStack, starting from root
         if sheetPathStack.isEmpty {
-            return currentPath
+            return "/"
         }
-        
-        // Always build relative to root, not currentPath
+
         var path = "/"
-        for (index, folder) in sheetPathStack.enumerated() {
-            path += folder.name
-            if index < sheetPathStack.count - 1 {
+        for item in sheetPathStack {
+            if path != "/" {
                 path += "/"
             }
+            path += item.name
         }
         return path
     }
@@ -670,6 +669,7 @@ struct FileListView: View {
         NavigationStack {
             VStack {
                 HStack {
+                    // Back button - goes up one level in sheetPathStack
                     Button(action: {
                         if !sheetPathStack.isEmpty {
                             sheetPathStack.removeLast()
@@ -682,12 +682,13 @@ struct FileListView: View {
                         }
                     }
                     .foregroundColor(sheetPathStack.isEmpty ? .gray : .primary)
+                    .disabled(sheetPathStack.isEmpty) // Disable when at root
 
                     Spacer()
 
+                    // Home button - goes to root directory
                     Button(action: {
                         sheetPathStack.removeAll()
-                        // Force refresh to root directory
                         viewModel.getFiles(at: "/")
                     }) {
                         VStack {
@@ -698,6 +699,7 @@ struct FileListView: View {
 
                     Spacer()
 
+                    // Action button (Move/Copy)
                     let icon = action == ModifyItem.move ? "arrow.right.circle.fill" : "doc.on.doc"
                     Button(action: {
                         modifyItem(to: currentSheetPath, action: action)
@@ -713,7 +715,7 @@ struct FileListView: View {
 
                 Divider()
 
-                // MARK: - Spinner or Folder List
+                // Folder list or loading spinner
                 if viewModel.sheetIsLoading {
                     Spacer()
                     ProgressView("Loading folders...")
@@ -721,7 +723,7 @@ struct FileListView: View {
                     Spacer()
                 } else {
                     if viewModel.sheetItems.isEmpty {
-                        Text("No items loaded").foregroundColor(.gray).padding()
+                        Text("No folders found").foregroundColor(.gray).padding()
                     } else {
                         List {
                             ForEach(viewModel.sheetItems.filter { $0.isDir }, id: \.id) { file in
@@ -736,8 +738,10 @@ struct FileListView: View {
                                             .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
                                             .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
                                         Text(file.name)
+                                        Spacer()
                                     }
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -746,40 +750,71 @@ struct FileListView: View {
             .navigationTitle(getSheetNavigationTitle())
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                if sheetPathStack.isEmpty {
-                    viewModel.getFiles(at: currentSheetPath)
-                }
+                // Initialize sheetPathStack based on currentPath when sheet appears
+                initializeSheetPath()
+                viewModel.getFiles(at: currentSheetPath)
+            }
+        }
+    }
+
+    private func initializeSheetPath() {
+        // Initialize sheetPathStack to represent the current path
+        sheetPathStack.removeAll()
+
+        if currentPath != "/" {
+            let pathComponents = currentPath.components(separatedBy: "/").filter { !$0.isEmpty }
+
+            // Build FileItem objects for each path component
+            var buildingPath = ""
+            for component in pathComponents {
+                buildingPath += "/" + component
+                let fileItem = FileItem(
+                    name: component,
+                    path: buildingPath,
+                    isDir: true,
+                    modified: nil,
+                    size: nil,
+                    extension: nil
+                )
+                sheetPathStack.append(fileItem)
             }
         }
     }
 
     private func getSheetNavigationTitle() -> String {
         if sheetPathStack.isEmpty {
-            // Show current directory name, not "/"
-            if currentSheetPath == "/" {
-                return "/"
-            } else {
-                return URL(fileURLWithPath: currentSheetPath).lastPathComponent
-            }
+            return "Root" // Show "Root" when at the top level
         } else {
-            return sheetPathStack.last?.name ?? "/"
+            return sheetPathStack.last?.name ?? "Root"
         }
     }
 
+    // Updated modifyItem function with better error handling and path management
     private func modifyItem(to destinationPath: String, action: ModifyItem) {
         let logAction = action.rawValue.lowercased()
         guard !selectedItems.isEmpty else {
             Log.warn("No items selected to \(logAction)")
             return
         }
+
+        // Validate destination path
+        guard !destinationPath.isEmpty else {
+            Log.error("Empty destination path for \(logAction)")
+            statusMessage = StatusPayload(text: "Invalid destination path", color: .red, duration: 3)
+            return
+        }
+
         let selectedNames = selectedItems.map { $0.name }
         let selectedCount = selectedItems.count
         Log.info("Selected items [\(selectedCount)] for \(logAction): \(selectedNames)")
         Log.info("\(action.rawValue.capitalized) to path: \(destinationPath)")
+
         let statusAction = action == ModifyItem.copy ? "Copying" : "Moving"
         let statusActionPost = action == ModifyItem.copy ? "Copied" : "Moved"
-        modifyMessage = StatusPayload(
-            text: "\(statusAction) \(selectedCount) to \(destinationPath)",
+
+        // TODO: Remove or fix - this will be displayed in the background (not in the sheet view)
+        statusMessage = StatusPayload(
+            text: "\(statusAction) \(selectedCount) item\(selectedCount == 1 ? "" : "s") to \(destinationPath)",
             color: .white,
             duration: 1.5
         )
@@ -788,13 +823,18 @@ struct FileListView: View {
         // TODO: Check if file exists at destination before loop
         // TODO: After copy or move - go back to source destination
         // TODO: Reset sheetPathStack, and other boolean flags
-        
+
         // Create a DispatchGroup to track completion
         let dispatchGroup = DispatchGroup()
+        var successCount = 0
+        var errorCount = 0
+
         for item in selectedItems {
-            dispatchGroup.enter() // Enter the group for each task
+            dispatchGroup.enter()
+
             let sourcePath = item.path.hasPrefix("/") ? item.path : "/" + item.path
             let encodedSource = sourcePath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sourcePath
+
             let destinationFullPath: String
             if destinationPath == "/" {
                 destinationFullPath = "/" + item.name
@@ -802,16 +842,17 @@ struct FileListView: View {
                 destinationFullPath = destinationPath + "/" + item.name
             }
             let encodedDestination = destinationFullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? destinationFullPath
-            let urlAction = action == ModifyItem.move ? "rename" : "copy"
 
+            let urlAction = action == ModifyItem.move ? "rename" : "copy"
             let sourceForURL = encodedSource.hasPrefix("/") ? String(encodedSource.dropFirst()) : encodedSource
             let urlString = "\(serverURL)/api/resources/\(sourceForURL)?action=\(urlAction)&destination=\(encodedDestination)&override=false&rename=false"
 
             Log.debug("\(action.rawValue): \(urlString)")
+
             guard let url = URL(string: urlString) else {
                 Log.error("Invalid URL for \(item.name)")
-                modifyMessage = StatusPayload(text: "❌ Invalid URL for \(item.name)", color: .red, duration: 3)
-                dispatchGroup.leave() // Leave the group for this task
+                errorCount += 1
+                dispatchGroup.leave()
                 continue
             }
 
@@ -820,37 +861,73 @@ struct FileListView: View {
             request.setValue(token, forHTTPHeaderField: "X-Auth")
 
             let task = URLSession.shared.dataTask(with: request) { _, response, error in
+                defer { dispatchGroup.leave() }
+
                 if let error = error {
                     let msg = "Failed to \(logAction) \(item.name): \(error.localizedDescription)"
                     Log.error(msg)
-                    modifyMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
-                    dispatchGroup.leave() // Leave the group for this task
+                    DispatchQueue.main.async {
+                        errorCount += 1
+                    }
                     return
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     let msg = "Invalid response received when trying to \(logAction) \(item.name)"
                     Log.error(msg)
-                    modifyMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
-                    dispatchGroup.leave() // Leave the group for this task
+                    DispatchQueue.main.async {
+                        errorCount += 1
+                    }
                     return
                 }
 
                 if (200...299).contains(httpResponse.statusCode) {
                     Log.info("\(item.name) \(logAction)d successfully to \(destinationPath)")
+                    DispatchQueue.main.async {
+                        successCount += 1
+                    }
                 } else {
-                    let msg = "Failed to \(logAction) \(item.name). HTTP Status: \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    let msg = "Failed to \(logAction) \(item.name). HTTP Status: \(httpResponse.statusCode)"
                     Log.error(msg)
-                    modifyMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    DispatchQueue.main.async {
+                        errorCount += 1
+                    }
                 }
-                dispatchGroup.leave() // Leave the group after completion
             }
             task.resume()
         }
 
-        // Wait for all tasks to finish before printing
+        // Wait for all tasks to complete
         dispatchGroup.notify(queue: .main) {
-            Log.info("\(selectedCount) items have been \(statusActionPost)")
+            Log.info("\(successCount) items successfully \(statusActionPost), \(errorCount) failed")
+
+            // Show completion message
+            if errorCount == 0 {
+                statusMessage = StatusPayload(
+                    text: "✅ \(statusActionPost) \(successCount) item\(successCount == 1 ? "" : "s")",
+                    color: .green,
+                    duration: 3
+                )
+            } else if successCount > 0 {
+                statusMessage = StatusPayload(
+                    text: "⚠️ \(statusActionPost) \(successCount), \(errorCount) failed",
+                    color: .yellow,
+                    duration: 4
+                )
+            } else {
+                statusMessage = StatusPayload(
+                    text: "❌ Failed to \(logAction) items",
+                    color: .red,
+                    duration: 3
+                )
+            }
+
+            // Close the sheet and refresh the current directory
+            showCopy = false
+            showMove = false
+            selectedItems.removeAll()
+            selectionMode = false
+            fetchFiles(at: currentPath)
         }
     }
 
