@@ -654,15 +654,16 @@ struct FileListView: View {
         if sheetPathStack.isEmpty {
             return currentPath
         }
-
-        let base = currentPath == "/" ? "" : currentPath
-        let relative = sheetPathStack.map { $0.name }.joined(separator: "/")
-
-        if base.isEmpty {
-            return "/" + relative
-        } else {
-            return base + "/" + relative
+        
+        // Always build relative to root, not currentPath
+        var path = "/"
+        for (index, folder) in sheetPathStack.enumerated() {
+            path += folder.name
+            if index < sheetPathStack.count - 1 {
+                path += "/"
+            }
         }
+        return path
     }
 
     private func modifySheet(action: ModifyItem) -> some View {
@@ -672,6 +673,7 @@ struct FileListView: View {
                     Button(action: {
                         if !sheetPathStack.isEmpty {
                             sheetPathStack.removeLast()
+                            viewModel.getFiles(at: currentSheetPath)
                         }
                     }) {
                         HStack {
@@ -679,6 +681,7 @@ struct FileListView: View {
                             Text("Back")
                         }
                     }
+                    .foregroundColor(sheetPathStack.isEmpty ? .gray : .primary)
 
                     Spacer()
 
@@ -724,6 +727,7 @@ struct FileListView: View {
                             ForEach(viewModel.sheetItems.filter { $0.isDir }, id: \.id) { file in
                                 Button(action: {
                                     sheetPathStack.append(file)
+                                    viewModel.getFiles(at: currentSheetPath)
                                 }) {
                                     HStack {
                                         Image(systemName: Icons.folder)
@@ -741,20 +745,21 @@ struct FileListView: View {
             }
             .navigationTitle(getSheetNavigationTitle())
             .navigationBarTitleDisplayMode(.inline)
-
-            // Load folders when path changes
-            .task(id: currentSheetPath) {
-                viewModel.getFiles(at: currentSheetPath)
+            .onAppear {
+                if sheetPathStack.isEmpty {
+                    viewModel.getFiles(at: currentSheetPath)
+                }
             }
         }
     }
 
     private func getSheetNavigationTitle() -> String {
         if sheetPathStack.isEmpty {
-            if currentPath == "/" {
+            // Show current directory name, not "/"
+            if currentSheetPath == "/" {
                 return "/"
             } else {
-                return URL(fileURLWithPath: currentPath).lastPathComponent
+                return URL(fileURLWithPath: currentSheetPath).lastPathComponent
             }
         } else {
             return sheetPathStack.last?.name ?? "/"
