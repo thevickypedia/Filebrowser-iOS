@@ -88,8 +88,9 @@ struct FileListView: View {
     @State private var errorMessage: String?
 
     // Display as disappearing labels
-    @State private var statusMessage: StatusPayload?
     @State private var settingsMessage: StatusPayload?
+    @State private var statusMessage: StatusPayload?
+    @State private var modifyMessage: StatusPayload?
     @State private var shareMessage: StatusPayload?
 
     // Specific for Grid view
@@ -767,14 +768,26 @@ struct FileListView: View {
             return
         }
         let selectedNames = selectedItems.map { $0.name }
-        Log.info("Selected items [\(selectedItems.count)] for \(logAction): \(selectedNames)")
+        let selectedCount = selectedItems.count
+        Log.info("Selected items [\(selectedCount)] for \(logAction): \(selectedNames)")
         Log.info("\(action.rawValue.capitalized) to path: \(destinationPath)")
+        let statusAction = action == ModifyItem.copy ? "Copying" : "Moving"
+        let statusActionPost = action == ModifyItem.copy ? "Copied" : "Moved"
+        modifyMessage = StatusPayload(
+            text: "\(statusAction) \(selectedCount) to \(destinationPath)",
+            color: .white,
+            duration: 1.5
+        )
 
         // TODO: Add new message pop up for statusMessage here
         // TODO: Check if file exists at destination before loop
         // TODO: After copy or move - go back to source destination
         // TODO: Reset sheetPathStack, and other boolean flags
+        
+        // Create a DispatchGroup to track completion
+        let dispatchGroup = DispatchGroup()
         for item in selectedItems {
+            dispatchGroup.enter() // Enter the group for each task
             let sourcePath = item.path.hasPrefix("/") ? item.path : "/" + item.path
             let encodedSource = sourcePath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sourcePath
             let destinationFullPath: String
@@ -792,7 +805,8 @@ struct FileListView: View {
             Log.debug("\(action.rawValue): \(urlString)")
             guard let url = URL(string: urlString) else {
                 Log.error("Invalid URL for \(item.name)")
-                statusMessage = StatusPayload(text: "❌ Invalid URL for \(item.name)", color: .red, duration: 3)
+                modifyMessage = StatusPayload(text: "❌ Invalid URL for \(item.name)", color: .red, duration: 3)
+                dispatchGroup.leave() // Leave the group for this task
                 continue
             }
 
@@ -804,14 +818,16 @@ struct FileListView: View {
                 if let error = error {
                     let msg = "Failed to \(logAction) \(item.name): \(error.localizedDescription)"
                     Log.error(msg)
-                    statusMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    modifyMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    dispatchGroup.leave() // Leave the group for this task
                     return
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
                     let msg = "Invalid response received when trying to \(logAction) \(item.name)"
                     Log.error(msg)
-                    statusMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    modifyMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    dispatchGroup.leave() // Leave the group for this task
                     return
                 }
 
@@ -820,11 +836,16 @@ struct FileListView: View {
                 } else {
                     let msg = "Failed to \(logAction) \(item.name). HTTP Status: \(httpResponse.statusCode) - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
                     Log.error(msg)
-                    statusMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
+                    modifyMessage = StatusPayload(text: "❌ \(msg)", color: .red, duration: 3)
                 }
+                dispatchGroup.leave() // Leave the group after completion
             }
-
             task.resume()
+        }
+
+        // Wait for all tasks to finish before printing
+        dispatchGroup.notify(queue: .main) {
+            Log.info("\(selectedCount) items have been \(statusActionPost)")
         }
     }
 
