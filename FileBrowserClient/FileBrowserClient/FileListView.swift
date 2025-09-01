@@ -90,6 +90,7 @@ struct FileListView: View {
     // Display as disappearing labels
     @State private var settingsMessage: StatusPayload?
     @State private var statusMessage: StatusPayload?
+    @State private var modifyMessage: StatusPayload?
     @State private var shareMessage: StatusPayload?
 
     // Specific for Grid view
@@ -665,6 +666,7 @@ struct FileListView: View {
         return path
     }
 
+    // Optional TODO: Add an overwrite button
     private func modifySheet(action: ModifyItem) -> some View {
         NavigationStack {
             VStack {
@@ -755,6 +757,7 @@ struct FileListView: View {
                 viewModel.getFiles(at: currentSheetPath)
             }
         }
+        .modifier(StatusMessage(payload: $modifyMessage))
     }
 
     private func initializeSheetPath() {
@@ -789,6 +792,57 @@ struct FileListView: View {
         }
     }
 
+    private func checkPathExists(_ fullPath: String) -> Bool {
+        guard isAuthValid else {
+            Log.error("❌ Auth not validated")
+            errorMessage = "Invalid authorization. Please log out and log back in."
+            return false
+        }
+
+        guard let components = URLComponents(string: serverURL + "/api/resources\(fullPath)") else {
+            Log.error("❌ Failed to make URL components for path: \(fullPath)")
+            errorMessage = "Invalid URL"
+            return false
+        }
+
+        guard let url = components.url else {
+            errorMessage = "Failed to build URL"
+            return false
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        var exists = false
+        let semaphore = DispatchSemaphore(value: 0)
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            defer { semaphore.signal() }
+
+            if let error = error {
+                Log.error("❌ Request error: \(error.localizedDescription)")
+                errorMessage = error.localizedDescription
+                return
+            }
+
+            if let http = response as? HTTPURLResponse {
+                if http.statusCode == 200 {
+                    exists = true
+                } else if http.statusCode == 404 {
+                    exists = false
+                } else {
+                    Log.error("❌ Path check failed with status \(http.statusCode)")
+                    errorMessage = "Server returned status \(http.statusCode)"
+                }
+            }
+        }.resume()
+
+        semaphore.wait() // ⚠️ Blocking here
+
+        return exists
+    }
+
     // Updated modifyItem function with better error handling and path management
     private func modifyItem(to destinationPath: String, action: ModifyItem) {
         let logAction = action.rawValue.lowercased()
@@ -809,26 +863,14 @@ struct FileListView: View {
         Log.info("Selected items [\(selectedCount)] for \(logAction): \(selectedNames)")
         Log.info("\(action.rawValue.capitalized) to path: \(destinationPath)")
 
-        let statusAction = action == ModifyItem.copy ? "Copying" : "Moving"
         let statusActionPost = action == ModifyItem.copy ? "Copied" : "Moved"
-
-        // TODO: Remove or fix - this will be displayed in the background (not in the sheet view)
-        statusMessage = StatusPayload(
-            text: "\(statusAction) \(selectedCount) item\(selectedCount == 1 ? "" : "s") to \(destinationPath)",
-            color: .white,
-            duration: 1.5
-        )
-
-        // TODO: Add new message pop up for statusMessage here
-        // TODO: Check if file exists at destination before loop
-        // TODO: After copy or move - go back to source destination
-        // TODO: Reset sheetPathStack, and other boolean flags
 
         // Create a DispatchGroup to track completion
         let dispatchGroup = DispatchGroup()
         var successCount = 0
         var errorCount = 0
 
+        // MARK: Loop ends even if one item fails to move/copy
         for item in selectedItems {
             dispatchGroup.enter()
 
@@ -842,6 +884,12 @@ struct FileListView: View {
                 destinationFullPath = destinationPath + "/" + item.name
             }
             let encodedDestination = destinationFullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? destinationFullPath
+            if checkPathExists(encodedDestination) {
+                let msg = "⚠️ \(item.name) already exists at \(destinationPath)"
+                Log.error(msg)
+                modifyMessage = StatusPayload(text: msg, color: .primary, duration: 2)
+                return
+            }
 
             let urlAction = action == ModifyItem.move ? "rename" : "copy"
             let sourceForURL = encodedSource.hasPrefix("/") ? String(encodedSource.dropFirst()) : encodedSource
@@ -850,15 +898,17 @@ struct FileListView: View {
             Log.debug("\(action.rawValue): \(urlString)")
 
             guard let url = URL(string: urlString) else {
-                Log.error("Invalid URL for \(item.name)")
+                let msg = "Invalid URL for \(item.name)"
+                modifyMessage = StatusPayload(text: msg, color: .primary, duration: 2)
+                Log.error(msg)
                 errorCount += 1
                 dispatchGroup.leave()
-                continue
+                return
             }
 
             var request = URLRequest(url: url)
             request.httpMethod = "PATCH"
-            request.setValue(token, forHTTPHeaderField: "X-Auth")
+            //request.setValue(token, forHTTPHeaderField: "X-Auth")
 
             let task = URLSession.shared.dataTask(with: request) { _, response, error in
                 defer { dispatchGroup.leave() }
@@ -892,6 +942,7 @@ struct FileListView: View {
                     DispatchQueue.main.async {
                         errorCount += 1
                     }
+                    return
                 }
             }
             task.resume()
