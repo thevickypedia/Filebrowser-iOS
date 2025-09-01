@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+v1.35.0 (09/01/2025)
+--------------------
+- [a1f3026](https://github.com/thevickypedia/Filebrowser-iOS/commit/a1f3026190325318dcaef6113005cf7fe4df7fb2) chore: Release ``v1.35.0``
+- [db5ee7b](https://github.com/thevickypedia/Filebrowser-iOS/commit/db5ee7bf38f3f4d54008c2cf26ba164fb79a38ae) fix: Fix navigation inconsistencies within copy/move view
+- [d336a6d](https://github.com/thevickypedia/Filebrowser-iOS/commit/d336a6d995a64cb4f32d7bc1797e17663cb287ba) fix: Build move/copy sheet path relative to root
+- [4054ce2](https://github.com/thevickypedia/Filebrowser-iOS/commit/4054ce2d16ea50e663df386e005afbe68fa14512) style: Add a status message for copy/move sheet
+- [bcbee4f](https://github.com/thevickypedia/Filebrowser-iOS/commit/bcbee4fab2b4ad06057fcfe4747c67664b8ef945) style: Display the current path instead of root in copy/move sheet
+- [42e5eb8](https://github.com/thevickypedia/Filebrowser-iOS/commit/42e5eb890d5148f44685ff0bb80866b033658ace) fix: Fix relative path issue in move/copy action
+- [a2d238b](https://github.com/thevickypedia/Filebrowser-iOS/commit/a2d238bfeca8ec2add047a7a6f2cb6bd51ee5f0b) style: Update icons and styling within selection action stack
+- [ec6b7a5](https://github.com/thevickypedia/Filebrowser-iOS/commit/ec6b7a5a30bae6afbbcb6cd74d1b9b9356c7f7fc) feat: Implement logic to move or copy items
+- [9e9c865](https://github.com/thevickypedia/Filebrowser-iOS/commit/9e9c865dfa2eb8254c5e3ca839225e7543d8b338) perf: Use enums to detect modify action type
+- [c4de190](https://github.com/thevickypedia/Filebrowser-iOS/commit/c4de190a4a34ab67e445b0dd0f86a4c138a2814a) refactor: Restructure verbose logging
+- [3cc50e2](https://github.com/thevickypedia/Filebrowser-iOS/commit/3cc50e2d6fdcdcd3337c214c923a3ed8361186ce) feat: Add a sheet view for move/copy to the destination directory
+- [4b32941](https://github.com/thevickypedia/Filebrowser-iOS/commit/4b32941599fabb16d1a1b86db3f2f6e6af5ac3c0) feat: Add move and copy options (placeholder)
+- [10f03b8](https://github.com/thevickypedia/Filebrowser-iOS/commit/10f03b80a01addbb955731d0b8b9ce432b874007) style: Move all selected options under a drop down menu
+- [81e6b5c](https://github.com/thevickypedia/Filebrowser-iOS/commit/81e6b5c04e23f662144485c8feaefba50ae8ce8f) chore: Update release notes for v1.34.2
+
 v1.34.2 (08/28/2025)
 --------------------
 - [8498dce](https://github.com/thevickypedia/Filebrowser-iOS/commit/8498dce39055c9d102b60bf05018052d0a2c9c7a) chore: Release ``v1.34.2``
