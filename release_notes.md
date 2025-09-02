@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.35.1 (09/02/2025)
+--------------------
+- [86dc4d9](https://github.com/thevickypedia/Filebrowser-iOS/commit/86dc4d9a4028797580d53aca685c440db86faa0a) chore: Release ``v1.35.1``
+- [4729d3b](https://github.com/thevickypedia/Filebrowser-iOS/commit/4729d3b0ce52288452acc21894f9fe367e987a03) chore: Add code markers
+- [4aa7dc0](https://github.com/thevickypedia/Filebrowser-iOS/commit/4aa7dc0a5a3dc645adeccf8cb2b58523f70ecbc3) perf: Check if file exists before trying to copy/move items
+- [67e0dd8](https://github.com/thevickypedia/Filebrowser-iOS/commit/67e0dd886a123378c12f1c31985259d7efe02282) chore: Update release notes for v1.35.0
+
 v1.35.0 (09/01/2025)
 --------------------
 - [a1f3026](https://github.com/thevickypedia/Filebrowser-iOS/commit/a1f3026190325318dcaef6113005cf7fe4df7fb2) chore: Release ``v1.35.0``
