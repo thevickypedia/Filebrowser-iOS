@@ -14,6 +14,7 @@ enum SortOption {
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel
+    @State private var progressObserver: NSObjectProtocol?
     @EnvironmentObject var themeManager: ThemeManager
 
     @Environment(\.dismiss) private var dismiss
@@ -1151,6 +1152,25 @@ struct FileListView: View {
                 Log.debug("📂 FileListView appeared for path: \(targetPath)")
                 fetchFiles(at: targetPath)
             }
+            viewModel.reconcilePendingUploads()
+            progressObserver = NotificationCenter.default.addObserver(
+                forName: .BackgroundTUSUploadProgress,
+                object: nil, queue: .main
+            ) { note in
+                guard let info = note.userInfo,
+                      let id = info["id"] as? UUID,
+                      let progress = info["progress"] as? Double,
+                      let filePath = info["filePath"] as? String ?? findFilePathForUploadId(id) else {
+                    return
+                }
+                viewModel.setUploadProgress(forPath: filePath, progress: progress)
+            }
+        }
+        .onDisappear {
+            if let obs = progressObserver {
+                NotificationCenter.default.removeObserver(obs)
+                progressObserver = nil
+            }
         }
         .onChange(of: pathStack) { newStack in
             if !searchClicked && !searchInProgress {
@@ -1210,6 +1230,14 @@ struct FileListView: View {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
             }
         }
+    }
+
+    private func findFilePathForUploadId(_ id: UUID) -> String? {
+        // If you didn't add filePath to notifications, this helper searches manager records for id
+        if let rec = BackgroundTUSUploadManager.shared.records[id] {
+            return rec.fileURL.path
+        }
+        return nil
     }
 
     func getSearchURL(serverURL: String, query: String) -> URL? {

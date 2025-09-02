@@ -19,12 +19,34 @@ class FileListViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var searchResults: [FileItemSearch] = []
     private var currentTask: Task<Void, Never>?
+    @Published var items: [FileItem] = []
+    private var _uploadProgress: [String: Double] = [:] // [filePath: progress]
 
     @Published var sheetItems: [FileItem] = []
     @Published var sheetIsLoading: Bool = false
 
     var token: String?
     var serverURL: String?
+
+    func uploadProgressForFile(path: String) -> Double? {
+        return _uploadProgress[path]
+    }
+
+    func setUploadProgress(forPath path: String, progress: Double) {
+        _uploadProgress[path] = progress
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
+    }
+
+    func reconcilePendingUploads() {
+        // get snapshot of manager records
+        let records = BackgroundTUSUploadManager.shared.records.values
+        for rec in records {
+            let progress = Double(rec.offset) / Double(max(1, rec.totalSize))
+            _uploadProgress[rec.fileURL.path] = progress
+        }
+    }
 
     func cancelCurrentFetch() {
         currentTask?.cancel()
