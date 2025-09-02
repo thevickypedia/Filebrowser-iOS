@@ -195,9 +195,9 @@ final class BackgroundTUSUploadManager: NSObject {
 
     private func updateRecord(_ id: UUID, update: @escaping (inout UploadRecord) -> Void) {
         recordsQueue.async(flags: .barrier) {
-            guard var r = self.records[id] else { return }
-            update(&r)
-            self.records[id] = r
+            guard var record = self.records[id] else { return }
+            update(&record)
+            self.records[id] = record
             self.saveAllRecordsToDisk()
         }
     }
@@ -235,7 +235,7 @@ final class BackgroundTUSUploadManager: NSObject {
             let decoder = JSONDecoder()
             let arr = try decoder.decode([UploadRecord].self, from: data)
             var dict: [UUID: UploadRecord] = [:]
-            for r in arr { dict[r.id] = r }
+            for record in arr { dict[record.id] = record }
             recordsQueue.async(flags: .barrier) { self.records = dict }
         } catch {
             // ignore if not exist
@@ -266,7 +266,7 @@ extension BackgroundTUSUploadManager: URLSessionDelegate, URLSessionTaskDelegate
                 fetchServerOffset(for: rec) { [weak self] serverOffset in
                     guard let self = self else { return }
                     if let newOffset = serverOffset {
-                        self.updateRecord(id) { r in r.offset = newOffset }
+                        self.updateRecord(id) { record in record.offset = newOffset }
                         if let updated = self.record(id: id) {
                             self.scheduleUploadChunk(for: updated)
                         }
@@ -316,7 +316,7 @@ extension BackgroundTUSUploadManager: URLSessionDelegate, URLSessionTaskDelegate
                     if let rec = record(id: id) {
                         let step = rec.chunkSize
                         let nextOffset = min(rec.totalSize, rec.offset + step)
-                        updateRecord(id) { r in r.offset = nextOffset }
+                        updateRecord(id) { record in record.offset = nextOffset }
                         if nextOffset >= rec.totalSize {
                             markCompleted(id)
                         } else {
