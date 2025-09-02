@@ -8,7 +8,8 @@
 import Foundation
 
 enum LogLevel: Int {
-    case debug = 0
+    case trace = 0
+    case debug
     case info
     case warning
     case error
@@ -42,6 +43,13 @@ struct Log {
         } else {
             print("\(paddedLabel) - \(timestamp()) - \(msg)")
         }
+    }
+
+    static func trace(_ message: @autoclosure () -> String,
+                      file: String = #fileID,
+                      line: Int = #line,
+                      function: String = #function) {
+        log(message(), level: .trace, label: "🔍 TRACE", file: file, line: line, function: function)
     }
 
     static func debug(_ message: @autoclosure () -> String,

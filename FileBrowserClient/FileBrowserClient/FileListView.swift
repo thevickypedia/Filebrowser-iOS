@@ -1884,7 +1884,7 @@ struct FileListView: View {
                     uploadProgress = Double(currentOffset) / Double(fileSize)
                     uploadProgressPct = Int((uploadProgress * 100).rounded())
                     currentUploadedFileSize = sizeConverter(currentOffset)
-                    Log.debug("📤 Uploaded chunk — new offset: \(currentOffset)")
+                    Log.trace("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
                 }
             }
