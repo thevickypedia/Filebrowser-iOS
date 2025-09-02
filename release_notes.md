@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.36.0 (09/02/2025)
+--------------------
+- [ff0ef2e](https://github.com/thevickypedia/Filebrowser-iOS/commit/ff0ef2ed9f579e926eea91a0fb1d98c1a4851f0d) chore: Release ``v1.36.0``
+- [3e1adc6](https://github.com/thevickypedia/Filebrowser-iOS/commit/3e1adc6068e26f494e1179cab162e2d4ed78559a) fix: Fix linting errors
+- [7212d97](https://github.com/thevickypedia/Filebrowser-iOS/commit/7212d97f0946f81ab5d18e0b05dffe622e04a722) feat: Add a feature to upload files to remote server in the background
+- [2cc7ba2](https://github.com/thevickypedia/Filebrowser-iOS/commit/2cc7ba270a1c98c49d14cba1b747536d284385f8) chore: Update release notes for v1.35.1
+
 v1.35.1 (09/02/2025)
 --------------------
 - [86dc4d9](https://github.com/thevickypedia/Filebrowser-iOS/commit/86dc4d9a4028797580d53aca685c440db86faa0a) chore: Release ``v1.35.1``
