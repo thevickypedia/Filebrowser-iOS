@@ -884,6 +884,8 @@ struct FileListView: View {
                 destinationFullPath = destinationPath + "/" + item.name
             }
             let encodedDestination = destinationFullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? destinationFullPath
+
+            // Client side issue: Break loop without resetting flags, so sheet is still up
             if checkPathExists(encodedDestination) {
                 let msg = "⚠️ \(item.name) already exists at \(destinationPath)"
                 Log.error(msg)
@@ -897,6 +899,7 @@ struct FileListView: View {
 
             Log.debug("\(action.rawValue): \(urlString)")
 
+            // Client side issue: Break loop without resetting flags, so sheet is still up
             guard let url = URL(string: urlString) else {
                 let msg = "Invalid URL for \(item.name)"
                 modifyMessage = StatusPayload(text: msg, color: .primary, duration: 2)
@@ -908,11 +911,12 @@ struct FileListView: View {
 
             var request = URLRequest(url: url)
             request.httpMethod = "PATCH"
-            //request.setValue(token, forHTTPHeaderField: "X-Auth")
+            request.setValue(token, forHTTPHeaderField: "X-Auth")
 
             let task = URLSession.shared.dataTask(with: request) { _, response, error in
                 defer { dispatchGroup.leave() }
 
+                // Server side issue: Continue to next item and display errors at last in list view
                 if let error = error {
                     let msg = "Failed to \(logAction) \(item.name): \(error.localizedDescription)"
                     Log.error(msg)
@@ -922,6 +926,7 @@ struct FileListView: View {
                     return
                 }
 
+                // Server side issue: Continue to next item and display errors at last in list view
                 guard let httpResponse = response as? HTTPURLResponse else {
                     let msg = "Invalid response received when trying to \(logAction) \(item.name)"
                     Log.error(msg)
@@ -937,12 +942,12 @@ struct FileListView: View {
                         successCount += 1
                     }
                 } else {
+                    // Server side issue: Continue to next item and display errors at last in list view
                     let msg = "Failed to \(logAction) \(item.name). HTTP Status: \(httpResponse.statusCode)"
                     Log.error(msg)
                     DispatchQueue.main.async {
                         errorCount += 1
                     }
-                    return
                 }
             }
             task.resume()
