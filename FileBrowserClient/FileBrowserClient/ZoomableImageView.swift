@@ -30,17 +30,36 @@ struct ZoomableImageView: View {
                         y: offset.height + gestureOffset.height)
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .gesture(pinchGesture())
-                .simultaneousGesture(panGesture())
                 .simultaneousGesture(doubleTapGesture())
-                .gesture(
-                    !isZoomed ? swipeGesture() : nil // Only allow swipe when not zoomed
-                )
+                .gesture(dragGesture())
                 .animation(.easeInOut(duration: 0.25), value: scale)
         }
     }
 
-    // MARK: - Gestures
+    private func dragGesture() -> some Gesture {
+        DragGesture()
+            .updating($gestureOffset) { value, state, _ in
+                if isZoomed {
+                    state = value.translation
+                }
+            }
+            .onEnded { value in
+                if isZoomed {
+                    // Pan behavior
+                    offset.width += value.translation.width
+                    offset.height += value.translation.height
+                } else {
+                    // Swipe behavior
+                    if value.translation.width < -50 {
+                        onSwipeLeft()
+                    } else if value.translation.width > 50 {
+                        onSwipeRight()
+                    }
+                }
+            }
+    }
 
+    // MARK: - Gestures
     private func pinchGesture() -> some Gesture {
         MagnificationGesture()
             .updating($gestureScale) { value, state, _ in
