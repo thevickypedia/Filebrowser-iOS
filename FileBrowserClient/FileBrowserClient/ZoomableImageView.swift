@@ -13,6 +13,7 @@ struct ZoomableImageView: View {
     let onSwipeRight: () -> Void
 
     @State private var scale: CGFloat = 1.0
+    @State private var zoomAnchor: CGPoint = .zero
     @GestureState private var gestureScale: CGFloat = 1.0
 
     @State private var offset: CGSize = .zero
@@ -33,6 +34,16 @@ struct ZoomableImageView: View {
                 .simultaneousGesture(doubleTapGesture())
                 .gesture(dragGesture())
                 .animation(.easeInOut(duration: 0.25), value: scale)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            // Save the touch location relative to center
+                            zoomAnchor = CGPoint(
+                                x: value.location.x - geometry.size.width / 2,
+                                y: value.location.y - geometry.size.height / 2
+                            )
+                        }
+                )
         }
     }
 
@@ -66,8 +77,17 @@ struct ZoomableImageView: View {
                 state = value
             }
             .onEnded { value in
-                scale = max(scale * value, 1.0)
-                isZoomed = scale > 1.0
+                let finalScale = scale * value
+                let clampedScale = max(finalScale, 1.0)
+                let anchorInView = zoomAnchor
+                let scaleDelta = clampedScale / scale
+                let newOffset = CGSize(
+                    width: (offset.width - anchorInView.x) * scaleDelta + anchorInView.x,
+                    height: (offset.height - anchorInView.y) * scaleDelta + anchorInView.y
+                )
+                offset = newOffset
+                scale = clampedScale
+                isZoomed = clampedScale > 1.0
             }
     }
 
@@ -96,6 +116,10 @@ struct ZoomableImageView: View {
                         isZoomed = false
                     } else {
                         scale = 2.5
+                        offset = CGSize(
+                            width: (offset.width - zoomAnchor.x) * 2.5 + zoomAnchor.x,
+                            height: (offset.height - zoomAnchor.y) * 2.5 + zoomAnchor.y
+                        )
                         isZoomed = true
                     }
                 }
