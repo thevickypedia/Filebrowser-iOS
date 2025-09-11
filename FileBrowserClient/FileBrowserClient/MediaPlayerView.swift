@@ -282,34 +282,32 @@ struct MediaPlayerView: View {
         DispatchQueue.global(qos: .userInitiated).async {
             let asset = AVURLAsset(url: url)
 
-            // Load metadata before proceeding
-            asset.loadValuesAsynchronously(forKeys: ["duration", "tracks"]) {
-                var error: NSError?
-                let durationStatus = asset.statusOfValue(forKey: "duration", error: &error)
-                let tracksStatus = asset.statusOfValue(forKey: "tracks", error: &error)
+            // Load the metadata asynchronously
+            Task {
+                do {
+                    try _ = await asset.load(.duration)
+                    try _ = await asset.load(.tracks)
 
-                guard durationStatus == .loaded, tracksStatus == .loaded else {
-                    Log.error("❌ Failed to load asset metadata")
-                    return
-                }
+                    let item = AVPlayerItem(asset: asset)
+                    let loadedPlayer = AVPlayer(playerItem: item)
+                    loadedPlayer.automaticallyWaitsToMinimizeStalling = false
 
-                let item = AVPlayerItem(asset: asset)
-                let loadedPlayer = AVPlayer(playerItem: item)
-                loadedPlayer.automaticallyWaitsToMinimizeStalling = false
+                    let savedTime = await PlaybackProgressStore.loadProgress(for: createHash(for: file.path))
 
-                let savedTime = PlaybackProgressStore.loadProgress(for: createHash(for: file.path))
+                    DispatchQueue.main.async {
+                        self.pendingPlayer = loadedPlayer
+                        self.pendingItem = item
 
-                DispatchQueue.main.async {
-                    self.pendingPlayer = loadedPlayer
-                    self.pendingItem = item
-
-                    if let savedTimeTmp = savedTime, savedTimeTmp > 5.0 {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            self.resumePromptData = ResumePromptData(resumeTime: savedTimeTmp)
+                        if let savedTimeTmp = savedTime, savedTimeTmp > 5.0 {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                self.resumePromptData = ResumePromptData(resumeTime: savedTimeTmp)
+                            }
+                        } else {
+                            self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
                         }
-                    } else {
-                        self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
                     }
+                } catch {
+                    Log.error("❌ Failed to load asset metadata: \(error)")
                 }
             }
         }
