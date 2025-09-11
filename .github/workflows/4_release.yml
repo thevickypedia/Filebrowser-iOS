@@ -20,7 +20,9 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on:
+      - thevickypedia-default
+      - posix
     outputs:
       release_exists: ${{ steps.check_release.outputs.release_exists }}
     steps:
@@ -41,6 +43,7 @@ jobs:
             echo "release_exists=false" >> $GITHUB_ENV
             echo "release_exists=false" >> $GITHUB_OUTPUT
           fi
+        shell: bash
 
       - name: Get Release Notes
         if: env.release_exists == 'false'
@@ -55,6 +58,7 @@ jobs:
           repository="${{ github.server_url }}/${{ github.repository }}"
           git log "${PREV_TAG}..HEAD" --pretty=format:"- [%h](${repository}/commit/%H) %s" --no-merges > release_notes.txt
           cat release_notes.txt
+        shell: bash
 
       - name: Create Release
         if: env.release_exists == 'false'
@@ -64,3 +68,4 @@ jobs:
             --notes-file release_notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        shell: bash

@@ -11,7 +11,9 @@ on:
 
 jobs:
   release-notes:
-    runs-on: ubuntu-latest
+    runs-on:
+      - thevickypedia-default
+      - posix
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
