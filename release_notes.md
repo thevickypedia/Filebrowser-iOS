@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+v1.36.1 (09/10/2025)
+--------------------
+- [337b43f](https://github.com/thevickypedia/Filebrowser-iOS/commit/337b43fba088833ae2398ebe05b56d939434a526) chore: Release ``v1.36.1``
+- [4455a94](https://github.com/thevickypedia/Filebrowser-iOS/commit/4455a9413d73c3f35d8fc71a4adaf68b129e65e1) ci: Handle project version that's already prefixed with ``v``
+- [f14980c](https://github.com/thevickypedia/Filebrowser-iOS/commit/f14980c8dfd23ef34704111782410202c9006018) ci: Run release and release notes GHA on self-hosted runners
+- [f5154c1](https://github.com/thevickypedia/Filebrowser-iOS/commit/f5154c139b140e0aaf4e351d3f54e2aa9adaaa0d) ci: Run build on self-hosted runner
+- [34f2af8](https://github.com/thevickypedia/Filebrowser-iOS/commit/34f2af83bf4b7947aadff3d4e4e1d245a3c89b67) ci: Bump iOS version for tests
+- [462383f](https://github.com/thevickypedia/Filebrowser-iOS/commit/462383fd00ad628fc49cb6ad1832fc3fb8d6908a) ci: Run tests on self-hosted runner
+- [fa066d7](https://github.com/thevickypedia/Filebrowser-iOS/commit/fa066d73bea3576e218cfcdf19673367a8a19628) ci: Run linting on self-hosted runner
+- [0ef70f9](https://github.com/thevickypedia/Filebrowser-iOS/commit/0ef70f9e11b7fbb5048658e2e921011abc2af32d) feat: Add a full-screen toggle button for images
+- [18eacc6](https://github.com/thevickypedia/Filebrowser-iOS/commit/18eacc6cca89946d0be8999d87560247bb16ada6) feat: (for images) Store pinch or tap location and zoom in to the particular spot
+- [a736cff](https://github.com/thevickypedia/Filebrowser-iOS/commit/a736cff97d297dd05dbef7d3d90f24ffada700b4) fix: Avoid moving to next and previous image when swiped in a zoomed in view
+- [6e14ba0](https://github.com/thevickypedia/Filebrowser-iOS/commit/6e14ba07d72d343cc7095f7be109604fec3a0f8f) build: Update CF options in property list
+- [d448147](https://github.com/thevickypedia/Filebrowser-iOS/commit/d448147a559cc64985fdc11fbda55bea0ee31b57) perf: Add new ``trace`` logging as foundation level
+- [dafb847](https://github.com/thevickypedia/Filebrowser-iOS/commit/dafb847e8c6e1ccba1a79efb99019a9fcdcf6ecd) chore: Update release notes for v1.36.0
+
 v1.36.0 (09/02/2025)
 --------------------
 - [ff0ef2e](https://github.com/thevickypedia/Filebrowser-iOS/commit/ff0ef2ed9f579e926eea91a0fb1d98c1a4851f0d) chore: Release ``v1.36.0``
@@ -8,7 +24,7 @@ v1.36.0 (09/02/2025)
 - [7212d97](https://github.com/thevickypedia/Filebrowser-iOS/commit/7212d97f0946f81ab5d18e0b05dffe622e04a722) feat: Add a feature to upload files to remote server in the background
 - [2cc7ba2](https://github.com/thevickypedia/Filebrowser-iOS/commit/2cc7ba270a1c98c49d14cba1b747536d284385f8) chore: Update release notes for v1.35.1
 
-v1.35.1 (09/02/2025)
+v1.35.1 (09/01/2025)
 --------------------
 - [86dc4d9](https://github.com/thevickypedia/Filebrowser-iOS/commit/86dc4d9a4028797580d53aca685c440db86faa0a) chore: Release ``v1.35.1``
 - [4729d3b](https://github.com/thevickypedia/Filebrowser-iOS/commit/4729d3b0ce52288452acc21894f9fe367e987a03) chore: Add code markers
@@ -148,12 +164,12 @@ v1.31.2 (08/14/2025)
 - [a7c4b05](https://github.com/thevickypedia/Filebrowser-iOS/commit/a7c4b05e46a5dd94a4201e22251476b5df445625) style: Overlay play icon for video thumbnails
 - [a4c71ad](https://github.com/thevickypedia/Filebrowser-iOS/commit/a4c71ad1f99f5771f44e4993948644ce4abf26ee) chore: Update release notes for v1.31.1
 
-v1.31.1 (08/14/2025)
+v1.31.1 (08/13/2025)
 --------------------
 - [1fd2c5d](https://github.com/thevickypedia/Filebrowser-iOS/commit/1fd2c5d7af96b6558b2de3a1a236dd172fa97520) chore: Release ``v1.31.1``
 - [af53301](https://github.com/thevickypedia/Filebrowser-iOS/commit/af53301f910199736470fef72495f0aeef6132a0) perf: Compress video thumbnails as JPEG with fallback logic to PNG
 
-v1.31.0 (08/14/2025)
+v1.31.0 (08/13/2025)
 --------------------
 - [6a76aea](https://github.com/thevickypedia/Filebrowser-iOS/commit/6a76aea533fe05a518d9c28ea9e72343b071286b) chore: Release ``v1.31.0``
 - [3dcd4c5](https://github.com/thevickypedia/Filebrowser-iOS/commit/3dcd4c51d0b6cddca783efa372bb3f298cca4682) feat: Add thumbnail for video files in listing page
@@ -178,7 +194,7 @@ v1.30.0 (08/13/2025)
 - [5f0f6a1](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f0f6a1c93a95af73d0c3e388ddc04a445bce103) feat: Allow full screen mode on images for single tap gesture
 - [1e762c8](https://github.com/thevickypedia/Filebrowser-iOS/commit/1e762c8979ed04166a5b07e637f70d01f472d8a7) chore: Update release notes for v1.29.3
 
-v1.29.3 (08/12/2025)
+v1.29.3 (08/11/2025)
 --------------------
 - [03ae13c](https://github.com/thevickypedia/Filebrowser-iOS/commit/03ae13c98272d98001a1bd423efa92a8a7134422) chore: Release ``v1.29.3``
 - [26601a8](https://github.com/thevickypedia/Filebrowser-iOS/commit/26601a8903dbcd75f3d311e76f12674204c042de) perf: Silently re-authenticate if JWT is invalid
@@ -231,7 +247,7 @@ v1.27.0 (08/11/2025)
 - [b6f190a](https://github.com/thevickypedia/Filebrowser-iOS/commit/b6f190a2c11bb795d335454b4980a2525e57297d) feat: Include an option to specify file types along with search query
 - [da7eea2](https://github.com/thevickypedia/Filebrowser-iOS/commit/da7eea2edc105a265e2dd2045142f8bd191954f7) chore: Update release notes for v1.26.1
 
-v1.26.1 (08/11/2025)
+v1.26.1 (08/10/2025)
 --------------------
 - [a2740f0](https://github.com/thevickypedia/Filebrowser-iOS/commit/a2740f0fa53852da38f1cfb650998b39d9743b55) chore: Release ``v1.26.1``
 - [9fcd10f](https://github.com/thevickypedia/Filebrowser-iOS/commit/9fcd10f20c747db53d80e6afcba19c29bbd9dccd) fix: Overflow beyond screen size in selectable text
@@ -287,14 +303,14 @@ v1.24.3 (08/10/2025)
 - [094b5c0](https://github.com/thevickypedia/Filebrowser-iOS/commit/094b5c0ab4cdce9a1773fe2b23c729461236cfb4) style: Display login errors in alert windows
 - [7f5b75b](https://github.com/thevickypedia/Filebrowser-iOS/commit/7f5b75bfd2e376519c7d77b918dc6b85f69afaf5) chore: Update release notes for v1.24.2
 
-v1.24.2 (08/10/2025)
+v1.24.2 (08/09/2025)
 --------------------
 - [6be9921](https://github.com/thevickypedia/Filebrowser-iOS/commit/6be992110301b0d3317691d245359b1b87ed39ce) chore: Release ``v1.24.2``
 - [8a81fca](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a81fca64b7266a3c6a1e110bfce6de95ee5b71a) fix: Ensure credentials are not empty before server connection
 - [7da409f](https://github.com/thevickypedia/Filebrowser-iOS/commit/7da409f14f1989358bbaf88141114586179274b7) fix: Catch invalid URLs when adding a new one
 - [00c9d3e](https://github.com/thevickypedia/Filebrowser-iOS/commit/00c9d3e0439d4b3fcd7818a4b962e6cb70133761) chore: Update release notes for v1.24.1
 
-v1.24.1 (08/10/2025)
+v1.24.1 (08/09/2025)
 --------------------
 - [412ccfd](https://github.com/thevickypedia/Filebrowser-iOS/commit/412ccfd8b8260e968db760905304fcbc1008316d) chore: Release ``v1.24.1``
 - [4a1c021](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a1c0219fe5f79b0c756a33633ceaa554eb4452b) fix: Bug fix on sharing JWT between servers
@@ -368,7 +384,7 @@ v1.22.3 (08/09/2025)
 - [747530c](https://github.com/thevickypedia/Filebrowser-iOS/commit/747530c7bcb31cf4fa9d519054c19e301a8d34ae) perf: Retrieve file information only when required
 - [d5bedbd](https://github.com/thevickypedia/Filebrowser-iOS/commit/d5bedbd6378766f8f9c9bb394fe17eab800774d1) chore: Update release notes for v1.22.2
 
-v1.22.2 (08/09/2025)
+v1.22.2 (08/08/2025)
 --------------------
 - [83307b3](https://github.com/thevickypedia/Filebrowser-iOS/commit/83307b3e7730bfbc61273d30dd50816fb58edc96) chore: Release ``v1.22.2``
 - [259f42d](https://github.com/thevickypedia/Filebrowser-iOS/commit/259f42d2de6c3785bc7ae5a334d8781630b78f0d) fix: Remove redundant logout logic
@@ -377,7 +393,7 @@ v1.22.2 (08/09/2025)
 - [9680221](https://github.com/thevickypedia/Filebrowser-iOS/commit/96802218d65f5635dccee048ea57dfcc8b7e5f21) fix: Set a fallback for username and password if FaceID fails
 - [d3b91ac](https://github.com/thevickypedia/Filebrowser-iOS/commit/d3b91ac67affba16ee5a3ef85a2629edf63b46b1) chore: Update release notes for v1.22.1
 
-v1.22.1 (08/09/2025)
+v1.22.1 (08/08/2025)
 --------------------
 - [2199136](https://github.com/thevickypedia/Filebrowser-iOS/commit/219913619165cf73b52396fc80182d1e72953693) chore: Release ``v1.22.1``
 - [04c9c5c](https://github.com/thevickypedia/Filebrowser-iOS/commit/04c9c5cfdc18db7f1bbef4d12757ad9790291c6d) fix: Check for saved session before giving an option for FaceID
@@ -385,7 +401,7 @@ v1.22.1 (08/09/2025)
 - [4dec964](https://github.com/thevickypedia/Filebrowser-iOS/commit/4dec9646d84609926524fd1f963dbfcdd6d37bc6) perf: Improve the usage for Face ID based on a top level var
 - [adfc197](https://github.com/thevickypedia/Filebrowser-iOS/commit/adfc197fbd6a18f5ab0ae63cf56680aa41e3e451) chore: Update release notes for v1.22.0
 
-v1.22.0 (08/09/2025)
+v1.22.0 (08/08/2025)
 --------------------
 - [594b62f](https://github.com/thevickypedia/Filebrowser-iOS/commit/594b62f3d64b3f9db08c7e5f637be4e1d281d9ce) chore: Release ``v1.22.0``
 - [5972b91](https://github.com/thevickypedia/Filebrowser-iOS/commit/5972b91cf51375cad9fcdb43b0312472e0d520f2) feat: Include support for Face ID
@@ -393,7 +409,7 @@ v1.22.0 (08/09/2025)
 - [1a1a558](https://github.com/thevickypedia/Filebrowser-iOS/commit/1a1a5588da738ba2c769177e1d4996ec6cea4263) refactor: Create individual modules for cell and thumbnail views
 - [29d6971](https://github.com/thevickypedia/Filebrowser-iOS/commit/29d697135f8b6d80dced8d536b9bca8976ad87e6) chore: Update release notes for v1.21.3
 
-v1.21.3 (08/09/2025)
+v1.21.3 (08/08/2025)
 --------------------
 - [978d3b1](https://github.com/thevickypedia/Filebrowser-iOS/commit/978d3b1d8e8ed19213932d21a871941a854113e7) chore: Release ``v1.21.3``
 - [f59bcfa](https://github.com/thevickypedia/Filebrowser-iOS/commit/f59bcfae47c8330883e32206dc7ad80d6231819c) fix: Swipe animation direction for detailed view
@@ -459,7 +475,7 @@ v1.19.0 (08/08/2025)
 - [5da1137](https://github.com/thevickypedia/Filebrowser-iOS/commit/5da1137bc10d68052b33079c61409c3ab0ffeecd) style: Move view options button inside it's own menu
 - [23ecfbd](https://github.com/thevickypedia/Filebrowser-iOS/commit/23ecfbd5c52a3cda5bc1035341e87c37d19462c6) chore: Update release notes for v1.18.0
 
-v1.18.0 (08/08/2025)
+v1.18.0 (08/07/2025)
 --------------------
 - [798b03c](https://github.com/thevickypedia/Filebrowser-iOS/commit/798b03c7d7482c32431bf4f97ff9ec549db62753) chore: Release ``v1.18.0``
 - [adef899](https://github.com/thevickypedia/Filebrowser-iOS/commit/adef89970200ad9dd7c1ca34506b909ee7100ff9) style: Include an option to arbitrarily resize thumbnails to fit grid view
@@ -505,13 +521,13 @@ v1.16.5 (08/07/2025)
 - [27b4e68](https://github.com/thevickypedia/Filebrowser-iOS/commit/27b4e68f70f734e3c8be6496669dafc5f3bab8fd) style: Parse JWT to display session information in settings view
 - [2414f6b](https://github.com/thevickypedia/Filebrowser-iOS/commit/2414f6b5f0ea23fbd3de0c3f69a4117e9ddeaa92) chore: Update release notes for v1.16.4
 
-v1.16.4 (08/07/2025)
+v1.16.4 (08/06/2025)
 --------------------
 - [e3403f3](https://github.com/thevickypedia/Filebrowser-iOS/commit/e3403f3d5a898ad7b2394569b21c729044b30fe1) chore: Release ``v1.16.4``
 - [8b6b4cc](https://github.com/thevickypedia/Filebrowser-iOS/commit/8b6b4cc609060d422a43226b25008bc56a8a36e0) style: Include a percentage indicator in upload progress view
 - [3c997a2](https://github.com/thevickypedia/Filebrowser-iOS/commit/3c997a270d5cda96fee8f0e9e0b917fd561b81bd) chore: Update release notes for v1.16.3
 
-v1.16.3 (08/07/2025)
+v1.16.3 (08/06/2025)
 --------------------
 - [aa1c7dc](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa1c7dc927d93edab4061ed67cd7ee19e0f70525) chore: Release ``v1.16.3``
 - [5564806](https://github.com/thevickypedia/Filebrowser-iOS/commit/55648066795581518131b52b58515e56562cd405) perf: Replace giant condition block for ``systemIcons`` with a dictionary
@@ -582,19 +598,19 @@ v1.14.0 (08/06/2025)
 - [8a4f32b](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a4f32be8598450d01b9788bd0ba50c3aef5c60a) feat: Allow users to choose ``chunkSize`` for file uploads
 - [20be4bf](https://github.com/thevickypedia/Filebrowser-iOS/commit/20be4bf6b7c706e166921ecee2f10f3f78232df3) chore: Update release notes for v1.13.5
 
-v1.13.5 (08/06/2025)
+v1.13.5 (08/05/2025)
 --------------------
 - [d884bcb](https://github.com/thevickypedia/Filebrowser-iOS/commit/d884bcb0c6f23e39c70dc5ff39d4fcec3bb3d84f) chore: Release ``v1.13.5``
 - [53b5a25](https://github.com/thevickypedia/Filebrowser-iOS/commit/53b5a2592a665aa13c20601ca6f99f737d31c305) style: Re-arrange icons in list and detail view
 - [97ffffe](https://github.com/thevickypedia/Filebrowser-iOS/commit/97ffffe5d048aa6e7010b1ddf83fc8b303ec547a) chore: Update release notes for v1.13.4
 
-v1.13.4 (08/06/2025)
+v1.13.4 (08/05/2025)
 --------------------
 - [9bf7512](https://github.com/thevickypedia/Filebrowser-iOS/commit/9bf7512c60155120084c66f7770a2d5f9ae71faf) chore: Release ``v1.13.4``
 - [d5af71c](https://github.com/thevickypedia/Filebrowser-iOS/commit/d5af71cd01807792f3a64d680b2e52ef964fabea) style: Display only the relevant icons in selection mode
 - [72ab4b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/72ab4b9a9e2ba3a32ab2e41c926fc650e2aa4a6d) chore: Update release notes for v1.13.3
 
-v1.13.3 (08/06/2025)
+v1.13.3 (08/05/2025)
 --------------------
 - [35f3b14](https://github.com/thevickypedia/Filebrowser-iOS/commit/35f3b14449b607040926c754fbf0c527cf9558f0) chore: Release ``v1.13.3``
 - [3f905f9](https://github.com/thevickypedia/Filebrowser-iOS/commit/3f905f93f855c6ed85af90c16d62a367718a10af) refactor: Update coding standards to honor linter
@@ -798,7 +814,7 @@ v1.3.1 (07/27/2025)
 - [d8b96c5](https://github.com/thevickypedia/Filebrowser-iOS/commit/d8b96c55d5e2b757714f522581802bb6e62a9738) feat: Add theme manager toggle button to login page
 - [8c3af7d](https://github.com/thevickypedia/Filebrowser-iOS/commit/8c3af7d30637aceefa961f28571a7dd4869513b5) chore: Update release notes for v1.3.0
 
-v1.3.0 (07/27/2025)
+v1.3.0 (07/26/2025)
 -------------------
 - [ae9733b](https://github.com/thevickypedia/Filebrowser-iOS/commit/ae9733b281d2afe66970212e805e2d95d481e10b) chore: Release v1.3.0
 - [01ed580](https://github.com/thevickypedia/Filebrowser-iOS/commit/01ed5800bd0faf0203de8e86c0561788c3462d98) ci: Update release notes format to markdown
@@ -809,7 +825,7 @@ v1.3.0 (07/27/2025)
 - [c019a64](https://github.com/thevickypedia/Filebrowser-iOS/commit/c019a644093327b919d3ca95ba424305b22290bc) feat: Include an option to set exact date format via settings
 - [f1ca457](https://github.com/thevickypedia/Filebrowser-iOS/commit/f1ca457211248eadab79e3ab3d17c87fb5131481) chore: Update release notes for v1.2.1
 
-v1.2.1 (07/26/2025)
+v1.2.1 (07/25/2025)
 -------------------
 - [44ae4ce](https://github.com/thevickypedia/Filebrowser-iOS/commit/44ae4ce) chore: Release v1.2.1
 - [1730d06](https://github.com/thevickypedia/Filebrowser-iOS/commit/1730d06) ci: Reinstate GitHub workflows for build and release
