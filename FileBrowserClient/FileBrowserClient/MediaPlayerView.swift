@@ -9,6 +9,11 @@ import SwiftUI
 import AVKit
 import MediaPlayer
 
+struct ResumePromptData: Identifiable {
+    let id = UUID()
+    let resumeTime: Double
+}
+
 struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
@@ -28,7 +33,7 @@ struct MediaPlayerView: View {
     @State private var lastSavedTime: Double = 0
     @State private var showResumeSheet = false
     @State private var resumeTime: Double?
-    @State private var resumeTimeString: String = ""
+    @State private var resumePromptData: ResumePromptData?
     @State private var pendingPlayer: AVPlayer?
     @State private var pendingItem: AVPlayerItem?
 
@@ -98,17 +103,17 @@ struct MediaPlayerView: View {
             cleanupPlayer()
             clearNowPlayingInfo()
         }
-        .sheet(isPresented: $showResumeSheet) {
+        .sheet(item: $resumePromptData) { data in
             ResumePromptView(
-                resumeTimeFormatted: self.resumeTimeString,
+                resumeTimeFormatted: formatTime(data.resumeTime),
                 onSelection: { playFromBeginning in
-                    showResumeSheet = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         guard let player = self.pendingPlayer, let item = self.pendingItem else { return }
-                        let seekTime = playFromBeginning ? nil : self.resumeTime
+                        let seekTime = playFromBeginning ? nil : data.resumeTime
                         self.finishPlayerSetup(player: player, item: item, seekTo: seekTime, autoPlay: true)
                         self.pendingPlayer = nil
                         self.pendingItem = nil
+                        self.resumePromptData = nil
                     }
                 }
             )
@@ -292,10 +297,8 @@ struct MediaPlayerView: View {
                     self.pendingItem = item
 
                     if let savedTimeTmp = savedTime, savedTimeTmp > 5.0 {
-                        self.resumeTime = savedTimeTmp
-                        self.resumeTimeString = formatTime(savedTimeTmp)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            self.showResumeSheet = true
+                            self.resumePromptData = ResumePromptData(resumeTime: savedTimeTmp)
                         }
                     } else {
                         self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
