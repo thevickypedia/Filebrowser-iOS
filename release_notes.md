@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.37.0 (09/10/2025)
+--------------------
+- [f40a68b](https://github.com/thevickypedia/Filebrowser-iOS/commit/f40a68be85a41e2faff4e5f643cf7865ae3dc0c1) chore: Release ``v1.37.0``
+- [ceb82dc](https://github.com/thevickypedia/Filebrowser-iOS/commit/ceb82dc8904f36cc78da359d0656dfd2f06cac84) feat: Add a new feature to store playback progress for media files
+- [ef9718f](https://github.com/thevickypedia/Filebrowser-iOS/commit/ef9718f92efe4b5eafb906f00d4fdaa364e49ad1) ci: Ensure all GHA workflows run on self-hosted runners
+- [f7b7024](https://github.com/thevickypedia/Filebrowser-iOS/commit/f7b70246d057bcf2426cc7cdf212c24b0183a923) chore: Update release notes for v1.36.1
+
 v1.36.1 (09/10/2025)
 --------------------
 - [337b43f](https://github.com/thevickypedia/Filebrowser-iOS/commit/337b43fba088833ae2398ebe05b56d939434a526) chore: Release ``v1.36.1``
