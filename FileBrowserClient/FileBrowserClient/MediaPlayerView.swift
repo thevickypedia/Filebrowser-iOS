@@ -33,6 +33,8 @@ struct MediaPlayerView: View {
                     .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
                         // No metadata rebuild; just ensure rate is 0 and time is final
                         self.updateNowPlayingPlaybackState(isPlaying: false)
+                        // ⏹ Reset saved playback progress when video ends
+                        PlaybackProgressStore.saveProgress(for: file.path, time: 0)
                     }
             } else {
                 ProgressView("Loading media player...")
@@ -243,6 +245,14 @@ struct MediaPlayerView: View {
 
                 self.player = loadedPlayer
 
+                let savedTime = PlaybackProgressStore.loadProgress(for: file.path)
+                if let savedTime = savedTime, savedTime > 5.0 {  // Skip tiny progress
+                    let target = CMTime(seconds: savedTime, preferredTimescale: 1)
+                    loadedPlayer.seek(to: target) { _ in
+                        Log.info("⏮ Resumed playback at \(savedTime)s for \(file.name)")
+                    }
+                }
+
                 self.setupRemoteTransportControls()
 
                 // Seed NP ONCE (title/artwork/mediaType stable in-memory)
@@ -411,6 +421,11 @@ struct MediaPlayerView: View {
             queue: .main
         ) { _ in
             self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
+
+            let currentTime = CMTimeGetSeconds(player.currentTime())
+            if currentTime.isFinite && !currentTime.isNaN {
+                PlaybackProgressStore.saveProgress(for: file.path, time: currentTime)
+            }
 
             // If duration was unknown at seed time, fill it in once it becomes finite.
             if let item = self.playerItem {
