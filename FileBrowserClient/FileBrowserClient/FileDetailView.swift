@@ -91,6 +91,7 @@ struct FileDetailView: View {
             MediaPlayerView(
                 file: file,
                 serverURL: serverURL,
+                username: auth.username,
                 token: token,
                 displayFullScreen: extensionTypes.videoExtensions.contains(where: fileName.hasSuffix)
             )

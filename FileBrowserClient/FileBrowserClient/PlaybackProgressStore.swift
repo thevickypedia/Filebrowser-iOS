@@ -8,11 +8,13 @@
 import Foundation
 
 struct PlaybackProgressStore {
-    static func saveProgress(for path: String, time: Double) {
-        UserDefaults.standard.set(time, forKey: "PlaybackProgress_\(path)")
+    static func saveProgress(for hash: String, time: Double) {
+        Log.debug("Storing play back progress with hash: \(hash)")
+        UserDefaults.standard.set(time, forKey: hash)
     }
 
-    static func loadProgress(for path: String) -> Double? {
-        return UserDefaults.standard.double(forKey: "PlaybackProgress_\(path)")
+    static func loadProgress(for hash: String) -> Double? {
+        Log.debug("Loading play back progress with hash: \(hash)")
+        return UserDefaults.standard.double(forKey: hash)
     }
 }

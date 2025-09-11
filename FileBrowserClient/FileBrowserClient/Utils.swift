@@ -11,6 +11,17 @@ enum ValidationError: Error {
     case invalidDateFormat
 }
 
+func sanitizer(_ input: String, replacement: Character = "_") -> String {
+    let allowed = CharacterSet.alphanumerics
+    let replaced = input.map { char in
+        String(char).rangeOfCharacter(from: allowed) != nil ? char : replacement
+    }
+    let collapsed = String(replaced)
+        .replacingOccurrences(of: "\(replacement)+", with: String(replacement), options: .regularExpression)
+        .trimmingCharacters(in: CharacterSet(charactersIn: String(replacement)))
+    return collapsed
+}
+
 func sizeConverter(_ byteSize: Int?) -> String {
     guard let byteSize = byteSize, byteSize >= 0 else {
         return "Unknown"

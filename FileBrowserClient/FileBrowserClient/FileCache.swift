@@ -19,27 +19,16 @@ class FileCache {
         try? fileManager.createDirectory(at: diskCacheURL, withIntermediateDirectories: true)
     }
 
-    private func sanitize(_ input: String, replacement: Character = "_") -> String {
-        let allowed = CharacterSet.alphanumerics
-        let replaced = input.map { char in
-            String(char).rangeOfCharacter(from: allowed) != nil ? char : replacement
-        }
-        let collapsed = String(replaced)
-            .replacingOccurrences(of: "\(replacement)+", with: String(replacement), options: .regularExpression)
-            .trimmingCharacters(in: CharacterSet(charactersIn: String(replacement)))
-        return collapsed
-    }
-
     private func cacheKeyPrefix(for server: String) -> String {
-        let safeServer = sanitize(server.trimmingCharacters(in: CharacterSet(charactersIn: ".")))
+        let safeServer = sanitizer(server.trimmingCharacters(in: CharacterSet(charactersIn: ".")))
         return "cache-\(safeServer)-"
     }
 
     private func cacheKey(for server: String, path: String, modified: String?, fileID: String?) -> String {
-        let safePath = sanitize(path)
-        let safeServer = sanitize(server.trimmingCharacters(in: CharacterSet(charactersIn: ".")))
-        let safeFileID = sanitize(fileID?.trimmingCharacters(in: CharacterSet(charactersIn: ".")) ?? "unknown")
-        let safeModified = sanitize(modified ?? "unknown", replacement: "-")
+        let safePath = sanitizer(path)
+        let safeServer = sanitizer(server.trimmingCharacters(in: CharacterSet(charactersIn: ".")))
+        let safeFileID = sanitizer(fileID?.trimmingCharacters(in: CharacterSet(charactersIn: ".")) ?? "unknown")
+        let safeModified = sanitizer(modified ?? "unknown", replacement: "-")
         return "cache-\(safeServer)-\(safePath)-\(safeFileID)-\(safeModified)"
     }
 
