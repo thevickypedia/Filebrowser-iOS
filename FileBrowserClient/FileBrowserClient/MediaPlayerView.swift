@@ -20,6 +20,11 @@ struct MediaPlayerView: View {
     let username: String?
     let token: String
     let displayFullScreen: Bool
+
+    // Display as alerts
+    @State private var errorTitle: String?
+    @State private var errorMessage: String?
+
     @State private var player: AVPlayer?
     @State private var isVisible: Bool = false
     @State private var isFullScreen: Bool = false
@@ -128,6 +133,7 @@ struct MediaPlayerView: View {
         .navigationTitle(file.name)
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(self.isFullScreen)
+        .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
     }
 
     private func seedNowPlayingIfNeeded() {
@@ -308,6 +314,15 @@ struct MediaPlayerView: View {
                     }
                 } catch {
                     Log.error("❌ Failed to load asset metadata: \(error)")
+                    DispatchQueue.main.async {
+                        errorTitle = "Metadata failed"
+                        errorMessage = "Failed to load asset metadata: \(error)"
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            // MARK: Fallback to a basic player with default AVPlayer
+                            let item = AVPlayerItem(asset: asset)
+                            self.finishPlayerSetup(player: AVPlayer(url: url), item: item, seekTo: nil, autoPlay: false)
+                        }
+                    }
                 }
             }
         }
