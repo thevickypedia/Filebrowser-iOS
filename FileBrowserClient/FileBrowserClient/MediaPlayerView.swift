@@ -26,6 +26,11 @@ struct MediaPlayerView: View {
     @State private var npBaseInfo: [String: Any] = [:]   // stable Now Playing bas
     @State private var notifTokens: [NSObjectProtocol] = []
     @State private var lastSavedTime: Double = 0
+    @State private var showResumeSheet = false
+    @State private var resumeTime: Double?
+    @State private var resumeTimeString: String = ""
+    @State private var pendingPlayer: AVPlayer?
+    @State private var pendingItem: AVPlayerItem?
 
     var body: some View {
         ZStack {
@@ -92,6 +97,21 @@ struct MediaPlayerView: View {
             isVisible = false
             cleanupPlayer()
             clearNowPlayingInfo()
+        }
+        .sheet(isPresented: $showResumeSheet) {
+            ResumePromptView(
+                resumeTimeFormatted: self.resumeTimeString,
+                onSelection: { playFromBeginning in
+                    showResumeSheet = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        guard let player = self.pendingPlayer, let item = self.pendingItem else { return }
+                        let seekTime = playFromBeginning ? nil : self.resumeTime
+                        self.finishPlayerSetup(player: player, item: item, seekTo: seekTime, autoPlay: true)
+                        self.pendingPlayer = nil
+                        self.pendingItem = nil
+                    }
+                }
+            )
         }
         .navigationTitle(file.name)
         .navigationBarTitleDisplayMode(.inline)
@@ -227,6 +247,19 @@ struct MediaPlayerView: View {
         }
     }
 
+    private func formatTime(_ time: Double) -> String {
+        let totalSeconds = Int(time)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+    }
+
     func loadPlayer() {
         guard let url = buildAPIURL(
             base: serverURL,
@@ -236,34 +269,62 @@ struct MediaPlayerView: View {
 
         DispatchQueue.global(qos: .userInitiated).async {
             let asset = AVURLAsset(url: url)
-            let item = AVPlayerItem(asset: asset)
-            let loadedPlayer = AVPlayer(playerItem: item)
-            loadedPlayer.automaticallyWaitsToMinimizeStalling = false
 
-            DispatchQueue.main.async {
-                self.playerItem = item
+            // Load metadata before proceeding
+            asset.loadValuesAsynchronously(forKeys: ["duration", "tracks"]) {
+                var error: NSError?
+                let durationStatus = asset.statusOfValue(forKey: "duration", error: &error)
+                let tracksStatus = asset.statusOfValue(forKey: "tracks", error: &error)
 
-                self.registerItemObservers(for: item)
-
-                self.player = loadedPlayer
-
-                let savedTime = PlaybackProgressStore.loadProgress(for: createHash(for: file.path))
-                if let savedTime = savedTime, savedTime > 5.0 {  // Skip tiny progress
-                    let target = CMTime(seconds: savedTime, preferredTimescale: 1)
-                    loadedPlayer.seek(to: target) { _ in
-                        Log.info("⏮ Resumed playback at \(savedTime)s for \(file.name)")
-                    }
+                guard durationStatus == .loaded, tracksStatus == .loaded else {
+                    Log.error("❌ Failed to load asset metadata")
+                    return
                 }
 
-                self.setupRemoteTransportControls()
+                let item = AVPlayerItem(asset: asset)
+                let loadedPlayer = AVPlayer(playerItem: item)
+                loadedPlayer.automaticallyWaitsToMinimizeStalling = false
 
-                // Seed NP ONCE (title/artwork/mediaType stable in-memory)
-                self.seedNowPlayingIfNeeded()
+                let savedTime = PlaybackProgressStore.loadProgress(for: createHash(for: file.path))
 
-                // Only update time/rate periodically (no rebuilding)
-                self.addPeriodicTimeObserver()
+                DispatchQueue.main.async {
+                    self.pendingPlayer = loadedPlayer
+                    self.pendingItem = item
 
-                loadedPlayer.pause()
+                    if let savedTimeTmp = savedTime, savedTimeTmp > 5.0 {
+                        self.resumeTime = savedTimeTmp
+                        self.resumeTimeString = formatTime(savedTimeTmp)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                            self.showResumeSheet = true
+                        }
+                    } else {
+                        self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
+                    }
+                }
+            }
+        }
+    }
+
+    private func finishPlayerSetup(player: AVPlayer, item: AVPlayerItem, seekTo time: Double?, autoPlay: Bool = true) {
+        self.playerItem = item
+        self.player = player
+
+        self.registerItemObservers(for: item)
+        self.setupRemoteTransportControls()
+        self.seedNowPlayingIfNeeded()
+        self.addPeriodicTimeObserver()
+
+        if let seekTime = time {
+            let target = CMTime(seconds: seekTime, preferredTimescale: 1)
+            player.seek(to: target) { _ in
+                Log.info("⏮ Resumed playback at \(seekTime)s for \(file.name)")
+                if autoPlay {
+                    player.play()
+                }
+            }
+        } else {
+            if autoPlay {
+                player.play()
             }
         }
     }
