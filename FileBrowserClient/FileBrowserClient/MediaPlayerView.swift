@@ -9,6 +9,12 @@ import SwiftUI
 import AVKit
 import MediaPlayer
 
+struct ResumeInfo: Identifiable {
+    let id = UUID()
+    let time: Double
+    let timeFormatted: String
+}
+
 struct MediaPlayerView: View {
     let file: FileItem
     let serverURL: String
@@ -26,9 +32,7 @@ struct MediaPlayerView: View {
     @State private var npBaseInfo: [String: Any] = [:]   // stable Now Playing bas
     @State private var notifTokens: [NSObjectProtocol] = []
     @State private var lastSavedTime: Double = 0
-    @State private var showResumeSheet = false
-    @State private var resumeTime: Double?
-    @State private var resumeTimeString: String = ""
+    @State private var resumeInfo: ResumeInfo?
     @State private var pendingPlayer: AVPlayer?
     @State private var pendingItem: AVPlayerItem?
 
@@ -98,17 +102,17 @@ struct MediaPlayerView: View {
             cleanupPlayer()
             clearNowPlayingInfo()
         }
-        .sheet(isPresented: $showResumeSheet) {
+        .sheet(item: $resumeInfo) { resume in
             ResumePromptView(
-                resumeTimeFormatted: self.resumeTimeString,
+                resumeTimeFormatted: resume.timeFormatted,
                 onSelection: { playFromBeginning in
-                    showResumeSheet = false
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         guard let player = self.pendingPlayer, let item = self.pendingItem else { return }
-                        let seekTime = playFromBeginning ? nil : self.resumeTime
+                        let seekTime = playFromBeginning ? nil : resume.time
                         self.finishPlayerSetup(player: player, item: item, seekTo: seekTime, autoPlay: true)
                         self.pendingPlayer = nil
                         self.pendingItem = nil
+                        self.resumeInfo = nil // dismiss sheet
                     }
                 }
             )
@@ -286,20 +290,12 @@ struct MediaPlayerView: View {
                 loadedPlayer.automaticallyWaitsToMinimizeStalling = false
 
                 let savedTime = PlaybackProgressStore.loadProgress(for: createHash(for: file.path))
-
-                DispatchQueue.main.async {
-                    self.pendingPlayer = loadedPlayer
-                    self.pendingItem = item
-
-                    if let savedTimeTmp = savedTime, savedTimeTmp > 5.0 {
-                        self.resumeTime = savedTimeTmp
-                        self.resumeTimeString = formatTime(savedTimeTmp)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                            self.showResumeSheet = true
-                        }
-                    } else {
-                        self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
-                    }
+                if let savedTimeTmp = savedTime, savedTimeTmp > 5.0 {
+                    let formatted = formatTime(savedTimeTmp)
+                    Log.info("⌛ Resume time string: \(formatted)")
+                    self.resumeInfo = ResumeInfo(time: savedTimeTmp, timeFormatted: formatted)
+                } else {
+                    self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
                 }
             }
         }
