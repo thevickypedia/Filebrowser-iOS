@@ -7,24 +7,24 @@ on:
         type: string
         description: iPhone version to run tests on
         required: false
-        default: "15"
+        default: "16"
       iOSVersion:
         type: string
         description: iOS version to run tests on
         required: false
-        default: "17.4"
+        default: "18.6"
   workflow_call:
     inputs:
       iPhoneVersion:
         type: string
         description: iPhone version to run tests on
         required: false
-        default: "15"
+        default: "16"
       iOSVersion:
         type: string
         description: iOS version to run tests on
         required: false
-        default: "17.4"
+        default: "18.6"
 
 jobs:
   test:
