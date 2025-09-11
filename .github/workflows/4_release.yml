@@ -29,17 +29,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Clean Project Version
+        run: |
+          original_version="${{ inputs.project_version }}"
+          clean_version="${original_version#v}"
+          echo "project_version=${clean_version}" >> $GITHUB_ENV
+        shell: bash
+
       - name: Check GH Tag
         id: check_release
         run: |
-          url="${{ github.api_url }}/repos/${{ github.repository }}/releases/tags/v${{ inputs.project_version }}"
+          url="${{ github.api_url }}/repos/${{ github.repository }}/releases/tags/v${{ env.project_version }}"
           response=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" "$url")
           if [ "$response" -eq 200 ]; then
-            echo "Release tag v${{ inputs.project_version }} already exists."
+            echo "Release tag v${{ env.project_version }} already exists."
             echo "release_exists=true" >> $GITHUB_ENV
             echo "release_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "Release tag v${{ inputs.project_version }} does not exist."
+            echo "Release tag v${{ env.project_version }} does not exist."
             echo "release_exists=false" >> $GITHUB_ENV
             echo "release_exists=false" >> $GITHUB_OUTPUT
           fi
@@ -54,7 +61,7 @@ jobs:
           git fetch --tags
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
           echo "::notice title=Previous Release::${PREV_TAG}"
-          echo "::notice title=Current Release::v${{ inputs.project_version }}"
+          echo "::notice title=Current Release::v${{ env.project_version }}"
           repository="${{ github.server_url }}/${{ github.repository }}"
           git log "${PREV_TAG}..HEAD" --pretty=format:"- [%h](${repository}/commit/%H) %s" --no-merges > release_notes.txt
           cat release_notes.txt
@@ -63,8 +70,8 @@ jobs:
       - name: Create Release
         if: env.release_exists == 'false'
         run: |
-          gh release create "v${{ inputs.project_version }}" \
-            --title "v${{ inputs.project_version }}" \
+          gh release create "v${{ env.project_version }}" \
+            --title "v${{ env.project_version }}" \
             --notes-file release_notes.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
