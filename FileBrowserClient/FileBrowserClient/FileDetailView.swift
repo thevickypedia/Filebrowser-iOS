@@ -64,6 +64,7 @@ struct FileDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var auth: AuthManager
 
+    @State private var isFullScreen = false
     @State private var isSharing = false
     // Display as alerts
     @State private var errorTitle: String?
@@ -117,7 +118,8 @@ struct FileDetailView: View {
                                     currentIndex -= 1
                                 }
                             }
-                        }
+                        },
+                        isFullScreen: $isFullScreen
                     )
                     .transition(
                         .asymmetric(
@@ -125,6 +127,11 @@ struct FileDetailView: View {
                             removal: .move(edge: swipeDirection == .left ? .leading : .trailing)
                         )
                     )
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarHidden(isFullScreen) // <-- hide nav bar when full-screen
+                    .statusBar(hidden: isFullScreen)   // <-- optional: hide status bar
+                    .ignoresSafeArea(edges: isFullScreen ? .all : []) // optional full area
+                    .background(Color.black) // optional for aesthetic fullscreen look
                     .id(currentIndex) // force re-render for transition to work
                 } else {
                     Text("Failed to load image")

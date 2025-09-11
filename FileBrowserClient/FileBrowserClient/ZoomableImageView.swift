@@ -20,30 +20,53 @@ struct ZoomableImageView: View {
     @GestureState private var gestureOffset: CGSize = .zero
 
     @State private var isZoomed: Bool = false
+    @Binding var isFullScreen: Bool
 
     var body: some View {
         GeometryReader { geometry in
-            Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .scaleEffect(scale * gestureScale)
-                .offset(x: offset.width + gestureOffset.width,
-                        y: offset.height + gestureOffset.height)
-                .frame(width: geometry.size.width, height: geometry.size.height)
-                .gesture(pinchGesture())
-                .simultaneousGesture(doubleTapGesture())
-                .gesture(dragGesture())
-                .animation(.easeInOut(duration: 0.25), value: scale)
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            // Save the touch location relative to center
-                            zoomAnchor = CGPoint(
-                                x: value.location.x - geometry.size.width / 2,
-                                y: value.location.y - geometry.size.height / 2
-                            )
+            ZStack {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .scaleEffect(scale * gestureScale)
+                    .offset(x: offset.width + gestureOffset.width,
+                            y: offset.height + gestureOffset.height)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .gesture(pinchGesture())
+                    .simultaneousGesture(doubleTapGesture())
+                    .gesture(dragGesture())
+                    .animation(.easeInOut(duration: 0.25), value: scale)
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                // Save the touch location relative to center
+                                zoomAnchor = CGPoint(
+                                    x: value.location.x - geometry.size.width / 2,
+                                    y: value.location.y - geometry.size.height / 2
+                                )
+                            }
+                    )
+
+                // Full-screen toggle button
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            isFullScreen.toggle()
+                        }) {
+                            Image(systemName: isFullScreen
+                                  ? "arrow.down.right.and.arrow.up.left"
+                                  : "arrow.up.left.and.arrow.down.right")
+                            .padding()
+                            .background(Color.black.opacity(0.6))
+                            .clipShape(Circle())
+                            .foregroundColor(.white)
                         }
-                )
+                    }
+                    .padding()
+                    Spacer()
+                }
+            }
         }
     }
 
