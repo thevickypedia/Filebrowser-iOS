@@ -31,8 +31,6 @@ struct MediaPlayerView: View {
     @State private var npBaseInfo: [String: Any] = [:]   // stable Now Playing bas
     @State private var notifTokens: [NSObjectProtocol] = []
     @State private var lastSavedTime: Double = 0
-    @State private var showResumeSheet = false
-    @State private var resumeTime: Double?
     @State private var resumePromptData: ResumePromptData?
     @State private var pendingPlayer: AVPlayer?
     @State private var pendingItem: AVPlayerItem?
