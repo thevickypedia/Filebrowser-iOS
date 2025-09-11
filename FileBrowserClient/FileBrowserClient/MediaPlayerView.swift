@@ -25,6 +25,7 @@ struct MediaPlayerView: View {
     @State private var npArtwork: MPMediaItemArtwork?    // stable artwork (in memory only)
     @State private var npBaseInfo: [String: Any] = [:]   // stable Now Playing bas
     @State private var notifTokens: [NSObjectProtocol] = []
+    @State private var lastSavedTime: Double = 0
 
     var body: some View {
         ZStack {
@@ -430,7 +431,11 @@ struct MediaPlayerView: View {
 
             let currentTime = CMTimeGetSeconds(player.currentTime())
             if currentTime.isFinite && !currentTime.isNaN {
-                PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
+                // Save every 5 seconds
+                if lastSavedTime == 0 || currentTime - lastSavedTime >= 5 {
+                    lastSavedTime = currentTime
+                    PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
+                }
             }
 
             // If duration was unknown at seed time, fill it in once it becomes finite.
