@@ -7,24 +7,24 @@ on:
         type: string
         description: iPhone version to build for
         required: false
-        default: "15"
+        default: "16"
       iOSVersion:
         type: string
         description: iOS version to build for
         required: false
-        default: "17.4"
+        default: "18.6"
   workflow_call:
     inputs:
       iPhoneVersion:
         type: string
         description: iPhone version to build for
         required: false
-        default: "15"
+        default: "16"
       iOSVersion:
         type: string
         description: iOS version to build for
         required: false
-        default: "17.4"
+        default: "18.6"
     outputs:
       project_version:
         description: "Extracted version from Info.plist"
@@ -34,15 +34,13 @@ jobs:
   build:
     outputs:
       project_version: ${{ steps.get_version.outputs.project_version }}
-    runs-on: macos-14
+    runs-on:
+      - thevickypedia-default
+      - macOS
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Xcode
-        run: |
-          sudo xcode-select -s /Applications/Xcode.app
 
       - name: Set inputs
         run: |
