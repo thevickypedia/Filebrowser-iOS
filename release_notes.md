@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.37.1 (09/11/2025)
+--------------------
+- [5814455](https://github.com/thevickypedia/Filebrowser-iOS/commit/58144558c8245ce120de22f6ea1d81e308ddfacb) chore: Release ``v1.37.1``
+- [5051dbd](https://github.com/thevickypedia/Filebrowser-iOS/commit/5051dbddcd8221a149005f528899e98a095cfbd7) perf: Store the last saved time for media files every 5s (instead of every 1s)
+- [4bae941](https://github.com/thevickypedia/Filebrowser-iOS/commit/4bae941d5791c7a7b82b1880e6fc32e27198db78) feat: Store playback progress w.r.t ``username`` and ``serverURL``
+- [fad140f](https://github.com/thevickypedia/Filebrowser-iOS/commit/fad140f1b22a9d430247d7901bc457076ca78faa) chore: Update release notes for v1.37.0
+
 v1.37.0 (09/10/2025)
 --------------------
 - [f40a68b](https://github.com/thevickypedia/Filebrowser-iOS/commit/f40a68be85a41e2faff4e5f643cf7865ae3dc0c1) chore: Release ``v1.37.0``
