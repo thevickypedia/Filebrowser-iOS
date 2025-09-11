@@ -44,6 +44,7 @@ jobs:
             exit 1
           fi
           echo "project_version=$PROJECT_VERSION" >> $GITHUB_OUTPUT
+        shell: bash
 
   # 4. Create GitHub Release
   # Outputs whether the release already exists
