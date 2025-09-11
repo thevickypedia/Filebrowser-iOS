@@ -103,7 +103,15 @@ struct MediaPlayerView: View {
             cleanupPlayer()
             clearNowPlayingInfo()
         }
-        .sheet(item: $resumePromptData) { data in
+        .sheet(item: $resumePromptData, onDismiss: {
+            if player == nil, let pendingPlayer = pendingPlayer, let pendingItem = pendingItem {
+                // MARK: Fallback to beginning if user closes the sheet without choosing an option
+                self.finishPlayerSetup(player: pendingPlayer, item: pendingItem, seekTo: nil)
+                self.pendingPlayer = nil
+                self.pendingItem = nil
+                self.resumePromptData = nil
+            }
+        }) { data in
             ResumePromptView(
                 resumeTimeFormatted: formatTime(data.resumeTime),
                 onSelection: { playFromBeginning in
