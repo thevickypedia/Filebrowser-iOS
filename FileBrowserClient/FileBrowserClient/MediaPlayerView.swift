@@ -105,7 +105,7 @@ struct MediaPlayerView: View {
         }
         .sheet(item: $resumePromptData, onDismiss: {
             if player == nil, let pendingPlayer = pendingPlayer, let pendingItem = pendingItem {
-                // MARK: Fallback to beginning if user closes the sheet without choosing an option
+                // MARK: Secondary: Fallback to beginning if user closes the sheet without choosing an option
                 self.finishPlayerSetup(player: pendingPlayer, item: pendingItem, seekTo: nil)
                 self.pendingPlayer = nil
                 self.pendingItem = nil
@@ -125,6 +125,7 @@ struct MediaPlayerView: View {
                     }
                 }
             )
+            .interactiveDismissDisabled(true) // MARK: Primary: Disable swipe-down dismissal
         }
         .navigationTitle(file.name)
         .navigationBarTitleDisplayMode(.inline)
