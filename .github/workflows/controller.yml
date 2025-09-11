@@ -29,7 +29,7 @@ jobs:
 
   # Set and validate project version
   set-version:
-    runs-on: ubuntu-latest
+    runs-on: thevickypedia-default
     needs: build
     outputs:
       project_version: ${{ steps.set-version.outputs.project_version }}
