@@ -21,6 +21,11 @@ struct MediaPlayerView: View {
     let token: String
     let displayFullScreen: Bool
 
+    // MARK: Controls:
+    // 1. How frequently the timestamp should be stored for a video
+    // 2. Minimum time (in secs) before a video can be considered resume-able
+    private let resumeThreshold: Double = 5.0
+
     // Display as alerts
     @State private var errorTitle: String?
     @State private var errorMessage: String?
@@ -304,7 +309,8 @@ struct MediaPlayerView: View {
                         self.pendingPlayer = loadedPlayer
                         self.pendingItem = item
 
-                        if let savedTimeTmp = savedTime, savedTimeTmp > 5.0 {
+                        // MARK: Minimum # of seconds for stored video before considering resume-able
+                        if let savedTimeTmp = savedTime, savedTimeTmp > resumeThreshold {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                                 self.resumePromptData = ResumePromptData(resumeTime: savedTimeTmp)
                             }
@@ -313,10 +319,11 @@ struct MediaPlayerView: View {
                         }
                     }
                 } catch {
-                    Log.error("❌ Failed to load asset metadata: \(error)")
+                    let msg = "Failed to load asset metadata: \(error.localizedDescription)"
+                    Log.error("❌ \(msg)")
                     DispatchQueue.main.async {
                         errorTitle = "Metadata failed"
-                        errorMessage = "Failed to load asset metadata: \(error)"
+                        errorMessage = msg
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                             // MARK: Fallback to a basic player with default AVPlayer
                             let item = AVPlayerItem(asset: asset)
@@ -515,8 +522,8 @@ struct MediaPlayerView: View {
 
             let currentTime = CMTimeGetSeconds(player.currentTime())
             if currentTime.isFinite && !currentTime.isNaN {
-                // Save every 5 seconds
-                if lastSavedTime == 0 || currentTime - lastSavedTime >= 5 {
+                // MARK: Auto save progress every N (resumeThreshold) seconds
+                if lastSavedTime == 0 || currentTime - lastSavedTime >= CGFloat(resumeThreshold) {
                     lastSavedTime = currentTime
                     PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
                 }
