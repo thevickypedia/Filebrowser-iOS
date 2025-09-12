@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+v1.37.2 (09/11/2025)
+--------------------
+- [dda2356](https://github.com/thevickypedia/Filebrowser-iOS/commit/dda23564dad2535229087448e01152cb504a1b3d) chore: Release ``v1.37.2``
+- [7243d0b](https://github.com/thevickypedia/Filebrowser-iOS/commit/7243d0b604b21e73542f3a5a2743cc52aacd9eb3) perf: Keep auto save and minimum resume threshold for videos in sync
+- [342b031](https://github.com/thevickypedia/Filebrowser-iOS/commit/342b031e938872815397dbdc959207046326ee89) perf: Show alert and load default AVPlayer if metadata fetch fails
+- [2405f31](https://github.com/thevickypedia/Filebrowser-iOS/commit/2405f31480c1d7bdb8c1d04bbc5a72761ffed53e) perf: Remove usage of deprecated functions
+- [9de3223](https://github.com/thevickypedia/Filebrowser-iOS/commit/9de322368772a9a882de8388f30aaa2f9a91eee4) refactor: Remove un-used variables
+- [0c4fec7](https://github.com/thevickypedia/Filebrowser-iOS/commit/0c4fec711b940c029eda67e969b7782dbbbd245c) perf: Add primary and secondary guard rails for resume-able media
+- [6126bc5](https://github.com/thevickypedia/Filebrowser-iOS/commit/6126bc520024f9dbbdfc0dd18ccbd5bcdb74f09a) perf: Fallback to beginning of a video if user closes the sheet without choosing an option
+- [8a22036](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a220360cb567f44b984bc2829999e26cf48c699) fix: Defer AVPlayer setup until the resume sheet decision is made
+- [e191be4](https://github.com/thevickypedia/Filebrowser-iOS/commit/e191be4541884b54e0679cf38f9c3029df388f13) revert: Rollback fix for resume sheet missing timestamp
+- [f106ff7](https://github.com/thevickypedia/Filebrowser-iOS/commit/f106ff77de83589acc7ee72c12810600471569fc) fix: Resume sheet missing timestamp
+- [0723060](https://github.com/thevickypedia/Filebrowser-iOS/commit/072306087f7ae67ef167d7672aa98cd96ac1fd43) chore: Update release notes for v1.37.1
+
 v1.37.1 (09/11/2025)
 --------------------
 - [5814455](https://github.com/thevickypedia/Filebrowser-iOS/commit/58144558c8245ce120de22f6ea1d81e308ddfacb) chore: Release ``v1.37.1``
