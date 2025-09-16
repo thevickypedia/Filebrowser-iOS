@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import Photos
+import UniformTypeIdentifiers
+import MobileCoreServices
 
 struct ResourceMetadata: Codable {
     let name: String
@@ -59,7 +62,7 @@ struct FileDetailView: View {
     @State private var isRenaming = false
     @State private var newName = ""
     @State private var showingDeleteConfirm = false
-    @State private var downloadMessage: String?
+    @State private var statusMessage: StatusPayload?
     @State private var isDownloading = false
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var auth: AuthManager
@@ -244,6 +247,7 @@ struct FileDetailView: View {
                 Text("Are you sure you want to delete \(file.name)?")
             }
             .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
+            .modifier(StatusMessage(payload: $statusMessage))
             .sheet(isPresented: $isSharing) {
                 ShareSheetView(
                     serverURL: serverURL,
@@ -465,23 +469,165 @@ struct FileDetailView: View {
         if content?.isEmpty ?? true {
             Log.info("Content wasn't downloaded already, downloading now...")
             isDownloading = true
+            // downloadRaw will call saveFile(showSave: true) once done
             downloadRaw(showSave: true)
         } else {
-            saveFile()
+            // content already present; request direct save
+            saveFile(showSave: true)
         }
     }
 
-    func saveFile() {
+    // MARK: - Unified save (shows share sheet OR saves directly if showSave true)
+    func saveFile(showSave: Bool = false) {
         guard let content = self.content else { return }
 
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
-        try? content.write(to: tempURL)
+        // write temp file off the main thread to avoid blocking UI for big files
+        DispatchQueue.global(qos: .userInitiated).async {
+            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
 
-        // Present share sheet
-        let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
+            do {
+                try content.write(to: tempURL, options: .atomic)
+
+                // Determine type using UTType (TODO: may be just use ExtensionTypes?)
+                let ext = tempURL.pathExtension
+                let utType = UTType(filenameExtension: ext) ?? UTType.data
+
+                // If caller specifically requested direct save -> try Photos API for image/video
+                if showSave {
+                    if utType.conforms(to: .image) || utType.identifier == "com.compuserve.gif" || utType.conforms(to: .movie) {
+                        // save images (including GIF path)
+                        saveDirectToPhotos(tempURL)
+                        return
+                    }
+                }
+
+                // Otherwise present share sheet (or fallback)
+                DispatchQueue.main.async {
+                    presentActivityController(with: tempURL)
+                }
+
+            } catch {
+                DispatchQueue.main.async {
+                    self.isDownloading = false
+                    self.error = "Failed to write temp file: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
+
+    // MARK: - Direct save to Photos (handles images and videos). Uses modern API when available.
+    func saveDirectToPhotos(_ fileURL: URL) {
+        // Request add-only authorization when available (iOS 14+), fallback otherwise
+        let handler: (PHAuthorizationStatus) -> Void = { status in
+            guard status == .authorized || status == .limited else {
+                DispatchQueue.main.async {
+                    self.isDownloading = false
+                    self.error = "Photos access not granted"
+                }
+                return
+            }
+
+            PHPhotoLibrary.shared().performChanges({
+                let ext = fileURL.pathExtension.lowercased()
+                if ["mp4", "mov", "m4v"].contains(ext) {
+                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
+                } else {
+                    // For images (and GIFs) create asset from file URL — this retains GIF data
+                    if #available(iOS 9.0, *) {
+                        let req = PHAssetCreationRequest.forAsset()
+                        let options = PHAssetResourceCreationOptions()
+                        // let the system detect the mime/uti from fileURL
+                        req.addResource(with: .photo, fileURL: fileURL, options: options)
+                    } else {
+                        PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
+                    }
+                }
+            }) { success, err in
+                DispatchQueue.main.async {
+                    self.isDownloading = false
+                    if success {
+                        statusMessage = StatusPayload(
+                            text: "📥 Saved to Photos: \(file.name)",
+                            color: .green,
+                            duration: 2
+                        )
+                    } else {
+                        self.error = "Save failed: \(err?.localizedDescription ?? "unknown")"
+                    }
+                    // cleanup temp file
+                    try? FileManager.default.removeItem(at: fileURL)
+                }
+            }
+        }
+
+        if #available(iOS 14, *) {
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+                handler(status)
+            }
+        } else {
+            PHPhotoLibrary.requestAuthorization { status in
+                handler(status)
+            }
+        }
+    }
+
+    // MARK: - Present Activity Controller with proper completion and cleanup
+    func presentActivityController(with fileURL: URL) {
+        // Choose appropriate activity items so "Save to Photos" appears where possible
+        var activityItems: [Any] = [fileURL]
+
+        if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .image) {
+            if let image = UIImage(data: (try? Data(contentsOf: fileURL)) ?? Data()) {
+                activityItems = [image]
+            } else {
+                activityItems = [fileURL]
+            }
+        } else if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .movie) {
+            activityItems = [fileURL]
+        } else if fileURL.pathExtension.lowercased() == "gif" {
+            // pass URL for GIFs so Share Sheet can often present Save option (and animation preserved)
+            activityItems = [fileURL]
+        }
+
+        let activityVC = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+
+        // iPad popover safe setup
         if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootVC = scene.windows.first?.rootViewController {
+            activityVC.completionWithItemsHandler = { _, completed, _, error in
+                // Remove temp file regardless
+                try? FileManager.default.removeItem(at: fileURL)
+                if completed {
+                    statusMessage = StatusPayload(
+                        text: "📤 Shared/Saved: \(file.name)",
+                        color: .green,
+                        duration: 2
+                    )
+                } else if let err = error {
+                    self.error = err.localizedDescription
+                }
+                self.isDownloading = false
+            }
+
+            // popover anchor on iPad
+            if let pop = activityVC.popoverPresentationController {
+                pop.sourceView = rootVC.view
+                pop.sourceRect = CGRect(x: rootVC.view.bounds.midX, y: rootVC.view.bounds.midY, width: 1, height: 1)
+                pop.permittedArrowDirections = []
+            }
             rootVC.present(activityVC, animated: true, completion: nil)
+        } else {
+            // fallback: present on main window root VC if available
+            DispatchQueue.main.async {
+                if let root = UIApplication.shared.windows.first?.rootViewController {
+                    root.present(activityVC, animated: true, completion: nil)
+                } else {
+                    // final fallback: show error
+                    self.error = "Unable to present share sheet"
+                    try? FileManager.default.removeItem(at: fileURL)
+                    self.isDownloading = false
+                }
+            }
         }
     }
 
