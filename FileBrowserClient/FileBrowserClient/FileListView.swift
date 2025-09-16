@@ -6,9 +6,17 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum SortOption {
     case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
+}
+
+// Download state (TODO: Implement something similar for upload state variables)
+struct DownloadQueueItem: Identifiable {
+    let id = UUID()
+    let file: FileItem
+    let showSave: Bool
 }
 
 struct FileListView: View {
@@ -37,9 +45,22 @@ struct FileListView: View {
     @State private var showingSettings = false
     @State private var dateFormatExact = false
 
-    @State private var showCopy = false
     @State private var showMove = false
+    @State private var showCopy = false
+    @State private var showDownload = false
     @State private var sheetPathStack: [FileItem] = []
+
+    // TODO: Group upload/download together
+    @State private var downloadQueue: [DownloadQueueItem] = []
+    @State private var currentDownloadIndex = 0
+    @State private var downloadProgress: Double = 0.0
+    @State private var downloadProgressPct: Int = 0
+    @State private var isDownloading = false
+    @State private var currentDownloadFile: String?
+    @State private var currentDownloadFileSize: String?
+    @State private var currentDownloadedFileSize: String?
+    @State private var currentDownloadTaskID: UUID?
+    @State private var isDownloadCancelled = false
 
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
@@ -337,6 +358,46 @@ struct FileListView: View {
         }
     }
 
+    private var downloadingStack: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // 🗂️ File Info
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundColor(.blue)
+                    .font(.title2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(currentDownloadFile ?? "Downloading...")
+                        .font(.headline)
+                    Text("\(currentDownloadedFileSize ?? "0 MB") / \(currentDownloadFileSize ?? "—")")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+            }
+
+            // 🔄 Queue
+            HStack(spacing: 12) {
+                Image(systemName: "list.number")
+                    .foregroundColor(.indigo)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Queue")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    Text("\(currentDownloadIndex + 1) of \(downloadQueue.count)")
+                        .font(.body)
+                }
+            }
+
+            // 📊 Progress Bar
+            ProgressView(value: downloadProgress, total: 1.0) {
+                EmptyView()
+            } currentValueLabel: {
+                Text("\(downloadProgressPct)%")
+            }
+            .progressViewStyle(LinearProgressViewStyle())
+            .padding(.top, 8)
+        }
+    }
+
     private var actionsTabStack: some View {
         return Menu {
             if userPermissions?.create == true {
@@ -416,10 +477,22 @@ struct FileListView: View {
 
     private var selectedStack: some View {
         return Menu {
+            if userPermissions?.download == true {
+                // 📥 Download
+                Button(action: {
+                    for item in selectedItems {
+                        enqueueDownload(file: item)
+                    }
+                    selectedItems.removeAll()
+                    selectionMode = false
+                }) {
+                    Label("Download", systemImage: "arrow.down")
+                }
+            }
+
             if userPermissions?.modify == true {
                 // ➡️ Move
                 Button(action: {
-                    Log.info("Move Icon clicked")
                     showMove = true
                 }) {
                     Label("Move", systemImage: "arrow.right")
@@ -429,7 +502,6 @@ struct FileListView: View {
             if userPermissions?.execute == true {
                 // 📋 Copy
                 Button(action: {
-                    Log.info("Copy Icon clicked")
                     showCopy = true
                 }) {
                     Label("Copy", systemImage: "doc.on.doc")
@@ -650,6 +722,7 @@ struct FileListView: View {
             fetchClientStorageInfo()
         }
     }
+
     // Fixed modifySheet implementation
     private var currentSheetPath: String {
         // Build path from sheetPathStack, starting from root
@@ -1030,6 +1103,33 @@ struct FileListView: View {
                         }
                         .padding(.top, 8)
                     }
+
+                    // Download UI
+                    if showDownload || isDownloading {
+                        downloadingStack
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .cornerRadius(12)
+                            .shadow(radius: 4)
+
+                        Button(action: {
+                            isDownloadCancelled = true
+                            if let id = currentDownloadTaskID {
+                                DownloadManager.shared.cancel(id)
+                            }
+                            downloadQueue.removeAll()
+                            currentDownloadIndex = 0
+                            downloadProgress = 0.0
+                            isDownloading = false
+                            showDownload = false
+                            Log.info("❌ Download cancelled by user.")
+                        }) {
+                            Label("Cancel Download", systemImage: "xmark.circle.fill")
+                                .foregroundColor(.red)
+                        }
+                        .padding(.top, 8)
+                    }
+
                     if viewModel.isLoading {
                         ProgressView()
                     } else if let error = viewModel.errorMessage {
@@ -1228,6 +1328,162 @@ struct FileListView: View {
         )) {
             if let index = selectedFileIndex {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
+            }
+        }
+    }
+
+    // Call this to queue a single file for download from FileListView
+    private func enqueueDownload(file: FileItem, saveToPhotos: Bool = false) {
+        let item = DownloadQueueItem(file: file, showSave: saveToPhotos)
+        downloadQueue.append(item)
+        showDownload = true
+        // start if idle
+        if !isDownloading {
+            startNextDownload()
+        }
+    }
+
+    // Start the next item in the queue
+    private func startNextDownload() {
+        guard !downloadQueue.isEmpty else {
+            // nothing to do
+            isDownloading = false
+            showDownload = false
+            downloadProgress = 0
+            currentDownloadIndex = 0
+            currentDownloadTaskID = nil
+            return
+        }
+
+        let item = downloadQueue[currentDownloadIndex]
+        let file = item.file
+        currentDownloadFile = file.name
+        downloadProgress = 0
+        downloadProgressPct = 0
+        isDownloading = true
+
+        // Build raw URL (same as FileDetailView)
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "raw", file.path],
+            queryItems: [ URLQueryItem(name: "auth", value: token) ]
+        ) else {
+            errorMessage = "Invalid download URL for \(file.name)"
+            isDownloading = false
+            return
+        }
+
+        // Kick off the download via DownloadManager
+        let taskID = DownloadManager.shared.download(from: url, token: token,
+            progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
+                DispatchQueue.main.async {
+                    Log.trace("Download progress: \(bytesWritten) / \(totalBytesWritten) of \(totalBytesExpected)")
+                    guard totalBytesExpected > 0 else {
+                        self.downloadProgress = 0
+                        self.downloadProgressPct = 0
+                        return
+                    }
+                    let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
+                    self.downloadProgress = prog
+                    self.downloadProgressPct = Int(prog * 100)
+                    // optional size strings
+                    self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
+                    self.currentDownloadFileSize = formatBytes(totalBytesExpected)
+                }
+            },
+            completion: { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let localURL):
+                        Log.info("✅ Download finished: \(file.name)")
+                        // If showSave is true, present share/save sheet
+                        if item.showSave {
+                            presentActivityController(with: localURL, suggestedName: file.name)
+                        } else {
+                            // otherwise remove temp file after brief success toast
+                            try? FileManager.default.removeItem(at: localURL)
+                            statusMessage = StatusPayload(text: "✅ Downloaded: \(file.name)", color: .green, duration: 2)
+                        }
+                    case .failure(let err):
+                        Log.error("❌ Download failed: \(err.localizedDescription)")
+                        self.errorMessage = "Download failed: \(err.localizedDescription)"
+                    }
+
+                    // move to next item
+                    self.currentDownloadIndex += 1
+                    if self.currentDownloadIndex >= self.downloadQueue.count {
+                        // finished all
+                        self.downloadQueue.removeAll()
+                        self.currentDownloadIndex = 0
+                        self.isDownloading = false
+                        self.currentDownloadTaskID = nil
+                        self.showDownload = false
+                        self.downloadProgress = 0
+                    } else {
+                        // start next
+                        self.startNextDownload()
+                    }
+                }
+            })
+
+        // store task id so it can be cancelled
+        currentDownloadTaskID = taskID
+    }
+
+    private func presentActivityController(with fileURL: URL, suggestedName: String? = nil) {
+        var activityItems: [Any] = [fileURL]
+
+        if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .image) {
+            if let image = UIImage(data: (try? Data(contentsOf: fileURL)) ?? Data()) {
+                activityItems = [image]
+            }
+        } else if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .movie) {
+            activityItems = [fileURL]
+        } else if fileURL.pathExtension.lowercased() == "gif" {
+            activityItems = [fileURL]
+        }
+
+        let activityVC = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        activityVC.completionWithItemsHandler = { _, completed, _, error in
+            // FIXME: Currently the temp file gets deleted regardless
+            // TODO: Implement automatic download to Photos and Files app
+            // TODO: Implement caching mechanism (if download fails - or may be always)
+            // Remove temp file regardless
+            try? FileManager.default.removeItem(at: fileURL)
+            if completed {
+                statusMessage = StatusPayload(text: "📤 Saved: \(suggestedName ?? fileURL.lastPathComponent)", color: .green, duration: 2)
+            } else if let err = error {
+                self.errorMessage = err.localizedDescription
+            }
+            self.isDownloading = false
+        }
+
+        DispatchQueue.main.async {
+            let foregroundScene = UIApplication.shared.connectedScenes
+                .first { $0.activationState == .foregroundActive } as? UIWindowScene
+
+            var rootVC: UIViewController?
+            if let scene = foregroundScene {
+                rootVC = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController
+                        ?? scene.windows.first?.rootViewController
+            }
+            if rootVC == nil {
+                if let anyScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                    rootVC = anyScene.windows.first?.rootViewController
+                }
+            }
+
+            if let root = rootVC {
+                if let pop = activityVC.popoverPresentationController {
+                    pop.sourceView = root.view
+                    pop.sourceRect = CGRect(x: root.view.bounds.midX, y: root.view.bounds.midY, width: 1, height: 1)
+                    pop.permittedArrowDirections = []
+                }
+                root.present(activityVC, animated: true, completion: nil)
+            } else {
+                self.errorMessage = "Unable to present share sheet"
+                try? FileManager.default.removeItem(at: fileURL)
+                self.isDownloading = false
             }
         }
     }
