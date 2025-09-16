@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.39.0 (09/16/2025)
+--------------------
+- [eb727c7](https://github.com/thevickypedia/Filebrowser-iOS/commit/eb727c778b2fcc439e8569498405054f7b8649f4) chore: Release ``v1.39.0``
+- [8d46c6e](https://github.com/thevickypedia/Filebrowser-iOS/commit/8d46c6e212d07bbbcc41096c40151041f110658e) lint: Fix identifier name violation
+- [3d334b6](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d334b6fd496ac568ab95317fb2bb908d0b81606) feat: Automatically save files to photos/files app based on file types
+- [c979592](https://github.com/thevickypedia/Filebrowser-iOS/commit/c97959225f7b2f28ca31890f11acfd4e13fd6fee) feat: Add a new feature to download file(s) from list view
+- [78d06ed](https://github.com/thevickypedia/Filebrowser-iOS/commit/78d06ed1437902f3366d3522b0aa767941df78a4) chore: Update release notes for v1.38.0
+
 v1.38.0 (09/15/2025)
 --------------------
 - [2928bc6](https://github.com/thevickypedia/Filebrowser-iOS/commit/2928bc61527c5784d945c7ecc1fa7b27d86218ce) chore: Release ``v1.38.0``
