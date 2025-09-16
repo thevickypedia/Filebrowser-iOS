@@ -477,6 +477,7 @@ struct FileDetailView: View {
         }
     }
 
+    // TODO: Display download progress just like list view [AND] unify logic in a dedicated module
     // MARK: - Unified save (shows share sheet OR saves directly if showSave true)
     func saveFile(showSave: Bool = false) {
         guard let content = self.content else { return }
@@ -496,14 +497,14 @@ struct FileDetailView: View {
                 if showSave {
                     if utType.conforms(to: .image) || utType.identifier == "com.compuserve.gif" || utType.conforms(to: .movie) {
                         // save images (including GIF path)
-                        saveDirectToPhotos(tempURL)
+                        saveDirectToPhotos(fileURL: tempURL, fileType: utType)
                         return
                     }
                 }
 
                 // Otherwise present share sheet (or fallback)
                 DispatchQueue.main.async {
-                    presentActivityController(with: tempURL)
+                    presentActivityController(fileURL: tempURL, fileType: utType)
                 }
 
             } catch {
@@ -516,7 +517,7 @@ struct FileDetailView: View {
     }
 
     // MARK: - Direct save to Photos (handles images and videos). Uses modern API when available.
-    func saveDirectToPhotos(_ fileURL: URL) {
+    func saveDirectToPhotos(fileURL: URL, fileType: UTType) {
         // Request add-only authorization when available (iOS 14+), fallback otherwise
         let handler: (PHAuthorizationStatus) -> Void = { status in
             guard status == .authorized || status == .limited else {
@@ -528,8 +529,7 @@ struct FileDetailView: View {
             }
 
             PHPhotoLibrary.shared().performChanges({
-                let ext = fileURL.pathExtension.lowercased()
-                if ["mp4", "mov", "m4v"].contains(ext) {
+                if fileType.conforms(to: .movie) {
                     PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
                 } else {
                     // For images (and GIFs) create asset from file URL — this retains GIF data
@@ -572,19 +572,19 @@ struct FileDetailView: View {
     }
 
     // MARK: - Present Activity Controller with proper completion and cleanup
-    func presentActivityController(with fileURL: URL) {
+    func presentActivityController(fileURL: URL, fileType: UTType) {
         // Choose appropriate activity items so "Save to Photos" appears where possible
         var activityItems: [Any] = [fileURL]
 
-        if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .image) {
+        if fileType.conforms(to: .image) {
             if let image = UIImage(data: (try? Data(contentsOf: fileURL)) ?? Data()) {
                 activityItems = [image]
             } else {
                 activityItems = [fileURL]
             }
-        } else if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .movie) {
+        } else if fileType.conforms(to: .movie) {
             activityItems = [fileURL]
-        } else if fileURL.pathExtension.lowercased() == "gif" {
+        } else if fileType.identifier == "com.compuserve.gif" {
             // pass URL for GIFs so Share Sheet can often present Save option (and animation preserved)
             activityItems = [fileURL]
         }
