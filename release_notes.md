@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.39.1 (09/16/2025)
+--------------------
+- [c6e34ae](https://github.com/thevickypedia/Filebrowser-iOS/commit/c6e34aee585ba1b495f857816457b275880430c6) chore: Release ``v1.39.1``
+- [c58c752](https://github.com/thevickypedia/Filebrowser-iOS/commit/c58c75204598eba79f2213a64c1b0801a9cc7278) perf: Remove code redundancies in download logic under detail view
+- [ba35623](https://github.com/thevickypedia/Filebrowser-iOS/commit/ba35623e22c548d8d3818e922615c686e007b82e) perf: Improve UX notification and logging when upload fails
+- [118d5e7](https://github.com/thevickypedia/Filebrowser-iOS/commit/118d5e745e934ab74bbc12c137c38df038dc5d0b) perf: Remove code redundancies in download operation under list view
+- [d081134](https://github.com/thevickypedia/Filebrowser-iOS/commit/d081134e1c5f37d79a5567451fbe836b0b08c8f9) chore: Update release notes for v1.39.0
+
 v1.39.0 (09/16/2025)
 --------------------
 - [eb727c7](https://github.com/thevickypedia/Filebrowser-iOS/commit/eb727c778b2fcc439e8569498405054f7b8649f4) chore: Release ``v1.39.0``
