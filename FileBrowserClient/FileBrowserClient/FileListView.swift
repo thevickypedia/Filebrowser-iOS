@@ -17,7 +17,6 @@ enum SortOption {
 struct DownloadQueueItem: Identifiable {
     let id = UUID()
     let file: FileItem
-    let showSave: Bool
 }
 
 struct FileListView: View {
@@ -1335,14 +1334,7 @@ struct FileListView: View {
 
     // Call this to queue a single file for download from FileListView
     private func enqueueDownload(file: FileItem) {
-        var saveToPhotosFlag = false
-        // file.extension: ".mp4" || FileURL: "mp4"
-        let ext = file.extension ?? URL(fileURLWithPath: file.name).pathExtension
-        let utType = UTType(filenameExtension: ext) ?? UTType.data
-        if utType.conforms(to: .image) || utType.identifier == "com.compuserve.gif" || utType.conforms(to: .movie) {
-            saveToPhotosFlag = true
-        }
-        let item = DownloadQueueItem(file: file, showSave: saveToPhotosFlag)
+        let item = DownloadQueueItem(file: file)
         downloadQueue.append(item)
         showDownload = true
         // start if idle
@@ -1404,45 +1396,37 @@ struct FileListView: View {
                     switch result {
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
-                        if item.showSave {
-                            let ext = localURL.pathExtension.lowercased()
-                            if let ut = UTType(filenameExtension: ext),
-                               ut.conforms(to: .image) || ut.conforms(to: .movie) || ext == "gif" {
-                                // Save to Photos
-                                saveToPhotos(localURL) { success, error in
-                                    if success {
-                                        statusMessage = StatusPayload(
-                                            text: "📸 Saved to Photos: \(file.name)",
-                                            color: .green,
-                                            duration: 2
-                                        )
-                                    } else {
-                                        self.errorMessage = error?.localizedDescription ?? "Failed to save to Photos"
-                                    }
-                                    try? FileManager.default.removeItem(at: localURL)
-                                }
-                            } else {
-                                // Save to Files
-                                if let savedURL = saveToFiles(localURL, fileName: file.name) {
+                        // TODO: Strip . from file.extension and get remove reference to pathExtension
+                        // file.extension: ".mp4" || FileURL: "mp4"
+                        let ext = localURL.pathExtension.lowercased()
+                        if let ut = UTType(filenameExtension: ext),
+                           ut.conforms(to: .image) || ut.conforms(to: .movie) || ext == "gif" {
+                            // Save to Photos
+                            saveToPhotos(fileURL: localURL, fileType: ut) { success, error in
+                                if success {
                                     statusMessage = StatusPayload(
-                                        text: "📂 Saved to Files: \(file.name)",
+                                        text: "📸 Saved to Photos: \(file.name)",
                                         color: .green,
                                         duration: 2
                                     )
-                                    Log.debug("Saved file at: \(savedURL)")
                                 } else {
-                                    self.errorMessage = "Failed to save file: \(file.name)"
+                                    self.errorMessage = error?.localizedDescription ?? "Failed to save to Photos"
                                 }
                                 try? FileManager.default.removeItem(at: localURL)
                             }
                         } else {
-                            // just cleanup temp
+                            // Save to Files
+                            if let savedURL = saveToFiles(fileURL: localURL, fileName: file.name) {
+                                statusMessage = StatusPayload(
+                                    text: "📂 Saved to Files: \(file.name)",
+                                    color: .green,
+                                    duration: 2
+                                )
+                                Log.debug("Saved file at: \(savedURL)")
+                            } else {
+                                self.errorMessage = "Failed to save file: \(file.name)"
+                            }
                             try? FileManager.default.removeItem(at: localURL)
-                            statusMessage = StatusPayload(
-                                text: "✅ Downloaded: \(file.name)",
-                                color: .green,
-                                duration: 2
-                            )
                         }
                     case .failure(let err):
                         Log.error("❌ Download failed: \(err.localizedDescription)")
@@ -1470,66 +1454,8 @@ struct FileListView: View {
         currentDownloadTaskID = taskID
     }
 
-    private func presentActivityController(with fileURL: URL, suggestedName: String? = nil) {
-        var activityItems: [Any] = [fileURL]
-
-        if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .image) {
-            if let image = UIImage(data: (try? Data(contentsOf: fileURL)) ?? Data()) {
-                activityItems = [image]
-            }
-        } else if let ut = UTType(filenameExtension: fileURL.pathExtension), ut.conforms(to: .movie) {
-            activityItems = [fileURL]
-        } else if fileURL.pathExtension.lowercased() == "gif" {
-            activityItems = [fileURL]
-        }
-
-        let activityVC = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-        activityVC.completionWithItemsHandler = { _, completed, _, error in
-            // FIXME: Currently the temp file gets deleted regardless
-            // TODO: Implement automatic download to Photos and Files app
-            // TODO: Implement caching mechanism (if download fails - or may be always)
-            // Remove temp file regardless
-            try? FileManager.default.removeItem(at: fileURL)
-            if completed {
-                statusMessage = StatusPayload(text: "📤 Saved: \(suggestedName ?? fileURL.lastPathComponent)", color: .green, duration: 2)
-            } else if let err = error {
-                self.errorMessage = err.localizedDescription
-            }
-            self.isDownloading = false
-        }
-
-        DispatchQueue.main.async {
-            let foregroundScene = UIApplication.shared.connectedScenes
-                .first { $0.activationState == .foregroundActive } as? UIWindowScene
-
-            var rootVC: UIViewController?
-            if let scene = foregroundScene {
-                rootVC = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController
-                        ?? scene.windows.first?.rootViewController
-            }
-            if rootVC == nil {
-                if let anyScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                    rootVC = anyScene.windows.first?.rootViewController
-                }
-            }
-
-            if let root = rootVC {
-                if let pop = activityVC.popoverPresentationController {
-                    pop.sourceView = root.view
-                    pop.sourceRect = CGRect(x: root.view.bounds.midX, y: root.view.bounds.midY, width: 1, height: 1)
-                    pop.permittedArrowDirections = []
-                }
-                root.present(activityVC, animated: true, completion: nil)
-            } else {
-                self.errorMessage = "Unable to present share sheet"
-                try? FileManager.default.removeItem(at: fileURL)
-                self.isDownloading = false
-            }
-        }
-    }
-
     // MARK: - Save Media to Photos
-    private func saveToPhotos(_ fileURL: URL, completion: @escaping (Bool, Error?) -> Void) {
+    private func saveToPhotos(fileURL: URL, fileType: UTType, completion: @escaping (Bool, Error?) -> Void) {
         // Ask only for add permission, not read
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             guard status == .authorized || status == .limited else {
@@ -1541,10 +1467,14 @@ struct FileListView: View {
             }
 
             PHPhotoLibrary.shared().performChanges({
-                if UTType(filenameExtension: fileURL.pathExtension)?.conforms(to: .image) == true {
+                if fileType.conforms(to: .image) {
+                    Log.trace("Storing \(fileURL.lastPathComponent) as an image")
                     PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
-                } else if UTType(filenameExtension: fileURL.pathExtension)?.conforms(to: .movie) == true {
+                } else if fileType.conforms(to: .movie) {
+                    Log.trace("Storing \(fileURL.lastPathComponent) as a video")
                     PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
+                } else {
+                    Log.warn("Unknown file type: \(fileType) - \(fileURL)")
                 }
             }) { success, error in
                 DispatchQueue.main.async { completion(success, error) }
@@ -1553,7 +1483,7 @@ struct FileListView: View {
     }
 
     // MARK: - Save Non-Media Files to Files App
-    func saveToFiles(_ fileURL: URL, fileName: String) -> URL? {
+    func saveToFiles(fileURL: URL, fileName: String) -> URL? {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let dest = docs.appendingPathComponent(fileName)
 
