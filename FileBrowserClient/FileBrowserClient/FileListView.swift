@@ -5,6 +5,7 @@
 //  Created by Vignesh Rao on 7/6/25.
 //
 
+import Photos
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -1333,8 +1334,15 @@ struct FileListView: View {
     }
 
     // Call this to queue a single file for download from FileListView
-    private func enqueueDownload(file: FileItem, saveToPhotos: Bool = false) {
-        let item = DownloadQueueItem(file: file, showSave: saveToPhotos)
+    private func enqueueDownload(file: FileItem) {
+        var saveToPhotosFlag = false
+        // file.extension: ".mp4" || FileURL: "mp4"
+        let ext = file.extension ?? URL(fileURLWithPath: file.name).pathExtension
+        let utType = UTType(filenameExtension: ext) ?? UTType.data
+        if utType.conforms(to: .image) || utType.identifier == "com.compuserve.gif" || utType.conforms(to: .movie) {
+            saveToPhotosFlag = true
+        }
+        let item = DownloadQueueItem(file: file, showSave: saveToPhotosFlag)
         downloadQueue.append(item)
         showDownload = true
         // start if idle
@@ -1396,13 +1404,45 @@ struct FileListView: View {
                     switch result {
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
-                        // If showSave is true, present share/save sheet
                         if item.showSave {
-                            presentActivityController(with: localURL, suggestedName: file.name)
+                            let ext = localURL.pathExtension.lowercased()
+                            if let ut = UTType(filenameExtension: ext),
+                               ut.conforms(to: .image) || ut.conforms(to: .movie) || ext == "gif" {
+                                // Save to Photos
+                                saveToPhotos(localURL) { success, error in
+                                    if success {
+                                        statusMessage = StatusPayload(
+                                            text: "📸 Saved to Photos: \(file.name)",
+                                            color: .green,
+                                            duration: 2
+                                        )
+                                    } else {
+                                        self.errorMessage = error?.localizedDescription ?? "Failed to save to Photos"
+                                    }
+                                    try? FileManager.default.removeItem(at: localURL)
+                                }
+                            } else {
+                                // Save to Files
+                                if let savedURL = saveToFiles(localURL, fileName: file.name) {
+                                    statusMessage = StatusPayload(
+                                        text: "📂 Saved to Files: \(file.name)",
+                                        color: .green,
+                                        duration: 2
+                                    )
+                                    Log.debug("Saved file at: \(savedURL)")
+                                } else {
+                                    self.errorMessage = "Failed to save file: \(file.name)"
+                                }
+                                try? FileManager.default.removeItem(at: localURL)
+                            }
                         } else {
-                            // otherwise remove temp file after brief success toast
+                            // just cleanup temp
                             try? FileManager.default.removeItem(at: localURL)
-                            statusMessage = StatusPayload(text: "✅ Downloaded: \(file.name)", color: .green, duration: 2)
+                            statusMessage = StatusPayload(
+                                text: "✅ Downloaded: \(file.name)",
+                                color: .green,
+                                duration: 2
+                            )
                         }
                     case .failure(let err):
                         Log.error("❌ Download failed: \(err.localizedDescription)")
@@ -1485,6 +1525,47 @@ struct FileListView: View {
                 try? FileManager.default.removeItem(at: fileURL)
                 self.isDownloading = false
             }
+        }
+    }
+
+    // MARK: - Save Media to Photos
+    private func saveToPhotos(_ fileURL: URL, completion: @escaping (Bool, Error?) -> Void) {
+        // Ask only for add permission, not read
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            guard status == .authorized || status == .limited else {
+                completion(false, NSError(
+                    domain: "PhotoLibrary", code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Photo Library add access denied"]
+                ))
+                return
+            }
+
+            PHPhotoLibrary.shared().performChanges({
+                if UTType(filenameExtension: fileURL.pathExtension)?.conforms(to: .image) == true {
+                    PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
+                } else if UTType(filenameExtension: fileURL.pathExtension)?.conforms(to: .movie) == true {
+                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
+                }
+            }) { success, error in
+                DispatchQueue.main.async { completion(success, error) }
+            }
+        }
+    }
+
+    // MARK: - Save Non-Media Files to Files App
+    func saveToFiles(_ fileURL: URL, fileName: String) -> URL? {
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let dest = docs.appendingPathComponent(fileName)
+
+        // remove existing file if overwriting
+        try? FileManager.default.removeItem(at: dest)
+
+        do {
+            try FileManager.default.copyItem(at: fileURL, to: dest)
+            return dest
+        } catch {
+            Log.error("❌ Failed to save to Files: \(error.localizedDescription)")
+            return nil
         }
     }
 
