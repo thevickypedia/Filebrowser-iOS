@@ -29,8 +29,8 @@ final class DownloadManager: NSObject, URLSessionDownloadDelegate {
                   progress: @escaping (Int64, Int64, Int64) -> Void,
                   completion: @escaping (Result<URL, Error>) -> Void) -> UUID {
         var req = URLRequest(url: url)
-        if let t = token {
-            req.setValue(t, forHTTPHeaderField: "X-Auth")
+        if let authToken = token {
+            req.setValue(authToken, forHTTPHeaderField: "X-Auth")
         }
         let task = session.downloadTask(with: req)
         records[id] = (task: task, progress: progress, completion: completion)
