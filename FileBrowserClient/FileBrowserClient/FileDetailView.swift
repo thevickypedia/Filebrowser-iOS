@@ -591,42 +591,54 @@ struct FileDetailView: View {
 
         let activityVC = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
 
-        // iPad popover safe setup
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = scene.windows.first?.rootViewController {
-            activityVC.completionWithItemsHandler = { _, completed, _, error in
-                // Remove temp file regardless
-                try? FileManager.default.removeItem(at: fileURL)
-                if completed {
-                    statusMessage = StatusPayload(
-                        text: "📤 Shared/Saved: \(file.name)",
-                        color: .green,
-                        duration: 2
-                    )
-                } else if let err = error {
-                    self.error = err.localizedDescription
-                }
-                self.isDownloading = false
+        activityVC.completionWithItemsHandler = { _, completed, _, error in
+            // Remove temp file regardless
+            try? FileManager.default.removeItem(at: fileURL)
+            if completed {
+                statusMessage = StatusPayload(
+                    text: "📤 Shared/Saved: \(file.name)",
+                    color: .green,
+                    duration: 2
+                )
+            } else if let err = error {
+                self.error = err.localizedDescription
+            }
+            self.isDownloading = false
+        }
+
+        // Present safely using UIWindowScene (non-deprecated)
+        DispatchQueue.main.async {
+            // Prefer the active/foreground scene
+            let foregroundScene = UIApplication.shared.connectedScenes
+                .first { $0.activationState == .foregroundActive } as? UIWindowScene
+
+            // Try to find the key window for that scene (preferred), otherwise any window
+            var rootVC: UIViewController?
+            if let scene = foregroundScene {
+                rootVC = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController
+                        ?? scene.windows.first?.rootViewController
             }
 
-            // popover anchor on iPad
-            if let pop = activityVC.popoverPresentationController {
-                pop.sourceView = rootVC.view
-                pop.sourceRect = CGRect(x: rootVC.view.bounds.midX, y: rootVC.view.bounds.midY, width: 1, height: 1)
-                pop.permittedArrowDirections = []
-            }
-            rootVC.present(activityVC, animated: true, completion: nil)
-        } else {
-            // fallback: present on main window root VC if available
-            DispatchQueue.main.async {
-                if let root = UIApplication.shared.windows.first?.rootViewController {
-                    root.present(activityVC, animated: true, completion: nil)
-                } else {
-                    // final fallback: show error
-                    self.error = "Unable to present share sheet"
-                    try? FileManager.default.removeItem(at: fileURL)
-                    self.isDownloading = false
+            // As a last resort, try any scene's first window
+            if rootVC == nil {
+                if let anyScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                    rootVC = anyScene.windows.first?.rootViewController
                 }
+            }
+
+            if let root = rootVC {
+                // popover anchor on iPad
+                if let pop = activityVC.popoverPresentationController {
+                    pop.sourceView = root.view
+                    pop.sourceRect = CGRect(x: root.view.bounds.midX, y: root.view.bounds.midY, width: 1, height: 1)
+                    pop.permittedArrowDirections = []
+                }
+                root.present(activityVC, animated: true, completion: nil)
+            } else {
+                // final fallback: show error and cleanup
+                self.error = "Unable to present share sheet"
+                try? FileManager.default.removeItem(at: fileURL)
+                self.isDownloading = false
             }
         }
     }
