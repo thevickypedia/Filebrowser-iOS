@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.38.0 (09/15/2025)
+--------------------
+- [2928bc6](https://github.com/thevickypedia/Filebrowser-iOS/commit/2928bc61527c5784d945c7ecc1fa7b27d86218ce) chore: Release ``v1.38.0``
+- [caeff97](https://github.com/thevickypedia/Filebrowser-iOS/commit/caeff976312ae32487f3b77fa20c5efd819c2587) perf: Remove deprecated windows function usage
+- [9f94c91](https://github.com/thevickypedia/Filebrowser-iOS/commit/9f94c91b52a5d4f3d603e30ffd3ab512c69fc936) feat: Add a new feature to save images/videos to photos app
+- [1cf0e48](https://github.com/thevickypedia/Filebrowser-iOS/commit/1cf0e486e25971da98e8c76fca2263bdbf6f6f54) chore: Update release notes for v1.37.2
+
 v1.37.2 (09/11/2025)
 --------------------
 - [dda2356](https://github.com/thevickypedia/Filebrowser-iOS/commit/dda23564dad2535229087448e01152cb504a1b3d) chore: Release ``v1.37.2``
