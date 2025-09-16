@@ -9,18 +9,19 @@ import Foundation
 import LocalAuthentication
 import Security
 
+struct StoredSession: Encodable, Decodable {
+    let token: String
+    let username: String
+    let serverURL: String
+    let transitProtection: Bool
+    let password: String?
+}
+
 enum KeychainHelper {
     static let key = "savedSession"
     static let knownServersKey = "knownServers"
-    static func saveSession(token: String, username: String, serverURL: String, password: String? = nil) {
-        var session: [String: String] = [
-            "token": token,
-            "username": username,
-            "serverURL": serverURL
-        ]
-        if let password = password {
-            session["password"] = password
-        }
+
+    static func saveSession(session: StoredSession) {
         if let data = try? JSONEncoder().encode(session) {
             let query: [String: Any] = [
                 kSecClass as String: kSecClassGenericPassword,
@@ -33,7 +34,7 @@ enum KeychainHelper {
         }
     }
 
-    static func loadSession() -> [String: String]? {
+    static func loadSession() -> StoredSession? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,
@@ -44,7 +45,7 @@ enum KeychainHelper {
         let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
         guard status == errSecSuccess,
               let data = dataTypeRef as? Data,
-              let session = try? JSONDecoder().decode([String: String].self, from: data) else {
+              let session = try? JSONDecoder().decode(StoredSession.self, from: data) else {
             return nil
         }
         return session

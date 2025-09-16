@@ -85,7 +85,6 @@ struct ContentView: View {
         }
     }
 
-    // FIXME: loadSession is being called redundantly
     var loginView: some View {
         VStack(spacing: 20) {
             Image("logo")
@@ -109,15 +108,15 @@ struct ContentView: View {
 
             if useFaceID,
                let existingSession = KeychainHelper.loadSession(),
-               existingSession["serverURL"] == serverURL {
+               existingSession.serverURL == serverURL {
                 // Face ID mode with saved session
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
                 Button(action: {
-                    biometricSignIn()
+                    biometricSignIn(session: existingSession)
                 }) {
-                    let username = existingSession["username"]
-                    let labelText = (username?.isEmpty == false) ? "Login as \(username!)" : "Login with FaceID"
+                    let username = existingSession.username
+                    let labelText = (username.isEmpty == false) ? "Login as \(username)" : "Login with FaceID"
                     Label(labelText, systemImage: "faceid")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -237,9 +236,7 @@ struct ContentView: View {
         .padding()
         .onAppear {
             knownServers = KeychainHelper.loadKnownServers()
-            if let session = KeychainHelper.loadSession(), let lastLoggedInURL = session["serverURL"] {
-                serverURL = lastLoggedInURL
-            } else if !knownServers.isEmpty {
+            if !knownServers.isEmpty {
                 serverURL = knownServers.first ?? ""
             }
         }
@@ -396,10 +393,14 @@ struct ContentView: View {
 
                         if rememberMe || useFaceID {
                             KeychainHelper.saveSession(
-                                token: jwt,
-                                username: username,
-                                serverURL: serverURL,
-                                password: useFaceID ? password : nil
+                                session: StoredSession(
+                                    token: jwt,
+                                    username: username,
+                                    serverURL: serverURL,
+                                    transitProtection: transitProtection,
+                                    // MARK: Store password only when FaceID is enabled
+                                    password: useFaceID ? password : nil
+                                )
                             )
                         } else {
                             // ensure any existing saved session is removed when the user opts out
@@ -426,16 +427,13 @@ struct ContentView: View {
         Log.info("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))")
     }
 
-    func reauth() {
-        if let session = KeychainHelper.loadSession(),
-           let savedUsername = session["username"],
-           let savedServerURL = session["serverURL"],
-           let savedPassword = session["password"],
-           savedServerURL == self.serverURL {
+    func reauth(_ session: StoredSession) {
+        if let sessionPassword = session.password,
+           session.serverURL == self.serverURL {
             DispatchQueue.main.async {
-                self.serverURL = savedServerURL
-                self.username = savedUsername
-                self.password = savedPassword
+                self.username = session.username
+                self.password = sessionPassword
+                self.transitProtection = session.transitProtection
                 // Reuse the normal login flow
                 Task {
                     await login()
@@ -448,17 +446,13 @@ struct ContentView: View {
         }
     }
 
-    func biometricSignIn() {
+    func biometricSignIn(session: StoredSession) {
         // Force remembering username whenever FaceID is toggled
         rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
             Task {
                 guard success,
-                      let session = KeychainHelper.loadSession(),
-                      let token = session["token"],
-                      let username = session["username"],
-                      let serverURL = session["serverURL"],
-                      serverURL == self.serverURL
+                      session.serverURL == self.serverURL
                 else {
                     DispatchQueue.main.async {
                         useFaceID = false // fallback to manual login
@@ -467,7 +461,7 @@ struct ContentView: View {
                 }
 
                 // Decode JWT to check expiration
-                guard let tokenPayload = decodeJWT(jwt: token) else {
+                guard let tokenPayload = decodeJWT(jwt: session.token) else {
                     errorMessage = "❌ Failed to decode server token"
                     return
                 }
@@ -475,11 +469,11 @@ struct ContentView: View {
                 if now >= tokenPayload.exp {
                     // TODO: Fails to re-auth when re-installed (transitProtection must be stored)
                     Log.info("🔑 Token expired — refreshing via stored credentials.")
-                    if let password = session["password"] {
+                    if let sessionPassword = session.password {
                         DispatchQueue.main.async {
-                            self.serverURL = serverURL
-                            self.username = username
-                            self.password = password
+                            self.serverURL = session.serverURL
+                            self.username = session.username
+                            self.password = sessionPassword
                             // Reuse the normal login flow
                             Task {
                                 await login()
@@ -496,31 +490,31 @@ struct ContentView: View {
 
                 // Token still valid — just use it
                 // MARK: Set auth params
-                auth.token = token
-                auth.username = username
-                auth.serverURL = serverURL
+                auth.token = session.token
+                auth.username = session.username
+                auth.serverURL = session.serverURL
                 auth.tokenPayload = tokenPayload
-                if let payload = decodeJWT(jwt: token) {
+                if let payload = decodeJWT(jwt: session.token) {
                     auth.tokenPayload = payload
                     logTokenInfo()
                 } else {
                     Log.error("Failed to decode JWT")
                 }
 
-                if let err = await auth.serverHandShake(for: String(tokenPayload.user.id), token: token, serverURL: serverURL) {
+                if let err = await auth.serverHandShake(for: String(tokenPayload.user.id), token: session.token, serverURL: session.serverURL) {
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
                         if ["401"].contains(err) {
                             // This indicates a server restart
                             Log.warn("FaceID passed, but session validation failed.")
-                            reauth()
+                            reauth(session)
                         } else {
                             errorMessage = err
                         }
                     }
                     return
                 }
-                fileListViewModel.configure(token: token, serverURL: serverURL)
+                fileListViewModel.configure(token: session.token, serverURL: session.serverURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true
                     statusMessage = "✅ Face ID login successful!"
