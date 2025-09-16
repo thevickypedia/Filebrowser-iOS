@@ -50,7 +50,7 @@ struct FileListView: View {
     @State private var showDownload = false
     @State private var sheetPathStack: [FileItem] = []
 
-    // TODO: Group upload/download together
+    // Download vars
     @State private var downloadQueue: [DownloadQueueItem] = []
     @State private var currentDownloadIndex = 0
     @State private var downloadProgress: Double = 0.0
@@ -62,17 +62,25 @@ struct FileListView: View {
     @State private var currentDownloadTaskID: UUID?
     @State private var isDownloadCancelled = false
 
-    @State private var showFileImporter = false
-    @State private var showPhotoPicker = false
-
+    // Upload vars
     @State private var uploadQueue: [URL] = []
     @State private var currentUploadIndex = 0
     @State private var uploadProgress: Double = 0.0
     @State private var uploadProgressPct: Int = 0
-
-    // This is a required redundancy since the combination is used to show preparation stage
     @State private var isUploading = false
+    @State private var currentUploadFile: String?
+    @State private var currentUploadFileSize: String?
+    @State private var currentUploadedFileSize: String?
+    @State private var isUploadCancelled = false
+
+    // Upload extra vars
     @State private var isPreparingUpload = false
+    @State private var uploadTask: URLSessionUploadTask?
+    @State private var currentUploadSpeed: Double = 0.0
+    @State private var currentUploadFileIcon: String?
+
+    @State private var showFileImporter = false
+    @State private var showPhotoPicker = false
 
     @State private var showDeleteOptionsSS = false
     @State private var showDeleteConfirmationSS = false
@@ -80,14 +88,6 @@ struct FileListView: View {
 
     @State private var knownServers: [String] = KeychainHelper.loadKnownServers()
     @State private var showDeleteOptionsKS = false
-
-    @State private var uploadTask: URLSessionUploadTask?
-    @State private var isUploadCancelled = false
-    @State private var currentUploadSpeed: Double = 0.0
-    @State private var currentUploadFile: String?
-    @State private var currentUploadFileIcon: String?
-    @State private var currentUploadFileSize: String?
-    @State private var currentUploadedFileSize: String?
 
     @State private var usageInfo: (used: Int64, total: Int64)?
     @State private var fileCacheSize: Int64 = 0
@@ -175,8 +175,6 @@ struct FileListView: View {
         self.token = token
         self.tokenPayload = tokenPayload
         self.isAuthValid = true
-        // TODO: Edge case - server hand shake passed but token was not authorized for listing
-        //  - Happened only once, but should be caught here or during debounce
         Log.info("✅ Auth validation successful")
     }
 

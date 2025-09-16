@@ -209,7 +209,6 @@ struct RemoteThumbnail: View {
         }
 
         // Step 2: Video thumbnail generation
-        // TODO: Add an advancedSettings option to load video thumbnails
         if isVideo {
             guard let videoURL = buildAPIURL(
                 base: serverURL,
