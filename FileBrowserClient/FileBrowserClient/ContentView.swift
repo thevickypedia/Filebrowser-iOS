@@ -473,6 +473,7 @@ struct ContentView: View {
                 }
                 let now = Date().timeIntervalSince1970
                 if now >= tokenPayload.exp {
+                    // TODO: Fails to re-auth when re-installed (transitProtection must be stored)
                     Log.info("🔑 Token expired — refreshing via stored credentials.")
                     if let password = session["password"] {
                         DispatchQueue.main.async {

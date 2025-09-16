@@ -698,6 +698,8 @@ struct FileListView: View {
             } message: {
                 deleteSessionMessage(includeKnownServers: removeKnownServers)
             }
+            // TODO: Capture client changes: (total uploaded/downloaded bytes)
+            // TODO: Capture server changes: (moved/copied/deleted/renamed/shared)
 
             Section(
                 footer: VStack(alignment: .leading) {
@@ -1399,19 +1401,29 @@ struct FileListView: View {
                         // TODO: Strip . from file.extension and get remove reference to pathExtension
                         // file.extension: ".mp4" || FileURL: "mp4"
                         let ext = localURL.pathExtension.lowercased()
-                        if let ut = UTType(filenameExtension: ext),
-                           ut.conforms(to: .image) || ut.conforms(to: .movie) || ext == "gif" {
+                        if let utType = UTType(filenameExtension: ext),
+                           utType.conforms(to: .image) || utType.conforms(to: .movie) || utType.identifier == "com.compuserve.gif" {
                             // Save to Photos
-                            saveToPhotos(fileURL: localURL, fileType: ut) { success, error in
+                            saveToPhotos(fileURL: localURL, fileType: utType) { success, error in
                                 if success {
                                     statusMessage = StatusPayload(
                                         text: "📸 Saved to Photos: \(file.name)",
                                         color: .green,
                                         duration: 2
                                     )
+                                    Log.info("Saved \(file.name) to Photos app")
                                 } else {
-                                    self.errorMessage = error?.localizedDescription ?? "Failed to save to Photos"
+                                    let err = "Faied to save \(file.name) to Photos"
+                                    self.errorTitle = "Save Error"
+                                    Log.error(err)
+                                    if let errorString = error?.localizedDescription {
+                                        Log.error(errorString)
+                                        self.errorMessage = errorString
+                                    } else {
+                                        self.errorMessage = "Failed to save to Photos"
+                                    }
                                 }
+                                // NOTE: Deleting outside condition block will remove the file before storing
                                 try? FileManager.default.removeItem(at: localURL)
                             }
                         } else {
@@ -1426,6 +1438,7 @@ struct FileListView: View {
                             } else {
                                 self.errorMessage = "Failed to save file: \(file.name)"
                             }
+                            // NOTE: Deleting outside condition block will remove the file before storing
                             try? FileManager.default.removeItem(at: localURL)
                         }
                     case .failure(let err):
@@ -1459,6 +1472,7 @@ struct FileListView: View {
         // Ask only for add permission, not read
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             guard status == .authorized || status == .limited else {
+                Log.warn("Photo Library add access denied")
                 completion(false, NSError(
                     domain: "PhotoLibrary", code: 1,
                     userInfo: [NSLocalizedDescriptionKey: "Photo Library add access denied"]
