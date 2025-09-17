@@ -379,12 +379,6 @@ struct ContentView: View {
                         auth.username = username
                         auth.serverURL = serverURL
                         auth.tokenPayload = payload
-                        // Wait for permissions to finish (to load userAccount)
-                        // TODO: Can run in background or doesn't need to
-                        if let err = await auth.serverHandShake(for: String(payload.user.id), token: jwt, serverURL: serverURL) {
-                            errorMessage = err
-                            return
-                        }
 
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
@@ -467,7 +461,6 @@ struct ContentView: View {
                 }
                 let now = Date().timeIntervalSince1970
                 if now >= tokenPayload.exp {
-                    // TODO: Fails to re-auth when re-installed (transitProtection must be stored)
                     Log.info("🔑 Token expired — refreshing via stored credentials.")
                     if let sessionPassword = session.password {
                         DispatchQueue.main.async {
