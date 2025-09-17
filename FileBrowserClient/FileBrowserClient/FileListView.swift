@@ -63,6 +63,7 @@ struct FileListView: View {
     @State private var isDownloadCancelled = false
     @State private var currentDownloadSpeed: Double = 0.0
     @State private var currentDownloadFileIcon: String?
+    @State private var downloadSpeedUpdateInterval: Double = 0.1
 
     // Upload vars
     @State private var uploadQueue: [URL] = []
@@ -1392,18 +1393,27 @@ struct FileListView: View {
             return
         }
 
-        // Variable to track download speed
+        // Variables to track download speed
         var downloadStartTime = Date()
+        var bytesDownloadedSinceLastUpdate: Int64 = 0
+
+        // Timer to update the speed every second
+        var speedUpdateTimer: Timer?
 
         // Kick off the download via DownloadManager
         let taskID = DownloadManager.shared.download(from: url, token: token,
             progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
                 DispatchQueue.main.async {
-                    Log.trace("Download progress: \(bytesWritten) / \(totalBytesWritten) of \(totalBytesExpected)")
-                    // Calculate download speed
+                    // Accumulate bytes downloaded
+                    bytesDownloadedSinceLastUpdate += bytesWritten
+                    // Calculate download speed every second
                     let elapsed = Date().timeIntervalSince(downloadStartTime)
-                    if elapsed > 0 {
-                        currentDownloadSpeed = Double(bytesWritten) / elapsed / (1024 * 1024)
+                    if elapsed >= downloadSpeedUpdateInterval {
+                        let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
+                        currentDownloadSpeed = downloadSpeed
+                        // Reset counters for the next period
+                        downloadStartTime = Date()
+                        bytesDownloadedSinceLastUpdate = 0
                     }
                     // Update progress
                     guard totalBytesExpected > 0 else {
@@ -1417,13 +1427,12 @@ struct FileListView: View {
                     // Optional size strings
                     self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
                     self.currentDownloadFileSize = formatBytes(totalBytesExpected)
-
-                    // Update the start time for the next chunk
-                    downloadStartTime = Date()
                 }
             },
             completion: { result in
                 DispatchQueue.main.async {
+                    // Invalidate the timer once the download is complete
+                    speedUpdateTimer?.invalidate()
                     switch result {
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
@@ -1494,6 +1503,7 @@ struct FileListView: View {
 
         // Store task ID so it can be cancelled
         currentDownloadTaskID = taskID
+        speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: downloadSpeedUpdateInterval, repeats: true) { _ in }
     }
 
     // MARK: - Save Media to Photos
