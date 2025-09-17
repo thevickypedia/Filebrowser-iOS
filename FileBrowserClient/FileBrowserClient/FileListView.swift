@@ -1436,7 +1436,6 @@ struct FileListView: View {
                     switch result {
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
-                        // TODO: Strip . from file.extension and get remove reference to pathExtension
                         // file.extension: ".mp4" || FileURL: "mp4"
                         let ext = localURL.pathExtension.lowercased()
                         if let utType = UTType(filenameExtension: ext),

@@ -489,7 +489,7 @@ struct FileDetailView: View {
             do {
                 try content.write(to: tempURL, options: .atomic)
 
-                // Determine type using UTType (TODO: may be just use ExtensionTypes?)
+                // Determine type using UTType
                 let ext = tempURL.pathExtension
                 let utType = UTType(filenameExtension: ext) ?? UTType.data
 
