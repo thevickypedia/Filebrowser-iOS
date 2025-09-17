@@ -14,10 +14,6 @@ struct Constants {
     // RemoteThumbnail: Maximum number of thumbnails to render
     static var maxConcurrentThumbnailRender: Int = 4
 
-    // FileListView: Time (in secs) to display the preparing uploading spinner
-    // TODO: Find a better way to implement this (look into PhotoPicker module)
-    static var preparingUploadResetDuration: Int = 10
-
     // MediaPlayerView: Minimum duration (in secs) of a video to be considered resume worthy
     static var minMediaResumePrompt: Double = 60.0
 

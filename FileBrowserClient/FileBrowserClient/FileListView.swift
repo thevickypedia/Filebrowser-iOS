@@ -24,6 +24,7 @@ struct FileListView: View {
     @EnvironmentObject var viewModel: FileListViewModel
     @State private var progressObserver: NSObjectProtocol?
     @EnvironmentObject var themeManager: ThemeManager
+    @StateObject private var photoPickerStatus = PhotoPickerStatus()
 
     @Environment(\.dismiss) private var dismiss
 
@@ -78,7 +79,6 @@ struct FileListView: View {
     @State private var currentUploadFileIcon: String?
 
     // Upload extra vars
-    @State private var isPreparingUpload = false
     @State private var uploadTask: URLSessionUploadTask?
 
     @State private var showFileImporter = false
@@ -428,11 +428,9 @@ struct FileListView: View {
             Menu("Upload File", systemImage: "square.and.arrow.up") {
                 Button("From Files", systemImage: Icons.doc, action: {
                     showFileImporter = true
-                    showPrepareUpload()
                 })
                 Button("From Photos", systemImage: "photo", action: {
                     showPhotoPicker = true
-                    showPrepareUpload()
                 })
             }
         } label: {
@@ -1095,7 +1093,7 @@ struct FileListView: View {
                     searchingStack
                     searchListView(for: viewModel.searchResults)
                 } else {
-                    if isPreparingUpload {
+                    if photoPickerStatus.isPreparingUpload {
                         preparingUploadStack
                     }
                     if isUploading {
@@ -1318,11 +1316,10 @@ struct FileListView: View {
             showSettingsSheet
         }
         .sheet(isPresented: $showPhotoPicker) {
-            PhotoPicker { urls in
-                uploadQueue = urls
-                currentUploadIndex = 0
-                uploadNextInQueue()
-            }
+            PhotoPicker(
+                photoPickerStatus: photoPickerStatus,
+                onFilesPicked: handlePickedFiles
+            )
         }
         .fileImporter(
             isPresented: $showFileImporter,
@@ -1346,6 +1343,12 @@ struct FileListView: View {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
             }
         }
+    }
+
+    private func handlePickedFiles(_ urls: [URL]) {
+        uploadQueue = urls
+        currentUploadIndex = 0
+        uploadNextInQueue()
     }
 
     // Call this to queue a single file for download from FileListView
@@ -1922,24 +1925,6 @@ struct FileListView: View {
         }
     }
 
-    func showPrepareUpload() {
-        // MARK: Force isPreparingUpload flag after a static timeout
-        // There is no real way to detect a cancel even from file importer or photo picker
-        // This is to make sure "preparing to upload" banner is not shown forever
-        isPreparingUpload = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.preparingUploadResetDuration)) {
-            if isPreparingUpload {
-                isPreparingUpload = false
-                Log.debug("Time's up! Forcing isPreparingUpload flag to false")
-                statusMessage = StatusPayload(
-                    text: "⚠️ Getting things ready... Upload will follow if files were selected.",
-                    color: .yellow,
-                    duration: 5
-                )
-            }
-        }
-    }
-
     private func getNavigationTitle() -> String {
         // Use currentDisplayPath instead of pathStack for immediate updates
         if currentDisplayPath == "/" || currentDisplayPath.isEmpty {
@@ -2222,7 +2207,6 @@ struct FileListView: View {
         }
 
         isUploading = true
-        isPreparingUpload = false
         isUploadCancelled = false
         uploadProgress = 0.0
         let fileURL = uploadQueue[currentUploadIndex]
