@@ -39,7 +39,7 @@ class FileCache {
         DispatchQueue.global(qos: .utility).sync {
             result = try? Data(contentsOf: diskPath, options: .mappedIfSafe)
             if result != nil {
-                Log.debug("Cache retrieved: \(diskPath)")
+                Log.trace("Cache retrieved: \(diskPath)")
             }
         }
         return result
@@ -50,7 +50,7 @@ class FileCache {
         let diskPath = diskCacheURL.appendingPathComponent(key)
         DispatchQueue.global(qos: .utility).async {
             if (try? data.write(to: diskPath)) != nil {
-                Log.debug("Cache stored: \(diskPath)")
+                Log.trace("Cache stored: \(diskPath)")
             }
         }
     }
