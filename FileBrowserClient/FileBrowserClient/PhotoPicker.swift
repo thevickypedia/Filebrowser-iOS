@@ -58,6 +58,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
             // TODO: Instead of append and return - use yield so each file can be uploaded as it is written to temp
             var tempURLs: [URL] = []
+            let tempURLsQueue = DispatchQueue(label: "tempURLsQueue")
             let dispatchGroup = DispatchGroup()
 
             for result in results {
@@ -78,9 +79,10 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                        // TODO: Use DispatchQueue to avoid potential race condition
                         if let url = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                            tempURLs.append(url)
+                            tempURLsQueue.async {
+                                tempURLs.append(url)
+                            }
                         }
                         Log.debug("End: Writing \(suggestedName) to temporary location")
                     }
@@ -97,9 +99,10 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                        // TODO: Use DispatchQueue to avoid potential race condition
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                            tempURLs.append(temp)
+                            tempURLsQueue.async {
+                                tempURLs.append(temp)
+                            }
                         }
                         Log.debug("End: Writing \(suggestedName) to temporary location")
                     }
