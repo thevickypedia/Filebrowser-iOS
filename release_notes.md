@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.39.2 (09/17/2025)
+--------------------
+- [6587ae4](https://github.com/thevickypedia/Filebrowser-iOS/commit/6587ae47fb7d0672d98c4dac5d14f69f8a9fccc0) chore: Release ``v1.39.2``
+- [5a4a5f4](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a4a5f4d99313ea1c6f6d16e1af67badc9bedc05) refactor: Move all hard-coded controls to ``Constants`` module
+- [bcb1a00](https://github.com/thevickypedia/Filebrowser-iOS/commit/bcb1a006a18494aeef2902d7a34a06163632e6c5) perf: Show media resume option sheet only when duration is > 60s
+- [b640f31](https://github.com/thevickypedia/Filebrowser-iOS/commit/b640f31f4477f9faf736544ae91c9810da984d17) refactor: Remove unworthy todo(s)
+- [04cfae6](https://github.com/thevickypedia/Filebrowser-iOS/commit/04cfae6f48e17515b784ba357baab35d0fba76e4) perf: Remove redundant server hand-shake after recent auth
+- [a550d47](https://github.com/thevickypedia/Filebrowser-iOS/commit/a550d47f942b0d2ab90d84c2e3164a429fc1dd6e) style: Include a buffer for upload speed refresh interval
+- [90261ce](https://github.com/thevickypedia/Filebrowser-iOS/commit/90261ce9c11af0fe9c901baee1e3505b53a1b2be) perf: Display download speed and download file icon in list view
+- [7cfd960](https://github.com/thevickypedia/Filebrowser-iOS/commit/7cfd9604c2022f9a88c0c5095cc12472fb491eca) refactor: Rearrange upload and download state vars in list view module
+- [7e62039](https://github.com/thevickypedia/Filebrowser-iOS/commit/7e62039f2ee5f5c1b8c27c6e062fce6f74b0bed3) perf: Switch to type-safe session storage in Keychain and avoid redundant prefetch
+- [224a0f2](https://github.com/thevickypedia/Filebrowser-iOS/commit/224a0f2051875d976da6057fd7eb18e3d8831e02) chore: Update release notes for v1.39.1
+
 v1.39.1 (09/16/2025)
 --------------------
 - [c6e34ae](https://github.com/thevickypedia/Filebrowser-iOS/commit/c6e34aee585ba1b495f857816457b275880430c6) chore: Release ``v1.39.1``
