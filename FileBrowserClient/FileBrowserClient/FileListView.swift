@@ -61,6 +61,8 @@ struct FileListView: View {
     @State private var currentDownloadedFileSize: String?
     @State private var currentDownloadTaskID: UUID?
     @State private var isDownloadCancelled = false
+    @State private var currentDownloadSpeed: Double = 0.0
+    @State private var currentDownloadFileIcon: String?
 
     // Upload vars
     @State private var uploadQueue: [URL] = []
@@ -72,12 +74,12 @@ struct FileListView: View {
     @State private var currentUploadFileSize: String?
     @State private var currentUploadedFileSize: String?
     @State private var isUploadCancelled = false
+    @State private var currentUploadSpeed: Double = 0.0
+    @State private var currentUploadFileIcon: String?
 
     // Upload extra vars
     @State private var isPreparingUpload = false
     @State private var uploadTask: URLSessionUploadTask?
-    @State private var currentUploadSpeed: Double = 0.0
-    @State private var currentUploadFileIcon: String?
 
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
@@ -358,9 +360,10 @@ struct FileListView: View {
 
     private var downloadingStack: some View {
         VStack(alignment: .leading, spacing: 16) {
+
             // 🗂️ File Info
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "arrow.down.circle.fill")
+                Image(systemName: currentDownloadFileIcon ?? "arrow.down.circle.fill")
                     .foregroundColor(.blue)
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 4) {
@@ -381,6 +384,19 @@ struct FileListView: View {
                         .font(.caption)
                         .foregroundColor(.gray)
                     Text("\(currentDownloadIndex + 1) of \(downloadQueue.count)")
+                        .font(.body)
+                }
+            }
+
+            // 🚀 Speed
+            HStack(spacing: 12) {
+                Image(systemName: "speedometer")
+                    .foregroundColor(.green)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Speed")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                    Text(String(format: "%.2f MB/s", currentDownloadSpeed))
                         .font(.body)
                 }
             }
@@ -1362,6 +1378,9 @@ struct FileListView: View {
         downloadProgressPct = 0
         isDownloading = true
 
+        // Set the download file icon
+        currentDownloadFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
+
         // Build raw URL (same as FileDetailView)
         guard let url = buildAPIURL(
             base: serverURL,
@@ -1373,11 +1392,20 @@ struct FileListView: View {
             return
         }
 
+        // Variable to track download speed
+        var downloadStartTime = Date()
+
         // Kick off the download via DownloadManager
         let taskID = DownloadManager.shared.download(from: url, token: token,
             progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
                 DispatchQueue.main.async {
                     Log.trace("Download progress: \(bytesWritten) / \(totalBytesWritten) of \(totalBytesExpected)")
+                    // Calculate download speed
+                    let elapsed = Date().timeIntervalSince(downloadStartTime)
+                    if elapsed > 0 {
+                        currentDownloadSpeed = Double(bytesWritten) / elapsed / (1024 * 1024)
+                    }
+                    // Update progress
                     guard totalBytesExpected > 0 else {
                         self.downloadProgress = 0
                         self.downloadProgressPct = 0
@@ -1386,9 +1414,12 @@ struct FileListView: View {
                     let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
                     self.downloadProgress = prog
                     self.downloadProgressPct = Int(prog * 100)
-                    // optional size strings
+                    // Optional size strings
                     self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
                     self.currentDownloadFileSize = formatBytes(totalBytesExpected)
+
+                    // Update the start time for the next chunk
+                    downloadStartTime = Date()
                 }
             },
             completion: { result in
@@ -1411,7 +1442,7 @@ struct FileListView: View {
                                     )
                                     Log.info("Saved \(file.name) to Photos app")
                                 } else {
-                                    let err = "Faied to save \(file.name) to Photos"
+                                    let err = "Failed to save \(file.name) to Photos"
                                     self.errorTitle = "Save Error"
                                     Log.error(err)
                                     if let errorString = error?.localizedDescription {
@@ -1444,10 +1475,10 @@ struct FileListView: View {
                         self.errorMessage = "Download failed: \(err.localizedDescription)"
                     }
 
-                    // move to next item
+                    // Move to next item
                     self.currentDownloadIndex += 1
                     if self.currentDownloadIndex >= self.downloadQueue.count {
-                        // finished all
+                        // Finished all
                         self.downloadQueue.removeAll()
                         self.currentDownloadIndex = 0
                         self.isDownloading = false
@@ -1455,13 +1486,13 @@ struct FileListView: View {
                         self.showDownload = false
                         self.downloadProgress = 0
                     } else {
-                        // start next
+                        // Start next
                         self.startNextDownload()
                     }
                 }
             })
 
-        // store task id so it can be cancelled
+        // Store task ID so it can be cancelled
         currentDownloadTaskID = taskID
     }
 
