@@ -24,7 +24,8 @@ struct MediaPlayerView: View {
     // MARK: Controls:
     // 1. How frequently the timestamp should be stored for a video
     // 2. Minimum time (in secs) before a video can be considered resume-able
-    private let resumeThreshold: Double = 5.0
+    private let mediaResumeThreshold: Double = 5.0
+    private let minMediaResumePrompt: Int = 60
 
     // Display as alerts
     @State private var errorTitle: String?
@@ -302,20 +303,24 @@ struct MediaPlayerView: View {
                     let item = AVPlayerItem(asset: asset)
                     let loadedPlayer = AVPlayer(playerItem: item)
                     loadedPlayer.automaticallyWaitsToMinimizeStalling = false
-
-                    let savedTime = await PlaybackProgressStore.loadProgress(for: createHash(for: file.path))
-
-                    DispatchQueue.main.async {
-                        self.pendingPlayer = loadedPlayer
-                        self.pendingItem = item
-
-                        // MARK: Minimum # of seconds for stored video before considering resume-able
-                        if let savedTimeTmp = savedTime, savedTimeTmp > resumeThreshold {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                                self.resumePromptData = ResumePromptData(resumeTime: savedTimeTmp)
-                            }
-                        } else {
+                    if CMTimeGetSeconds(item.duration) < minMediaResumePrompt {
+                        DispatchQueue.main.async {
                             self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
+                        }
+                    } else {
+                        let savedTime = await PlaybackProgressStore.loadProgress(for: createHash(for: file.path))
+                        DispatchQueue.main.async {
+                            self.pendingPlayer = loadedPlayer
+                            self.pendingItem = item
+
+                            // MARK: Minimum # of seconds [mediaResumeThreshold] for stored video before considering resume-able
+                            if let savedTimeTmp = savedTime, savedTimeTmp > mediaResumeThreshold {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                    self.resumePromptData = ResumePromptData(resumeTime: savedTimeTmp)
+                                }
+                            } else {
+                                self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
+                            }
                         }
                     }
                 } catch {
@@ -522,8 +527,8 @@ struct MediaPlayerView: View {
 
             let currentTime = CMTimeGetSeconds(player.currentTime())
             if currentTime.isFinite && !currentTime.isNaN {
-                // MARK: Auto save progress every N (resumeThreshold) seconds
-                if lastSavedTime == 0 || currentTime - lastSavedTime >= CGFloat(resumeThreshold) {
+                // MARK: Auto save progress every N [mediaResumeThreshold] seconds
+                if lastSavedTime == 0 || currentTime - lastSavedTime >= CGFloat(mediaResumeThreshold) {
                     lastSavedTime = currentTime
                     PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
                 }
