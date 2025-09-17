@@ -21,12 +21,6 @@ struct MediaPlayerView: View {
     let token: String
     let displayFullScreen: Bool
 
-    // MARK: Controls:
-    // 1. How frequently the timestamp should be stored for a video
-    // 2. Minimum time (in secs) before a video can be considered resume-able
-    private let mediaResumeThreshold: Double = 5.0
-    private let minMediaResumePrompt: Int = 60
-
     // Display as alerts
     @State private var errorTitle: String?
     @State private var errorMessage: String?
@@ -303,7 +297,7 @@ struct MediaPlayerView: View {
                     let item = AVPlayerItem(asset: asset)
                     let loadedPlayer = AVPlayer(playerItem: item)
                     loadedPlayer.automaticallyWaitsToMinimizeStalling = false
-                    if CMTimeGetSeconds(item.duration) < minMediaResumePrompt {
+                    if CMTimeGetSeconds(item.duration) < Constants.minMediaResumePrompt {
                         DispatchQueue.main.async {
                             self.finishPlayerSetup(player: loadedPlayer, item: item, seekTo: nil)
                         }
@@ -314,7 +308,7 @@ struct MediaPlayerView: View {
                             self.pendingItem = item
 
                             // MARK: Minimum # of seconds [mediaResumeThreshold] for stored video before considering resume-able
-                            if let savedTimeTmp = savedTime, savedTimeTmp > mediaResumeThreshold {
+                            if let savedTimeTmp = savedTime, savedTimeTmp > Constants.mediaResumeThreshold {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                                     self.resumePromptData = ResumePromptData(resumeTime: savedTimeTmp)
                                 }
@@ -528,7 +522,7 @@ struct MediaPlayerView: View {
             let currentTime = CMTimeGetSeconds(player.currentTime())
             if currentTime.isFinite && !currentTime.isNaN {
                 // MARK: Auto save progress every N [mediaResumeThreshold] seconds
-                if lastSavedTime == 0 || currentTime - lastSavedTime >= CGFloat(mediaResumeThreshold) {
+                if lastSavedTime == 0 || currentTime - lastSavedTime >= CGFloat(Constants.mediaResumeThreshold) {
                     lastSavedTime = currentTime
                     PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
                 }

@@ -91,11 +91,9 @@ struct RemoteThumbnail: View {
     // Prevent multiple load attempts
     @State private var loadAttempted = false
 
-    // MARK: Set max concurrent thumbnail rendering to 4
-    // TODO: Add an advancedSettings option to allow user to control
     private let thumbnailQueue: OperationQueue = {
         let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 4
+        queue.maxConcurrentOperationCount = Constants.maxConcurrentThumbnailRender
         return queue
     }()
 

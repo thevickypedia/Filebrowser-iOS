@@ -63,7 +63,6 @@ struct FileListView: View {
     @State private var isDownloadCancelled = false
     @State private var currentDownloadSpeed: Double = 0.0
     @State private var currentDownloadFileIcon: String?
-    @State private var downloadSpeedUpdateInterval: Double = 0.1
 
     // Upload vars
     @State private var uploadQueue: [URL] = []
@@ -1236,7 +1235,7 @@ struct FileListView: View {
             }
         }
         .id("filelist-\(currentDisplayPath)-\(pathStack.count)")
-        // MARK: Messages on any listing page (behind all sheets)
+        // MARK: Messages on any listing page with no sheets presented
         .modifier(StatusMessage(payload: $statusMessage))
         .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
         .modifier(CreateFileAlert(
@@ -1395,6 +1394,8 @@ struct FileListView: View {
 
         // Variables to track download speed
         var downloadStartTime = Date()
+        // Instead of updating currentDownloadSpeed immediately with each chunk,
+        // we accumulate the bytes downloaded and calculate the speed at certain intervals
         var bytesDownloadedSinceLastUpdate: Int64 = 0
 
         // Timer to update the speed every second
@@ -1406,9 +1407,9 @@ struct FileListView: View {
                 DispatchQueue.main.async {
                     // Accumulate bytes downloaded
                     bytesDownloadedSinceLastUpdate += bytesWritten
-                    // Calculate download speed every second
+                    // Calculate download speed with 'downloadSpeedUpdateInterval'
                     let elapsed = Date().timeIntervalSince(downloadStartTime)
-                    if elapsed >= downloadSpeedUpdateInterval {
+                    if elapsed >= Constants.downloadSpeedUpdateInterval {
                         let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
                         currentDownloadSpeed = downloadSpeed
                         // Reset counters for the next period
@@ -1502,7 +1503,8 @@ struct FileListView: View {
 
         // Store task ID so it can be cancelled
         currentDownloadTaskID = taskID
-        speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: downloadSpeedUpdateInterval, repeats: true) { _ in }
+        // Update download speed in the UX with 'downloadSpeedUpdateInterval'
+        speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
     }
 
     // MARK: - Save Media to Photos
@@ -1920,12 +1922,12 @@ struct FileListView: View {
         }
     }
 
-    func showPrepareUpload(after duration: Int = 10) {
+    func showPrepareUpload() {
         // MARK: Force isPreparingUpload flag after a static timeout
         // There is no real way to detect a cancel even from file importer or photo picker
         // This is to make sure "preparing to upload" banner is not shown forever
         isPreparingUpload = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(duration)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.preparingUploadResetDuration)) {
             if isPreparingUpload {
                 isPreparingUpload = false
                 Log.debug("Time's up! Forcing isPreparingUpload flag to false")
