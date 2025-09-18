@@ -75,4 +75,4 @@ jobs:
           echo "Client Version: $SHORT_VERSION" >> $GITHUB_STEP_SUMMARY
           echo "Build Version: $BUILD_VERSION" >> $GITHUB_STEP_SUMMARY
           echo "project_version=$SHORT_VERSION" >> $GITHUB_OUTPUT
-        working-directory: FileBrowserClient
+        working-directory: FileBrowserClient/FileBrowserClient/AppEntry
