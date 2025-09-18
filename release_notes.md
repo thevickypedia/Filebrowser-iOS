@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.39.3 (09/18/2025)
+--------------------
+- [62c258c](https://github.com/thevickypedia/Filebrowser-iOS/commit/62c258c1f4902b39d77c1db53e245f84954505e7) chore: Release ``v1.39.3``
+- [985deb4](https://github.com/thevickypedia/Filebrowser-iOS/commit/985deb438d5a2cda187f740f0794e5fee85e36ae) fix: Remove deprecated bluetooth function for ``AVAudioSession``
+- [9e12bfb](https://github.com/thevickypedia/Filebrowser-iOS/commit/9e12bfb874d483c069d4a420210c0eaea9bfd24e) refactor: Move ``thumbnailQuality`` to constants and convert all constants to ``let``
+- [bb23ecb](https://github.com/thevickypedia/Filebrowser-iOS/commit/bb23ecb52102f00ba2bd27f0a632f2d3a777f7e6) perf: Implement thread safety for multi-file upload logic
+- [273df72](https://github.com/thevickypedia/Filebrowser-iOS/commit/273df72b9be6f2487b0210b20615452442d34cfe) perf: Set caching logs to trace level
+- [7a898b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/7a898b9c4ab20857fa73b2cd3be8ab64436ff093) perf: Remove static prepare upload delay with accurate status for upload stack
+- [ccc6d02](https://github.com/thevickypedia/Filebrowser-iOS/commit/ccc6d022a614e41ca1e0dd4969df53388f34b968) chore: Update release notes for v1.39.2
+
 v1.39.2 (09/17/2025)
 --------------------
 - [6587ae4](https://github.com/thevickypedia/Filebrowser-iOS/commit/6587ae47fb7d0672d98c4dac5d14f69f8a9fccc0) chore: Release ``v1.39.2``
