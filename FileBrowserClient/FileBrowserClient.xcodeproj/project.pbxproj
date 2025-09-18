@@ -109,7 +109,7 @@
 		F85486172E1B19B000115F18 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
 		F85486192E1B1C3E00115F18 /* FileItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileItem.swift; sourceTree = "<group>"; };
 		F854861B2E1B1C5000115F18 /* FileListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListView.swift; sourceTree = "<group>"; };
-		F854861D2E1B253E00115F18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F854861D2E1B253E00115F18 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F854862A2E1BA3F900115F18 /* FileListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListViewModel.swift; sourceTree = "<group>"; };
 		F87456272E1CABD70041EDDF /* FileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDetailView.swift; sourceTree = "<group>"; };
 		F87456292E1CDF400041EDDF /* PDFKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFKitView.swift; sourceTree = "<group>"; };
@@ -145,7 +145,6 @@
 		98823EC22E1AFADA004CBB11 = {
 			isa = PBXGroup;
 			children = (
-				F854861D2E1B253E00115F18 /* Info.plist */,
 				98823ECD2E1AFADA004CBB11 /* FileBrowserClient */,
 				98823EDE2E1AFADC004CBB11 /* FileBrowserClientTests */,
 				98823EE82E1AFADD004CBB11 /* FileBrowserClientUITests */,
@@ -166,44 +165,16 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
-				98B1AC4C2E7AF660000210BC /* Constants.swift */,
-				98836BCC2E79214B0053170A /* DownloadManager.swift */,
-				98836BAE2E7291230053170A /* ResumePromptView.swift */,
-				98836BAC2E7285F90053170A /* PlaybackProgressStore.swift */,
-				988368062E6793FF0053170A /* BackgroundTUSUploadManager.swift */,
-				98B600382E52103D00F24FB8 /* AdvancedSettings.swift */,
-				98B600342E5149AC00F24FB8 /* ShareSheetView.swift */,
-				98B600262E50B1F900F24FB8 /* ShareLinkRow.swift */,
-				987C61882E4A986500C5DE8E /* SearchType.swift */,
-				987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */,
-				987C617D2E47EC0900C5DE8E /* ServerURLMenu.swift */,
-				984F170B2E46D5D5003502DF /* KeychainHelper.swift */,
-				984F17052E46A8AA003502DF /* ZoomableImageView.swift */,
-				984F17012E468CA9003502DF /* ViewStyle.swift */,
-				98D563EC2E45194700DE0079 /* StatusMessage.swift */,
-				98D563D82E44F27A00DE0079 /* CopyableTextContainer.swift */,
-				98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */,
-				98D563D42E44DDA800DE0079 /* SelectableTextView.swift */,
-				98D563D02E44354400DE0079 /* FileExtensions.swift */,
-				988D9DE72E43915000C37B15 /* FileListAlerts.swift */,
-				986F5A762E42BB130058E2C4 /* PhotoPicker.swift */,
-				986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */,
-				986F5A682E3A237D0058E2C4 /* ThemeManager.swift */,
-				986F5A662E39A78A0058E2C4 /* FileCache.swift */,
-				98067D492E38E6CD00808541 /* Utils.swift */,
-				F8BE8BBB2E379CED00967D18 /* ExtensionTypes.swift */,
-				F8BE8BB92E379B8500967D18 /* RemoteThumbnail.swift */,
-				F85295432E303AF800498675 /* Log.swift */,
-				F84264632E234B9A001A1BBC /* MediaPlayerView.swift */,
-				F87456292E1CDF400041EDDF /* PDFKitView.swift */,
-				F87456272E1CABD70041EDDF /* FileDetailView.swift */,
-				F854862A2E1BA3F900115F18 /* FileListViewModel.swift */,
-				F854861B2E1B1C5000115F18 /* FileListView.swift */,
-				F85486192E1B1C3E00115F18 /* FileItem.swift */,
-				F85486172E1B19B000115F18 /* AuthManager.swift */,
-				98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */,
-				98823ED02E1AFADA004CBB11 /* ContentView.swift */,
 				98823ED22E1AFADC004CBB11 /* Assets.xcassets */,
+				98B1AC572E7C5CDC000210BC /* AppEntry */,
+				98B1AC542E7C5C93000210BC /* Authentication */,
+				98B1AC582E7C5CF3000210BC /* Configuration */,
+				98B1AC532E7C5C76000210BC /* DataManagers */,
+				98B1AC522E7C5C38000210BC /* Models */,
+				98B1AC552E7C5CA8000210BC /* StateAndPersistence */,
+				98B1AC592E7C5D05000210BC /* Utilities */,
+				98B1AC512E7C5C28000210BC /* ViewModels */,
+				98B1AC502E7C5B9A000210BC /* Views */,
 				98823ED42E1AFADC004CBB11 /* Preview Content */,
 			);
 			path = FileBrowserClient;
@@ -232,6 +203,107 @@
 				98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */,
 			);
 			path = FileBrowserClientUITests;
+			sourceTree = "<group>";
+		};
+		98B1AC502E7C5B9A000210BC /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				98B600382E52103D00F24FB8 /* AdvancedSettings.swift */,
+				986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */,
+				98823ED02E1AFADA004CBB11 /* ContentView.swift */,
+				98D563D82E44F27A00DE0079 /* CopyableTextContainer.swift */,
+				98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */,
+				F87456272E1CABD70041EDDF /* FileDetailView.swift */,
+				F854861B2E1B1C5000115F18 /* FileListView.swift */,
+				F84264632E234B9A001A1BBC /* MediaPlayerView.swift */,
+				F87456292E1CDF400041EDDF /* PDFKitView.swift */,
+				986F5A762E42BB130058E2C4 /* PhotoPicker.swift */,
+				98836BAE2E7291230053170A /* ResumePromptView.swift */,
+				98D563D42E44DDA800DE0079 /* SelectableTextView.swift */,
+				98B600262E50B1F900F24FB8 /* ShareLinkRow.swift */,
+				98B600342E5149AC00F24FB8 /* ShareSheetView.swift */,
+				984F17052E46A8AA003502DF /* ZoomableImageView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		98B1AC512E7C5C28000210BC /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				F854862A2E1BA3F900115F18 /* FileListViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		98B1AC522E7C5C38000210BC /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				F8BE8BBB2E379CED00967D18 /* ExtensionTypes.swift */,
+				98D563D02E44354400DE0079 /* FileExtensions.swift */,
+				F85486192E1B1C3E00115F18 /* FileItem.swift */,
+				988D9DE72E43915000C37B15 /* FileListAlerts.swift */,
+				987C61882E4A986500C5DE8E /* SearchType.swift */,
+				984F17012E468CA9003502DF /* ViewStyle.swift */,
+				987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		98B1AC532E7C5C76000210BC /* DataManagers */ = {
+			isa = PBXGroup;
+			children = (
+				988368062E6793FF0053170A /* BackgroundTUSUploadManager.swift */,
+				98836BCC2E79214B0053170A /* DownloadManager.swift */,
+				986F5A662E39A78A0058E2C4 /* FileCache.swift */,
+				F8BE8BB92E379B8500967D18 /* RemoteThumbnail.swift */,
+			);
+			path = DataManagers;
+			sourceTree = "<group>";
+		};
+		98B1AC542E7C5C93000210BC /* Authentication */ = {
+			isa = PBXGroup;
+			children = (
+				F85486172E1B19B000115F18 /* AuthManager.swift */,
+				984F170B2E46D5D5003502DF /* KeychainHelper.swift */,
+			);
+			path = Authentication;
+			sourceTree = "<group>";
+		};
+		98B1AC552E7C5CA8000210BC /* StateAndPersistence */ = {
+			isa = PBXGroup;
+			children = (
+				98836BAC2E7285F90053170A /* PlaybackProgressStore.swift */,
+				98D563EC2E45194700DE0079 /* StatusMessage.swift */,
+				986F5A682E3A237D0058E2C4 /* ThemeManager.swift */,
+			);
+			path = StateAndPersistence;
+			sourceTree = "<group>";
+		};
+		98B1AC572E7C5CDC000210BC /* AppEntry */ = {
+			isa = PBXGroup;
+			children = (
+				F854861D2E1B253E00115F18 /* Info.plist */,
+				98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */,
+			);
+			path = AppEntry;
+			sourceTree = "<group>";
+		};
+		98B1AC582E7C5CF3000210BC /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				98B1AC4C2E7AF660000210BC /* Constants.swift */,
+				987C617D2E47EC0900C5DE8E /* ServerURLMenu.swift */,
+			);
+			path = Configuration;
+			sourceTree = "<group>";
+		};
+		98B1AC592E7C5D05000210BC /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				F85295432E303AF800498675 /* Log.swift */,
+				98067D492E38E6CD00808541 /* Utils.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -565,7 +637,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FileBrowserClient/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FileBrowserClient/Info.plist;
+				INFOPLIST_FILE = FileBrowserClient/AppEntry/Info.plist;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to authenticate securely.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -595,7 +667,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"FileBrowserClient/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FileBrowserClient/Info.plist;
+				INFOPLIST_FILE = FileBrowserClient/AppEntry/Info.plist;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to authenticate securely.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
