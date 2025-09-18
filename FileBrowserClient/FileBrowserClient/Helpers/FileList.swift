@@ -5,7 +5,7 @@
 //  Created by Vignesh Rao on 9/18/25.
 //
 
-private func getNavigationTitle(for currentDisplayPath: String) -> String {
+func getNavigationTitle(for currentDisplayPath: String) -> String {
     // Use currentDisplayPath instead of pathStack for immediate updates
     if currentDisplayPath == "/" || currentDisplayPath.isEmpty {
         return "Home"
