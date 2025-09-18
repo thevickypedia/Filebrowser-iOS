@@ -15,10 +15,10 @@ class PhotoPickerStatus: ObservableObject {
 struct PhotoPicker: UIViewControllerRepresentable {
     @ObservedObject var photoPickerStatus: PhotoPickerStatus
 
-    var onFilePicked: (_ url: URL) -> Void
+    var onFilesPicked: (_ urls: [URL]) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(photoPickerStatus: photoPickerStatus, onFilePicked: onFilePicked)
+        Coordinator(photoPickerStatus: photoPickerStatus, onFilesPicked: onFilesPicked)
     }
 
     func makeUIViewController(context: Context) -> PHPickerViewController {
@@ -38,12 +38,12 @@ struct PhotoPicker: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
 
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
-        var onFilePicked: (_ url: URL) -> Void
+        var onFilesPicked: (_ urls: [URL]) -> Void
         var photoPickerStatus: PhotoPickerStatus
 
-        init(photoPickerStatus: PhotoPickerStatus, onFilePicked: @escaping (_ url: URL) -> Void) {
+        init(photoPickerStatus: PhotoPickerStatus, onFilesPicked: @escaping (_ urls: [URL]) -> Void) {
             self.photoPickerStatus = photoPickerStatus
-            self.onFilePicked = onFilePicked
+            self.onFilesPicked = onFilesPicked
         }
 
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
@@ -56,6 +56,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
             }
             Log.info("Selected files for upload: \(results.count)")
 
+            // TODO: Instead of append and return - use yield so each file can be uploaded as it is written to temp
+            var tempURLs: [URL] = []
+            let tempURLsQueue = DispatchQueue(label: "tempURLsQueue")
             let dispatchGroup = DispatchGroup()
 
             for result in results {
@@ -76,9 +79,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                        if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                            DispatchQueue.main.async {
-                                self.onFilePicked(temp)
+                        if let url = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
+                            tempURLsQueue.async {
+                                tempURLs.append(url)
                             }
                         }
                         Log.debug("End: Writing \(suggestedName) to temporary location")
@@ -97,8 +100,8 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
 
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                            DispatchQueue.main.async {
-                                self.onFilePicked(temp)
+                            tempURLsQueue.async {
+                                tempURLs.append(temp)
                             }
                         }
                         Log.debug("End: Writing \(suggestedName) to temporary location")
@@ -107,7 +110,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
             }
 
             dispatchGroup.notify(queue: .main) {
+                // MARK: Exit
                 self.photoPickerStatus.isPreparingUpload = false
+                self.onFilesPicked(tempURLs)
             }
         }
     }
