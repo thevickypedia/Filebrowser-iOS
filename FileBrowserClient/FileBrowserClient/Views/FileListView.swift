@@ -1299,7 +1299,7 @@ struct FileListView: View {
         .sheet(isPresented: $showPhotoPicker) {
             PhotoPicker(
                 photoPickerStatus: photoPickerStatus,
-                onFilesPicked: handlePickedFiles
+                onFilePicked: handlePickedFile
             )
         }
         .fileImporter(
@@ -1326,10 +1326,12 @@ struct FileListView: View {
         }
     }
 
-    private func handlePickedFiles(_ urls: [URL]) {
-        uploadQueue = urls
-        currentUploadIndex = 0
-        uploadNextInQueue()
+    private func handlePickedFile(_ url: URL) {
+        uploadQueue.append(url)
+        if !isUploading {
+            currentUploadIndex = uploadQueue.count - 1
+            uploadNextInQueue()
+        }
     }
 
     // Call this to queue a single file for download from FileListView
