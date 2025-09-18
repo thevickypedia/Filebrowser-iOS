@@ -308,6 +308,13 @@ struct ContentView: View {
         }.joined(separator: "\\u")
     }
 
+    private func loginFailed(_ msg: String) {
+        isLoading = false
+        let msgF = "Login failed: \(msg)"
+        Log.error(msgF)
+        errorMessage = msgF
+    }
+
     func login() async {
         if serverURL.isEmpty || username.isEmpty || password.isEmpty {
             errorMessage = "Credentials are required to login!"
@@ -321,8 +328,7 @@ struct ContentView: View {
             serverURL.removeLast()
         }
         guard let url = URL(string: "\(serverURL)/api/login") else {
-            errorMessage = "Invalid URL"
-            isLoading = false
+            loginFailed("Invalid URL")
             return
         }
 
@@ -338,8 +344,7 @@ struct ContentView: View {
             let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
 
             guard let payload = combined.data(using: .utf8)?.base64EncodedString() else {
-                errorMessage = "Encoding failed"
-                isLoading = false
+                loginFailed("Failed to encode credentials")
                 return
             }
 
@@ -354,8 +359,7 @@ struct ContentView: View {
             do {
                 request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
             } catch {
-                errorMessage = "Failed to encode credentials"
-                isLoading = false
+                loginFailed("Failed to encode credentials")
                 return
             }
         }
@@ -369,7 +373,9 @@ struct ContentView: View {
                 errorMessage = "Invalid response"
                 return
             }
-
+            Log.error(serverURL)
+            Log.error(username)
+            Log.error(password)
             if httpResponse.statusCode == 200 {
                 if let jwt = String(data: data, encoding: .utf8) {
                     if let payload = decodeJWT(jwt: jwt) {
@@ -401,16 +407,17 @@ struct ContentView: View {
                             KeychainHelper.deleteSession()
                             KeychainHelper.deleteKnownServers()
                         }
+                    } else {
+                        loginFailed("Failed to decode token")
                     }
                 } else {
-                    errorMessage = "Failed to decode token"
+                    loginFailed("Failed to extract JWT")
                 }
             } else {
-                errorMessage = "Login failed: \(httpResponse.statusCode)"
+                loginFailed("\(httpResponse.statusCode)")
             }
         } catch {
-            isLoading = false
-            errorMessage = error.localizedDescription
+            loginFailed(error.localizedDescription)
         }
     }
 
