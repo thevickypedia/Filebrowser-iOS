@@ -38,7 +38,6 @@ struct FileBrowserClientApp: App {
                 mode: .moviePlayback,
                 options: [
                     .allowAirPlay,
-                    .allowBluetooth,
                     .allowBluetoothA2DP
                 ]
             )
