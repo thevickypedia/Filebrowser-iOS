@@ -358,8 +358,19 @@ func copyToClipboard(_ text: String) {
 
 func urlPath(_ url: URL) -> String {
     var result = url.path
-    if let query = url.query, !query.isEmpty {
-        result += "?" + query
+
+    if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+       let queryItems = components.queryItems, !queryItems.isEmpty {
+        let maskedItems = queryItems.map { item -> String in
+            if item.name.lowercased() == "auth" {
+                return "\(item.name)=******"
+            } else if let value = item.value {
+                return "\(item.name)=\(value)"
+            } else {
+                return item.name
+            }
+        }
+        result += "?" + maskedItems.joined(separator: "&")
     }
     return result
 }
