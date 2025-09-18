@@ -1299,7 +1299,12 @@ struct FileListView: View {
         .sheet(isPresented: $showPhotoPicker) {
             PhotoPicker(
                 photoPickerStatus: photoPickerStatus,
-                onFilePicked: handlePickedFile
+                onFilePicked: { url in
+                    uploadQueue.append(url)
+                    if !isUploading {
+                        uploadNextInQueue()
+                    }
+                }
             )
         }
         .fileImporter(
@@ -1323,14 +1328,6 @@ struct FileListView: View {
             if let index = selectedFileIndex {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
             }
-        }
-    }
-
-    private func handlePickedFile(_ url: URL) {
-        uploadQueue.append(url)
-        if !isUploading {
-            currentUploadIndex = uploadQueue.count - 1
-            uploadNextInQueue()
         }
     }
 

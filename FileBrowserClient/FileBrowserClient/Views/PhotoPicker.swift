@@ -56,19 +56,14 @@ struct PhotoPicker: UIViewControllerRepresentable {
             }
             Log.info("Selected files for upload: \(results.count)")
 
-            let dispatchGroup = DispatchGroup()
-
             for result in results {
                 let provider = result.itemProvider
-                let suggestedName = provider.suggestedName ?? "" // <-- get suggested name if available
+                let suggestedName = provider.suggestedName ?? ""
                 Log.debug("Start: Writing \(suggestedName) to temporary location")
 
                 // if loadDataRepresentation or loadFileRepresentation fails (when data == nil) - log errors or notify
                 if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                    dispatchGroup.enter()
                     provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
-                        defer { dispatchGroup.leave() }
-
                         guard let data = data else { return }
 
                         let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
@@ -79,15 +74,13 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
                             DispatchQueue.main.async {
                                 self.onFilePicked(temp)
+                                self.photoPickerStatus.isPreparingUpload = false
                             }
                         }
                         Log.debug("End: Writing \(suggestedName) to temporary location")
                     }
                 } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
-                    dispatchGroup.enter()
                     provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
-                        defer { dispatchGroup.leave() }
-
                         guard let url = url,
                               let data = try? Data(contentsOf: url) else { return }
 
@@ -99,15 +92,12 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
                             DispatchQueue.main.async {
                                 self.onFilePicked(temp)
+                                self.photoPickerStatus.isPreparingUpload = false
                             }
                         }
                         Log.debug("End: Writing \(suggestedName) to temporary location")
                     }
                 }
-            }
-
-            dispatchGroup.notify(queue: .main) {
-                self.photoPickerStatus.isPreparingUpload = false
             }
         }
     }
