@@ -81,7 +81,6 @@ struct RemoteThumbnail: View {
     let extensionTypes: ExtensionTypes
     var width: CGFloat = 32
     var height: CGFloat = 32
-    var thumbnailQuality: CGFloat = 0.1
     @Binding var loadingFiles: [String: Bool]
     var iconSize: CGFloat
 
@@ -231,7 +230,7 @@ struct RemoteThumbnail: View {
                     let uiImage = UIImage(cgImage: cgImage)
                     let thumbImage = overlayPlayIcon(on: uiImage)
                     var imageData: Data?
-                    if let compressed = thumbImage.jpegData(compressionQuality: thumbnailQuality) {
+                    if let compressed = thumbImage.jpegData(compressionQuality: Constants.thumbnailQuality) {
                         imageData = compressed
                         Log.debug("🗜️ Compressed thumbnail size: \(sizeConverter(compressed.count))")
                     } else {
