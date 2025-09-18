@@ -5,15 +5,8 @@
 //  Created by Vignesh Rao on 7/6/25.
 //
 
-import Photos
 import SwiftUI
 import UniformTypeIdentifiers
-
-// Download state (TODO: Implement something similar for upload state variables)
-struct DownloadQueueItem: Identifiable {
-    let id = UUID()
-    let file: FileItem
-}
 
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
@@ -1496,60 +1489,6 @@ struct FileListView: View {
         currentDownloadTaskID = taskID
         // Update download speed in the UX with 'downloadSpeedUpdateInterval'
         speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
-    }
-
-    // MARK: - Save Media to Photos
-    private func saveToPhotos(fileURL: URL, fileType: UTType, completion: @escaping (Bool, Error?) -> Void) {
-        // Ask only for add permission, not read
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-            guard status == .authorized || status == .limited else {
-                Log.warn("Photo Library add access denied")
-                completion(false, NSError(
-                    domain: "PhotoLibrary", code: 1,
-                    userInfo: [NSLocalizedDescriptionKey: "Photo Library add access denied"]
-                ))
-                return
-            }
-
-            PHPhotoLibrary.shared().performChanges({
-                if fileType.conforms(to: .image) {
-                    Log.trace("Storing \(fileURL.lastPathComponent) as an image")
-                    PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
-                } else if fileType.conforms(to: .movie) {
-                    Log.trace("Storing \(fileURL.lastPathComponent) as a video")
-                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
-                } else {
-                    Log.warn("Unknown file type: \(fileType) - \(fileURL)")
-                }
-            }) { success, error in
-                DispatchQueue.main.async { completion(success, error) }
-            }
-        }
-    }
-
-    // MARK: - Save Non-Media Files to Files App
-    func saveToFiles(fileURL: URL, fileName: String) -> URL? {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let dest = docs.appendingPathComponent(fileName)
-
-        // remove existing file if overwriting
-        try? FileManager.default.removeItem(at: dest)
-
-        do {
-            try FileManager.default.copyItem(at: fileURL, to: dest)
-            return dest
-        } catch {
-            Log.error("❌ Failed to save to Files: \(error.localizedDescription)")
-            return nil
-        }
-    }
-
-    private func findFilePathForUploadId(_ id: UUID) -> String? {
-        // If you didn't add filePath to notifications, this helper searches manager records for id
-        if let rec = BackgroundTUSUploadManager.shared.records[id] {
-            return rec.fileURL.path
-        }
-        return nil
     }
 
     func getSearchURL(serverURL: String, query: String) -> URL? {

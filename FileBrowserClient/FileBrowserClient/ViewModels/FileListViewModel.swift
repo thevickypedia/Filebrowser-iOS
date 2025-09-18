@@ -13,6 +13,11 @@ enum ModifyItem: String {
     case move = "Move"
 }
 
+struct DownloadQueueItem: Identifiable {
+    let id = UUID()
+    let file: FileItem
+}
+
 class FileListViewModel: ObservableObject {
     @Published var files: [FileItem] = []
     @Published var errorMessage: String?
