@@ -237,7 +237,7 @@ struct ContentView: View {
         .onAppear {
             knownServers = KeychainHelper.loadKnownServers()
             if !knownServers.isEmpty {
-                serverURL = knownServers.first ?? ""
+                serverURL = knownServers.last ?? ""
             }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil), presenting: errorMessage) { _ in
