@@ -56,46 +56,49 @@ struct PhotoPicker: UIViewControllerRepresentable {
             }
             Log.info("Selected files for upload: \(results.count)")
 
+            let writingQueue = DispatchQueue(label: "photoPicker.tempWriter", attributes: .concurrent)
+
             for result in results {
-                let provider = result.itemProvider
-                let suggestedName = provider.suggestedName ?? ""
-                Log.debug("Start: Writing \(suggestedName) to temporary location")
+                writingQueue.async {
+                    let provider = result.itemProvider
+                    let suggestedName = provider.suggestedName ?? ""
+                    Log.debug("Start: Writing \(suggestedName) to temporary location")
 
-                // if loadDataRepresentation or loadFileRepresentation fails (when data == nil) - log errors or notify
-                if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-                    provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
-                        guard let data = data else { return }
+                    if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                        provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                            guard let data = data else { return }
 
-                        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-                        let ext = pathExt.isEmpty ? "jpg" : pathExt
-                        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
-                        let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
+                            let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+                            let ext = pathExt.isEmpty ? "jpg" : pathExt
+                            let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
+                            let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                        if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                            DispatchQueue.main.async {
-                                self.onFilePicked(temp)
-                                self.photoPickerStatus.isPreparingUpload = false
+                            if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
+                                DispatchQueue.main.async {
+                                    self.onFilePicked(temp)
+                                    self.photoPickerStatus.isPreparingUpload = false
+                                }
                             }
+                            Log.debug("End: Writing \(suggestedName) to temporary location")
                         }
-                        Log.debug("End: Writing \(suggestedName) to temporary location")
-                    }
-                } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
-                    provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
-                        guard let url = url,
-                              let data = try? Data(contentsOf: url) else { return }
+                    } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
+                        provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
+                            guard let url = url,
+                                  let data = try? Data(contentsOf: url) else { return }
 
-                        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-                        let ext = pathExt.isEmpty ? "mov" : pathExt
-                        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
-                        let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
+                            let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+                            let ext = pathExt.isEmpty ? "mov" : pathExt
+                            let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
+                            let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                        if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                            DispatchQueue.main.async {
-                                self.onFilePicked(temp)
-                                self.photoPickerStatus.isPreparingUpload = false
+                            if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
+                                DispatchQueue.main.async {
+                                    self.onFilePicked(temp)
+                                    self.photoPickerStatus.isPreparingUpload = false
+                                }
                             }
+                            Log.debug("End: Writing \(suggestedName) to temporary location")
                         }
-                        Log.debug("End: Writing \(suggestedName) to temporary location")
                     }
                 }
             }
