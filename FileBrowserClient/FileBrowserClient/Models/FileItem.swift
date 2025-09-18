@@ -22,3 +22,7 @@ struct FileItemSearch: Decodable {
     let dir: Bool
     let path: String
 }
+
+struct ResourceResponse: Codable {
+    let items: [FileItem]
+}

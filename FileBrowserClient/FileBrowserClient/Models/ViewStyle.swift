@@ -54,10 +54,6 @@ struct ViewStyle {
     }
 }
 
-enum ViewMode: String {
-    case list, grid, module
-}
-
 struct GridStyle {
     let gridHeight: CGFloat
     let isModule: Bool
@@ -98,4 +94,12 @@ func adaptiveColumns(module: Bool) -> [GridItem] {
         repeating: GridItem(.flexible(), spacing: 12),
         count: columnsCount
     )
+}
+
+enum ViewMode: String {
+    case list, grid, module
+}
+
+enum SortOption {
+    case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
 }

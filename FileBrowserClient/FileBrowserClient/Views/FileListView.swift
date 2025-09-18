@@ -9,10 +9,6 @@ import Photos
 import SwiftUI
 import UniformTypeIdentifiers
 
-enum SortOption {
-    case nameAsc, nameDesc, sizeAsc, sizeDesc, modifiedAsc, modifiedDesc
-}
-
 // Download state (TODO: Implement something similar for upload state variables)
 struct DownloadQueueItem: Identifiable {
     let id = UUID()
@@ -837,7 +833,7 @@ struct FileListView: View {
                     }
                 }
             }
-            .navigationTitle(getSheetNavigationTitle())
+            .navigationTitle(getSheetNavigationTitle(sheetPathStack))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 // Initialize sheetPathStack based on currentPath when sheet appears
@@ -869,14 +865,6 @@ struct FileListView: View {
                 )
                 sheetPathStack.append(fileItem)
             }
-        }
-    }
-
-    private func getSheetNavigationTitle() -> String {
-        if sheetPathStack.isEmpty {
-            return "Root" // Show "Root" when at the top level
-        } else {
-            return sheetPathStack.last?.name ?? "Root"
         }
     }
 
@@ -1179,7 +1167,7 @@ struct FileListView: View {
             .padding(.trailing, 20)
             .padding(.bottom, 30)
         }
-        .navigationTitle(getNavigationTitle())
+        .navigationTitle(getNavigationTitle(for: currentDisplayPath))
         .navigationBarTitleDisplayMode(.large)
         .navigationBarHidden(false)
         .toolbar {
@@ -1776,7 +1764,7 @@ struct FileListView: View {
                 .onTapGesture { toggleSelection(for: file) }
             } else {
                 if file.isDir {
-                    NavigationLink(value: fullPath(for: file)) {
+                    NavigationLink(value: fullPath(for: file, with: currentPath)) {
                         HStack {
                             thumbnailOrIcon(for: file)
                                 .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
@@ -1785,7 +1773,7 @@ struct FileListView: View {
                     }
                     .simultaneousGesture(TapGesture().onEnded {
                         // Pre-update the display path for immediate UI response
-                        currentDisplayPath = fullPath(for: file)
+                        currentDisplayPath = fullPath(for: file, with: currentPath)
                     })
                 } else {
                     NavigationLink(destination: detailView(for: file, index: index, sortedFiles: fileList)) {
@@ -1827,7 +1815,7 @@ struct FileListView: View {
                     }
                     .buttonStyle(.plain)
                 } else {
-                    NavigationLink(value: fullPath(for: file)) {
+                    NavigationLink(value: fullPath(for: file, with: currentPath)) {
                         gridContent(file: file, style: style, module: module)
                     }
                     .buttonStyle(.plain)
@@ -1923,16 +1911,6 @@ struct FileListView: View {
                 }
             }
         }
-    }
-
-    private func getNavigationTitle() -> String {
-        // Use currentDisplayPath instead of pathStack for immediate updates
-        if currentDisplayPath == "/" || currentDisplayPath.isEmpty {
-            return "Home"
-        }
-
-        let components = currentDisplayPath.components(separatedBy: "/")
-        return components.last?.isEmpty == false ? components.last! : "Home"
     }
 
     func fetchClientStorageInfo() {
@@ -2458,7 +2436,7 @@ struct FileListView: View {
             size: 0,
             extension: isDirectory ? nil : newResourceName.split(separator: ".").last.map(String.init)
         )
-        let fullPath = self.fullPath(for: fileItem)
+        let fullPath = fullPath(for: fileItem, with: currentPath)
 
         guard let encodedPath = fullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             Log.error("❌ Failed to encode path")
@@ -2508,17 +2486,4 @@ struct FileListView: View {
         Log.debug("ℹ️ Refresh Directory")
         fetchFiles(at: currentPath)
     }
-
-    private func fullPath(for file: FileItem) -> String {
-        if currentPath == "/" {
-            return "/\(file.name)"
-        } else {
-            return "\(currentPath)/\(file.name)"
-        }
-    }
-}
-
-// Wrapper for decoding FileBrowser's response
-struct ResourceResponse: Codable {
-    let items: [FileItem]
 }
