@@ -373,9 +373,7 @@ struct ContentView: View {
                 errorMessage = "Invalid response"
                 return
             }
-            Log.error(serverURL)
-            Log.error(username)
-            Log.error(password)
+
             if httpResponse.statusCode == 200 {
                 if let jwt = String(data: data, encoding: .utf8) {
                     if let payload = decodeJWT(jwt: jwt) {
@@ -390,7 +388,7 @@ struct ContentView: View {
                         isLoggedIn = true
                         // Show success message
                         statusMessage = "✅ Login successful!"
-
+                        logTokenInfo()
                         if rememberMe || useFaceID {
                             KeychainHelper.saveSession(
                                 session: StoredSession(
@@ -494,13 +492,6 @@ struct ContentView: View {
                 auth.username = session.username
                 auth.serverURL = session.serverURL
                 auth.tokenPayload = tokenPayload
-                if let payload = decodeJWT(jwt: session.token) {
-                    auth.tokenPayload = payload
-                    logTokenInfo()
-                } else {
-                    Log.error("Failed to decode JWT")
-                }
-
                 if let err = await auth.serverHandShake(for: String(tokenPayload.user.id), token: session.token, serverURL: session.serverURL) {
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
@@ -520,6 +511,7 @@ struct ContentView: View {
                     statusMessage = "✅ Face ID login successful!"
                 }
                 Log.info("✅ Face ID login successful")
+                logTokenInfo()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     statusMessage = nil
                 }
