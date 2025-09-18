@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.39.4 (09/18/2025)
+--------------------
+- [823ee1f](https://github.com/thevickypedia/Filebrowser-iOS/commit/823ee1f38767f006cda3f3e0e18abd7879a11f77) chore: Release ``v1.39.4``
+- [7b07fd3](https://github.com/thevickypedia/Filebrowser-iOS/commit/7b07fd335af0c9972661c511a3a1421938be7899) ci: Update working directory for ``Info.plist`` after refactor
+- [5f5c2cb](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f5c2cb098617f07ae2537d1baa45d5d1236d7b0) fix: Avoid exposing auth token when logging URL paths
+- [bc1879e](https://github.com/thevickypedia/Filebrowser-iOS/commit/bc1879ead2c84f398809c9fcd67f6684a26c0fcd) refactor: Offload more standalone functions from ``FileListView``
+- [932aa3f](https://github.com/thevickypedia/Filebrowser-iOS/commit/932aa3fe72a4c3bb9cf783f10357feb87505830f) refactor: Log more information for login failures
+- [a0602fb](https://github.com/thevickypedia/Filebrowser-iOS/commit/a0602fb91d4e8b0fdefc0f816b330817e01741bb) fix: Make ``getNavigationTitle`` function non-private
+- [c086e7a](https://github.com/thevickypedia/Filebrowser-iOS/commit/c086e7a4dab9603c2103f4ed524faf7981bfe8ac) refactor: Offload minor functionalities from ``FileListView`` to helper module
+- [e392e49](https://github.com/thevickypedia/Filebrowser-iOS/commit/e392e49c45ecb4d2668acbf6e2f598494d806893) refactor: Group modules according to their functionalities
+- [a4757d2](https://github.com/thevickypedia/Filebrowser-iOS/commit/a4757d29a739118d1bab9ddaa7cbfc22f4ead2b6) refactor: Use last knwon ``serverURL`` as default
+- [b76c0db](https://github.com/thevickypedia/Filebrowser-iOS/commit/b76c0dbdc5dcc5c8596b361e0a9a748e854cc5dc) chore: Update release notes for v1.39.3
+
 v1.39.3 (09/18/2025)
 --------------------
 - [62c258c](https://github.com/thevickypedia/Filebrowser-iOS/commit/62c258c1f4902b39d77c1db53e245f84954505e7) chore: Release ``v1.39.3``
