@@ -5,7 +5,7 @@
 	<key>CFBundleName</key>
 	<string>FileBrowserClient</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.39.4</string>
+	<string>1.40.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>NSFaceIDUsageDescription</key>
@@ -25,12 +25,6 @@
 	</dict>
 	<key>AVInitialRouteSharingPolicy</key>
 	<string>LongFormAudio</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-		<string>processing</string>
-		<string>fetch</string>
-	</array>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Photo library is used to save downloaded photos/videos.</string>
 </dict>
