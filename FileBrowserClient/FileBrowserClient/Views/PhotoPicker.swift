@@ -41,22 +41,32 @@ struct PhotoPicker: UIViewControllerRepresentable {
         var onFilesPicked: (_ urls: [URL]) -> Void
         var photoPickerStatus: PhotoPickerStatus
         private var currentCount = 0
+        private var processedFilenames = Set<String>()
 
         init(photoPickerStatus: PhotoPickerStatus, onFilesPicked: @escaping (_ urls: [URL]) -> Void) {
             self.photoPickerStatus = photoPickerStatus
             self.onFilesPicked = onFilesPicked
         }
 
-        func updateCurrentProcessed(fileName: String, bytes: Int, total: Int) {
+        func updateCurrentProcessed(fileName: String, total: Int, bytes: Int? = nil) {
             DispatchQueue.main.async {
-                self.currentCount += 1
-                let fileSize = sizeConverter(bytes)
-                if bytes == 0 {
-                    Log.debug("\(fileName): Unable to determine file size")
-                } else {
-                    Log.debug("\(fileName): \(fileSize)")
+                if !self.processedFilenames.contains(fileName) {
+                    self.currentCount += 1
+                    self.processedFilenames.insert(fileName)
                 }
-                self.photoPickerStatus.currentlyPreparing = "\(self.currentCount)/\(total): \(fileName) \(bytes == 0 ? "" : "- \(fileSize)")"
+
+                if let byteSize = bytes {
+                    let fileSize = sizeConverter(byteSize)
+                    if byteSize == 0 {
+                        Log.debug("End: Writing \(fileName): Unable to determine file size")
+                    } else {
+                        Log.debug("End: Writing \(fileName): \(fileSize)")
+                    }
+                    self.photoPickerStatus.currentlyPreparing = "\(self.currentCount)/\(total): \(fileName) \(byteSize == 0 ? "" : "- \(fileSize)")"
+                } else {
+                    Log.debug("Start: Copying \(fileName)")
+                    self.photoPickerStatus.currentlyPreparing = "\(self.currentCount)/\(total): \(fileName)"
+                }
             }
         }
 
@@ -82,46 +92,46 @@ struct PhotoPicker: UIViewControllerRepresentable {
                 let provider = result.itemProvider
                 let suggestedName = provider.suggestedName ?? "Unknown"
 
-                Log.debug("Start: Copying \(suggestedName)")
+                let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+                let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
 
-                if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+                let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+                let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
+
+                let defaultExt = isImage ? "jpg" : "mov"
+                let ext = pathExt.isEmpty ? defaultExt : pathExt
+
+                let defaultPre = isImage ? "photo" : "video"
+                let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
+
+                self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total)
+
+                if isImage {
                     provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
                         defer { dispatchGroup.leave() }
 
                         guard let data = data else { return }
 
-                        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-                        let ext = pathExt.isEmpty ? "jpg" : pathExt
-                        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
-                        let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
-
-                        self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: data.count, total: total)
+                        self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total, bytes: data.count)
 
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
                             resultQueue.async {
                                 collectedURLs.append(temp)
                             }
                         }
-
-                        Log.info("End: Writing image \(suggestedName)")
                     }
-                } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
-                    provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
+                } else if isVideo {
+                     provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
                         defer { dispatchGroup.leave() }
 
                         guard let url = url else { return }
 
-                        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-                        let ext = pathExt.isEmpty ? "mov" : pathExt
-                        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
-                        let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
-
                         if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber {
                             self.updateCurrentProcessed(
-                                fileName: "\(suggestedName).\(ext)", bytes: fileSize.intValue, total: total
+                                fileName: "\(suggestedName).\(ext)", total: total, bytes: fileSize.intValue
                             )
                         } else {
-                            self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: 0, total: total)
+                            self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total, bytes: 0)
                         }
 
                         if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: filename) {
@@ -129,8 +139,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
                                 collectedURLs.append(temp)
                             }
                         }
-
-                        Log.info("End: Copying video \(suggestedName)")
                     }
                 } else {
                     dispatchGroup.leave()
