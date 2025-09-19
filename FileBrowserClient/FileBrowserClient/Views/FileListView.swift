@@ -1077,6 +1077,11 @@ struct FileListView: View {
         if photoPickerStatus.isPreparingUpload {
             return false
         }
+        if photoPickerStatus.totalSelected.isEmpty {
+            // If totalSelected is empty, check pendingUploads (reverse and return)
+            return !photoPickerStatus.pendingUploads.isEmpty
+        }
+        // If totalSelected is not empty, then check if uploadQueue is smaller
         return uploadQueue.count < photoPickerStatus.totalSelected.count
     }
 
@@ -2017,19 +2022,12 @@ struct FileListView: View {
     }
 
     func cancelUpload(fileHandle: FileHandle?) {
+        Log.info("❌ Upload cancelled by user.")
         UIApplication.shared.isIdleTimerDisabled = false
         fileHandle?.closeFile()
         uploadTask?.cancel()
-        uploadTask = nil
-        isUploading = false
-        uploadQueue = []
-        currentUploadIndex = 0
-        uploadProgress = 0.0
-        photoPickerStatus.isPreparingUpload = false
-        photoPickerStatus.totalSelected.removeAll()
-        photoPickerStatus.processedFiles.removeAll()
-        photoPickerStatus.pendingUploads.removeAll()
-        Log.info("❌ Upload cancelled by user.")
+        clearUploadStatus()
+        clearPickerStatus()
         fetchFiles(at: currentPath)
     }
 
@@ -2143,18 +2141,35 @@ struct FileListView: View {
         uploadNext()
     }
 
+    func clearUploadStatus() {
+        Log.debug("Resetting all upload attributes")
+        uploadTask = nil
+        isUploading = false
+        uploadQueue = []
+        currentUploadIndex = 0
+        uploadProgress = 0.0
+    }
+
+    func clearPickerStatus() {
+        Log.debug("Resetting all photo picker attributes")
+        photoPickerStatus.isPreparingUpload = false
+        photoPickerStatus.totalSelected.removeAll()
+        photoPickerStatus.processedFiles.removeAll()
+        photoPickerStatus.pendingUploads.removeAll()
+    }
+
     func uploadNextInQueue() {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
             statusMessage = StatusPayload(text: "📤 Uploaded \(currentUploadIndex) items")
             if photoPickerStatus.totalSelected.count == photoPickerStatus.processedFiles.count {
                 // MARK: Exit - Enable auto-lock and clean up staging area
-                // TODO: Cleanup all photoPickerStatus status when closed/cancelled
-                photoPickerStatus.isPreparingUpload = false
-                photoPickerStatus.totalSelected.removeAll()
-                photoPickerStatus.processedFiles.removeAll()
-                photoPickerStatus.pendingUploads.removeAll()
+                Log.info("End of all uploads")
                 UIApplication.shared.isIdleTimerDisabled = false
+                clearPickerStatus()
+                clearUploadStatus()
+            } else {
+                Log.debug("Unprocessed files: \(photoPickerStatus.pendingUploads.count)")
             }
             return
         }
