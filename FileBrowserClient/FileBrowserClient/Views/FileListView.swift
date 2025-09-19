@@ -1297,15 +1297,12 @@ struct FileListView: View {
             showSettingsSheet
         }
         .sheet(isPresented: $showPhotoPicker) {
-            PhotoPicker(
-                photoPickerStatus: photoPickerStatus,
-                onFilePicked: { url in
-                    uploadQueue.append(url)
-                    if !isUploading {
-                        uploadNextInQueue()
-                    }
+            PhotoPicker(photoPickerStatus: photoPickerStatus) { urls in
+                uploadQueue.append(contentsOf: urls)
+                if !isUploading {
+                    uploadNextInQueue()
                 }
-            )
+            }
         }
         .fileImporter(
             isPresented: $showFileImporter,
