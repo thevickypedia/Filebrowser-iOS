@@ -11,14 +11,15 @@ import PhotosUI
 class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
     @Published var currentlyPreparing: String?
+    @Published var totalSelected: [String] = []
 }
 
 struct PhotoPicker: UIViewControllerRepresentable {
     @ObservedObject var photoPickerStatus: PhotoPickerStatus
-    var onFilesPicked: (_ urls: [URL]) -> Void
+    var onFilePicked: (_ url: URL) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(photoPickerStatus: photoPickerStatus, onFilesPicked: onFilesPicked)
+        Coordinator(photoPickerStatus: photoPickerStatus, onFilePicked: onFilePicked)
     }
 
     func makeUIViewController(context: Context) -> PHPickerViewController {
@@ -39,14 +40,14 @@ struct PhotoPicker: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {}
 
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
-        var onFilesPicked: (_ urls: [URL]) -> Void
+        var onFilePicked: (_ url: URL) -> Void
         var photoPickerStatus: PhotoPickerStatus
         private var currentCount = 0
         private var processedFilenames = Set<String>()
 
-        init(photoPickerStatus: PhotoPickerStatus, onFilesPicked: @escaping (_ urls: [URL]) -> Void) {
+        init(photoPickerStatus: PhotoPickerStatus, onFilePicked: @escaping (_ url: URL) -> Void) {
             self.photoPickerStatus = photoPickerStatus
-            self.onFilesPicked = onFilesPicked
+            self.onFilePicked = onFilePicked
         }
 
         func updateCurrentProcessed(fileName: String, total: Int, bytes: Int? = nil) {
@@ -81,74 +82,64 @@ struct PhotoPicker: UIViewControllerRepresentable {
             }
 
             let total = results.count
+            self.photoPickerStatus.totalSelected = results.map { $0.itemProvider.suggestedName ?? "Unknown" }
             Log.info("Selected files for upload: \(total)")
 
-            let dispatchGroup = DispatchGroup()
-            var collectedURLs: [URL] = []
-            let resultQueue = DispatchQueue(label: "photoPicker.resultQueue") // For thread-safe access
+            let writingQueue = DispatchQueue(label: "photoPicker.tempWriter", attributes: .concurrent)
 
+            // TODO: One large file in between blocks smaller files that could have been uploaded meanwhile
             for result in results {
-                dispatchGroup.enter()
+                writingQueue.async {
+                    let provider = result.itemProvider
+                    let suggestedName = provider.suggestedName ?? "Unknown"
 
-                let provider = result.itemProvider
-                let suggestedName = provider.suggestedName ?? "Unknown"
+                    let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+                    let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
 
-                let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
-                let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
+                    let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+                    let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
 
-                let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-                let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
+                    let defaultExt = isImage ? "jpg" : "mov"
+                    let ext = pathExt.isEmpty ? defaultExt : pathExt
 
-                let defaultExt = isImage ? "jpg" : "mov"
-                let ext = pathExt.isEmpty ? defaultExt : pathExt
+                    let defaultPre = isImage ? "photo" : "video"
+                    let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                let defaultPre = isImage ? "photo" : "video"
-                let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
+                    self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total)
+                    if isImage {
+                        provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                            guard let data = data else { return }
 
-                self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total)
+                            self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total, bytes: data.count)
 
-                if isImage {
-                    provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
-                        defer { dispatchGroup.leave() }
+                            if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
+                                DispatchQueue.main.async {
+                                    self.onFilePicked(temp)
+                                    self.photoPickerStatus.isPreparingUpload = false
+                                }
+                            }
+                        }
+                    } else if isVideo {
+                        provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
+                            guard let url = url else { return }
 
-                        guard let data = data else { return }
+                            if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber {
+                                self.updateCurrentProcessed(
+                                    fileName: "\(suggestedName).\(ext)", total: total, bytes: fileSize.intValue
+                                )
+                            } else {
+                                self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total, bytes: 0)
+                            }
 
-                        self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total, bytes: data.count)
-
-                        if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
-                            resultQueue.async {
-                                collectedURLs.append(temp)
+                            if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: filename) {
+                                DispatchQueue.main.async {
+                                    self.onFilePicked(temp)
+                                    self.photoPickerStatus.isPreparingUpload = false
+                                }
                             }
                         }
                     }
-                } else if isVideo {
-                     provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
-                        defer { dispatchGroup.leave() }
-
-                        guard let url = url else { return }
-
-                        if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber {
-                            self.updateCurrentProcessed(
-                                fileName: "\(suggestedName).\(ext)", total: total, bytes: fileSize.intValue
-                            )
-                        } else {
-                            self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", total: total, bytes: 0)
-                        }
-
-                        if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: filename) {
-                            resultQueue.async {
-                                collectedURLs.append(temp)
-                            }
-                        }
-                    }
-                } else {
-                    dispatchGroup.leave()
                 }
-            }
-
-            dispatchGroup.notify(queue: .main) {
-                self.onFilesPicked(collectedURLs)
-                self.photoPickerStatus.isPreparingUpload = false
             }
         }
     }
