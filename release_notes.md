@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.40.1 (09/19/2025)
+--------------------
+- [78cbe40](https://github.com/thevickypedia/Filebrowser-iOS/commit/78cbe407c6dbf63f21002384fb8c625651e216eb) chore: Release ``v1.40.1``
+- [6955b96](https://github.com/thevickypedia/Filebrowser-iOS/commit/6955b9673193cca02210cfd16134b156617ac36e) perf: Display upload files' names in the UX before extracting the data
+- [804250a](https://github.com/thevickypedia/Filebrowser-iOS/commit/804250a513c6fe94ef196a7bcd33134d27f86275) perf: Remove temp file post upload with a 5s delay to avoid potential race condition
+- [fe59974](https://github.com/thevickypedia/Filebrowser-iOS/commit/fe59974967fc6d3fc80ef34b0bdcbcc2ae479e5c) chore: Update release notes for v1.40.0
+
 v1.40.0 (09/18/2025)
 --------------------
 - [63b02f7](https://github.com/thevickypedia/Filebrowser-iOS/commit/63b02f74b52a04cf688bdef4f0415b0025a10145) chore: Release ``v1.40.0``
