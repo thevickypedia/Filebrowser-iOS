@@ -180,7 +180,7 @@ struct RemoteThumbnail: View {
         })
     }
 
-    private func actuallyLoadThumbnail() {
+    private func actuallyLoadThumbnail(retryCount: Int = 0) {
         let fileName = file.name.lowercased()
         let isGIF = fileName.hasSuffix(".gif")
         let isVideo = extensionTypes.videoExtensions.contains { fileName.hasSuffix($0) }
@@ -248,8 +248,17 @@ struct RemoteThumbnail: View {
                     }
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: thumbImage, gifData: nil, failed: false)
                 } catch {
-                    Log.error("❌ Video thumbnail generation failed: \(error.localizedDescription)")
-                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
+                    // Retry up to 3 times
+                    if retryCount < 2 {
+                        Log.warn("⚠️ Video thumbnail generation failed: \(error.localizedDescription) — attempt \(retryCount + 1)")
+                        // Retry by re-adding operation to queue with incremented retry count
+                        thumbnailQueue.addOperation {
+                            self.actuallyLoadThumbnail(retryCount: retryCount + 1)
+                        }
+                    } else {
+                        Log.error("❌ Video thumbnail generation failed: \(error.localizedDescription) — retry attempts exceeded")
+                        GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
+                    }
                 }
             }
             return
