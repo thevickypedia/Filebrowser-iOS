@@ -10,6 +10,7 @@ import PhotosUI
 
 class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
+    @Published var currentlyPreparing: String?
 }
 
 struct PhotoPicker: UIViewControllerRepresentable {
@@ -45,6 +46,18 @@ struct PhotoPicker: UIViewControllerRepresentable {
             self.onFilesPicked = onFilesPicked
         }
 
+        func updateCurrentProcessed(fileName: String, bytes: Int, idx: Int, total: Int) {
+            let fileSize = sizeConverter(bytes)
+            if bytes == 0 {
+                Log.debug("\(fileName): Unable to determine file size")
+            } else {
+                Log.debug("\(fileName): \(fileSize)")
+            }
+            DispatchQueue.main.async {
+                self.photoPickerStatus.currentlyPreparing = "Preparing [\(idx)/\(total)] \(fileName) \(bytes == 0 ? "" : "- \(fileSize)")"
+            }
+        }
+
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             picker.dismiss(animated: true)
 
@@ -54,17 +67,19 @@ struct PhotoPicker: UIViewControllerRepresentable {
                 return
             }
 
-            Log.info("Selected files for upload: \(results.count)")
+            let total = results.count
+            Log.info("Selected files for upload: \(total)")
 
             let dispatchGroup = DispatchGroup()
             var collectedURLs: [URL] = []
             let resultQueue = DispatchQueue(label: "photoPicker.resultQueue") // For thread-safe access
 
-            for result in results {
+            // TODO: Drop enumerated and use iterative count - accurate index can swap idx from 4 to 1
+            for (idx, result) in results.enumerated() {
                 dispatchGroup.enter()
 
                 let provider = result.itemProvider
-                let suggestedName = provider.suggestedName ?? ""
+                let suggestedName = provider.suggestedName ?? "Unknown"
 
                 Log.info("Start: Processing \(suggestedName)")
 
@@ -73,12 +88,13 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         defer { dispatchGroup.leave() }
 
                         guard let data = data else { return }
-                        Log.debug("\(suggestedName): \(sizeConverter(data.count))")
 
                         let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
                         let ext = pathExt.isEmpty ? "jpg" : pathExt
                         let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
+
+                        self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: data.count, idx: idx, total: total)
 
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
                             resultQueue.async {
@@ -93,17 +109,19 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         defer { dispatchGroup.leave() }
 
                         guard let url = url else { return }
-                        if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber {
-                            let byteCount = fileSize.intValue
-                            Log.debug("\(suggestedName): \(sizeConverter(byteCount))")
-                        } else {
-                            Log.debug("\(suggestedName): Unable to determine file size.")
-                        }
-                        
+
                         let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
                         let ext = pathExt.isEmpty ? "mov" : pathExt
                         let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
+
+                        if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber {
+                            self.updateCurrentProcessed(
+                                fileName: "\(suggestedName).\(ext)", bytes: fileSize.intValue, idx: idx, total: total
+                            )
+                        } else {
+                            self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: 0, idx: idx, total: total)
+                        }
 
                         if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: filename) {
                             resultQueue.async {

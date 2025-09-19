@@ -205,7 +205,7 @@ struct FileListView: View {
 
     private var preparingUploadStack: some View {
         ZStack {
-            ProgressView("Preparing for upload...")
+            ProgressView(photoPickerStatus.currentlyPreparing ?? "Preparing for upload...")
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .padding(24)
                 .background(.ultraThinMaterial)
