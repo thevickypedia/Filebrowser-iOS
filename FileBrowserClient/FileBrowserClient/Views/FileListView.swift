@@ -2119,6 +2119,7 @@ struct FileListView: View {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
             statusMessage = StatusPayload(text: "📤 Uploaded \(currentUploadIndex) items")
+            UIApplication.shared.isIdleTimerDisabled = false
             return
         }
 

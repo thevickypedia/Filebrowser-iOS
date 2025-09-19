@@ -23,6 +23,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
     func makeUIViewController(context: Context) -> PHPickerViewController {
         // MARK: Entry
+        UIApplication.shared.isIdleTimerDisabled = true
         DispatchQueue.main.async {
             self.photoPickerStatus.isPreparingUpload = true
         }
