@@ -659,6 +659,7 @@ struct FileListView: View {
             }
             Section {
                 Button(role: .destructive) {
+                    GlobalThumbnailLoader.shared.clearFailedPath()
                     FileCache.shared.clearDiskCache(self.serverURL)
                     fetchClientStorageInfo()
                     settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)

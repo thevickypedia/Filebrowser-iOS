@@ -65,9 +65,13 @@ final class GlobalThumbnailLoader {
         }
     }
 
-    func clearFailedPath(_ filePath: String) {
-        _ = queue.sync(flags: .barrier) {
-            failedPaths.remove(filePath)
+    func clearFailedPath(_ filePath: String? = nil) {
+        if let path = filePath {
+            _ = queue.sync(flags: .barrier) {
+                failedPaths.remove(path)
+            }
+        } else {
+            failedPaths.removeAll()
         }
     }
 }
