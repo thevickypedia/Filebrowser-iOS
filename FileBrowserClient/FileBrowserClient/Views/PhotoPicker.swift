@@ -40,21 +40,23 @@ struct PhotoPicker: UIViewControllerRepresentable {
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
         var onFilesPicked: (_ urls: [URL]) -> Void
         var photoPickerStatus: PhotoPickerStatus
+        private var currentCount = 0
 
         init(photoPickerStatus: PhotoPickerStatus, onFilesPicked: @escaping (_ urls: [URL]) -> Void) {
             self.photoPickerStatus = photoPickerStatus
             self.onFilesPicked = onFilesPicked
         }
 
-        func updateCurrentProcessed(fileName: String, bytes: Int, idx: Int, total: Int) {
-            let fileSize = sizeConverter(bytes)
-            if bytes == 0 {
-                Log.debug("\(fileName): Unable to determine file size")
-            } else {
-                Log.debug("\(fileName): \(fileSize)")
-            }
+        func updateCurrentProcessed(fileName: String, bytes: Int, total: Int) {
             DispatchQueue.main.async {
-                self.photoPickerStatus.currentlyPreparing = "Preparing [\(idx)/\(total)] \(fileName) \(bytes == 0 ? "" : "- \(fileSize)")"
+                self.currentCount += 1
+                let fileSize = sizeConverter(bytes)
+                if bytes == 0 {
+                    Log.debug("\(fileName): Unable to determine file size")
+                } else {
+                    Log.debug("\(fileName): \(fileSize)")
+                }
+                self.photoPickerStatus.currentlyPreparing = "\(self.currentCount)/\(total): \(fileName) \(bytes == 0 ? "" : "- \(fileSize)")"
             }
         }
 
@@ -74,14 +76,13 @@ struct PhotoPicker: UIViewControllerRepresentable {
             var collectedURLs: [URL] = []
             let resultQueue = DispatchQueue(label: "photoPicker.resultQueue") // For thread-safe access
 
-            // TODO: Drop enumerated and use iterative count - accurate index can swap idx from 4 to 1
-            for (idx, result) in results.enumerated() {
+            for result in results {
                 dispatchGroup.enter()
 
                 let provider = result.itemProvider
                 let suggestedName = provider.suggestedName ?? "Unknown"
 
-                Log.info("Start: Processing \(suggestedName)")
+                Log.debug("Start: Copying \(suggestedName)")
 
                 if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
                     provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
@@ -94,7 +95,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                         let filename = (base.isEmpty ? "photo-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                        self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: data.count, idx: idx, total: total)
+                        self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: data.count, total: total)
 
                         if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
                             resultQueue.async {
@@ -117,10 +118,10 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
                         if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber {
                             self.updateCurrentProcessed(
-                                fileName: "\(suggestedName).\(ext)", bytes: fileSize.intValue, idx: idx, total: total
+                                fileName: "\(suggestedName).\(ext)", bytes: fileSize.intValue, total: total
                             )
                         } else {
-                            self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: 0, idx: idx, total: total)
+                            self.updateCurrentProcessed(fileName: "\(suggestedName).\(ext)", bytes: 0, total: total)
                         }
 
                         if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: filename) {

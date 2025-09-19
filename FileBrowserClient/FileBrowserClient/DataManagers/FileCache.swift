@@ -110,7 +110,7 @@ class FileCache {
             try FileManager.default.copyItem(at: sourceURL, to: tempURL)
             return tempURL
         } catch {
-            Log.error("❌ Failed to copy temp file: \(error)")
+            Log.error("❌ Failed to copy temp file: \(error.localizedDescription)")
             return nil
         }
     }
