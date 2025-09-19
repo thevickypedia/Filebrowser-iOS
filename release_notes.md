@@ -1,6 +1,29 @@
 Release Notes
 =============
 
+v1.40.0 (09/18/2025)
+--------------------
+- [63b02f7](https://github.com/thevickypedia/Filebrowser-iOS/commit/63b02f74b52a04cf688bdef4f0415b0025a10145) chore: Release ``v1.40.0``
+- [c5dcf42](https://github.com/thevickypedia/Filebrowser-iOS/commit/c5dcf42f7ca11a62aac2ea69af63e00ddabba8c3) fix: Resolve inaccurate upload files' progress counter
+- [2b7490c](https://github.com/thevickypedia/Filebrowser-iOS/commit/2b7490c159818985c8bd4b79d35613b8fcef567a) feat: Show current processing queue while upload begins
+- [227bff2](https://github.com/thevickypedia/Filebrowser-iOS/commit/227bff29ffcdc26115c5880fa4551c74d842cc92) perf: Simplify retry handler for thumbnails
+- [8a1a9bc](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a1a9bcb8f1ebd85b4b81736a46ad465288eea93) chore: Store ``thumbnailRetryLimit`` as a constant
+- [f04a7e9](https://github.com/thevickypedia/Filebrowser-iOS/commit/f04a7e94d0fb84b6fb7ffc152f09357ba5b1d367) perf: Clear failed thumbnail paths when cache is cleared
+- [8bed5e8](https://github.com/thevickypedia/Filebrowser-iOS/commit/8bed5e8f66eeba328746389c91f1b51f01a005da) perf: Add a retry logic for thumbnail loader
+- [3f1e989](https://github.com/thevickypedia/Filebrowser-iOS/commit/3f1e989475fd6bc636f39cf20938e9c6a3ba7c7d) perf: Copy files to temp parallely but wait for completion before initating upload
+- [a5b5132](https://github.com/thevickypedia/Filebrowser-iOS/commit/a5b5132c5f65338eac3cc71d9f4bb2ff189088c6) revert: Rollback full async photo/video upload process
+- [40d7afa](https://github.com/thevickypedia/Filebrowser-iOS/commit/40d7afa933d26681eb961e188b942961b7660208) perf: Use fully concurrent file upload process
+- [8475e68](https://github.com/thevickypedia/Filebrowser-iOS/commit/8475e68f36f9deaa1f5ed23431c3348dc0fe578a) perf: Copy upload files to temp directory instead of writing
+- [ff69a6d](https://github.com/thevickypedia/Filebrowser-iOS/commit/ff69a6dc8723b96135ad03584d341dd5bdfb59c9) perf: Use dispatch group with concurrent queue to parallelize the writing to temp
+- [ea9004f](https://github.com/thevickypedia/Filebrowser-iOS/commit/ea9004fb87afa5288091d037cf1be79473a1ddd9) perf: Start upload process immediately after the first file is ready while copying the rest asynchronously
+- [b28faa9](https://github.com/thevickypedia/Filebrowser-iOS/commit/b28faa96d569b776cb63a3273cd80758ac3f3e40) feat: Start upload immediately after the first file is copied to temp using an yield-like approach
+- [33d7c28](https://github.com/thevickypedia/Filebrowser-iOS/commit/33d7c285a74e89356eb0cbf6cdab8970a141bddc) fix: Remove redundant JWT decode step for biometrics sign in
+- [b233381](https://github.com/thevickypedia/Filebrowser-iOS/commit/b233381e6512226061f2126919d3f8be34793035) revert: Rollback async copy to temp process for file uploads
+- [d29542c](https://github.com/thevickypedia/Filebrowser-iOS/commit/d29542c30f9bcb5e2842abab5663c3905ff26910) feat: Start upload immediately after the first file is copied to temp while copying the rest to temp asynchronously
+- [d8daaa2](https://github.com/thevickypedia/Filebrowser-iOS/commit/d8daaa2db86b2ab9c70ddcaf9e5065b0e4936e80) revert: Rollback the yield-like file uploader as it blocks the copy to temp action
+- [7eebbf4](https://github.com/thevickypedia/Filebrowser-iOS/commit/7eebbf407935848c2f021c1d9454d7813e75ae58) feat: Start upload immediately after the first file is copied to temp using a yield-like approach
+- [ae3212f](https://github.com/thevickypedia/Filebrowser-iOS/commit/ae3212faca88cd54c60b9fdf0db6adf54091b744) chore: Update release notes for v1.39.4
+
 v1.39.4 (09/18/2025)
 --------------------
 - [823ee1f](https://github.com/thevickypedia/Filebrowser-iOS/commit/823ee1f38767f006cda3f3e0e18abd7879a11f77) chore: Release ``v1.39.4``
