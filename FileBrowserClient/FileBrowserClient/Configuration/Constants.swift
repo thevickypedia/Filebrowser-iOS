@@ -25,4 +25,5 @@ struct Constants {
     static let mediaResumeThreshold: Double = 5.0
 
     static let thumbnailQuality: CGFloat = 0.1
+    static let thumbnailRetryLimit: Int = 5
 }

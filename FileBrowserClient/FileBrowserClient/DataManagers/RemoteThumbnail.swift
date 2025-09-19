@@ -252,8 +252,7 @@ struct RemoteThumbnail: View {
                     }
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: thumbImage, gifData: nil, failed: false)
                 } catch {
-                    // Retry up to 3 times
-                    if retryCount < 2 {
+                    if retryCount < Constants.thumbnailRetryLimit {
                         Log.warn("⚠️ Video thumbnail generation failed: \(error.localizedDescription) — attempt \(retryCount + 1)")
                         // Retry by re-adding operation to queue with incremented retry count
                         thumbnailQueue.addOperation {
