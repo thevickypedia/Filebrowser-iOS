@@ -184,6 +184,19 @@ struct RemoteThumbnail: View {
         })
     }
 
+    private func retryHandler(retryCount: Int, errMsg: String) {
+        if retryCount < Constants.thumbnailRetryLimit {
+            Log.warn("⚠️ \(errMsg) — attempt \(retryCount + 1)")
+            // Retry by re-adding operation to queue with incremented retry count
+            thumbnailQueue.addOperation {
+                self.actuallyLoadThumbnail(retryCount: retryCount + 1)
+            }
+        } else {
+            Log.error("❌ \(errMsg) — retry attempts exceeded")
+            GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
+        }
+    }
+
     private func actuallyLoadThumbnail(retryCount: Int = 0) {
         let fileName = file.name.lowercased()
         let isGIF = fileName.hasSuffix(".gif")
@@ -252,16 +265,8 @@ struct RemoteThumbnail: View {
                     }
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: thumbImage, gifData: nil, failed: false)
                 } catch {
-                    if retryCount < Constants.thumbnailRetryLimit {
-                        Log.warn("⚠️ Video thumbnail generation failed: \(error.localizedDescription) — attempt \(retryCount + 1)")
-                        // Retry by re-adding operation to queue with incremented retry count
-                        thumbnailQueue.addOperation {
-                            self.actuallyLoadThumbnail(retryCount: retryCount + 1)
-                        }
-                    } else {
-                        Log.error("❌ Video thumbnail generation failed: \(error.localizedDescription) — retry attempts exceeded")
-                        GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
-                    }
+                    let errMsg = "Video thumbnail generation failed: \(error.localizedDescription)"
+                    retryHandler(retryCount: retryCount, errMsg: errMsg)
                 }
             }
             return
@@ -282,10 +287,8 @@ struct RemoteThumbnail: View {
 
         URLSession.shared.dataTask(with: url) { data, _, error in
             guard let data = data, error == nil else {
-                Log.error(
-                    "❌ Image thumbnail request failed for file: \(file.name) — error: \(error?.localizedDescription ?? "Unknown error")"
-                )
-                GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
+                let errMsg = "Image thumbnail request failed for file: \(file.name) — error: \(error?.localizedDescription ?? "Unknown error")"
+                retryHandler(retryCount: retryCount, errMsg: errMsg)
                 return
             }
             autoreleasepool {
@@ -303,8 +306,8 @@ struct RemoteThumbnail: View {
                 } else if let img = UIImage(data: data) {
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: img, gifData: nil, failed: false)
                 } else {
-                    Log.error("❌ Failed to decode image thumbnail for file: \(file.name) — data size: \(data.count) bytes")
-                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
+                    let errMsg = "Failed to decode image thumbnail for file: \(file.name) — data size: \(data.count) bytes"
+                    retryHandler(retryCount: retryCount, errMsg: errMsg)
                 }
             }
         }.resume()
