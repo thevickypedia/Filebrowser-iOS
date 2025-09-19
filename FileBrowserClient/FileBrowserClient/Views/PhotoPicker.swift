@@ -10,8 +10,8 @@ import PhotosUI
 
 class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
-    @Published var currentlyPreparing: String?
     @Published var totalSelected: [String] = []
+    @Published var processedFiles: [String] = []
 }
 
 struct PhotoPicker: UIViewControllerRepresentable {
@@ -59,15 +59,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
                 if let byteSize = bytes {
                     let fileSize = sizeConverter(byteSize)
-                    if byteSize == 0 {
-                        Log.debug("End: Writing \(fileName): Unable to determine file size")
-                    } else {
-                        Log.debug("End: Writing \(fileName): \(fileSize)")
-                    }
-                    self.photoPickerStatus.currentlyPreparing = "\(self.currentCount)/\(total): \(fileName) \(byteSize == 0 ? "" : "- \(fileSize)")"
+                    Log.debug("Copied \(fileName) [\(fileSize)] to temp directory")
                 } else {
-                    Log.debug("Start: Copying \(fileName)")
-                    self.photoPickerStatus.currentlyPreparing = "\(self.currentCount)/\(total): \(fileName)"
+                    Log.debug("Copied \(fileName) [Unknown size] to temp directory")
                 }
             }
         }
@@ -121,7 +115,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
             // TODO: One large file in between blocks smaller files that could have been uploaded meanwhile
             for result in results {
                 writingQueue.async {
-                    self.updateCurrentProcessed(fileName: result.rawFileName, total: results.count)
                     if result.isImage {
                         result.provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
                             guard let data = data else { return }
@@ -144,7 +137,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
                                     fileName: result.rawFileName, total: total, bytes: fileSize.intValue
                                 )
                             } else {
-                                self.updateCurrentProcessed(fileName: result.rawFileName, total: total, bytes: 0)
+                                self.updateCurrentProcessed(fileName: result.rawFileName, total: total)
                             }
 
                             if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: result.filename) {

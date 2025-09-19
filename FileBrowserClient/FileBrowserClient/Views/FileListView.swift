@@ -205,7 +205,7 @@ struct FileListView: View {
 
     private var preparingUploadStack: some View {
         ZStack {
-            ProgressView(photoPickerStatus.currentlyPreparing ?? "Preparing for upload...")
+            ProgressView("Preparing for upload...")
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .padding(24)
                 .background(.ultraThinMaterial)
@@ -1108,7 +1108,6 @@ struct FileListView: View {
                             currentUploadIndex = 0
                             uploadProgress = 0.0
                             isUploading = false
-                            photoPickerStatus.currentlyPreparing = nil
                             photoPickerStatus.totalSelected.removeAll()
                             photoPickerStatus.isPreparingUpload = false
                             Log.info("❌ Upload cancelled by user.")
