@@ -12,6 +12,7 @@ class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
     @Published var totalSelected: [String] = []
     @Published var processedFiles: [String] = []
+    @Published var pendingUploads: [String] = []
 }
 
 struct PhotoPicker: UIViewControllerRepresentable {
@@ -42,8 +43,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
     class Coordinator: NSObject, PHPickerViewControllerDelegate {
         var onFilePicked: (_ url: URL) -> Void
         var photoPickerStatus: PhotoPickerStatus
-        private var currentCount = 0
-        private var processedFilenames = Set<String>()
 
         init(photoPickerStatus: PhotoPickerStatus, onFilePicked: @escaping (_ url: URL) -> Void) {
             self.photoPickerStatus = photoPickerStatus
@@ -52,9 +51,8 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
         func updateCurrentProcessed(fileName: String, total: Int, bytes: Int? = nil) {
             DispatchQueue.main.async {
-                if !self.processedFilenames.contains(fileName) {
-                    self.currentCount += 1
-                    self.processedFilenames.insert(fileName)
+                if !self.photoPickerStatus.processedFiles.contains(fileName) {
+                    self.photoPickerStatus.processedFiles.append(fileName)
                 }
 
                 if let byteSize = bytes {
@@ -89,6 +87,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
                 let defaultPre = isImage ? "photo" : "video"
                 let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
                 self.photoPickerStatus.totalSelected.append(rawFileName)
+                self.photoPickerStatus.pendingUploads.append(rawFileName)
                 processedResults.append(
                     ProcessedResults(
                         provider: provider, rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
@@ -112,10 +111,12 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
             let writingQueue = DispatchQueue(label: "photoPicker.tempWriter", attributes: .concurrent)
 
-            // TODO: One large file in between blocks smaller files that could have been uploaded meanwhile
+            // TODO: One large file in between, blocks smaller files that could have been uploaded meanwhile
+            // TODO: Make writingQueue a cancellable task and cancel when upload is cancelled
             for result in results {
                 writingQueue.async {
                     if result.isImage {
+                        Log.debug("Loading image: \(result.rawFileName)")
                         result.provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
                             guard let data = data else { return }
 
@@ -129,6 +130,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
                             }
                         }
                     } else if result.isVideo {
+                        Log.debug("Loading video: \(result.rawFileName)")
                         result.provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
                             guard let url = url else { return }
 

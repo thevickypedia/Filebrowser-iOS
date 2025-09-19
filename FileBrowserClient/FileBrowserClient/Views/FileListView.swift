@@ -205,7 +205,7 @@ struct FileListView: View {
 
     private var preparingUploadStack: some View {
         ZStack {
-            ProgressView("Preparing for upload...")
+            ProgressView("Preparing \(photoPickerStatus.totalSelected.count) files for upload...")
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .padding(24)
                 .background(.ultraThinMaterial)
@@ -345,15 +345,22 @@ struct FileListView: View {
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
 
-// FIXME: Swift/ContiguousArrayBuffer.swift:690: Fatal error: Index out of range
-//            // TODO: Next up is incorrect since the currentUploadIndex is not an exact sequence in totalSelected
-//            if photoPickerStatus.totalSelected.count >= currentUploadIndex + 1 {
-//                Text("Next up: \(photoPickerStatus.totalSelected[currentUploadIndex + 1])")
-//                    .font(.footnote)
-//                    .foregroundColor(.secondary)
-//                    .padding(.top, 4)
-//            }
+            if let nextUp = nextUploadInQueue() {
+                Text(nextUp)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            }
         }
+    }
+
+    private func nextUploadInQueue() -> String? {
+        if currentUploadIndex + 1 < uploadQueue.count {
+            return "Next up: \(uploadQueue[currentUploadIndex + 1].lastPathComponent)"
+        } else if !isUploading {
+            return "Processing \(photoPickerStatus.pendingUploads.count) pending files"
+        }
+        return nil
     }
 
     private var downloadingStack: some View {
@@ -1102,15 +1109,7 @@ struct FileListView: View {
                             .shadow(radius: 4)
                         Button(action: {
                             isUploadCancelled = true
-                            uploadTask?.cancel()
-                            uploadTask = nil
-                            uploadQueue = []
-                            currentUploadIndex = 0
-                            uploadProgress = 0.0
-                            isUploading = false
-                            photoPickerStatus.totalSelected.removeAll()
-                            photoPickerStatus.isPreparingUpload = false
-                            Log.info("❌ Upload cancelled by user.")
+                            cancelUpload(fileHandle: nil)
                         }) {
                             Label("Cancel Upload", systemImage: "xmark.circle.fill")
                                 .foregroundColor(.red)
@@ -2018,11 +2017,19 @@ struct FileListView: View {
     }
 
     func cancelUpload(fileHandle: FileHandle?) {
+        UIApplication.shared.isIdleTimerDisabled = false
         fileHandle?.closeFile()
         uploadTask?.cancel()
         uploadTask = nil
         isUploading = false
-        Log.debug("❌ Upload cancelled")
+        uploadQueue = []
+        currentUploadIndex = 0
+        uploadProgress = 0.0
+        photoPickerStatus.isPreparingUpload = false
+        photoPickerStatus.totalSelected.removeAll()
+        photoPickerStatus.processedFiles.removeAll()
+        photoPickerStatus.pendingUploads.removeAll()
+        Log.info("❌ Upload cancelled by user.")
         fetchFiles(at: currentPath)
     }
 
@@ -2060,7 +2067,6 @@ struct FileListView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                     FileCache.shared.removeTempFile(at: fileURL)
                 }
-                // TODO: Causes conflict with "Queue" when next up is pending
                 currentUploadIndex += 1
                 uploadTask = nil
                 uploadProgress = 1.0
@@ -2141,8 +2147,15 @@ struct FileListView: View {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
             statusMessage = StatusPayload(text: "📤 Uploaded \(currentUploadIndex) items")
-            // MARK: Exit - Enable auto-lock
-            UIApplication.shared.isIdleTimerDisabled = false
+            if photoPickerStatus.totalSelected.count == photoPickerStatus.processedFiles.count {
+                // MARK: Exit - Enable auto-lock and clean up staging area
+                // TODO: Cleanup all photoPickerStatus status when closed/cancelled
+                photoPickerStatus.isPreparingUpload = false
+                photoPickerStatus.totalSelected.removeAll()
+                photoPickerStatus.processedFiles.removeAll()
+                photoPickerStatus.pendingUploads.removeAll()
+                UIApplication.shared.isIdleTimerDisabled = false
+            }
             return
         }
 
@@ -2150,6 +2163,10 @@ struct FileListView: View {
         isUploadCancelled = false
         uploadProgress = 0.0
         let fileURL = uploadQueue[currentUploadIndex]
+        if let index = photoPickerStatus.pendingUploads.firstIndex(of: fileURL.lastPathComponent) {
+            photoPickerStatus.pendingUploads.remove(at: index)
+            Log.debug("Removed \(fileURL.lastPathComponent) from pending uploads - remaining: \(photoPickerStatus.pendingUploads.count)")
+        }
         initiateTusUpload(for: fileURL)
     }
 

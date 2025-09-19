@@ -122,7 +122,7 @@ class FileCache {
                     try FileManager.default.removeItem(at: fileURL)
                     Log.info("🗑️ Deleted temp file: \(fileURL.lastPathComponent)")
                 } catch {
-                    Log.warn("⚠️ Failed to delete file: \(error)")
+                    Log.warn("⚠️ Failed to delete file: \(error.localizedDescription)")
                 }
             }
         }
