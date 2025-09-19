@@ -305,7 +305,7 @@ struct FileListView: View {
                     Text("Queue")
                         .font(.caption)
                         .foregroundColor(.gray)
-                    Text("\(currentUploadIndex) of \(photoPickerStatus.totalSelected.count)")
+                    Text("\(currentUploadIndex + 1) of \(photoPickerStatus.totalSelected.count)")
                         .font(.body)
                 }
             }
@@ -2061,7 +2061,7 @@ struct FileListView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
                     FileCache.shared.removeTempFile(at: fileURL)
                 }
-                // TODO: Causes conflict with "Queue"
+                // TODO: Causes conflict with "Queue" when next up is pending
                 currentUploadIndex += 1
                 uploadTask = nil
                 uploadProgress = 1.0
