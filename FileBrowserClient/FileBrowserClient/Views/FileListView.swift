@@ -305,7 +305,7 @@ struct FileListView: View {
                     Text("Queue")
                         .font(.caption)
                         .foregroundColor(.gray)
-                    Text("\(currentUploadIndex + 1) of \(photoPickerStatus.totalSelected.count)")
+                    Text("\(isUploading ? currentUploadIndex + 1 : currentUploadIndex) of \(photoPickerStatus.totalSelected.count)")
                         .font(.body)
                 }
             }
