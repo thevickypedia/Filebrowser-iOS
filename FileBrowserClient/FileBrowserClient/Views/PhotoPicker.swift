@@ -83,15 +83,14 @@ struct PhotoPicker: UIViewControllerRepresentable {
                         }
                     } else if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {
                         provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
-                            guard let url = url,
-                                  let data = try? Data(contentsOf: url) else { return }
+                            guard let url = url else { return }
 
                             let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
                             let ext = pathExt.isEmpty ? "mov" : pathExt
                             let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
                             let filename = (base.isEmpty ? "video-\(UUID().uuidString)" : base) + ".\(ext)"
 
-                            if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: filename) {
+                            if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: filename) {
                                 DispatchQueue.main.async {
                                     self.onFilePicked(temp)
                                     self.photoPickerStatus.isPreparingUpload = false

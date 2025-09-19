@@ -101,6 +101,20 @@ class FileCache {
         }
     }
 
+    func copyToTemporaryFile(from sourceURL: URL, as suggestedName: String) -> URL? {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(suggestedName)
+        do {
+            if FileManager.default.fileExists(atPath: tempURL.path) {
+                try FileManager.default.removeItem(at: tempURL)
+            }
+            try FileManager.default.copyItem(at: sourceURL, to: tempURL)
+            return tempURL
+        } catch {
+            Log.error("❌ Failed to copy temp file: \(error)")
+            return nil
+        }
+    }
+
     func removeTempFile(at fileURL: URL) {
         Task(priority: .low) {
             if FileManager.default.fileExists(atPath: fileURL.path) {
