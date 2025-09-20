@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.41.0 (09/19/2025)
+--------------------
+- [5dcdd6e](https://github.com/thevickypedia/Filebrowser-iOS/commit/5dcdd6e406eaec023f3b690835deec8ed01e19ca) chore: Release ``v1.41.0``
+- [ca02518](https://github.com/thevickypedia/Filebrowser-iOS/commit/ca02518959f37868d20e16b7ad8561fda566a602) feat: Implement asynchronous task-based concurrency for photo picker with structured cancellation
+- [fcda6a2](https://github.com/thevickypedia/Filebrowser-iOS/commit/fcda6a2658b487965c29f3d9a2c13b0a61b12660) chore: Update release notes for v1.40.2
+
 v1.40.2 (09/19/2025)
 --------------------
 - [0132d98](https://github.com/thevickypedia/Filebrowser-iOS/commit/0132d9800f3d275fbd52afce4d9d46ed1b8d6135) chore: Release ``v1.40.2``
