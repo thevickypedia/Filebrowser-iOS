@@ -477,7 +477,7 @@ struct FileDetailView: View {
         }
     }
 
-    // TODO: Display download progress just like list view [AND] unify logic in a dedicated module
+    // TODO: Unify logic with FileListView in a dedicated module
     // MARK: - Unified save (shows share sheet OR saves directly if showSave true)
     func saveFile(showSave: Bool = false) {
         guard let content = self.content else { return }

@@ -719,8 +719,6 @@ struct FileListView: View {
             } message: {
                 deleteSessionMessage(includeKnownServers: removeKnownServers)
             }
-            // TODO: Capture client changes: (total uploaded/downloaded bytes)
-            // TODO: Capture server changes: (moved/copied/deleted/renamed/shared)
 
             Section(
                 footer: VStack(alignment: .leading) {
@@ -763,7 +761,6 @@ struct FileListView: View {
         return path
     }
 
-    // Optional TODO: Add an overwrite button
     private func modifySheet(action: ModifyItem) -> some View {
         NavigationStack {
             VStack {
@@ -772,7 +769,7 @@ struct FileListView: View {
                     Button(action: {
                         if !sheetPathStack.isEmpty {
                             sheetPathStack.removeLast()
-                            viewModel.getFiles(at: currentSheetPath)
+                            viewModel.getFiles(at: currentSheetPath, modifySheet: true)
                         }
                     }) {
                         HStack {
@@ -788,7 +785,7 @@ struct FileListView: View {
                     // Home button - goes to root directory
                     Button(action: {
                         sheetPathStack.removeAll()
-                        viewModel.getFiles(at: "/")
+                        viewModel.getFiles(at: "/", modifySheet: true)
                     }) {
                         VStack {
                             Image(systemName: "house")
@@ -828,7 +825,7 @@ struct FileListView: View {
                             ForEach(viewModel.sheetItems.filter { $0.isDir }, id: \.id) { file in
                                 Button(action: {
                                     sheetPathStack.append(file)
-                                    viewModel.getFiles(at: currentSheetPath)
+                                    viewModel.getFiles(at: currentSheetPath, modifySheet: true)
                                 }) {
                                     HStack {
                                         Image(systemName: Icons.folder)
@@ -851,7 +848,7 @@ struct FileListView: View {
             .onAppear {
                 // Initialize sheetPathStack based on currentPath when sheet appears
                 initializeSheetPath()
-                viewModel.getFiles(at: currentSheetPath)
+                viewModel.getFiles(at: currentSheetPath, modifySheet: true)
             }
         }
         .modifier(StatusMessage(payload: $modifyMessage))
