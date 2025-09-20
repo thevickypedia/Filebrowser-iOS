@@ -13,6 +13,7 @@ class PhotoPickerStatus: ObservableObject {
     @Published var totalSelected: [String] = []
     @Published var processedFiles: [String] = []
     @Published var pendingUploads: [String] = []
+    @Published var cancellableTasks: [Task<Void, Never>] = []
 }
 
 struct PhotoPicker: UIViewControllerRepresentable {
@@ -49,6 +50,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
             self.onFilePicked = onFilePicked
         }
 
+        // TODO: May be adding @MainActor is warranted
         func updateCurrentProcessed(fileName: String, total: Int, bytes: Int? = nil) {
             DispatchQueue.main.async {
                 if !self.photoPickerStatus.processedFiles.contains(fileName) {
@@ -57,15 +59,14 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
                 if let byteSize = bytes {
                     let fileSize = sizeConverter(byteSize)
-                    Log.debug("Copied \(fileName) [\(fileSize)] to temp directory")
+                    Log.debug("Copying \(fileName) [\(fileSize)] to temp directory")
                 } else {
-                    Log.debug("Copied \(fileName) [Unknown size] to temp directory")
+                    Log.debug("Copying \(fileName) [Unknown size] to temp directory")
                 }
             }
         }
 
-        struct ProcessedResults {
-            let provider: NSItemProvider
+        struct ProcessedResults: Sendable {
             let rawFileName: String
             let isImage: Bool
             let isVideo: Bool
@@ -90,7 +91,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
                 self.photoPickerStatus.pendingUploads.append(rawFileName)
                 processedResults.append(
                     ProcessedResults(
-                        provider: provider, rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
+                        rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
                 )
             }
             return processedResults
@@ -100,8 +101,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
             picker.dismiss(animated: true)
 
             guard !rawResults.isEmpty else {
-                // MARK: Exit early with reset state
-                self.photoPickerStatus.isPreparingUpload = false
+                photoPickerStatus.isPreparingUpload = false
                 return
             }
 
@@ -109,49 +109,98 @@ struct PhotoPicker: UIViewControllerRepresentable {
             let total = results.count
             Log.info("Selected files for upload: \(total)")
 
-            let writingQueue = DispatchQueue(label: "photoPicker.tempWriter", attributes: .concurrent)
+            // Cancel and clear existing tasks
+            photoPickerStatus.cancellableTasks.forEach { $0.cancel() }
+            photoPickerStatus.cancellableTasks.removeAll()
 
             // TODO: One large file in between, blocks smaller files that could have been uploaded meanwhile
-            // TODO: Make writingQueue a cancellable task and cancel when upload is cancelled
-            for result in results {
-                writingQueue.async {
+            for (index, result) in results.enumerated() {
+                // FIXME: Temporary solution - itemProvider should come from "preProcessor" func
+                let provider = rawResults[index].itemProvider
+                let fileName = result.rawFileName
+
+                let task = Task(priority: .userInitiated) {
+                    guard !Task.isCancelled else {
+                        Log.debug("❌ Task cancelled before start: \(fileName)")
+                        return
+                    }
+
                     if result.isImage {
-                        Log.debug("Loading image: \(result.rawFileName)")
-                        result.provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
-                            guard let data = data else { return }
+                        Log.debug("📷 Loading image: \(fileName)")
 
-                            self.updateCurrentProcessed(fileName: result.rawFileName, total: total, bytes: data.count)
-
-                            if let temp = FileCache.shared.writeTemporaryFile(data: data, suggestedName: result.filename) {
-                                DispatchQueue.main.async {
-                                    self.onFilePicked(temp)
-                                    self.photoPickerStatus.isPreparingUpload = false
+                        do {
+                            let data = try await withCheckedThrowingContinuation { continuation in
+                                provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, error in
+                                    if let data = data {
+                                        continuation.resume(returning: data)
+                                    } else {
+                                        continuation.resume(throwing: error ?? NSError(domain: "PhotoPicker", code: 1, userInfo: nil))
+                                    }
                                 }
                             }
+
+                            guard !Task.isCancelled else {
+                                Log.debug("🛑 Cancelled image processing: \(fileName)")
+                                return
+                            }
+
+                            updateCurrentProcessed(fileName: fileName, total: total, bytes: data.count)
+
+                            if let tempURL = FileCache.shared.writeTemporaryFile(data: data, suggestedName: result.filename) {
+                                await MainActor.run {
+                                    onFilePicked(tempURL)
+                                }
+                            }
+
+                        } catch {
+                            Log.error("❌ Failed to load image \(fileName): \(error.localizedDescription)")
                         }
+
                     } else if result.isVideo {
-                        Log.debug("Loading video: \(result.rawFileName)")
-                        result.provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, _ in
-                            guard let url = url else { return }
+                        Log.debug("🎥 Loading video: \(fileName)")
 
-                            if let fileSize = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber {
-                                self.updateCurrentProcessed(
-                                    fileName: result.rawFileName, total: total, bytes: fileSize.intValue
-                                )
-                            } else {
-                                self.updateCurrentProcessed(fileName: result.rawFileName, total: total)
-                            }
+                        do {
+                            let tempCopiedURL: URL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
+                                provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
+                                    guard let tempURL = url else {
+                                        continuation.resume(throwing: error ?? NSError(domain: "PhotoPicker", code: 2, userInfo: nil))
+                                        return
+                                    }
 
-                            if let temp = FileCache.shared.copyToTemporaryFile(from: url, as: result.filename) {
-                                DispatchQueue.main.async {
-                                    self.onFilePicked(temp)
-                                    self.photoPickerStatus.isPreparingUpload = false
+                                    if let copied = FileCache.shared.copyToTemporaryFile(from: tempURL, as: result.filename) {
+                                        continuation.resume(returning: copied)
+                                    } else {
+                                        let copyError = NSError(domain: "PhotoPicker", code: 3, userInfo: [
+                                            NSLocalizedDescriptionKey: "Failed to copy video temp file: \(tempURL.lastPathComponent)"
+                                        ])
+                                        continuation.resume(throwing: copyError)
+                                    }
                                 }
                             }
+                            guard !Task.isCancelled else {
+                                Log.debug("🛑 Cancelled video processing: \(fileName)")
+                                return
+                            }
+
+                            let size = (try? FileManager.default.attributesOfItem(atPath: tempCopiedURL.path)[.size] as? NSNumber)?.intValue
+                            updateCurrentProcessed(fileName: fileName, total: total, bytes: size)
+
+                            await MainActor.run {
+                                onFilePicked(tempCopiedURL)
+                            }
+
+                        } catch {
+                            Log.error("❌ Failed to load video \(fileName): \(error.localizedDescription)")
                         }
                     }
                 }
+
+                Log.debug("📌 Task scheduled: \(fileName)")
+                photoPickerStatus.cancellableTasks.append(task)
             }
+
+            // Upload process officially started
+            photoPickerStatus.isPreparingUpload = false
         }
     }
 }
