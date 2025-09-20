@@ -18,7 +18,6 @@ struct ProcessedResult: Sendable {
 class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
     @Published var totalSelected: [String] = []
-    @Published var processedFiles: [String] = []
     @Published var pendingUploads: [String] = []
     @Published var cancellableTasks: [Task<Void, Never>] = []
 }
@@ -83,10 +82,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
         func updateCurrentProcessed(fileName: String, total: Int, bytes: Int? = nil) {
             DispatchQueue.main.async {
-                if !self.photoPickerStatus.processedFiles.contains(fileName) {
-                    self.photoPickerStatus.processedFiles.append(fileName)
-                }
-
                 if let byteSize = bytes {
                     let fileSize = sizeConverter(byteSize)
                     Log.debug("Copying \(fileName) [\(fileSize)] to temp directory")

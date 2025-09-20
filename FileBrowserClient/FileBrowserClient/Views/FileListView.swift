@@ -2179,7 +2179,6 @@ struct FileListView: View {
         Log.debug("Resetting all photo picker attributes")
         photoPickerStatus.isPreparingUpload = false
         photoPickerStatus.totalSelected.removeAll()
-        photoPickerStatus.processedFiles.removeAll()
         photoPickerStatus.pendingUploads.removeAll()
         photoPickerStatus.cancellableTasks.removeAll()
     }
@@ -2187,15 +2186,14 @@ struct FileListView: View {
     func uploadNextInQueue() {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
-            if photoPickerStatus.totalSelected.count == photoPickerStatus.processedFiles.count {
-                // TODO: Check usage of processedFiles, and remove if unused
+            if photoPickerStatus.pendingUploads.isEmpty {
                 let statusText = "📤 Uploaded \(currentUploadIndex) files"
                 DispatchQueue.main.asyncAfter(deadline: .now() + Constants.statusMessageDuration) {
                     statusMessage = StatusPayload(text: statusText)
                 }
                 endUpload()
             } else {
-                Log.debug("Unprocessed files: \(photoPickerStatus.pendingUploads.count)")
+                Log.trace("Unprocessed files: \(photoPickerStatus.pendingUploads.count)")
             }
             return
         }
