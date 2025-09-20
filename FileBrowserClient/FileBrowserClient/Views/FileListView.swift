@@ -357,6 +357,9 @@ struct FileListView: View {
     private func nextUploadInQueue() -> String? {
         if currentUploadIndex + 1 < uploadQueue.count {
             return "Next up: \(uploadQueue[currentUploadIndex + 1].lastPathComponent)"
+        } else if photoPickerStatus.pendingUploads.count == 1,
+               let nextUpFile = photoPickerStatus.pendingUploads.first {
+                return "Next up: \(nextUpFile)"
         } else if !isUploading {
             return "Processing \(photoPickerStatus.pendingUploads.count) pending files"
         }
