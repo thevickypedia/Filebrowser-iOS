@@ -8,6 +8,10 @@
 import Foundation
 import UIKit
 
+enum UploadState: String, Codable {
+    case queued, uploading, paused, completed, failed
+}
+
 /// Background TUS Upload Manager
 /// - Uses a background URLSession to upload file chunks using PATCH requests (TUS-style).
 /// - Persists upload records to disk so uploads can resume across restarts.
@@ -16,17 +20,13 @@ final class BackgroundTUSUploadManager: NSObject {
 
     // MARK: - Public types
     struct UploadRecord: Codable {
-        enum State: String, Codable {
-            case queued, uploading, paused, completed, failed
-        }
-
         let id: UUID
         let fileURL: URL       // local file (absolute)
         let tusURL: URL        // TUS upload resource URL on server
         var offset: Int64
         var chunkSize: Int64
         var totalSize: Int64
-        var state: State
+        var state: UploadState
         var lastError: String?
     }
 
