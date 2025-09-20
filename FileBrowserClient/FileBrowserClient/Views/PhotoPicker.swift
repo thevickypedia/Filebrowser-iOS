@@ -16,6 +16,35 @@ class PhotoPickerStatus: ObservableObject {
     @Published var cancellableTasks: [Task<Void, Never>] = []
 }
 
+struct ProcessedResults: Sendable {
+    let rawFileName: String
+    let isImage: Bool
+    let isVideo: Bool
+    let filename: String
+}
+
+func preProcessor(_ rawResults: [PHPickerResult]) -> [ProcessedResults] {
+    var processedResults: [ProcessedResults] = []
+    for result in rawResults {
+        let provider: NSItemProvider = result.itemProvider
+        let suggestedName = provider.suggestedName ?? "Unknown"
+        let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+        let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
+        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
+        let defaultExt = isImage ? "jpg" : "mov"
+        let ext = pathExt.isEmpty ? defaultExt : pathExt
+        let rawFileName = "\(suggestedName).\(ext)"
+        let defaultPre = isImage ? "photo" : "video"
+        let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
+        processedResults.append(
+            ProcessedResults(
+                rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
+        )
+    }
+    return processedResults
+}
+
 struct PhotoPicker: UIViewControllerRepresentable {
     @ObservedObject var photoPickerStatus: PhotoPickerStatus
     var onFilePicked: (_ url: URL) -> Void
@@ -66,37 +95,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
             }
         }
 
-        struct ProcessedResults: Sendable {
-            let rawFileName: String
-            let isImage: Bool
-            let isVideo: Bool
-            let filename: String
-        }
-
-        func preProcessor(_ rawResults: [PHPickerResult]) -> [ProcessedResults] {
-            var processedResults: [ProcessedResults] = []
-            for result in rawResults {
-                let provider: NSItemProvider = result.itemProvider
-                let suggestedName = provider.suggestedName ?? "Unknown"
-                let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
-                let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
-                let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-                let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
-                let defaultExt = isImage ? "jpg" : "mov"
-                let ext = pathExt.isEmpty ? defaultExt : pathExt
-                let rawFileName = "\(suggestedName).\(ext)"
-                let defaultPre = isImage ? "photo" : "video"
-                let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
-                self.photoPickerStatus.totalSelected.append(rawFileName)
-                self.photoPickerStatus.pendingUploads.append(rawFileName)
-                processedResults.append(
-                    ProcessedResults(
-                        rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
-                )
-            }
-            return processedResults
-        }
-
         func picker(_ picker: PHPickerViewController, didFinishPicking rawResults: [PHPickerResult]) {
             picker.dismiss(animated: true)
 
@@ -113,7 +111,11 @@ struct PhotoPicker: UIViewControllerRepresentable {
             photoPickerStatus.cancellableTasks.forEach { $0.cancel() }
             photoPickerStatus.cancellableTasks.removeAll()
 
-            // TODO: One large file in between, blocks smaller files that could have been uploaded meanwhile
+            // NOTE: One large file in between, blocks smaller files since the files are processed in sequence
+            // NSItemProvider uses internal serialization for file loading
+            // It’s how the system accesses or exports the media
+            // Only one file representation is being processed at a time under the hood
+            // This is a limitation of iOS's implementation of NSItemProvider
             for (index, result) in results.enumerated() {
                 // FIXME: Temporary solution - itemProvider should come from "preProcessor" func
                 let provider = rawResults[index].itemProvider
@@ -195,8 +197,10 @@ struct PhotoPicker: UIViewControllerRepresentable {
                     }
                 }
 
-                Log.debug("📌 Task scheduled: \(fileName)")
                 photoPickerStatus.cancellableTasks.append(task)
+                Log.debug("📌 Task scheduled: \(fileName)")
+                self.photoPickerStatus.totalSelected.append(fileName)
+                self.photoPickerStatus.pendingUploads.append(fileName)
             }
 
             // Upload process officially started
