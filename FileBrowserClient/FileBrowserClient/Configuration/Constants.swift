@@ -13,6 +13,8 @@ struct Constants {
     // 2. Minimum time (in secs) to accumulate the bytes downloaded and estimate the speed
     static let downloadSpeedUpdateInterval: Double = 0.1
 
+    static let uploadCleanupDelay: Int = 2
+
     // RemoteThumbnail:
     // Maximum number of thumbnails to render
     static let maxConcurrentThumbnailRender: Int = 4

@@ -2080,7 +2080,7 @@ struct FileListView: View {
             guard currentOffset < fileSize else {
                 fileHandle.closeFile()
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.uploadCleanupDelay)) {
                     FileCache.shared.removeTempFile(at: fileURL)
                 }
                 currentUploadIndex += 1
