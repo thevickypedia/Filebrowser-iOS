@@ -218,16 +218,16 @@ struct MediaPlayerView: View {
         unregisterItemObservers()
 
         // Time jumped (seek), playback stalled, access log entries → immediately republish full info
-        let n1 = NotificationCenter.default.addObserver(forName: .AVPlayerItemTimeJumped, object: item, queue: .main) { _ in
+        let nc1 = NotificationCenter.default.addObserver(forName: .AVPlayerItemTimeJumped, object: item, queue: .main) { _ in
             self.publishNowPlaying()
         }
-        let n2 = NotificationCenter.default.addObserver(forName: .AVPlayerItemPlaybackStalled, object: item, queue: .main) { _ in
+        let nc2 = NotificationCenter.default.addObserver(forName: .AVPlayerItemPlaybackStalled, object: item, queue: .main) { _ in
             self.publishNowPlaying()
         }
-        let n3 = NotificationCenter.default.addObserver(forName: .AVPlayerItemNewAccessLogEntry, object: item, queue: .main) { _ in
+        let nc3 = NotificationCenter.default.addObserver(forName: .AVPlayerItemNewAccessLogEntry, object: item, queue: .main) { _ in
             self.publishNowPlaying()
         }
-        notifTokens = [n1, n2, n3]
+        notifTokens = [nc1, nc2, nc3]
     }
 
     private func unregisterItemObservers() {

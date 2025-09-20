@@ -32,8 +32,8 @@ final class BackgroundTUSUploadManager: NSObject {
 
     // MARK: - Persistence
     private let storageURL: URL = {
-        let fm = FileManager.default
-        let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let fileManager = FileManager.default
+        let docs = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         return docs.appendingPathComponent("background_uploads.json")
     }()
 
@@ -176,11 +176,11 @@ final class BackgroundTUSUploadManager: NSObject {
         let uuid = UUID().uuidString
         let chunkFile = tmpDir.appendingPathComponent("tus_chunk_\(uuid)")
         // Read range and write
-        let fh = try FileHandle(forReadingFrom: source)
-        defer { try? fh.close() }
+        let fileHandle = try FileHandle(forReadingFrom: source)
+        defer { try? fileHandle.close() }
 
-        try fh.seek(toOffset: UInt64(offset))
-        let data = try fh.read(upToCount: Int(length)) ?? Data()
+        try fileHandle.seek(toOffset: UInt64(offset))
+        let data = try fileHandle.read(upToCount: Int(length)) ?? Data()
         try data.write(to: chunkFile, options: .atomic)
         return chunkFile
     }
