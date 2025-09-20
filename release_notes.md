@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.41.1 (09/19/2025)
+--------------------
+- [4df7043](https://github.com/thevickypedia/Filebrowser-iOS/commit/4df7043ca8a809f84d659c9f1817a9cc6834d3da) chore: Release ``v1.41.1``
+- [fe17952](https://github.com/thevickypedia/Filebrowser-iOS/commit/fe179522f36211c1e07e0afc4f220a9864dd2520) perf: Include next up information when only 1 file is pending for upload
+- [31df8c6](https://github.com/thevickypedia/Filebrowser-iOS/commit/31df8c6ae13537cc308d58c2378526404043ac29) refactor: Move ``PHPickerResult`` preProcessor to a standalone function
+- [b5e2926](https://github.com/thevickypedia/Filebrowser-iOS/commit/b5e29265a1076fa1d9bc1dfaded85433c16c2b3a) chore: Update release notes for v1.41.0
+
 v1.41.0 (09/19/2025)
 --------------------
 - [5dcdd6e](https://github.com/thevickypedia/Filebrowser-iOS/commit/5dcdd6e406eaec023f3b690835deec8ed01e19ca) chore: Release ``v1.41.0``
