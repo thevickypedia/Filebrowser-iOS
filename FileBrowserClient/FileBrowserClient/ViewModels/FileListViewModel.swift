@@ -86,6 +86,13 @@ class FileListViewModel: ObservableObject {
     }
 
     func getFiles(at path: String, modifySheet: Bool) {
+        let setLoading: (Bool) -> Void = { isLoading in
+            if modifySheet {
+                self.sheetIsLoading = isLoading
+            } else {
+                self.isLoading = isLoading
+            }
+        }
         Log.debug("📡 Fetching files at path: \(path)")
         guard let token = token, let serverURL = serverURL else {
             DispatchQueue.main.async {
@@ -111,43 +118,26 @@ class FileListViewModel: ObservableObject {
 
         DispatchQueue.main.async {
             self.errorMessage = nil
-            if modifySheet {
-                self.sheetIsLoading = true
-            } else {
-                self.isLoading = true
-            }
+            setLoading(true)
         }
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    if modifySheet {
-                        self.sheetIsLoading = false
-                    } else {
-                        self.isLoading = false
-                    }
+                    setLoading(false)
                     self.errorMessage = "Server error: Invalid response"
                     Log.error("❌ Server error: Response was not HTTPURLResponse")
                     return
                 }
 
                 guard httpResponse.statusCode == 200 else {
-                    if modifySheet {
-                        self.sheetIsLoading = false
-                    } else {
-                        self.isLoading = false
-                    }
+                    setLoading(false)
                     self.errorMessage = "Server error: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
                     Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
                     return
                 }
 
-                if modifySheet {
-                    self.sheetIsLoading = false
-                } else {
-                    self.isLoading = false
-                }
-
+                setLoading(false)
                 if let error = error {
                     self.errorMessage = error.localizedDescription
                     return
@@ -167,10 +157,8 @@ class FileListViewModel: ObservableObject {
                     // }
                     if modifySheet {
                         self.sheetItems = fileItems
-                        self.sheetIsLoading = false
                     } else {
                         self.files = fileItems
-                        self.isLoading = false
                     }
                 } catch {
                     self.errorMessage = "Failed to parse files"
