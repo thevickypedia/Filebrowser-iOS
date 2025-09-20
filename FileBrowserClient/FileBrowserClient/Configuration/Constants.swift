@@ -28,6 +28,6 @@ struct Constants {
     static let mediaResumeThreshold: Double = 5.0
 
     // PhotoPicker:
-    // Maximum number of tasks that copies files to temp directory
-    static let maxUploadStagingLimit: Int = 10
+    // Maximum number of tasks that copy files to temp directory before upload
+    static let maxUploadStagingLimit: Int = 5
 }
