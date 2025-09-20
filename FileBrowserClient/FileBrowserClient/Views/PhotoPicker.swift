@@ -16,35 +16,6 @@ class PhotoPickerStatus: ObservableObject {
     @Published var cancellableTasks: [Task<Void, Never>] = []
 }
 
-struct ProcessedResult: Sendable {
-    let rawFileName: String
-    let isImage: Bool
-    let isVideo: Bool
-    let filename: String
-}
-
-func preProcessor(_ rawResults: [PHPickerResult]) -> [ProcessedResult] {
-    var processedResults: [ProcessedResult] = []
-    for result in rawResults {
-        let provider: NSItemProvider = result.itemProvider
-        let suggestedName = provider.suggestedName ?? "Unknown"
-        let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
-        let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
-        let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-        let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
-        let defaultExt = isImage ? "jpg" : "mov"
-        let ext = pathExt.isEmpty ? defaultExt : pathExt
-        let rawFileName = "\(suggestedName).\(ext)"
-        let defaultPre = isImage ? "photo" : "video"
-        let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
-        processedResults.append(
-            ProcessedResult(
-                rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
-        )
-    }
-    return processedResults
-}
-
 struct PhotoPicker: UIViewControllerRepresentable {
     @ObservedObject var photoPickerStatus: PhotoPickerStatus
     var onFilePicked: (_ url: URL) -> Void
@@ -79,7 +50,37 @@ struct PhotoPicker: UIViewControllerRepresentable {
             self.onFilePicked = onFilePicked
         }
 
-        // TODO: May be adding @MainActor is warranted
+        struct ProcessedResult: Sendable {
+            let rawFileName: String
+            let isImage: Bool
+            let isVideo: Bool
+            let filename: String
+        }
+
+        func preProcessor(_ rawResults: [PHPickerResult]) -> [ProcessedResult] {
+            var processedResults: [ProcessedResult] = []
+            for result in rawResults {
+                let provider: NSItemProvider = result.itemProvider
+                let suggestedName = provider.suggestedName ?? "Unknown"
+                let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+                let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
+                let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+                let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
+                let defaultExt = isImage ? "jpg" : "mov"
+                let ext = pathExt.isEmpty ? defaultExt : pathExt
+                let rawFileName = "\(suggestedName).\(ext)"
+                let defaultPre = isImage ? "photo" : "video"
+                let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
+                self.photoPickerStatus.totalSelected.append(rawFileName)
+                self.photoPickerStatus.pendingUploads.append(rawFileName)
+                processedResults.append(
+                    ProcessedResult(
+                        rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
+                )
+            }
+            return processedResults
+        }
+
         func updateCurrentProcessed(fileName: String, total: Int, bytes: Int? = nil) {
             DispatchQueue.main.async {
                 if !self.photoPickerStatus.processedFiles.contains(fileName) {
@@ -145,7 +146,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
                 // Upload process officially started
                 await MainActor.run {
-                    self.photoPickerStatus.isPreparingUpload = false
+                    Log.info("All tasks (to copy upload files to temp) have been submitted.")
                 }
             }
 
@@ -184,6 +185,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
                     if let tempURL = FileCache.shared.writeTemporaryFile(data: data, suggestedName: result.filename) {
                         await MainActor.run {
+                            if self.photoPickerStatus.isPreparingUpload {
+                                self.photoPickerStatus.isPreparingUpload = false
+                            }
                             onFilePicked(tempURL)
                         }
                     }
@@ -223,6 +227,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
                     updateCurrentProcessed(fileName: fileName, total: total, bytes: size)
 
                     await MainActor.run {
+                        if self.photoPickerStatus.isPreparingUpload {
+                            self.photoPickerStatus.isPreparingUpload = false
+                        }
                         onFilePicked(tempCopiedURL)
                     }
 
@@ -231,11 +238,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
                 }
             }
 
-            // record selection + pending state
+            // record selection
             await MainActor.run {
-                self.photoPickerStatus.totalSelected.append(fileName)
-                self.photoPickerStatus.pendingUploads.append(fileName)
-                Log.debug("📌 Task scheduled: \(fileName)")
+                Log.trace("📌 Task scheduled: \(fileName)")
             }
         }
     }
