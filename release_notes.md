@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+v1.40.2 (09/19/2025)
+--------------------
+- [0132d98](https://github.com/thevickypedia/Filebrowser-iOS/commit/0132d9800f3d275fbd52afce4d9d46ed1b8d6135) chore: Release ``v1.40.2``
+- [3ecc272](https://github.com/thevickypedia/Filebrowser-iOS/commit/3ecc272477486fcbe5a82218869cb7f46448d4d3) perf: Reset upload stats when file uploads finish
+- [980c18c](https://github.com/thevickypedia/Filebrowser-iOS/commit/980c18ca63a86bf367658f7ea27dcbc4f0b8a099) perf: Add a ``processingFiles`` state to keep track of files being copied to temp
+- [a543787](https://github.com/thevickypedia/Filebrowser-iOS/commit/a5437877f157b4441c9c897e212781f9328fe239) fix: Remove ``currentlyPreparing`` state since async initiates file copy in parallel
+- [b4cc98f](https://github.com/thevickypedia/Filebrowser-iOS/commit/b4cc98f2400519107bf873a114323a06b8ffb56f) style: Update current upload index w.r.t uploading vs pending state
+- [7356ea6](https://github.com/thevickypedia/Filebrowser-iOS/commit/7356ea61a77b3cc4199f7aae6c509c22b2e4f793) fix: Display correct upload index in ``uploadingStack``
+- [3d665f0](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d665f0a99bedc8e3148f03afbb35db3b28893e3) perf: Preprocess photo picker results to avoid change in total selected count
+- [f9c265a](https://github.com/thevickypedia/Filebrowser-iOS/commit/f9c265ab2c5e9574e94cb1e88257ee5b902a84d0) perf: Retain uploadingStack while files are still being prepared
+- [268e813](https://github.com/thevickypedia/Filebrowser-iOS/commit/268e81335a6afbace133b047d47900825305a679) perf: Use dispatch group with concurrent queue to parallelize the writing to temp
+- [36af17f](https://github.com/thevickypedia/Filebrowser-iOS/commit/36af17f94c53faab421dbaf7666c657b9ad316d3) perf: Disable auto-lock while file upload is in progress
+- [04ebfcb](https://github.com/thevickypedia/Filebrowser-iOS/commit/04ebfcbde766e8d036b1fb3a5962961a9467cdbe) chore: Update release notes for v1.40.1
+
 v1.40.1 (09/19/2025)
 --------------------
 - [78cbe40](https://github.com/thevickypedia/Filebrowser-iOS/commit/78cbe407c6dbf63f21002384fb8c625651e216eb) chore: Release ``v1.40.1``
