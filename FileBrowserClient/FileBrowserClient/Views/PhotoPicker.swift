@@ -8,6 +8,13 @@
 import SwiftUI
 import PhotosUI
 
+struct ProcessedResult: Sendable {
+    let rawFileName: String
+    let isImage: Bool
+    let isVideo: Bool
+    let filename: String
+}
+
 class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
     @Published var totalSelected: [String] = []
@@ -48,13 +55,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
         init(photoPickerStatus: PhotoPickerStatus, onFilePicked: @escaping (_ url: URL) -> Void) {
             self.photoPickerStatus = photoPickerStatus
             self.onFilePicked = onFilePicked
-        }
-
-        struct ProcessedResult: Sendable {
-            let rawFileName: String
-            let isImage: Bool
-            let isVideo: Bool
-            let filename: String
         }
 
         func preProcessor(_ rawResults: [PHPickerResult]) -> [ProcessedResult] {
@@ -124,6 +124,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
                     while inFlight < Constants.maxUploadStagingLimit, let (index, result) = iterator.next() {
                         inFlight += 1
+                        // TODO: Temporary solution for non Sendable type NSItemProvider
                         let provider = rawResults[index].itemProvider
                         group.addTask { [weak self] in
                             await self?.handleResult(result, provider: provider, total: total)
