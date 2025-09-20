@@ -2088,7 +2088,6 @@ struct FileListView: View {
                 uploadProgress = 1.0
                 currentUploadSpeed = 0.0
                 uploadNextInQueue()
-                fetchFiles(at: currentPath)
                 statusMessage = StatusPayload(text: "📤 Uploaded \(fileURL.lastPathComponent)")
                 return
             }
