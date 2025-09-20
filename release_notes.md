@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.42.0 (09/20/2025)
+--------------------
+- [e2bba5e](https://github.com/thevickypedia/Filebrowser-iOS/commit/e2bba5e1a5252051d8caeb85ac6ea1571b4fee40) chore: Release ``v1.42.0``
+- [0502357](https://github.com/thevickypedia/Filebrowser-iOS/commit/0502357bf6748e5ee68de8112ed8734eb08604cc) refactor: Move hard-coded upload staging limit to ``Constants``
+- [0068b23](https://github.com/thevickypedia/Filebrowser-iOS/commit/0068b2383bbdffb303789a3969a3ba4337bef9e1) perf: Set ``isPreparingUpload`` flag to ``false`` immediately after the first file is staged
+- [c3c0360](https://github.com/thevickypedia/Filebrowser-iOS/commit/c3c0360cacd9830a480ce5f2f15e83f9c015f496) refactor: Reconstruct logging levels
+- [1264048](https://github.com/thevickypedia/Filebrowser-iOS/commit/1264048fc981010ea7964d0a1a0600207140ddf2) perf: Processes photo selection results in batches of concurrent tasks to avoid memory and CPU overhead during large selections
+- [ea95e98](https://github.com/thevickypedia/Filebrowser-iOS/commit/ea95e983bf1af5418e0d6739ebe44d75af6bc411) perf: Update last user server after each successful login
+- [e5fc16c](https://github.com/thevickypedia/Filebrowser-iOS/commit/e5fc16c78bad3b9eb8115f0af35dbd5495cdcf57) chore: Update release notes for v1.41.1
+
 v1.41.1 (09/19/2025)
 --------------------
 - [4df7043](https://github.com/thevickypedia/Filebrowser-iOS/commit/4df7043ca8a809f84d659c9f1817a9cc6834d3da) chore: Release ``v1.41.1``
