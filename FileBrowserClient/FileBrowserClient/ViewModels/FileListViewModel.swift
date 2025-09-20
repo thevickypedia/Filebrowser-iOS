@@ -145,7 +145,7 @@ class FileListViewModel: ObservableObject {
                 do {
                     let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
                     let fileItems = result.items
-                    Log.info("Loaded \(fileItems.count) items at path: \(path)")
+                    Log.debug("Loaded \(fileItems.count) items at path: \(path)")
                     // for file in fileItems {
                     //    Log.debug(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
                     // }
@@ -222,7 +222,7 @@ class FileListViewModel: ObservableObject {
                 do {
                     let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
                     let fileItems = result.items
-                    Log.info("Loaded \(fileItems.count) items at path: \(path)")
+                    Log.debug("Loaded \(fileItems.count) items at path: \(path)")
                     // for file in fileItems {
                     //    Log.debug(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
                     // }

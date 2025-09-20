@@ -1983,7 +1983,7 @@ struct FileListView: View {
                     return
                 }
 
-                Log.info("✅ Upload session initiated at: \(urlPath(uploadURL))")
+                Log.debug("✅ Upload session initiated at: \(urlPath(uploadURL))")
                 getUploadOffset(fileHandle: fileHandle, fileURL: fileURL, uploadURL: uploadURL)
             }
         }.resume()
@@ -2013,7 +2013,9 @@ struct FileListView: View {
                     return
                 }
 
-                Log.info("📍 Upload starting from offset: \(offset)")
+                if offset != 0 {
+                    Log.info("📍 Upload starting from offset: \(offset)")
+                }
                 uploadFileInChunks(
                     fileHandle: fileHandle,
                     fileURL: fileURL,

@@ -120,7 +120,7 @@ class FileCache {
             if FileManager.default.fileExists(atPath: fileURL.path) {
                 do {
                     try FileManager.default.removeItem(at: fileURL)
-                    Log.info("🗑️ Deleted temp file: \(fileURL.lastPathComponent)")
+                    Log.trace("🗑️ Deleted temp file: \(fileURL.lastPathComponent)")
                 } catch {
                     Log.warn("⚠️ Failed to delete file: \(error.localizedDescription)")
                 }
