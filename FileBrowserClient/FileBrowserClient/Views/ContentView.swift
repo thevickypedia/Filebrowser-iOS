@@ -389,6 +389,7 @@ struct ContentView: View {
                         // Show success message
                         statusMessage = "✅ Login successful!"
                         logTokenInfo()
+                        updateLastUsedServer()
                         if rememberMe || useFaceID {
                             KeychainHelper.saveSession(
                                 session: StoredSession(
@@ -417,6 +418,20 @@ struct ContentView: View {
         } catch {
             loginFailed(error.localizedDescription)
         }
+    }
+
+    func updateLastUsedServer() {
+        var knownServersCopy = KeychainHelper.loadKnownServers()
+        // Skip if current serverURL is already in the last index of knownServer list
+        if knownServersCopy.last == serverURL { return }
+        Log.debug("Updating last logged in server")
+        Log.debug("Before update: \(knownServersCopy)")
+        if let index = knownServersCopy.firstIndex(of: serverURL) {
+            let item = knownServersCopy.remove(at: index)
+            knownServersCopy.append(item)
+        }
+        Log.debug("After update: \(knownServersCopy)")
+        KeychainHelper.saveKnownServers(knownServersCopy)
     }
 
     func logTokenInfo() {
@@ -512,6 +527,7 @@ struct ContentView: View {
                 }
                 Log.info("✅ Face ID login successful")
                 logTokenInfo()
+                updateLastUsedServer()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                     statusMessage = nil
                 }
