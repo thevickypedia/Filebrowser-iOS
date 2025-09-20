@@ -1205,7 +1205,10 @@ struct FileListView: View {
             ToolbarItemGroup(placement: .navigationBarTrailing) {
                 // Buttons to display when something is selected
                 if selectionMode {
-                    selectedStack
+                    // Selection (three dot) buttons - needs at least one item to be selected
+                    if selectedItems.count > 0 {
+                        selectedStack
+                    }
 
                     // ✅ Select All / Deselect All
                     Button(action: toggleSelectAll) {
