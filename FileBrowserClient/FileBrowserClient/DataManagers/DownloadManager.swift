@@ -8,12 +8,18 @@
 import Foundation
 import UniformTypeIdentifiers
 
+private struct DownloadRecord {
+    let task: URLSessionDownloadTask
+    let progress: (Int64, Int64, Int64) -> Void
+    let completion: (Result<URL, Error>) -> Void
+}
+
 final class DownloadManager: NSObject, URLSessionDownloadDelegate {
     static let shared = DownloadManager()
     private var session: URLSession!
 
     // Mapping id -> (task, progressClosure, completion)
-    private var records: [UUID: (task: URLSessionDownloadTask, progress: (Int64, Int64, Int64) -> Void, completion: (Result<URL, Error>) -> Void)] = [:]
+    private var records: [UUID: DownloadRecord] = [:]
 
     private override init() {
         super.init()
@@ -33,7 +39,7 @@ final class DownloadManager: NSObject, URLSessionDownloadDelegate {
             req.setValue(authToken, forHTTPHeaderField: "X-Auth")
         }
         let task = session.downloadTask(with: req)
-        records[id] = (task: task, progress: progress, completion: completion)
+        records[id] = DownloadRecord(task: task, progress: progress, completion: completion)
         task.resume()
         return id
     }
