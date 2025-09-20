@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.42.1 (09/20/2025)
+--------------------
+- [c8c598e](https://github.com/thevickypedia/Filebrowser-iOS/commit/c8c598ef4cdadadec24020b50d928cd1bac6d438) chore: Release ``v1.42.1``
+- [b2bcac6](https://github.com/thevickypedia/Filebrowser-iOS/commit/b2bcac6ba42ee64921c8eda234022a21c9f42572) refactor: Move ``ProcessedResult`` enum to top-level
+- [d50e254](https://github.com/thevickypedia/Filebrowser-iOS/commit/d50e254125affc210bb123f6490bb8efe03683e0) lint: Fix character limit violation
+- [20cbf2e](https://github.com/thevickypedia/Filebrowser-iOS/commit/20cbf2e95b334b8f479ddad192782118c21e0d5e) refactor: Move ``UploadState`` enum to top-level
+- [4a04c26](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a04c26457cdb06a9638eb93f218045623d753ec) refactor: Convert long tuple into a struct for download records
+- [c4f0f9b](https://github.com/thevickypedia/Filebrowser-iOS/commit/c4f0f9b12bd29aa00a9adb6afbf1cb3ac3841254) perf: Reduce ``maxUploadStagingLimit``
+- [613d2df](https://github.com/thevickypedia/Filebrowser-iOS/commit/613d2dfaa59e1e091f8be189a45fed13ac87546e) style: Display selected options' icon in list view only if a selection is made
+- [f3ec0f1](https://github.com/thevickypedia/Filebrowser-iOS/commit/f3ec0f172b73d265eec359a9558aa960a6bd97f1) refactor: Replace redundant condition blocks with a closure
+- [eac8c1b](https://github.com/thevickypedia/Filebrowser-iOS/commit/eac8c1b59341d417bba4d1c5ca9a76d29d5ab299) perf: Unify ``getFiles`` vs ``performFetch`` functionalities
+- [70ea73f](https://github.com/thevickypedia/Filebrowser-iOS/commit/70ea73f91c39de17b636d5b631a158909fcc8b39) chore: Update release notes for v1.42.0
+
 v1.42.0 (09/20/2025)
 --------------------
 - [e2bba5e](https://github.com/thevickypedia/Filebrowser-iOS/commit/e2bba5e1a5252051d8caeb85ac6ea1571b4fee40) chore: Release ``v1.42.0``
