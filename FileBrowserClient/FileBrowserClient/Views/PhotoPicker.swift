@@ -122,8 +122,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
                     var iterator = Array(results.enumerated()).makeIterator()
                     var inFlight = 0
 
-                    // prime with up to 10 tasks
-                    while inFlight < 10, let (index, result) = iterator.next() {
+                    while inFlight < Constants.maxUploadStagingLimit, let (index, result) = iterator.next() {
                         inFlight += 1
                         let provider = rawResults[index].itemProvider
                         group.addTask { [weak self] in
