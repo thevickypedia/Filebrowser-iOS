@@ -2071,7 +2071,11 @@ struct FileListView: View {
             if isUploadCancelled {
                 Log.info("⏹️ Upload cancelled by user.")
                 cancelUpload(fileHandle: fileHandle)
-                statusMessage = StatusPayload(text: "⚠️ Upload cancelled", color: .yellow)
+                var statusText = "⚠️ Upload cancelled"
+                if !photoPickerStatus.pendingUploads.isEmpty {
+                    statusText += ", pending files: \(photoPickerStatus.pendingUploads.count)"
+                }
+                statusMessage = StatusPayload(text: statusText, color: .yellow)
                 return
             }
 
@@ -2079,6 +2083,7 @@ struct FileListView: View {
             // MARK: Checks if there are more chunks to upload w.r.t file size
             guard currentOffset < fileSize else {
                 fileHandle.closeFile()
+                statusMessage = StatusPayload(text: "📤 Uploaded \(fileURL.lastPathComponent)")
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.uploadCleanupDelay)) {
                     FileCache.shared.removeTempFile(at: fileURL)
@@ -2088,7 +2093,6 @@ struct FileListView: View {
                 uploadProgress = 1.0
                 currentUploadSpeed = 0.0
                 uploadNextInQueue()
-                statusMessage = StatusPayload(text: "📤 Uploaded \(fileURL.lastPathComponent)")
                 return
             }
 
@@ -2110,8 +2114,12 @@ struct FileListView: View {
                     if isUploadCancelled {
                         Log.info("⏹️ Upload cancelled mid-chunk. \(fileName) may be incomplete.")
                         cancelUpload(fileHandle: fileHandle)
+                        var statusText = "⚠️ Upload cancelled mid-chunk, '\(fileName)' may be incomplete."
+                        if !photoPickerStatus.pendingUploads.isEmpty {
+                            statusText += " Pending files: \(photoPickerStatus.pendingUploads.count)"
+                        }
                         statusMessage = StatusPayload(
-                            text: "⚠️ Upload cancelled mid-chunk, '\(fileName)' may be incomplete.",
+                            text: statusText,
                             color: .yellow,
                             duration: 7
                         )
@@ -2179,8 +2187,12 @@ struct FileListView: View {
     func uploadNextInQueue() {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
-            statusMessage = StatusPayload(text: "📤 Uploaded \(currentUploadIndex) items")
             if photoPickerStatus.totalSelected.count == photoPickerStatus.processedFiles.count {
+                // TODO: Check usage of processedFiles, and remove if unused
+                let statusText = "📤 Uploaded \(currentUploadIndex) files"
+                DispatchQueue.main.asyncAfter(deadline: .now() + Constants.statusMessageDuration) {
+                    statusMessage = StatusPayload(text: statusText)
+                }
                 endUpload()
             } else {
                 Log.debug("Unprocessed files: \(photoPickerStatus.pendingUploads.count)")
