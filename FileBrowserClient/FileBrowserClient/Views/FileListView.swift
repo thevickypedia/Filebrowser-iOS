@@ -69,6 +69,8 @@ struct FileListView: View {
 
     // Upload extra vars
     @State private var uploadTask: URLSessionUploadTask?
+    @State private var isFileUpload = false
+    @State private var isPhotoUpload = false
 
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
@@ -1071,6 +1073,10 @@ struct FileListView: View {
     }
 
     private func retainUploadingStack() -> Bool {
+        if isFileUpload {
+            // If it's a file upload check if uploadQueue is empty (since all URLs are loaded initially)
+            return !uploadQueue.isEmpty
+        }
         if photoPickerStatus.isPreparingUpload {
             return false
         }
@@ -1100,6 +1106,7 @@ struct FileListView: View {
                     searchingStack
                     searchListView(for: viewModel.searchResults)
                 } else {
+                    // MARK: Preparing upload will be displayed only for uploads from Files app
                     if photoPickerStatus.isPreparingUpload {
                         preparingUploadStack
                     }
@@ -1111,7 +1118,6 @@ struct FileListView: View {
                             .shadow(radius: 4)
                         Button(action: {
                             isUploadCancelled = true
-                            // TODO: Is it required to cancel here?
                             cancelUpload(fileHandle: nil, statusText: "❌ Upload cancelled by user.")
                         }) {
                             Label("Cancel Upload", systemImage: "xmark.circle.fill")
@@ -1324,6 +1330,7 @@ struct FileListView: View {
             PhotoPicker(
                 photoPickerStatus: photoPickerStatus,
                 onFilePicked: { url in
+                    isPhotoUpload = true
                     uploadQueue.append(url)
                     if !isUploading {
                         uploadNextInQueue()
@@ -1338,10 +1345,12 @@ struct FileListView: View {
         ) { result in
             switch result {
             case .success(let urls):
+                isFileUpload = true
                 uploadQueue = urls
                 currentUploadIndex = 0
                 uploadNextInQueue()
             case .failure(let error):
+                isFileUpload = false
                 Log.error("❌ File selection failed: \(error.localizedDescription)")
             }
         }
@@ -1922,16 +1931,9 @@ struct FileListView: View {
     }
 
     func getUploadURL(serverURL: String, encodedName: String) -> URL? {
-        if currentPath == "/" {
-            return buildAPIURL(
-                base: serverURL,
-                pathComponents: ["api", "tus", encodedName],
-                queryItems: [URLQueryItem(name: "override", value: "false")]
-            )
-        }
         return buildAPIURL(
             base: serverURL,
-            pathComponents: ["api", "tus", currentPath, encodedName],
+            pathComponents: currentPath == "/" ? ["api", "tus", encodedName] : ["api", "tus", currentPath, encodedName],
             queryItems: [URLQueryItem(name: "override", value: "false")]
         )
     }
@@ -2027,18 +2029,22 @@ struct FileListView: View {
     func cancelUpload(fileHandle: FileHandle?, statusText: String?) {
         Log.info("❌ Upload cancelled by user.")
         UIApplication.shared.isIdleTimerDisabled = false
-        // MARK: Cancel task that streams files to be uploaded
-        photoPickerStatus.cancellableTasks.forEach { $0.cancel() }
         fileHandle?.closeFile()
         uploadTask?.cancel()
         clearUploadStatus()
-        clearPickerStatus()
+        if isPhotoUpload {
+            // MARK: Cancel task that streams files to be uploaded
+            photoPickerStatus.cancellableTasks.forEach { $0.cancel() }
+            clearPickerStatus()
+        }
         fetchFiles(at: currentPath)
         if let text = statusText {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 statusMessage = StatusPayload(text: text, color: .yellow, duration: 7)
             }
         }
+        isPhotoUpload = false
+        isFileUpload = false
     }
 
     func endUpload() {
@@ -2048,10 +2054,15 @@ struct FileListView: View {
         clearPickerStatus()
         clearUploadStatus()
         fetchFiles(at: currentPath)
+        isPhotoUpload = false
+        isFileUpload = false
     }
 
     private var pendingUploads: Int {
-        return photoPickerStatus.totalSelected - currentUploadIndex
+        if isPhotoUpload {
+            return photoPickerStatus.totalSelected - currentUploadIndex
+        }
+        return uploadQueue.count - currentUploadIndex
     }
 
     func uploadFileInChunks(
@@ -2082,6 +2093,9 @@ struct FileListView: View {
                 if pendingUploads != 0 {
                     statusText += ", pending files: \(pendingUploads)"
                 }
+                if isFileUpload {
+                    do { fileURL.stopAccessingSecurityScopedResource() }
+                }
                 cancelUpload(fileHandle: fileHandle, statusText: statusText)
                 return
             }
@@ -2090,6 +2104,9 @@ struct FileListView: View {
             // MARK: Checks if there are more chunks to upload w.r.t file size
             guard currentOffset < fileSize else {
                 fileHandle.closeFile()
+                if isFileUpload {
+                    do { fileURL.stopAccessingSecurityScopedResource() }
+                }
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.uploadCleanupDelay)) {
                     FileCache.shared.removeTempFile(at: fileURL)
@@ -2200,6 +2217,12 @@ struct FileListView: View {
         isUploadCancelled = false
         uploadProgress = 0.0
         let fileURL = uploadQueue[currentUploadIndex]
+        if isFileUpload {
+            guard fileURL.startAccessingSecurityScopedResource() else {
+                Log.error("❌ Failed to access file: \(fileURL)")
+                return
+            }
+        }
         initiateTusUpload(for: fileURL)
     }
 

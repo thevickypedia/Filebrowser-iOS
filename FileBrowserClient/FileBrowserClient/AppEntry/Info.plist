@@ -27,5 +27,7 @@
 	<string>LongFormAudio</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Photo library is used to save downloaded photos/videos.</string>
+	<key>NSDocumentsUsageDescription</key>
+	<string>We need access to import files.</string>
 </dict>
 </plist>
