@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.43.2 (09/21/2025)
+--------------------
+- [af77c0e](https://github.com/thevickypedia/Filebrowser-iOS/commit/af77c0e07a1b8359e97006671f8e69fcfd90b152) chore: Release ``v1.43.2``
+- [4fbd7a6](https://github.com/thevickypedia/Filebrowser-iOS/commit/4fbd7a620523e3d371c0548f322a07a5ec2cf273) fix: Stop preparing for upload when sheet is dismissed/swiped-down
+- [58b3957](https://github.com/thevickypedia/Filebrowser-iOS/commit/58b39577d12a539fe81d00d38723a5599d6c97ee) chore: Update release notes for v1.43.1
+
 v1.43.1 (09/21/2025)
 --------------------
 - [f221aa5](https://github.com/thevickypedia/Filebrowser-iOS/commit/f221aa5ec4c15f9ae186167e93b58235fdc78a56) chore: Release ``v1.43.1``
