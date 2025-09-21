@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.43.1 (09/21/2025)
+--------------------
+- [f221aa5](https://github.com/thevickypedia/Filebrowser-iOS/commit/f221aa5ec4c15f9ae186167e93b58235fdc78a56) chore: Release ``v1.43.1``
+- [2fa03c4](https://github.com/thevickypedia/Filebrowser-iOS/commit/2fa03c4d8e38e65a27916c2c8020b07c3bdec36e) fix: Remove temp solution for non-sendable type ``NSItemProvider`` in ``PhotoPicker``
+- [d9dcbc5](https://github.com/thevickypedia/Filebrowser-iOS/commit/d9dcbc513de1fff602cd963641a1767962ea1db9) chore: Update release notes for v1.43.0
+
 v1.43.0 (09/21/2025)
 --------------------
 - [41471e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/41471e0916e8de42401b2e9d2c69d324ab7c83a4) chore: Release ``v1.43.0``
