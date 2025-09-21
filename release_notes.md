@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v1.43.0 (09/21/2025)
+--------------------
+- [41471e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/41471e0916e8de42401b2e9d2c69d324ab7c83a4) chore: Release ``v1.43.0``
+- [7b9610b](https://github.com/thevickypedia/Filebrowser-iOS/commit/7b9610b8a6bfca98cea864bc4d04e6074e7797c2) fix: Fix broken file uploads
+- [ad45d2b](https://github.com/thevickypedia/Filebrowser-iOS/commit/ad45d2b0bc9a0929788f608f4492622ed5f70a16) refactor: Move cancelled status message to ``cancelUpload`` function
+- [c911eb3](https://github.com/thevickypedia/Filebrowser-iOS/commit/c911eb3c87029648216850bf6345c46804896cb5) perf: Change ``photoPickerStatus`` attributes to ``Int`` type to avoid potential memory leaks
+- [365bd89](https://github.com/thevickypedia/Filebrowser-iOS/commit/365bd8971c496326f404f1a672b07be6c3a203ef) perf: Remove unused ``processedFiles`` array
+- [b0fd9e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/b0fd9e0c5d1058a47ebf08a46a17a895cbb8a704) style: Add clear status messages for upload confirmation
+- [3763729](https://github.com/thevickypedia/Filebrowser-iOS/commit/3763729d96769341591d5f07fef11d95ebe79109) perf: Avoid fetching files after each file's upload completion
+- [3b3d4b4](https://github.com/thevickypedia/Filebrowser-iOS/commit/3b3d4b4353dc847f1f908f5c99d4f61f86e1211d) perf: Reduce the delay to cleanup temp files after remote server upload
+- [fdfac5d](https://github.com/thevickypedia/Filebrowser-iOS/commit/fdfac5d34395bd466074ca7d21effc8af486d68d) chore: Update release notes for v1.42.1
+
 v1.42.1 (09/20/2025)
 --------------------
 - [c8c598e](https://github.com/thevickypedia/Filebrowser-iOS/commit/c8c598ef4cdadadec24020b50d928cd1bac6d438) chore: Release ``v1.42.1``
