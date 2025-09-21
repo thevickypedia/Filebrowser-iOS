@@ -1111,7 +1111,8 @@ struct FileListView: View {
                             .shadow(radius: 4)
                         Button(action: {
                             isUploadCancelled = true
-                            cancelUpload(fileHandle: nil)
+                            // TODO: Is it required to cancel here?
+                            cancelUpload(fileHandle: nil, statusText: "❌ Upload cancelled by user.")
                         }) {
                             Label("Cancel Upload", systemImage: "xmark.circle.fill")
                                 .foregroundColor(.red)
@@ -1957,10 +1958,10 @@ struct FileListView: View {
         do {
             fileHandle = try FileHandle(forReadingFrom: fileURL)
         } catch {
-            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error)")
+            Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error.localizedDescription)")
             errorTitle = "File Error"
             errorMessage = error.localizedDescription
-            cancelUpload(fileHandle: nil)
+            cancelUpload(fileHandle: nil, statusText: nil)
             statusMessage = StatusPayload(text: "❌ Upload failed", color: .red)
             return
         }
@@ -2023,7 +2024,7 @@ struct FileListView: View {
         }.resume()
     }
 
-    func cancelUpload(fileHandle: FileHandle?) {
+    func cancelUpload(fileHandle: FileHandle?, statusText: String?) {
         Log.info("❌ Upload cancelled by user.")
         UIApplication.shared.isIdleTimerDisabled = false
         // MARK: Cancel task that streams files to be uploaded
@@ -2033,6 +2034,11 @@ struct FileListView: View {
         clearUploadStatus()
         clearPickerStatus()
         fetchFiles(at: currentPath)
+        if let text = statusText {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                statusMessage = StatusPayload(text: text, color: .yellow, duration: 7)
+            }
+        }
     }
 
     func endUpload() {
@@ -2071,12 +2077,12 @@ struct FileListView: View {
             // MARK: Catches cancellation during mid-chunk
             if isUploadCancelled {
                 Log.info("⏹️ Upload cancelled by user.")
-                cancelUpload(fileHandle: fileHandle)
+                // Store statusText before cancelling
                 var statusText = "⚠️ Upload cancelled"
                 if pendingUploads != 0 {
                     statusText += ", pending files: \(pendingUploads)"
                 }
-                statusMessage = StatusPayload(text: statusText, color: .yellow)
+                cancelUpload(fileHandle: fileHandle, statusText: statusText)
                 return
             }
 
@@ -2113,16 +2119,12 @@ struct FileListView: View {
                 DispatchQueue.main.async {
                     if isUploadCancelled {
                         Log.info("⏹️ Upload cancelled mid-chunk. \(fileName) may be incomplete.")
-                        cancelUpload(fileHandle: fileHandle)
+                        // Store statusText before cancelling
                         var statusText = "⚠️ Upload cancelled mid-chunk, '\(fileName)' may be incomplete."
                         if pendingUploads != 0 {
                             statusText += " Pending files: \(pendingUploads)"
                         }
-                        statusMessage = StatusPayload(
-                            text: statusText,
-                            color: .yellow,
-                            duration: 7
-                        )
+                        cancelUpload(fileHandle: fileHandle, statusText: statusText)
                         return
                     }
 
