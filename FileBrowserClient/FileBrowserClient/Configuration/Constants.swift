@@ -15,8 +15,6 @@ struct Constants {
 
     static let uploadCleanupDelay: Int = 2
 
-    static let statusMessageDuration: Double = 2.5
-
     // RemoteThumbnail:
     // Maximum number of thumbnails to render
     static let maxConcurrentThumbnailRender: Int = 4

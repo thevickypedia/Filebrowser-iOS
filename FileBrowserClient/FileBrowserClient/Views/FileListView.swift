@@ -169,7 +169,7 @@ struct FileListView: View {
         Log.debug("✅ Auth validation successful")
     }
 
-    var userPermissions: UserPermission? {
+    private var userPermissions: UserPermission? {
         return auth.tokenPayload?.user.perm
     }
 
@@ -205,7 +205,7 @@ struct FileListView: View {
 
     private var preparingUploadStack: some View {
         ZStack {
-            ProgressView("Preparing \(photoPickerStatus.totalSelected.count) files for upload...")
+            ProgressView("Preparing \(photoPickerStatus.totalSelected) files for upload...")
                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 .padding(24)
                 .background(.ultraThinMaterial)
@@ -305,7 +305,7 @@ struct FileListView: View {
                     Text("Queue")
                         .font(.caption)
                         .foregroundColor(.gray)
-                    Text("\(isUploading ? currentUploadIndex + 1 : currentUploadIndex) of \(photoPickerStatus.totalSelected.count)")
+                    Text("\(isUploading ? currentUploadIndex + 1 : currentUploadIndex) of \(photoPickerStatus.totalSelected)")
                         .font(.body)
                 }
             }
@@ -357,11 +357,8 @@ struct FileListView: View {
     private func nextUploadInQueue() -> String? {
         if currentUploadIndex + 1 < uploadQueue.count {
             return "Next up: \(uploadQueue[currentUploadIndex + 1].lastPathComponent)"
-        } else if photoPickerStatus.pendingUploads.count == 1,
-               let nextUpFile = photoPickerStatus.pendingUploads.first {
-                return "Next up: \(nextUpFile)"
         } else if !isUploading {
-            return "Processing \(photoPickerStatus.pendingUploads.count) pending files"
+            return "Processing \(pendingUploads) pending files"
         }
         return nil
     }
@@ -1077,12 +1074,12 @@ struct FileListView: View {
         if photoPickerStatus.isPreparingUpload {
             return false
         }
-        if photoPickerStatus.totalSelected.isEmpty {
+        if photoPickerStatus.totalSelected == 0 {
             // If totalSelected is empty, check pendingUploads (reverse and return)
-            return !photoPickerStatus.pendingUploads.isEmpty
+            return pendingUploads != 0
         }
         // If totalSelected is not empty, then check if uploadQueue is smaller
-        return uploadQueue.count < photoPickerStatus.totalSelected.count
+        return uploadQueue.count < photoPickerStatus.totalSelected
     }
 
     var body: some View {
@@ -2047,6 +2044,10 @@ struct FileListView: View {
         fetchFiles(at: currentPath)
     }
 
+    private var pendingUploads: Int {
+        return photoPickerStatus.totalSelected - currentUploadIndex
+    }
+
     func uploadFileInChunks(
         fileHandle: FileHandle,
         fileURL: URL,
@@ -2072,8 +2073,8 @@ struct FileListView: View {
                 Log.info("⏹️ Upload cancelled by user.")
                 cancelUpload(fileHandle: fileHandle)
                 var statusText = "⚠️ Upload cancelled"
-                if !photoPickerStatus.pendingUploads.isEmpty {
-                    statusText += ", pending files: \(photoPickerStatus.pendingUploads.count)"
+                if pendingUploads != 0 {
+                    statusText += ", pending files: \(pendingUploads)"
                 }
                 statusMessage = StatusPayload(text: statusText, color: .yellow)
                 return
@@ -2083,7 +2084,6 @@ struct FileListView: View {
             // MARK: Checks if there are more chunks to upload w.r.t file size
             guard currentOffset < fileSize else {
                 fileHandle.closeFile()
-                statusMessage = StatusPayload(text: "📤 Uploaded \(fileURL.lastPathComponent)")
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.uploadCleanupDelay)) {
                     FileCache.shared.removeTempFile(at: fileURL)
@@ -2115,8 +2115,8 @@ struct FileListView: View {
                         Log.info("⏹️ Upload cancelled mid-chunk. \(fileName) may be incomplete.")
                         cancelUpload(fileHandle: fileHandle)
                         var statusText = "⚠️ Upload cancelled mid-chunk, '\(fileName)' may be incomplete."
-                        if !photoPickerStatus.pendingUploads.isEmpty {
-                            statusText += " Pending files: \(photoPickerStatus.pendingUploads.count)"
+                        if pendingUploads != 0 {
+                            statusText += " Pending files: \(pendingUploads)"
                         }
                         statusMessage = StatusPayload(
                             text: statusText,
@@ -2178,22 +2178,18 @@ struct FileListView: View {
     func clearPickerStatus() {
         Log.debug("Resetting all photo picker attributes")
         photoPickerStatus.isPreparingUpload = false
-        photoPickerStatus.totalSelected.removeAll()
-        photoPickerStatus.pendingUploads.removeAll()
+        photoPickerStatus.totalSelected = 0
         photoPickerStatus.cancellableTasks.removeAll()
     }
 
     func uploadNextInQueue() {
         guard currentUploadIndex < uploadQueue.count else {
             isUploading = false
-            if photoPickerStatus.pendingUploads.isEmpty {
-                let statusText = "📤 Uploaded \(currentUploadIndex) files"
-                DispatchQueue.main.asyncAfter(deadline: .now() + Constants.statusMessageDuration) {
-                    statusMessage = StatusPayload(text: statusText)
-                }
+            if pendingUploads == 0 {
+                statusMessage = StatusPayload(text: "📤 Uploaded \(currentUploadIndex) \(currentUploadIndex == 1 ? "file" : "files")")
                 endUpload()
             } else {
-                Log.trace("Unprocessed files: \(photoPickerStatus.pendingUploads.count)")
+                Log.trace("Unprocessed files: \(pendingUploads)")
             }
             return
         }
@@ -2202,10 +2198,6 @@ struct FileListView: View {
         isUploadCancelled = false
         uploadProgress = 0.0
         let fileURL = uploadQueue[currentUploadIndex]
-        if let index = photoPickerStatus.pendingUploads.firstIndex(of: fileURL.lastPathComponent) {
-            photoPickerStatus.pendingUploads.remove(at: index)
-            Log.debug("Removed \(fileURL.lastPathComponent) from pending uploads - remaining: \(photoPickerStatus.pendingUploads.count)")
-        }
         initiateTusUpload(for: fileURL)
     }
 

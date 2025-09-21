@@ -10,7 +10,7 @@ import SwiftUI
 struct StatusPayload {
     var text: String?
     var color: Color = .green
-    var duration: TimeInterval = Constants.statusMessageDuration
+    var duration: TimeInterval = 2.5
 }
 
 struct StatusMessage: ViewModifier {

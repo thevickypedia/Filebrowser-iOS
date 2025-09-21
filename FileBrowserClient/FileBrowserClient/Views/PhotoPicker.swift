@@ -17,8 +17,8 @@ struct ProcessedResult: Sendable {
 
 class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
-    @Published var totalSelected: [String] = []
-    @Published var pendingUploads: [String] = []
+    @Published var totalSelected: Int = 0
+    @Published var pendingUploads: Int = 0
     @Published var cancellableTasks: [Task<Void, Never>] = []
 }
 
@@ -70,8 +70,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
                 let rawFileName = "\(suggestedName).\(ext)"
                 let defaultPre = isImage ? "photo" : "video"
                 let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
-                self.photoPickerStatus.totalSelected.append(rawFileName)
-                self.photoPickerStatus.pendingUploads.append(rawFileName)
                 processedResults.append(
                     ProcessedResult(
                         rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
@@ -101,6 +99,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
             let results = preProcessor(rawResults)
             let total = results.count
+            self.photoPickerStatus.totalSelected = total
             Log.info("Selected files for upload: \(total)")
 
             // Cancel and clear existing tasks
