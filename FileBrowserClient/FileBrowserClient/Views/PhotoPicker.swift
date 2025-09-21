@@ -8,7 +8,7 @@
 import SwiftUI
 import PhotosUI
 
-struct ProcessedResult: Sendable {
+struct ProcessedResult {
     let rawFileName: String
     let isImage: Bool
     let isVideo: Bool
@@ -56,26 +56,20 @@ struct PhotoPicker: UIViewControllerRepresentable {
             self.onFilePicked = onFilePicked
         }
 
-        func preProcessor(_ rawResults: [PHPickerResult]) -> [ProcessedResult] {
-            var processedResults: [ProcessedResult] = []
-            for result in rawResults {
-                let provider: NSItemProvider = result.itemProvider
-                let suggestedName = provider.suggestedName ?? "Unknown"
-                let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
-                let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
-                let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
-                let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
-                let defaultExt = isImage ? "jpg" : "mov"
-                let ext = pathExt.isEmpty ? defaultExt : pathExt
-                let rawFileName = "\(suggestedName).\(ext)"
-                let defaultPre = isImage ? "photo" : "video"
-                let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
-                processedResults.append(
-                    ProcessedResult(
-                        rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename)
-                )
-            }
-            return processedResults
+        func preProcessor(_ provider: NSItemProvider) -> ProcessedResult {
+            let suggestedName = provider.suggestedName ?? "Unknown"
+            let isImage = provider.hasItemConformingToTypeIdentifier(UTType.image.identifier)
+            let isVideo = provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
+            let pathExt = URL(fileURLWithPath: suggestedName).pathExtension
+            let base = URL(fileURLWithPath: suggestedName).deletingPathExtension().lastPathComponent
+            let defaultExt = isImage ? "jpg" : "mov"
+            let ext = pathExt.isEmpty ? defaultExt : pathExt
+            let rawFileName = "\(suggestedName).\(ext)"
+            let defaultPre = isImage ? "photo" : "video"
+            let filename = (base.isEmpty ? "\(defaultPre)-\(UUID().uuidString)" : base) + ".\(ext)"
+            return ProcessedResult(
+                rawFileName: rawFileName, isImage: isImage, isVideo: isVideo, filename: filename
+            )
         }
 
         func updateCurrentProcessed(fileName: String, total: Int, bytes: Int? = nil) {
@@ -97,8 +91,7 @@ struct PhotoPicker: UIViewControllerRepresentable {
                 return
             }
 
-            let results = preProcessor(rawResults)
-            let total = results.count
+            let total = rawResults.count
             self.photoPickerStatus.totalSelected = total
             Log.info("Selected files for upload: \(total)")
 
@@ -113,26 +106,24 @@ struct PhotoPicker: UIViewControllerRepresentable {
             // This is a limitation of iOS's implementation of NSItemProvider
             let parentTask = Task(priority: .userInitiated) {
                 await withTaskGroup(of: Void.self) { group in
-                    var iterator = Array(results.enumerated()).makeIterator()
+                    // TODO: Use enumerated to track submitted/staged
+                    var iterator = Array(rawResults).makeIterator()
                     var inFlight = 0
 
-                    while inFlight < Constants.maxUploadStagingLimit, let (index, result) = iterator.next() {
+                    while inFlight < Constants.maxUploadStagingLimit, let rawResult = iterator.next() {
                         inFlight += 1
-                        // TODO: Temporary solution for non Sendable type NSItemProvider
-                        let provider = rawResults[index].itemProvider
                         group.addTask { [weak self] in
-                            await self?.handleResult(result, provider: provider, total: total)
+                            await self?.handleResult(rawResult, total: total)
                         }
                     }
 
                     // when one finishes, start the next
                     for await _ in group {
                         inFlight -= 1
-                        if let (index, result) = iterator.next() {
+                        if let rawResult = iterator.next() {
                             inFlight += 1
-                            let provider = rawResults[index].itemProvider
                             group.addTask { [weak self] in
-                                await self?.handleResult(result, provider: provider, total: total)
+                                await self?.handleResult(rawResult, total: total)
                             }
                         }
                     }
@@ -148,7 +139,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
         }
 
         // MARK: - Per-item handling
-        private func handleResult(_ result: ProcessedResult, provider: NSItemProvider, total: Int) async {
+        private func handleResult(_ rawResult: PHPickerResult, total: Int) async {
+            let provider = rawResult.itemProvider
+            let result = preProcessor(provider)
             let fileName = result.rawFileName
 
             guard !Task.isCancelled else {
