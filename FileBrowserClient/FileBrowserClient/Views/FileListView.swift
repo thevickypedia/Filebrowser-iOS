@@ -1106,7 +1106,7 @@ struct FileListView: View {
                     searchingStack
                     searchListView(for: viewModel.searchResults)
                 } else {
-                    // MARK: Preparing upload will be displayed only for uploads from Files app
+                    // MARK: Preparing upload will be displayed only for uploads from Photos app
                     if photoPickerStatus.isPreparingUpload {
                         preparingUploadStack
                     }
@@ -1326,7 +1326,13 @@ struct FileListView: View {
         .sheet(isPresented: $showingSettings) {
             showSettingsSheet
         }
-        .sheet(isPresented: $showPhotoPicker) {
+        .sheet(isPresented: $showPhotoPicker, onDismiss: {
+            // This will fire on cancel (including swipe down)
+            if photoPickerStatus.isPreparingUpload {
+                Log.warn("Upload sheet dismissed without selection")
+                photoPickerStatus.isPreparingUpload = false
+            }
+        }) {
             PhotoPicker(
                 photoPickerStatus: photoPickerStatus,
                 onFilePicked: { url in
