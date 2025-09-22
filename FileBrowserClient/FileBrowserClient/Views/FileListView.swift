@@ -1200,8 +1200,8 @@ struct FileListView: View {
             showSettingsSheet
         }
         .sheet(isPresented: $showPhotoPicker, onDismiss: {
-            // This will fire on cancel (including swipe down)
-            if photoPickerStatus.isPreparingUpload {
+            // This will fire on cancel, swipe down or selection - so check selected count first
+            if photoPickerStatus.totalSelected == 0 && photoPickerStatus.isPreparingUpload {
                 Log.warn("Upload sheet dismissed without selection")
                 photoPickerStatus.isPreparingUpload = false
             }
