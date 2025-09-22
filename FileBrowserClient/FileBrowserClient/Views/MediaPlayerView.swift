@@ -334,7 +334,7 @@ struct MediaPlayerView: View {
         }
     }
 
-    private func finishPlayerSetup(player: AVPlayer, item: AVPlayerItem, seekTo time: Double?, autoPlay: Bool = true) {
+    private func finishPlayerSetup(player: AVPlayer, item: AVPlayerItem, seekTo time: Double?, autoPlay: Bool = false) {
         self.playerItem = item
         self.player = player
 
