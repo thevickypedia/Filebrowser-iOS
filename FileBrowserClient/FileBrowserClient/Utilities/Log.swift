@@ -60,22 +60,24 @@ struct Log {
 
     private static func writeToFile(_ message: String) {
         // TODO: Move creation to init
-        let fileManager = FileManager.default
-        let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let logFileURL = logsDirectory.appendingPathComponent("app.log")
+        DispatchQueue.global(qos: .utility).async {
+            let fileManager = FileManager.default
+            let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+            let logFileURL = logsDirectory.appendingPathComponent("app.log")
 
-        let logMessage = message + "\n"
+            let logMessage = message + "\n"
 
-        if fileManager.fileExists(atPath: logFileURL.path) {
-            if let fileHandle = try? FileHandle(forWritingTo: logFileURL) {
-                fileHandle.seekToEndOfFile()
-                if let data = logMessage.data(using: .utf8) {
-                    fileHandle.write(data)
-                    fileHandle.closeFile()
+            if fileManager.fileExists(atPath: logFileURL.path) {
+                if let fileHandle = try? FileHandle(forWritingTo: logFileURL) {
+                    fileHandle.seekToEndOfFile()
+                    if let data = logMessage.data(using: .utf8) {
+                        fileHandle.write(data)
+                        fileHandle.closeFile()
+                    }
                 }
+            } else {
+                try? logMessage.write(to: logFileURL, atomically: true, encoding: .utf8)
             }
-        } else {
-            try? logMessage.write(to: logFileURL, atomically: true, encoding: .utf8)
         }
     }
 
