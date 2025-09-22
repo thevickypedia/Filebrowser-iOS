@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.44.1 (09/22/2025)
+--------------------
+- [7cc14e4](https://github.com/thevickypedia/Filebrowser-iOS/commit/7cc14e4ce238a4391cdb2b40a384987b799e0a3c) chore: Release ``v1.44.1``
+- [3a427aa](https://github.com/thevickypedia/Filebrowser-iOS/commit/3a427aaf323f5a8553f0a309f23efada64b1d4b0) fix: Show upload progress only when progress begins
+- [367e12c](https://github.com/thevickypedia/Filebrowser-iOS/commit/367e12c7abfe7242c5d40b1aa39fcc187913eb7a) refactor: Move download and upload views to dedicated modules and stacks
+- [3dc2914](https://github.com/thevickypedia/Filebrowser-iOS/commit/3dc29148df72e2aeb1d20d3693950a033fb8b67e) chore: Update release notes for v1.44.0
+
 v1.44.0 (09/21/2025)
 --------------------
 - [9d948e9](https://github.com/thevickypedia/Filebrowser-iOS/commit/9d948e9a35633eb4ffeae56d46ac9b721cff0bf8) chore: Release ``v1.44.0``
