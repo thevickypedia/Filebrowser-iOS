@@ -282,80 +282,6 @@ struct FileListView: View {
         }
     }
 
-    private var uploadingStack: some View {
-        VStack(alignment: .leading, spacing: 16) {
-
-            // 🗂️ File Info
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: currentUploadFileIcon ?? "doc.fill")
-                    .foregroundColor(.blue)
-                    .font(.title2)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(currentUploadFile ?? "Unknown")
-                        .font(.headline)
-                    Text("\(currentUploadedFileSize ?? "0.0 MB") / \(currentUploadFileSize ?? "0.0 MB")")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-            }
-
-            // 🔄 Queue
-            HStack(spacing: 12) {
-                Image(systemName: "list.number")
-                    .foregroundColor(.indigo)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Queue")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Text("\(isUploading ? currentUploadIndex + 1 : currentUploadIndex) of \(photoPickerStatus.totalSelected)")
-                        .font(.body)
-                }
-            }
-
-            // 🚀 Speed
-            HStack(spacing: 12) {
-                Image(systemName: "speedometer")
-                    .foregroundColor(.green)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Speed")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Text(String(format: "%.2f MB/s", currentUploadSpeed))
-                        .font(.body)
-                }
-            }
-
-            // 📤 Chunk Size
-            HStack(spacing: 12) {
-                Image(systemName: "square.stack.3d.up")
-                    .foregroundColor(.orange)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Chunk Size")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Text("\(advancedSettings.chunkSize) MB")
-                        .font(.body)
-                }
-            }
-
-            // 📊 Progress Bar
-            ProgressView(value: uploadProgress, total: 1.0) {
-                EmptyView() // No label
-            } currentValueLabel: {
-                Text("\(uploadProgressPct)%")
-            }
-            .progressViewStyle(LinearProgressViewStyle())
-            .padding(.top, 8)
-
-            if let nextUp = nextUploadInQueue() {
-                Text(nextUp)
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                    .padding(.top, 4)
-            }
-        }
-    }
-
     private func nextUploadInQueue() -> String? {
         if currentUploadIndex + 1 < uploadQueue.count {
             return "Next up: \(uploadQueue[currentUploadIndex + 1].lastPathComponent)"
@@ -363,60 +289,6 @@ struct FileListView: View {
             return "Processing \(pendingUploads) pending files"
         }
         return nil
-    }
-
-    private var downloadingStack: some View {
-        VStack(alignment: .leading, spacing: 16) {
-
-            // 🗂️ File Info
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: currentDownloadFileIcon ?? "arrow.down.circle.fill")
-                    .foregroundColor(.blue)
-                    .font(.title2)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(currentDownloadFile ?? "Downloading...")
-                        .font(.headline)
-                    Text("\(currentDownloadedFileSize ?? "0 MB") / \(currentDownloadFileSize ?? "—")")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-            }
-
-            // 🔄 Queue
-            HStack(spacing: 12) {
-                Image(systemName: "list.number")
-                    .foregroundColor(.indigo)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Queue")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Text("\(currentDownloadIndex + 1) of \(downloadQueue.count)")
-                        .font(.body)
-                }
-            }
-
-            // 🚀 Speed
-            HStack(spacing: 12) {
-                Image(systemName: "speedometer")
-                    .foregroundColor(.green)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Speed")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    Text(String(format: "%.2f MB/s", currentDownloadSpeed))
-                        .font(.body)
-                }
-            }
-
-            // 📊 Progress Bar
-            ProgressView(value: downloadProgress, total: 1.0) {
-                EmptyView()
-            } currentValueLabel: {
-                Text("\(downloadProgressPct)%")
-            }
-            .progressViewStyle(LinearProgressViewStyle())
-            .padding(.top, 8)
-        }
     }
 
     private var actionsTabStack: some View {
@@ -1111,45 +983,46 @@ struct FileListView: View {
                         preparingUploadStack
                     }
                     if isUploading || retainUploadingStack() {
-                        uploadingStack
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(12)
-                            .shadow(radius: 4)
-                        Button(action: {
-                            isUploadCancelled = true
-                            cancelUpload(fileHandle: nil, statusText: "❌ Upload cancelled by user.")
-                        }) {
-                            Label("Cancel Upload", systemImage: "xmark.circle.fill")
-                                .foregroundColor(.red)
-                        }
-                        .padding(.top, 8)
+                        UploadingStack(
+                            fileName: currentUploadFile,
+                            fileIcon: currentUploadFileIcon,
+                            uploaded: currentUploadedFileSize,
+                            total: currentUploadFileSize,
+                            progress: uploadProgress,
+                            progressPct: uploadProgressPct,
+                            speed: currentUploadSpeed,
+                            index: currentUploadIndex + 1,
+                            totalCount: photoPickerStatus.totalSelected,
+                            chunkSize: advancedSettings.chunkSize,
+                            onCancel: {
+                                isUploadCancelled = true
+                                cancelUpload(fileHandle: nil, statusText: "❌ Upload cancelled by user.")
+                            }
+                        )
                     }
 
                     // Download UI
                     if showDownload || isDownloading {
-                        downloadingStack
-                            .padding()
-                            .background(.ultraThinMaterial)
-                            .cornerRadius(12)
-                            .shadow(radius: 4)
-
-                        Button(action: {
-                            isDownloadCancelled = true
-                            if let id = currentDownloadTaskID {
-                                DownloadManager.shared.cancel(id)
+                        DownloadingStack(
+                            fileName: currentDownloadFile,
+                            fileIcon: currentDownloadFileIcon,
+                            downloaded: currentDownloadedFileSize,
+                            total: currentDownloadFileSize,
+                            progress: downloadProgress,
+                            progressPct: downloadProgressPct,
+                            speed: currentDownloadSpeed,
+                            index: currentDownloadIndex + 1,
+                            totalCount: downloadQueue.count,
+                            onCancel: {
+                                isDownloadCancelled = true
+                                if let id = currentDownloadTaskID { DownloadManager.shared.cancel(id) }
+                                downloadQueue.removeAll()
+                                currentDownloadIndex = 0
+                                downloadProgress = 0.0
+                                isDownloading = false
+                                showDownload = false
                             }
-                            downloadQueue.removeAll()
-                            currentDownloadIndex = 0
-                            downloadProgress = 0.0
-                            isDownloading = false
-                            showDownload = false
-                            Log.info("❌ Download cancelled by user.")
-                        }) {
-                            Label("Cancel Download", systemImage: "xmark.circle.fill")
-                                .foregroundColor(.red)
-                        }
-                        .padding(.top, 8)
+                        )
                     }
 
                     if viewModel.isLoading {
