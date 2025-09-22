@@ -1459,48 +1459,13 @@ struct FileListView: View {
                     switch result {
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
-                        // file.extension: ".mp4" || FileURL: "mp4"
-                        let ext = localURL.pathExtension.lowercased()
-                        if let utType = UTType(filenameExtension: ext),
-                           utType.conforms(to: .image) || utType.conforms(to: .movie) || utType.identifier == "com.compuserve.gif" {
-                            // Save to Photos
-                            saveToPhotos(fileURL: localURL, fileType: utType) { success, error in
-                                if success {
-                                    statusMessage = StatusPayload(
-                                        text: "📸 Saved to Photos: \(file.name)",
-                                        color: .green,
-                                        duration: 2
-                                    )
-                                    Log.info("Saved \(file.name) to Photos app")
-                                } else {
-                                    let err = "Failed to save \(file.name) to Photos"
-                                    self.errorTitle = "Save Error"
-                                    Log.error(err)
-                                    if let errorString = error?.localizedDescription {
-                                        Log.error(errorString)
-                                        self.errorMessage = errorString
-                                    } else {
-                                        self.errorMessage = "Failed to save to Photos"
-                                    }
-                                }
-                                // NOTE: Deleting outside condition block will remove the file before storing
-                                try? FileManager.default.removeItem(at: localURL)
-                            }
-                        } else {
-                            // Save to Files
-                            if let savedURL = saveToFiles(fileURL: localURL, fileName: file.name) {
-                                statusMessage = StatusPayload(
-                                    text: "📂 Saved to Files: \(file.name)",
-                                    color: .green,
-                                    duration: 2
-                                )
-                                Log.debug("Saved file at: \(savedURL)")
-                            } else {
-                                self.errorMessage = "Failed to save file: \(file.name)"
-                            }
-                            // NOTE: Deleting outside condition block will remove the file before storing
-                            try? FileManager.default.removeItem(at: localURL)
-                        }
+                        FileDownloadHelper.handleDownloadCompletion(
+                            file: file,
+                            localURL: localURL,
+                            statusMessage: $statusMessage,
+                            errorTitle: $errorTitle,
+                            errorMessage: $errorMessage
+                        )
                     case .failure(let err):
                         Log.error("❌ Download failed: \(err.localizedDescription)")
                         self.errorMessage = "Download failed: \(err.localizedDescription)"

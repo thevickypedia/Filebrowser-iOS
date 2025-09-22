@@ -466,181 +466,33 @@ struct FileDetailView: View {
     }
 
     func downloadAndSave() {
-        if content?.isEmpty ?? true {
-            Log.info("Content wasn't downloaded already, downloading now...")
-            isDownloading = true
-            // downloadRaw will call saveFile(showSave: true) once done
-            downloadRaw(showSave: true)
-        } else {
-            // content already present; request direct save
-            saveFile(showSave: true)
-        }
-    }
+        guard let url = FileDownloadHelper.makeDownloadURL(
+            serverURL: serverURL,
+            token: token,
+            filePath: file.path
+        ) else { return }
 
-    // TODO: Unify logic with FileListView in a dedicated module
-    // MARK: - Unified save (shows share sheet OR saves directly if showSave true)
-    func saveFile(showSave: Bool = false) {
-        guard let content = self.content else { return }
-
-        // write temp file off the main thread to avoid blocking UI for big files
-        DispatchQueue.global(qos: .userInitiated).async {
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
-
-            do {
-                try content.write(to: tempURL, options: .atomic)
-
-                // Determine type using UTType
-                let ext = tempURL.pathExtension
-                let utType = UTType(filenameExtension: ext) ?? UTType.data
-
-                // If caller specifically requested direct save -> try Photos API for image/video
-                if showSave {
-                    if utType.conforms(to: .image) || utType.identifier == "com.compuserve.gif" || utType.conforms(to: .movie) {
-                        // save images (including GIF path)
-                        saveDirectToPhotos(fileURL: tempURL, fileType: utType)
-                        return
-                    }
-                }
-
-                // Otherwise present share sheet (or fallback)
-                DispatchQueue.main.async {
-                    presentActivityController(fileURL: tempURL, fileType: utType)
-                }
-
-            } catch {
+        isDownloading = true
+        DownloadManager.shared.download(from: url, token: token,
+            progress: { _, _, _ in },
+            completion: { result in
                 DispatchQueue.main.async {
                     self.isDownloading = false
-                    self.error = "Failed to write temp file: \(error.localizedDescription)"
-                }
-            }
-        }
-    }
-
-    // MARK: - Direct save to Photos (handles images and videos). Uses modern API when available.
-    func saveDirectToPhotos(fileURL: URL, fileType: UTType) {
-        // Request add-only authorization when available (iOS 14+), fallback otherwise
-        let handler: (PHAuthorizationStatus) -> Void = { status in
-            guard status == .authorized || status == .limited else {
-                DispatchQueue.main.async {
-                    self.isDownloading = false
-                    self.error = "Photos access not granted"
-                }
-                return
-            }
-
-            PHPhotoLibrary.shared().performChanges({
-                if fileType.conforms(to: .movie) {
-                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: fileURL)
-                } else {
-                    // For images (and GIFs) create asset from file URL — this retains GIF data
-                    if #available(iOS 9.0, *) {
-                        let req = PHAssetCreationRequest.forAsset()
-                        let options = PHAssetResourceCreationOptions()
-                        // let the system detect the mime/uti from fileURL
-                        req.addResource(with: .photo, fileURL: fileURL, options: options)
-                    } else {
-                        PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: fileURL)
-                    }
-                }
-            }) { success, err in
-                DispatchQueue.main.async {
-                    self.isDownloading = false
-                    if success {
-                        statusMessage = StatusPayload(
-                            text: "📥 Saved to Photos: \(file.name)",
-                            color: .green,
-                            duration: 2
+                    switch result {
+                    case .success(let localURL):
+                        FileDownloadHelper.handleDownloadCompletion(
+                            file: file,
+                            localURL: localURL,
+                            statusMessage: $statusMessage,
+                            errorTitle: $errorTitle,
+                            errorMessage: $errorMessage
                         )
-                    } else {
-                        self.error = "Save failed: \(err?.localizedDescription ?? "unknown")"
+                    case .failure(let error):
+                        self.error = "Download failed: \(error.localizedDescription)"
                     }
-                    // cleanup temp file
-                    try? FileManager.default.removeItem(at: fileURL)
                 }
             }
-        }
-
-        if #available(iOS 14, *) {
-            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-                handler(status)
-            }
-        } else {
-            PHPhotoLibrary.requestAuthorization { status in
-                handler(status)
-            }
-        }
-    }
-
-    // MARK: - Present Activity Controller with proper completion and cleanup
-    func presentActivityController(fileURL: URL, fileType: UTType) {
-        // Choose appropriate activity items so "Save to Photos" appears where possible
-        var activityItems: [Any] = [fileURL]
-
-        if fileType.conforms(to: .image) {
-            if let image = UIImage(data: (try? Data(contentsOf: fileURL)) ?? Data()) {
-                activityItems = [image]
-            } else {
-                activityItems = [fileURL]
-            }
-        } else if fileType.conforms(to: .movie) {
-            activityItems = [fileURL]
-        } else if fileType.identifier == "com.compuserve.gif" {
-            // pass URL for GIFs so Share Sheet can often present Save option (and animation preserved)
-            activityItems = [fileURL]
-        }
-
-        let activityVC = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-
-        activityVC.completionWithItemsHandler = { _, completed, _, error in
-            // Remove temp file regardless
-            try? FileManager.default.removeItem(at: fileURL)
-            if completed {
-                statusMessage = StatusPayload(
-                    text: "📤 Shared/Saved: \(file.name)",
-                    color: .green,
-                    duration: 2
-                )
-            } else if let err = error {
-                self.error = err.localizedDescription
-            }
-            self.isDownloading = false
-        }
-
-        // Present safely using UIWindowScene (non-deprecated)
-        DispatchQueue.main.async {
-            // Prefer the active/foreground scene
-            let foregroundScene = UIApplication.shared.connectedScenes
-                .first { $0.activationState == .foregroundActive } as? UIWindowScene
-
-            // Try to find the key window for that scene (preferred), otherwise any window
-            var rootVC: UIViewController?
-            if let scene = foregroundScene {
-                rootVC = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController
-                        ?? scene.windows.first?.rootViewController
-            }
-
-            // As a last resort, try any scene's first window
-            if rootVC == nil {
-                if let anyScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                    rootVC = anyScene.windows.first?.rootViewController
-                }
-            }
-
-            if let root = rootVC {
-                // popover anchor on iPad
-                if let pop = activityVC.popoverPresentationController {
-                    pop.sourceView = root.view
-                    pop.sourceRect = CGRect(x: root.view.bounds.midX, y: root.view.bounds.midY, width: 1, height: 1)
-                    pop.permittedArrowDirections = []
-                }
-                root.present(activityVC, animated: true, completion: nil)
-            } else {
-                // final fallback: show error and cleanup
-                self.error = "Unable to present share sheet"
-                try? FileManager.default.removeItem(at: fileURL)
-                self.isDownloading = false
-            }
-        }
+        )
     }
 
     func downloadFile(fileName: String, extensionTypes: ExtensionTypes) {
@@ -752,7 +604,19 @@ struct FileDetailView: View {
         ) {
             self.content = cached
             if showSave {
-                self.saveFile()
+                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
+                do {
+                    try cached.write(to: tempURL, options: .atomic)
+                    FileDownloadHelper.handleDownloadCompletion(
+                        file: file,
+                        localURL: tempURL,
+                        statusMessage: $statusMessage,
+                        errorTitle: $errorTitle,
+                        errorMessage: $errorMessage
+                    )
+                } catch {
+                    self.error = "Failed to save cached file: \(error.localizedDescription)"
+                }
             }
             return
         }
@@ -797,7 +661,22 @@ struct FileDetailView: View {
                 }
 
                 if showSave {
-                    self.saveFile()
+                    if showSave, let data = data {
+                        // Write data to temp file and reuse unified completion
+                        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
+                        do {
+                            try data.write(to: tempURL, options: .atomic)
+                            FileDownloadHelper.handleDownloadCompletion(
+                                file: file,
+                                localURL: tempURL,
+                                statusMessage: $statusMessage,
+                                errorTitle: $errorTitle,
+                                errorMessage: $errorMessage
+                            )
+                        } catch {
+                            self.error = "Failed to save file: \(error.localizedDescription)"
+                        }
+                    }
                 }
             }
         }.resume()
