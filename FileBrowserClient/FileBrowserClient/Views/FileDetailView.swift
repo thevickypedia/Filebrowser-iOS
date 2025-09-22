@@ -660,22 +660,20 @@ struct FileDetailView: View {
                     onFileCached?()
                 }
 
-                if showSave {
-                    if showSave, let data = data {
-                        // Write data to temp file and reuse unified completion
-                        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
-                        do {
-                            try data.write(to: tempURL, options: .atomic)
-                            FileDownloadHelper.handleDownloadCompletion(
-                                file: file,
-                                localURL: tempURL,
-                                statusMessage: $statusMessage,
-                                errorTitle: $errorTitle,
-                                errorMessage: $errorMessage
-                            )
-                        } catch {
-                            self.error = "Failed to save file: \(error.localizedDescription)"
-                        }
+                if showSave, let data = data {
+                    // Write data to temp file and reuse unified completion
+                    let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
+                    do {
+                        try data.write(to: tempURL, options: .atomic)
+                        FileDownloadHelper.handleDownloadCompletion(
+                            file: file,
+                            localURL: tempURL,
+                            statusMessage: $statusMessage,
+                            errorTitle: $errorTitle,
+                            errorMessage: $errorMessage
+                        )
+                    } catch {
+                        self.error = "Failed to save file: \(error.localizedDescription)"
                     }
                 }
             }
