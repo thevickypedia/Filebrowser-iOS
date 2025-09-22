@@ -15,9 +15,15 @@ enum LogLevel: Int {
     case error
 }
 
+enum LogOptions: String {
+    case file
+    case stdout
+}
+
 struct Log {
     static var currentLevel: LogLevel = .error
     static var verboseMode: Bool = false
+    static var logOption: LogOptions = .file
 
     private static func log(_ message: @autoclosure () -> String,
                             level: LogLevel,
@@ -29,6 +35,7 @@ struct Log {
         // MARK: Only evaluated if level check passes
         let msg = message()
         let paddedLabel = label.padding(toLength: 10, withPad: " ", startingAt: 0)
+        var finalLog: String
         if verboseMode {
             let fileName = URL(fileURLWithPath: file).deletingPathExtension().lastPathComponent
             let functionName: String = {
@@ -39,9 +46,36 @@ struct Log {
                 return function // fallback
             }()
             let location = "[\(fileName):\(line)] - \(functionName)"
-            print("\(paddedLabel) - \(timestamp()) - \(location) - \(msg)")
+            finalLog = "\(paddedLabel) - \(timestamp()) - \(location) - \(msg)"
         } else {
-            print("\(paddedLabel) - \(timestamp()) - \(msg)")
+            finalLog = "\(paddedLabel) - \(timestamp()) - \(msg)"
+        }
+        switch logOption {
+        case .file:
+            writeToFile(finalLog)
+        case .stdout:
+            print(finalLog)
+        }
+    }
+
+    private static func writeToFile(_ message: String) {
+        // TODO: Move creation to init
+        let fileManager = FileManager.default
+        let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let logFileURL = logsDirectory.appendingPathComponent("app.log")
+
+        let logMessage = message + "\n"
+
+        if fileManager.fileExists(atPath: logFileURL.path) {
+            if let fileHandle = try? FileHandle(forWritingTo: logFileURL) {
+                fileHandle.seekToEndOfFile()
+                if let data = logMessage.data(using: .utf8) {
+                    fileHandle.write(data)
+                    fileHandle.closeFile()
+                }
+            }
+        } else {
+            try? logMessage.write(to: logFileURL, atomically: true, encoding: .utf8)
         }
     }
 
