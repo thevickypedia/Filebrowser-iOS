@@ -60,7 +60,7 @@ struct Log {
 
     private static func writeToFile(_ message: String) {
         // TODO: Move creation to init
-        DispatchQueue.global(qos: .utility).async {
+        Task.detached(priority: .utility) {
             let fileManager = FileManager.default
             let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
             let logFileURL = logsDirectory.appendingPathComponent("app.log")
