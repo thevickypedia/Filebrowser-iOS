@@ -33,6 +33,7 @@
 		98B1AC4D2E7AF663000210BC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC4C2E7AF660000210BC /* Constants.swift */; };
 		98B1AC762E7C6AB9000210BC /* FileList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC752E7C6AB2000210BC /* FileList.swift */; };
 		98B1ACD92E80CC43000210BC /* FileDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */; };
+		98B1ACDB2E80D89F000210BC /* PDFViewerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1ACDA2E80D89F000210BC /* PDFViewerScreen.swift */; };
 		98B600272E50B1F900F24FB8 /* ShareLinkRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B600262E50B1F900F24FB8 /* ShareLinkRow.swift */; };
 		98B600352E5149AC00F24FB8 /* ShareSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B600342E5149AC00F24FB8 /* ShareSheetView.swift */; };
 		98B600392E52103D00F24FB8 /* AdvancedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B600382E52103D00F24FB8 /* AdvancedSettings.swift */; };
@@ -100,6 +101,7 @@
 		98B1AC4C2E7AF660000210BC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		98B1AC752E7C6AB2000210BC /* FileList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileList.swift; sourceTree = "<group>"; };
 		98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDownloadHelper.swift; sourceTree = "<group>"; };
+		98B1ACDA2E80D89F000210BC /* PDFViewerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFViewerScreen.swift; sourceTree = "<group>"; };
 		98B600262E50B1F900F24FB8 /* ShareLinkRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareLinkRow.swift; sourceTree = "<group>"; };
 		98B600342E5149AC00F24FB8 /* ShareSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheetView.swift; sourceTree = "<group>"; };
 		98B600382E52103D00F24FB8 /* AdvancedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSettings.swift; sourceTree = "<group>"; };
@@ -213,6 +215,7 @@
 		98B1AC502E7C5B9A000210BC /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				98B1ACDA2E80D89F000210BC /* PDFViewerScreen.swift */,
 				98B600382E52103D00F24FB8 /* AdvancedSettings.swift */,
 				986F5A6A2E3AC0190058E2C4 /* AnimatedImageView.swift */,
 				98823ED02E1AFADA004CBB11 /* ContentView.swift */,
@@ -454,6 +457,7 @@
 				98B1AC762E7C6AB9000210BC /* FileList.swift in Sources */,
 				98D563D92E44F27A00DE0079 /* CopyableTextContainer.swift in Sources */,
 				F854861A2E1B1C3E00115F18 /* FileItem.swift in Sources */,
+				98B1ACDB2E80D89F000210BC /* PDFViewerScreen.swift in Sources */,
 				986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */,
 				98836BAF2E7291230053170A /* ResumePromptView.swift in Sources */,
 				986F5A6B2E3AC0190058E2C4 /* AnimatedImageView.swift in Sources */,

@@ -151,7 +151,7 @@ struct FileDetailView: View {
                 }
 
             } else if fileName.hasSuffix(".pdf") {
-                PDFKitView(data: content)
+                PDFViewerScreen(content: content)
             } else {
                 Text("File preview not supported for this type.").foregroundColor(.gray)
             }
