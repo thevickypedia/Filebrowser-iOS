@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.43.3 (09/21/2025)
+--------------------
+- [736da52](https://github.com/thevickypedia/Filebrowser-iOS/commit/736da52c2482c30f73b63dc9b00a1faec6f71448) chore: Release ``v1.43.3``
+- [c2ff48b](https://github.com/thevickypedia/Filebrowser-iOS/commit/c2ff48b6687fa707f0e56aba0c9bea89f745de65) fix: Remove nested duplicate for ``showSave`` condition
+- [2f04ffb](https://github.com/thevickypedia/Filebrowser-iOS/commit/2f04ffb5274a36038cdb432cb90817e124433047) refactor: Unify file download functionalities from list and detail view
+- [cd559f1](https://github.com/thevickypedia/Filebrowser-iOS/commit/cd559f111a0589cd8e8ab8ddc26d245088722f26) chore: Update release notes for v1.43.2
+
 v1.43.2 (09/21/2025)
 --------------------
 - [af77c0e](https://github.com/thevickypedia/Filebrowser-iOS/commit/af77c0e07a1b8359e97006671f8e69fcfd90b152) chore: Release ``v1.43.2``
