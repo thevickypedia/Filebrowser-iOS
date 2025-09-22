@@ -25,7 +25,7 @@ struct Log {
     static var verboseMode: Bool = false
     static var logOption: LogOptions = .file
 
-    private static func log(_ message: @autoclosure () -> String,
+    private static func log(_ message: () -> String,
                             level: LogLevel,
                             label: String,
                             file: String = #fileID,
@@ -85,35 +85,35 @@ struct Log {
                       file: String = #fileID,
                       line: Int = #line,
                       function: String = #function) {
-        log(message(), level: .trace, label: "🔍 TRACE", file: file, line: line, function: function)
+        log(message, level: .trace, label: "🔍 TRACE", file: file, line: line, function: function)
     }
 
     static func debug(_ message: @autoclosure () -> String,
                       file: String = #fileID,
                       line: Int = #line,
                       function: String = #function) {
-        log(message(), level: .debug, label: "🐛 DEBUG", file: file, line: line, function: function)
+        log(message, level: .debug, label: "🐛 DEBUG", file: file, line: line, function: function)
     }
 
     static func info(_ message: @autoclosure () -> String,
                      file: String = #fileID,
                      line: Int = #line,
                      function: String = #function) {
-        log(message(), level: .info, label: "ℹ️ INFO", file: file, line: line, function: function)
+        log(message, level: .info, label: "ℹ️ INFO", file: file, line: line, function: function)
     }
 
     static func warn(_ message: @autoclosure () -> String,
                      file: String = #fileID,
                      line: Int = #line,
                      function: String = #function) {
-        log(message(), level: .warning, label: "⚠️ WARNING", file: file, line: line, function: function)
+        log(message, level: .warning, label: "⚠️ WARNING", file: file, line: line, function: function)
     }
 
     static func error(_ message: @autoclosure () -> String,
                       file: String = #fileID,
                       line: Int = #line,
                       function: String = #function) {
-        log(message(), level: .error, label: "❌ ERROR", file: file, line: line, function: function)
+        log(message, level: .error, label: "❌ ERROR", file: file, line: line, function: function)
     }
 
     private static func timestamp() -> String {
