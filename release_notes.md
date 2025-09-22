@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.44.0 (09/21/2025)
+--------------------
+- [9d948e9](https://github.com/thevickypedia/Filebrowser-iOS/commit/9d948e9a35633eb4ffeae56d46ac9b721cff0bf8) chore: Release ``v1.44.0``
+- [ede9884](https://github.com/thevickypedia/Filebrowser-iOS/commit/ede98842e0b9ae7402b02c2b0d17bb38b3e07851) feat: Include page numbers for PDF files
+- [2de60e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/2de60e0e71fdf41a4a7b531f91a409017bf5e573) chore: Update release notes for v1.43.3
+
 v1.43.3 (09/21/2025)
 --------------------
 - [736da52](https://github.com/thevickypedia/Filebrowser-iOS/commit/736da52c2482c30f73b63dc9b00a1faec6f71448) chore: Release ``v1.43.3``
