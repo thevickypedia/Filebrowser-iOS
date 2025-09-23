@@ -97,7 +97,7 @@ struct FileListView: View {
     @State private var logFiles: [URL] = []
     @State private var showLogFilePicker: Bool = false
     @State private var showLogFileContent: Bool = false
-    @State private var selectedLogFile: URL? = nil
+    @State private var selectedLogFile: URL?
 
     private var viewMode: ViewMode {
         get { ViewMode(rawValue: viewModeRawValue) ?? .list }
