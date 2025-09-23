@@ -13,6 +13,7 @@ struct CopyableTextContainer: View {
     @State private var fontSize: CGFloat = 14
     @State private var useMonospaced: Bool = false
     @State private var showFontControls = false
+    @State private var isWordWrapped = true  // New state for word wrap toggle
 
     private let defaultFontSize: CGFloat = 14
     private let minFontSize: CGFloat = 10
@@ -36,9 +37,23 @@ struct CopyableTextContainer: View {
 
                         HStack {
                             Spacer()
+                            Button(action: {
+                                isWordWrapped.toggle()
+                            }) {
+                                Label(isWordWrapped ? "Disable Word Wrap" : "Enable Word Wrap", systemImage: isWordWrapped ? "arrow.right.arrow.left" : "rectangle.on.rectangle.angled")
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                    .buttonStyle(.bordered)
+                            }
+                            .padding(.horizontal)
+                        }
+
+                        HStack {
+                            Spacer()
                             Button("Reset") {
                                 fontSize = defaultFontSize
                                 useMonospaced = false
+                                isWordWrapped = true
                             }
                             .font(.caption)
                             .foregroundColor(.blue)
@@ -68,14 +83,19 @@ struct CopyableTextContainer: View {
             )
             .padding(.bottom, 8)
 
-            ScrollView {
-                CopyableTextView(
-                    text: text,
-                    font: useMonospaced
-                        ? .monospacedSystemFont(ofSize: fontSize, weight: .regular)
-                        : .systemFont(ofSize: fontSize)
-                )
-                .padding()
+            // ScrollView for the Text Content
+            ScrollView(isWordWrapped ? .vertical : .horizontal, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 0) {
+                    CopyableTextView(
+                        text: text,
+                        font: useMonospaced
+                            ? .monospacedSystemFont(ofSize: fontSize, weight: .regular)
+                            : .systemFont(ofSize: fontSize)
+                    )
+                    .padding()
+                    .lineLimit(isWordWrapped ? nil : 1)  // Toggle word wrap using .lineLimit
+                    .fixedSize(horizontal: isWordWrapped ? false : true, vertical: true)  // Allow horizontal overflow
+                }
             }
         }
         .padding()
