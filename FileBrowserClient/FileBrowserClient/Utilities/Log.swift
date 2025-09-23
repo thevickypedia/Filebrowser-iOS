@@ -26,6 +26,7 @@ struct Log {
     static var currentLevel: LogLevel = .trace
     static var verboseMode: Bool = false
     static var logOption: LogOptions = .both
+    private static let fileWriteQueue = DispatchQueue(label: "log.file.write", qos: .utility)
 
     private static func log(_ message: () -> String,
                             level: LogLevel,
@@ -68,7 +69,7 @@ struct Log {
     }
 
     private static func writeToFile(label: String, message: String) {
-        Task.detached(priority: .utility) {
+        fileWriteQueue.async {
             let fileManager = FileManager.default
             let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
             let formatter = DateFormatter()
@@ -78,16 +79,23 @@ struct Log {
 
             let logMessage = "\(label) - \(message)\n"
 
-            if fileManager.fileExists(atPath: logFileURL.path) {
-                if let fileHandle = try? FileHandle(forWritingTo: logFileURL) {
+            do {
+                if fileManager.fileExists(atPath: logFileURL.path) {
+                    // Append to existing file
+                    let fileHandle = try FileHandle(forWritingTo: logFileURL)
+                    defer { fileHandle.closeFile() } // Ensure it's always closed
+                    
                     fileHandle.seekToEndOfFile()
                     if let data = logMessage.data(using: .utf8) {
                         fileHandle.write(data)
-                        fileHandle.closeFile()
                     }
+                } else {
+                    // Create new file
+                    try logMessage.write(to: logFileURL, atomically: true, encoding: .utf8)
                 }
-            } else {
-                try? logMessage.write(to: logFileURL, atomically: true, encoding: .utf8)
+            } catch {
+                // Fallback: print to console if file writing fails
+                print("Log file write failed: \(error)")
             }
         }
     }
