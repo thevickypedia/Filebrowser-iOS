@@ -21,7 +21,7 @@ enum LogOptions: String {
 }
 
 struct Log {
-    static var currentLevel: LogLevel = .error
+    static var currentLevel: LogLevel = .trace
     static var verboseMode: Bool = false
     static var logOption: LogOptions = .file
 
@@ -59,11 +59,13 @@ struct Log {
     }
 
     private static func writeToFile(_ message: String) {
-        // TODO: Move creation to init
         Task.detached(priority: .utility) {
             let fileManager = FileManager.default
             let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-            let logFileURL = logsDirectory.appendingPathComponent("app.log")
+            let formatter = DateFormatter()
+            formatter.dateFormat = "dd-MM-yyyy"
+            let dateString = formatter.string(from: Date())
+            let logFileURL = logsDirectory.appendingPathComponent("filebrowser_\(dateString).log")
 
             let logMessage = message + "\n"
 
