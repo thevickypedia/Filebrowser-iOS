@@ -18,12 +18,14 @@ enum LogLevel: Int {
 enum LogOptions: String {
     case file
     case stdout
+    case both
 }
 
 struct Log {
+    // TODO: Control these via advanced settings
     static var currentLevel: LogLevel = .trace
     static var verboseMode: Bool = false
-    static var logOption: LogOptions = .file
+    static var logOption: LogOptions = .both
 
     private static func log(_ message: () -> String,
                             level: LogLevel,
@@ -34,7 +36,6 @@ struct Log {
         guard level.rawValue >= currentLevel.rawValue else { return }
         // MARK: Only evaluated if level check passes
         let msg = message()
-        let paddedLabel = label.padding(toLength: 10, withPad: " ", startingAt: 0)
         var finalLog: String
         if verboseMode {
             let fileName = URL(fileURLWithPath: file).deletingPathExtension().lastPathComponent
@@ -46,19 +47,27 @@ struct Log {
                 return function // fallback
             }()
             let location = "[\(fileName):\(line)] - \(functionName)"
-            finalLog = "\(paddedLabel) - \(timestamp()) - \(location) - \(msg)"
+            finalLog = "\(timestamp()) - \(location) - \(msg)"
         } else {
-            finalLog = "\(paddedLabel) - \(timestamp()) - \(msg)"
+            finalLog = "\(timestamp()) - \(msg)"
         }
         switch logOption {
         case .file:
-            writeToFile(finalLog)
+            writeToFile(label: label, message: finalLog)
         case .stdout:
-            print(finalLog)
+            writeToStdout(label: label, message: finalLog)
+        case .both:
+            writeToFile(label: label, message: finalLog)
+            writeToStdout(label: label, message: finalLog)
         }
     }
 
-    private static func writeToFile(_ message: String) {
+    private static func writeToStdout(label: String, message: String) {
+        let paddedLabel = label.padding(toLength: 10, withPad: " ", startingAt: 0)
+        print("\(paddedLabel) - \(message)")
+    }
+
+    private static func writeToFile(label: String, message: String) {
         Task.detached(priority: .utility) {
             let fileManager = FileManager.default
             let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -67,7 +76,7 @@ struct Log {
             let dateString = formatter.string(from: Date())
             let logFileURL = logsDirectory.appendingPathComponent("filebrowser_\(dateString).log")
 
-            let logMessage = message + "\n"
+            let logMessage = "\(label) - \(message)\n"
 
             if fileManager.fileExists(atPath: logFileURL.path) {
                 if let fileHandle = try? FileHandle(forWritingTo: logFileURL) {
