@@ -546,25 +546,52 @@ struct FileListView: View {
         }
     }
 
+    private func deleteLogFile(_ logFile: URL) {
+        do {
+            try FileManager.default.removeItem(at: logFile)
+            // Remove from the state array
+            logFiles.removeAll { $0 == logFile }
+            print("🗑️ Deleted log file: \(logFile.lastPathComponent)")
+        } catch {
+            print("❌ Error deleting log file: \(error)")
+            errorTitle = "Delete Failed"
+            errorMessage = "❌ Failed to delete \(logFile.lastPathComponent)"
+        }
+    }
+
     private var logFileListView: some View {
         NavigationView {
             Group {
                 if logFiles.isEmpty {
                     VStack(spacing: 16) {
-                        ProgressView("Fetching logs...")
-                        Text("If this persists, check if logs exist in Documents directory.")
+                        Text("❌ No log files found")
                             .font(.footnote)
                             .foregroundColor(.gray)
                     }
                 } else {
-                    List(logFiles, id: \.self) { logFile in
-                        Button(action: {
-                            selectedLogFile = logFile
-                            showLogFilePicker = false
-                            showLogFileContent = true
-                        }) {
-                            Text(logFile.lastPathComponent)
+                    List {
+                        ForEach(logFiles, id: \.self) { logFile in
+                            Button(action: {
+                                selectedLogFile = logFile
+                                showLogFilePicker = false
+                                showLogFileContent = true
+                            }) {
+                                HStack {
+                                    Text(logFile.lastPathComponent)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    // Optional: Add file size or date info
+                                    if let attributes = try? FileManager.default.attributesOfItem(atPath: logFile.path),
+                                       let fileSize = attributes[.size] as? Int64 {
+                                        Text(formatBytes(fileSize))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle()) // Prevents button from interfering with swipe
                         }
+                        .onDelete(perform: deleteLogFiles)
                     }
                 }
             }
@@ -575,12 +602,23 @@ struct FileListView: View {
                         showLogFilePicker = false
                     }
                 }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
+                }
             }
             .onAppear {
                 if logFiles.isEmpty {
                     logFiles = fetchLogFiles()
                 }
             }
+        }
+    }
+
+    private func deleteLogFiles(at offsets: IndexSet) {
+        for index in offsets {
+            let logFile = logFiles[index]
+            deleteLogFile(logFile)
         }
     }
 
