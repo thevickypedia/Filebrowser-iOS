@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum LogLevel: Int {
+enum LogLevel: Int, Equatable {
     case trace = 0
     case debug
     case info
@@ -15,18 +15,25 @@ enum LogLevel: Int {
     case error
 }
 
-enum LogOptions: String {
+enum LogOptions: String, Equatable {
     case file
     case stdout
     case both
 }
 
 struct Log {
-    // TODO: Control these via advanced settings
     static var currentLevel: LogLevel = .trace
     static var verboseMode: Bool = false
     static var logOption: LogOptions = .both
     private static let fileWriteQueue = DispatchQueue(label: "log.file.write", qos: .utility)
+
+    static func initialize(logOption: LogOptions = .both,
+                           logLevel: LogLevel = .trace,
+                           verboseMode: Bool = false) {
+        self.currentLevel = logLevel
+        self.verboseMode = verboseMode
+        self.logOption = logOption
+    }
 
     private static func log(_ message: () -> String,
                             level: LogLevel,

@@ -17,6 +17,9 @@ struct AdvancedSettings {
     let cacheThumbnail: Bool
     let animateGIF: Bool
     let chunkSize: Int
+    let logOption: LogOptions
+    let logLevel: LogLevel
+    let verboseLogging: Bool
 }
 
 struct AdvancedSettingsView: View {
@@ -28,6 +31,9 @@ struct AdvancedSettingsView: View {
     @Binding var cacheThumbnail: Bool
     @Binding var animateGIF: Bool
     @Binding var chunkSize: Int
+    @Binding var logOption: LogOptions
+    @Binding var logLevel: LogLevel
+    @Binding var verboseLogging: Bool
 
     var body: some View {
         DisclosureGroup("Advanced Settings") {
@@ -48,6 +54,29 @@ struct AdvancedSettingsView: View {
             Toggle("Display Thumbnails", isOn: $displayThumbnail)
             Toggle("Cache Thumbnails", isOn: $cacheThumbnail)
             Toggle("Animate GIF Files", isOn: $animateGIF)
+            HStack {
+                Text("Log option")
+                Spacer()
+                Picker("", selection: $logOption) {
+                    ForEach([LogOptions.stdout, LogOptions.file, LogOptions.both], id: \.self) { option in
+                        Text(String(describing: option)).tag(option)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(width: 80)
+            }
+            HStack {
+                Text("Log level")
+                Spacer()
+                Picker("", selection: $logLevel) {
+                    ForEach([LogLevel.trace, LogLevel.debug, LogLevel.info, LogLevel.warning, LogLevel.error], id: \.self) { level in
+                        Text(String(describing: level)).tag(level)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(width: 80)
+            }
+            Toggle("Verbose logging", isOn: $verboseLogging)
         }
     }
 }

@@ -39,6 +39,9 @@ struct ContentView: View {
     @AppStorage("displayThumbnail") private var displayThumbnail = true
     @AppStorage("animateGIF") private var animateGIF = true
     @AppStorage("chunkSize") private var chunkSize = 1
+    @AppStorage("logLevel") private var logLevel = LogLevel.info
+    @AppStorage("logOption") private var logOption = LogOptions.both
+    @AppStorage("verboseLogging") private var verboseLogging = false
     @State private var chunkSizeText: String = "1"
 
     private func fileListView(advancedSettings: AdvancedSettings,
@@ -64,7 +67,10 @@ struct ContentView: View {
             displayThumbnail: displayThumbnail,
             cacheThumbnail: cacheThumbnail,
             animateGIF: animateGIF,
-            chunkSize: chunkSize
+            chunkSize: chunkSize,
+            logOption: logOption,
+            logLevel: logLevel,
+            verboseLogging: verboseLogging
         )
         let cacheExtensions = getCacheExtensions(advancedSettings: advancedSettings, extensionTypes: extensionTypes)
         NavigationStack(path: $pathStack) {
@@ -83,6 +89,12 @@ struct ContentView: View {
                              cacheExtensions: cacheExtensions)
             }
         }
+    }
+
+    struct LoggingSettings: Equatable {
+        var level: LogLevel
+        var option: LogOptions
+        var verbose: Bool
     }
 
     var loginView: some View {
@@ -176,6 +188,10 @@ struct ContentView: View {
                 .disabled(isLoading)
             }
 
+            var currentLoggingSettings: LoggingSettings {
+                LoggingSettings(level: logLevel, option: logOption, verbose: verboseLogging)
+            }
+
             Section {
                 AdvancedSettingsView(
                     cacheImage: $cacheImage,
@@ -184,10 +200,20 @@ struct ContentView: View {
                     displayThumbnail: $displayThumbnail,
                     cacheThumbnail: $cacheThumbnail,
                     animateGIF: $animateGIF,
-                    chunkSize: $chunkSize
+                    chunkSize: $chunkSize,
+                    logOption: $logOption,
+                    logLevel: $logLevel,
+                    verboseLogging: $verboseLogging
                 )
                 .onAppear {
                     chunkSizeText = String(chunkSize)
+                }
+                .onChange(of: currentLoggingSettings) { newSettings in
+                    Log.initialize(
+                        logOption: newSettings.option,
+                        logLevel: newSettings.level,
+                        verboseMode: newSettings.verbose
+                    )
                 }
             }
 

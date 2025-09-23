@@ -13,7 +13,7 @@ struct CopyableTextContainer: View {
     @State private var fontSize: CGFloat = 14
     @State private var useMonospaced: Bool = false
     @State private var showFontControls = false
-    @State private var isWordWrapped = true  // New state for word wrap toggle
+    @State private var isWordWrapped = true
 
     private let defaultFontSize: CGFloat = 14
     private let minFontSize: CGFloat = 10
