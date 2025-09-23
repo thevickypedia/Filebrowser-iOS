@@ -84,7 +84,7 @@ struct Log {
                     // Append to existing file
                     let fileHandle = try FileHandle(forWritingTo: logFileURL)
                     defer { fileHandle.closeFile() } // Ensure it's always closed
-                    
+
                     fileHandle.seekToEndOfFile()
                     if let data = logMessage.data(using: .utf8) {
                         fileHandle.write(data)

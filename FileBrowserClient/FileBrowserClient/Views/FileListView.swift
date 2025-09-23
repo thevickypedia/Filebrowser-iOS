@@ -470,7 +470,7 @@ struct FileListView: View {
              Scroll: 819e917
              Limitter: bca5ec2
              Button disabled: d9b1bc0
-            */
+             */
             ScrollView {
                 ForEach(knownServers, id: \.self) { knownServerURL in
                     HStack {
@@ -571,11 +571,7 @@ struct FileListView: View {
                 } else {
                     List {
                         ForEach(logFiles, id: \.self) { logFile in
-                            Button(action: {
-                                selectedLogFile = logFile
-                                showLogFilePicker = false
-                                showLogFileContent = true
-                            }) {
+                            NavigationLink(destination: logFileContentView(for: logFile)) {
                                 HStack {
                                     Text(logFile.lastPathComponent)
                                         .foregroundColor(.primary)
@@ -589,7 +585,6 @@ struct FileListView: View {
                                     }
                                 }
                             }
-                            .buttonStyle(PlainButtonStyle()) // Prevents button from interfering with swipe
                         }
                         .onDelete(perform: deleteLogFiles)
                     }
@@ -622,30 +617,6 @@ struct FileListView: View {
         }
     }
 
-    private var logFileContentView: some View {
-        NavigationView {
-            Group {
-                if let selectedLogFile = selectedLogFile,
-                   let content = try? String(contentsOf: selectedLogFile) {
-                    ScrollView {
-                        CopyableTextContainer(text: content)
-                    }
-                } else {
-                    Text("Unable to load log file.")
-                        .foregroundColor(.red)
-                }
-            }
-            .navigationTitle(selectedLogFile?.lastPathComponent ?? "Log")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
-                        showLogFileContent = false
-                    }
-                }
-            }
-        }
-    }
-
     private var showSettingsSheet: some View {
         Form {
             Toggle("Hide dotfiles", isOn: $hideDotfiles)
@@ -672,9 +643,6 @@ struct FileListView: View {
             }
             .fullScreenCover(isPresented: $showLogFilePicker) {
                 logFileListView
-            }
-            .fullScreenCover(isPresented: $showLogFileContent) {
-                logFileContentView
             }
 
             Section(header: Text("Client Storage")) {
