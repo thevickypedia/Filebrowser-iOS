@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.45.2 (09/23/2025)
+--------------------
+- [b903a08](https://github.com/thevickypedia/Filebrowser-iOS/commit/b903a087b9c3e7ad2412e194c9f5a045889c8d3a) chore: Release ``v1.45.2``
+- [95d7b66](https://github.com/thevickypedia/Filebrowser-iOS/commit/95d7b664f684dfc2e1676170b6c75873ebffb1bf) feat: Create a dedicated log initalizer and control log configuration from advanced settings in login view
+- [607f724](https://github.com/thevickypedia/Filebrowser-iOS/commit/607f72409ee2257529f861710461e5d39c7bcc55) perf: Remove rendering multiple ``View``s for log files and setup a navigation stack with a dedicated module
+- [7dcff14](https://github.com/thevickypedia/Filebrowser-iOS/commit/7dcff14997b434323f7e80a4ad2471543a007ca7) perf: Create an async queue for logging to avoid wiring multiple logs simultaneously
+- [ce44b75](https://github.com/thevickypedia/Filebrowser-iOS/commit/ce44b75258d5e479a5fd6b477d639d03762b4f84) fix: Text in log files overlap because of padding with ``UTF-8`` emojis
+- [e8d978d](https://github.com/thevickypedia/Filebrowser-iOS/commit/e8d978d911cd7834588fb0d6843a27d5463c766d) chore: Update release notes for v1.45.1
+
 v1.45.1 (09/23/2025)
 --------------------
 - [d21aac1](https://github.com/thevickypedia/Filebrowser-iOS/commit/d21aac124b2d7fdc45a77c8f5a723ac988901b90) chore: Release ``v1.45.1``
