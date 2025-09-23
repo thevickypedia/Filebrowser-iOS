@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+v1.45.0 (09/23/2025)
+--------------------
+- [6fcd094](https://github.com/thevickypedia/Filebrowser-iOS/commit/6fcd094a9b383893c7fe66f336c4f2ce4801b17b) chore: Release ``v1.45.0``
+- [8240a13](https://github.com/thevickypedia/Filebrowser-iOS/commit/8240a1377868ac4f12a9b07d17955d13be7383c9) style: Open log files in default text extension viewer
+- [921072a](https://github.com/thevickypedia/Filebrowser-iOS/commit/921072aa057700fd0a4e1a1d11246b84cb659f5a) style: Switch logs files' view to full screen sheet
+- [77d1be0](https://github.com/thevickypedia/Filebrowser-iOS/commit/77d1be0ef4c0cfb6595bb3e4c0464772c892ed7e) feat: Create a new view within settings sheet to view log files
+- [94508c7](https://github.com/thevickypedia/Filebrowser-iOS/commit/94508c745b7bd87342366dcc865f46a1affaf84f) refactor: Add datetime identifier for log files
+- [3948f78](https://github.com/thevickypedia/Filebrowser-iOS/commit/3948f78cb50e879e0846c322d349fb1961243491) fix: Autoclosure for logging framework
+- [8d84dd9](https://github.com/thevickypedia/Filebrowser-iOS/commit/8d84dd988398f191e814b878f1659463cb21ffc5) perf: Write logs to file in a dedicated thread with low priority
+- [0d853c1](https://github.com/thevickypedia/Filebrowser-iOS/commit/0d853c12b8b13c4d2c2bee0f903eb03a188cd909) perf: Write file logs to file off the main thread
+- [7fdad07](https://github.com/thevickypedia/Filebrowser-iOS/commit/7fdad07ba98a264f1a1e4294c0b5903d05b6e2b1) feat: Create an option to write logs to a file
+- [81b34d5](https://github.com/thevickypedia/Filebrowser-iOS/commit/81b34d5442d6aedc64e5cbe693c39fe607c193d1) refactor: Disable autoplay for videos launched for the first time
+- [02e3664](https://github.com/thevickypedia/Filebrowser-iOS/commit/02e3664041d5016cc9715c6f454a554af1c133bc) chore: Update release notes for v1.44.1
+
 v1.44.1 (09/22/2025)
 --------------------
 - [7cc14e4](https://github.com/thevickypedia/Filebrowser-iOS/commit/7cc14e4ce238a4391cdb2b40a384987b799e0a3c) chore: Release ``v1.44.1``
