@@ -5,6 +5,7 @@
 //  Created by Vignesh Rao on 7/6/25.
 //
 
+import UIKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -92,6 +93,11 @@ struct FileListView: View {
 
     @State private var currentDisplayPath: String = "/"
     @State private var isNavigating = false
+
+    @State private var logFiles: [URL] = []
+    @State private var showLogFilePicker: Bool = false
+    @State private var showLogFileContent: Bool = false
+    @State private var selectedLogFile: URL? = nil
 
     private var viewMode: ViewMode {
         get { ViewMode(rawValue: viewModeRawValue) ?? .list }
@@ -526,6 +532,29 @@ struct FileListView: View {
         .presentationDetents([.fraction(0.3)]) // 30% of the screen height
     }
 
+    private func fetchLogFiles() -> [URL] {
+        print("Fetching log files")
+        let fileManager = FileManager.default
+        let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        do {
+            let logFiles = try fileManager.contentsOfDirectory(at: logsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+            let logs = logFiles.filter { $0.pathExtension == "log" }
+            if logs.isEmpty {
+                print("No log files found")
+            }
+            print("\(logs)")
+            return logs
+        } catch {
+            print("Error fetching log files: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    private func showLogFileContent(_ logFile: URL) {
+        selectedLogFile = logFile
+        showLogFileContent = true
+    }
+
     private var showSettingsSheet: some View {
         Form {
             Toggle("Hide dotfiles", isOn: $hideDotfiles)
@@ -544,6 +573,40 @@ struct FileListView: View {
                     Text("Loading...")
                 }
             }
+
+            Section {
+                Button("View Log Files") {
+                    logFiles = fetchLogFiles() // Fetch the log files when button is tapped
+                    showLogFilePicker = true // Show the log file picker sheet
+                }
+            }
+            // MARK: Show log file picker sheet
+             .sheet(isPresented: $showLogFilePicker) {
+                 VStack {
+                     Text("Select a log file to view")
+                         .font(.headline)
+                         .padding()
+
+                     List(logFiles, id: \.self) { logFile in
+                         Button(logFile.lastPathComponent) {
+                             showLogFileContent(logFile)
+                         }
+                     }
+                 }
+                 .padding()
+             }
+
+             // MARK: Show log file content sheet
+             .sheet(isPresented: $showLogFileContent) {
+                 if let selectedLogFile = selectedLogFile, let content = try? String(contentsOf: selectedLogFile) {
+                     ScrollView {
+                         Text(content)
+                             .font(.body)
+                             .padding()
+                     }
+                 }
+             }
+
             Section(header: Text("Client Storage")) {
                 SelectableTextView(text: "File Cache: \(formatBytes(fileCacheSize))")
             }
