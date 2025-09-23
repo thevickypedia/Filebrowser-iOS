@@ -533,26 +533,81 @@ struct FileListView: View {
     }
 
     private func fetchLogFiles() -> [URL] {
-        print("Fetching log files")
         let fileManager = FileManager.default
         let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         do {
-            let logFiles = try fileManager.contentsOfDirectory(at: logsDirectory, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+            let logFiles = try fileManager.contentsOfDirectory(at: logsDirectory, includingPropertiesForKeys: nil)
             let logs = logFiles.filter { $0.pathExtension == "log" }
-            if logs.isEmpty {
-                print("No log files found")
-            }
-            print("\(logs)")
+            // TODO: Include more information on logs' status
             return logs
         } catch {
-            print("Error fetching log files: \(error.localizedDescription)")
+            print("❌ Error fetching logs: \(error)")
             return []
         }
     }
 
-    private func showLogFileContent(_ logFile: URL) {
-        selectedLogFile = logFile
-        showLogFileContent = true
+    private var logFileListView: some View {
+        NavigationView {
+            Group {
+                if logFiles.isEmpty {
+                    VStack(spacing: 16) {
+                        ProgressView("Fetching logs...")
+                        Text("If this persists, check if logs exist in Documents directory.")
+                            .font(.footnote)
+                            .foregroundColor(.gray)
+                    }
+                } else {
+                    List(logFiles, id: \.self) { logFile in
+                        Button(action: {
+                            selectedLogFile = logFile
+                            showLogFilePicker = false
+                            showLogFileContent = true
+                        }) {
+                            Text(logFile.lastPathComponent)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Log Files")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        showLogFilePicker = false
+                    }
+                }
+            }
+            .onAppear {
+                if logFiles.isEmpty {
+                    logFiles = fetchLogFiles()
+                }
+            }
+        }
+    }
+
+    private var logFileContentView: some View {
+        NavigationView {
+            Group {
+                if let selectedLogFile = selectedLogFile,
+                   let content = try? String(contentsOf: selectedLogFile) {
+                    ScrollView {
+                        Text(content)
+                            .font(.system(.body, design: .monospaced))
+                            .padding()
+                    }
+                } else {
+                    Text("Unable to load log file.")
+                        .foregroundColor(.red)
+                }
+            }
+            .navigationTitle(selectedLogFile?.lastPathComponent ?? "Log")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        showLogFileContent = false
+                    }
+                }
+            }
+        }
     }
 
     private var showSettingsSheet: some View {
@@ -576,36 +631,15 @@ struct FileListView: View {
 
             Section {
                 Button("View Log Files") {
-                    logFiles = fetchLogFiles() // Fetch the log files when button is tapped
-                    showLogFilePicker = true // Show the log file picker sheet
+                    showLogFilePicker = true
                 }
             }
-            // MARK: Show log file picker sheet
-             .sheet(isPresented: $showLogFilePicker) {
-                 VStack {
-                     Text("Select a log file to view")
-                         .font(.headline)
-                         .padding()
-
-                     List(logFiles, id: \.self) { logFile in
-                         Button(logFile.lastPathComponent) {
-                             showLogFileContent(logFile)
-                         }
-                     }
-                 }
-                 .padding()
-             }
-
-             // MARK: Show log file content sheet
-             .sheet(isPresented: $showLogFileContent) {
-                 if let selectedLogFile = selectedLogFile, let content = try? String(contentsOf: selectedLogFile) {
-                     ScrollView {
-                         Text(content)
-                             .font(.body)
-                             .padding()
-                     }
-                 }
-             }
+            .fullScreenCover(isPresented: $showLogFilePicker) {
+                logFileListView
+            }
+            .fullScreenCover(isPresented: $showLogFileContent) {
+                logFileContentView
+            }
 
             Section(header: Text("Client Storage")) {
                 SelectableTextView(text: "File Cache: \(formatBytes(fileCacheSize))")
