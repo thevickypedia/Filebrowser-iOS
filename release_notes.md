@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.45.1 (09/23/2025)
+--------------------
+- [d21aac1](https://github.com/thevickypedia/Filebrowser-iOS/commit/d21aac124b2d7fdc45a77c8f5a723ac988901b90) chore: Release ``v1.45.1``
+- [cf5e508](https://github.com/thevickypedia/Filebrowser-iOS/commit/cf5e508a93909e4217621d3e5d7bd3b4122988c4) feat: Include an option to delete log files
+- [3a146c5](https://github.com/thevickypedia/Filebrowser-iOS/commit/3a146c51496f2040e4baf037354590baf7005105) feat: Add a new toggle button for word wrap in default text viewer
+- [43ba0df](https://github.com/thevickypedia/Filebrowser-iOS/commit/43ba0df4bdc169293a45101fcf4e97e81fa2a1be) chore: Update release notes for v1.45.0
+
 v1.45.0 (09/23/2025)
 --------------------
 - [6fcd094](https://github.com/thevickypedia/Filebrowser-iOS/commit/6fcd094a9b383893c7fe66f336c4f2ce4801b17b) chore: Release ``v1.45.0``
