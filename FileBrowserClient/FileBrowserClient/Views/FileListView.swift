@@ -590,9 +590,7 @@ struct FileListView: View {
                 if let selectedLogFile = selectedLogFile,
                    let content = try? String(contentsOf: selectedLogFile) {
                     ScrollView {
-                        Text(content)
-                            .font(.system(.body, design: .monospaced))
-                            .padding()
+                        CopyableTextContainer(text: content)
                     }
                 } else {
                     Text("Unable to load log file.")
