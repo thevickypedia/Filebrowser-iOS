@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.46.1 (09/23/2025)
+--------------------
+- [f28fe25](https://github.com/thevickypedia/Filebrowser-iOS/commit/f28fe25ae286b448c36994d052b887be25a04749) chore: Release ``v1.46.1``
+- [8ab87d0](https://github.com/thevickypedia/Filebrowser-iOS/commit/8ab87d0e85f5cced93dffb654ade535fa41d77e7) style: Update button sytle for pause/resume and cancel
+- [1d0393b](https://github.com/thevickypedia/Filebrowser-iOS/commit/1d0393b7fc0a5dd4894418e982b536fec9cbe448) feat: Include notification and logging to indicate download state - paused/resumed/cancelled
+- [b51a60a](https://github.com/thevickypedia/Filebrowser-iOS/commit/b51a60a86525201228dbc2cc2d770d9ea075658b) chore: Update release notes for v1.46.0
+
 v1.46.0 (09/23/2025)
 --------------------
 - [ceb5a28](https://github.com/thevickypedia/Filebrowser-iOS/commit/ceb5a28d33922b8e2fa57166fa97f5167844bc05) chore: Release ``v1.46.0``
