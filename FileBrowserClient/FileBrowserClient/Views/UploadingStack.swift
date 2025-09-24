@@ -65,7 +65,6 @@ struct UploadingStack: View {
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
 
-
             // ⏸️ Pause, ▶️ Resume and ❌ Cancel
             HStack(spacing: 20) {
                 if isPaused {
