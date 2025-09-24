@@ -91,10 +91,26 @@ struct ContentView: View {
         }
     }
 
-    struct LoggingSettings: Equatable {
-        var level: LogLevel
+    private struct LoggingSettings: Equatable {
         var option: LogOptions
+        var level: LogLevel
         var verbose: Bool
+    }
+
+    private func applyLogSettings(_ settings: LoggingSettings? = nil) {
+        let logSettings: LoggingSettings
+        if let customSettings = settings {
+            logSettings = customSettings
+            Log.debug("Configuring logger with overridden app storage: \(logSettings)")
+        } else {
+            logSettings = LoggingSettings(option: logOption, level: logLevel, verbose: verboseLogging)
+            Log.debug("Configuring logger with app storage")
+        }
+        Log.initialize(
+            logOption: logSettings.option,
+            logLevel: logSettings.level,
+            verboseMode: logSettings.verbose
+        )
     }
 
     var loginView: some View {
@@ -189,7 +205,7 @@ struct ContentView: View {
             }
 
             var currentLoggingSettings: LoggingSettings {
-                LoggingSettings(level: logLevel, option: logOption, verbose: verboseLogging)
+                LoggingSettings(option: logOption, level: logLevel, verbose: verboseLogging)
             }
 
             Section {
@@ -207,13 +223,10 @@ struct ContentView: View {
                 )
                 .onAppear {
                     chunkSizeText = String(chunkSize)
+                    applyLogSettings()
                 }
-                .onChange(of: currentLoggingSettings) { newSettings in
-                    Log.initialize(
-                        logOption: newSettings.option,
-                        logLevel: newSettings.level,
-                        verboseMode: newSettings.verbose
-                    )
+                .onChange(of: currentLoggingSettings) { logSettings in
+                    applyLogSettings(logSettings)
                 }
             }
 
