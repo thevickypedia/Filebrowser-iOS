@@ -13,7 +13,7 @@ struct CopyableTextContainer: View {
     @State private var fontSize: CGFloat = 14
     @State private var useMonospaced: Bool = false
     @State private var showFontControls = false
-    @State private var isWordWrapped = true
+    @State private var isWordWrapped = false
 
     private let defaultFontSize: CGFloat = 14
     private let minFontSize: CGFloat = 10
@@ -35,17 +35,8 @@ struct CopyableTextContainer: View {
                             Stepper("\(Int(fontSize))", value: $fontSize, in: minFontSize...maxFontSize)
                         }
 
-                        HStack {
-                            Spacer()
-                            Button(action: {
-                                isWordWrapped.toggle()
-                            }) {
-                                Label(isWordWrapped ? "Disable Word Wrap" : "Enable Word Wrap", systemImage: isWordWrapped ? "arrow.right.arrow.left" : "rectangle.on.rectangle.angled")
-                                    .font(.caption)
-                                    .foregroundColor(.blue)
-                                    .buttonStyle(.bordered)
-                            }
-                            .padding(.horizontal)
+                        Toggle(isOn: $isWordWrapped) {
+                            Label("Word Wrap", systemImage: "textformat")
                         }
 
                         HStack {
@@ -53,7 +44,7 @@ struct CopyableTextContainer: View {
                             Button("Reset") {
                                 fontSize = defaultFontSize
                                 useMonospaced = false
-                                isWordWrapped = true
+                                isWordWrapped = false
                             }
                             .font(.caption)
                             .foregroundColor(.blue)
