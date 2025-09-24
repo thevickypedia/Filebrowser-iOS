@@ -1069,28 +1069,20 @@ struct FileListView: View {
         return uploadQueue.count < photoPickerStatus.totalSelected
     }
 
-    enum LoadState: String {
-        case upload
-        case download
-    }
+    private func notifyTransferState(_ action: TransferAction, _ state: TransferState) {
+        let currentFile = action == .upload ? currentUploadFile : currentDownloadFile
+        let currentState = action == .upload
+            ? "[\(currentUploadIndex + 1)/\(uploadQueue.count)]"
+            : "[\(currentDownloadIndex + 1)/\(downloadQueue.count)]"
+        let percent = action == .upload ? uploadProgressPct : downloadProgressPct
 
-    private func notifyLoadState(_ action: LoadState, _ state: String) {
-        let emojiMap = ["paused": "⏸️", "resumed": "▶️", "cancelled": "❌"]
-        let colorMap = ["paused": Color.yellow, "resumed": Color.green, "cancelled": Color.red]
-        let currentFile = action == LoadState.upload ? currentUploadFile : currentDownloadFile
-        let currentState = action == LoadState.upload ? "[\(currentUploadIndex + 1)/\(uploadQueue.count)]" : "[\(currentDownloadIndex + 1)/\(downloadQueue.count)]"
-        let percent = action == LoadState.upload ? uploadProgressPct : downloadProgressPct
-
-        var text: String
-        if let fileName = currentFile {
-            text = "\(emojiMap[state] ?? "") \(action) \(currentState) - \(fileName) - \(state) \(state == "resumed" ? "from" : "at") \(percent)%"
-        } else {
-            text = "\(emojiMap[state] ?? "") \(action) \(state)"
-        }
+        let text = currentFile.map {
+            "\(state.emoji) \(action.rawValue) \(currentState) - \($0) - \(state.rawValue) \(state.prefix) \(percent)%"
+        } ?? "\(state.emoji) \(action.rawValue) \(state.rawValue)"
 
         statusMessage = StatusPayload(
             text: text,
-            color: colorMap[state] ?? .gray,
+            color: state.color,
             duration: 3
         )
 
@@ -1133,16 +1125,16 @@ struct FileListView: View {
                             chunkSize: advancedSettings.chunkSize,
                             isPaused: isUploadPaused,
                             onPause: {
-                                notifyLoadState(LoadState.upload, "paused")
+                                notifyTransferState(TransferAction.upload, TransferState.paused)
                                 isUploadPaused = true
                                 uploadTask?.cancel()
                             },
                             onResume: {
-                                notifyLoadState(LoadState.upload, "resumed")
+                                // Conditional notification
                                 resumeUpload()
                             },
                             onCancel: {
-                                notifyLoadState(LoadState.upload, "resumed")
+                                notifyTransferState(TransferAction.upload, TransferState.cancelled)
                                 isUploadCancelled = true
                                 cancelUpload(fileHandle: nil, statusText: nil)
                             }
@@ -1163,107 +1155,16 @@ struct FileListView: View {
                             totalCount: downloadQueue.count,
                             isPaused: isDownloadPaused,
                             onPause: {
-                                isDownloadPaused = true
-                                notifyLoadState(LoadState.download, "paused")
-                                if let id = currentDownloadTaskID {
-                                    DownloadManager.shared.pause(id) { data in
-                                        pausedResumeData = data
-                                    }
-                                }
+                                // Conditional notification
+                                pauseDownload()
                             },
                             onResume: {
-                                guard let data = pausedResumeData else { return }
-
-                                notifyLoadState(LoadState.download, "resumed")
-                                isDownloadPaused = false
-                                let file = downloadQueue[currentDownloadIndex].file
-                                currentDownloadFile = file.name
-                                currentDownloadFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
-                                downloadProgress = 0
-                                downloadProgressPct = 0
-                                isDownloading = true
-
-                                var downloadStartTime = Date()
-                                var bytesDownloadedSinceLastUpdate: Int64 = 0
-                                var speedUpdateTimer: Timer?
-
-                                let newID = UUID()
-                                currentDownloadTaskID = newID
-
-                                DownloadManager.shared.resume(
-                                    with: data,
-                                    id: newID,
-                                    progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
-                                        DispatchQueue.main.async {
-                                            bytesDownloadedSinceLastUpdate += bytesWritten
-                                            let elapsed = Date().timeIntervalSince(downloadStartTime)
-                                            if elapsed >= Constants.downloadSpeedUpdateInterval {
-                                                let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
-                                                currentDownloadSpeed = downloadSpeed
-                                                downloadStartTime = Date()
-                                                bytesDownloadedSinceLastUpdate = 0
-                                            }
-
-                                            guard totalBytesExpected > 0 else {
-                                                self.downloadProgress = 0
-                                                self.downloadProgressPct = 0
-                                                return
-                                            }
-                                            let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
-                                            self.downloadProgress = prog
-                                            self.downloadProgressPct = Int(prog * 100)
-                                            self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
-                                            self.currentDownloadFileSize = formatBytes(totalBytesExpected)
-                                        }
-                                    },
-                                    completion: { result in
-                                        DispatchQueue.main.async {
-                                            speedUpdateTimer?.invalidate()
-                                            pausedResumeData = nil
-
-                                            switch result {
-                                            case .success(let localURL):
-                                                Log.info("✅ Resumed download finished: \(file.name)")
-                                                FileDownloadHelper.handleDownloadCompletion(
-                                                    file: file,
-                                                    localURL: localURL,
-                                                    statusMessage: $statusMessage,
-                                                    errorTitle: $errorTitle,
-                                                    errorMessage: $errorMessage
-                                                )
-                                            case .failure(let err):
-                                                Log.error("❌ Resumed download failed: \(err.localizedDescription)")
-                                                self.errorMessage = "Download failed: \(err.localizedDescription)"
-                                            }
-
-                                            self.currentDownloadIndex += 1
-                                            if self.currentDownloadIndex >= self.downloadQueue.count {
-                                                self.downloadQueue.removeAll()
-                                                self.currentDownloadIndex = 0
-                                                self.isDownloading = false
-                                                self.currentDownloadTaskID = nil
-                                                self.showDownload = false
-                                                self.downloadProgress = 0
-                                            } else {
-                                                self.startNextDownload()
-                                            }
-                                        }
-                                    })
-
-                                // Start speed update timer (optional; since closure is empty)
-                                speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
+                                // Conditional notification
+                                resumeDownload()
                             },
                             onCancel: {
-                                isDownloadCancelled = true
-                                notifyLoadState(LoadState.download, "cancelled")
-                                if let id = currentDownloadTaskID {
-                                    DownloadManager.shared.cancel(id)
-                                }
-                                downloadQueue.removeAll()
-                                currentDownloadIndex = 0
-                                downloadProgress = 0.0
-                                isDownloading = false
-                                showDownload = false
+                                notifyTransferState(TransferAction.download, TransferState.cancelled)
+                                cancelDownload()
                             }
                         )
                     }
@@ -1484,6 +1385,120 @@ struct FileListView: View {
                 detailView(for: selectedFileList[index], index: index, sortedFiles: selectedFileList)
             }
         }
+    }
+
+    private func pauseDownload() {
+        isDownloadPaused = true
+        if let id = currentDownloadTaskID {
+            notifyTransferState(TransferAction.download, TransferState.paused)
+            DownloadManager.shared.pause(id) { data in
+                pausedResumeData = data
+            }
+        } else {
+            Log.warn("Download ID [currentDownloadTaskID] is missing")
+            errorTitle = "Pause download failed"
+            errorMessage = "Download ID is missing - unable to pause download"
+        }
+    }
+
+    private func cancelDownload() {
+        isDownloadCancelled = true
+        if let id = currentDownloadTaskID {
+            DownloadManager.shared.cancel(id)
+        }
+        downloadQueue.removeAll()
+        currentDownloadIndex = 0
+        downloadProgress = 0.0
+        isDownloading = false
+        showDownload = false
+    }
+
+    private func resumeDownload() {
+        guard let data = pausedResumeData else {
+            Log.error("Resume download condition not met")
+            errorTitle = "Resume Error"
+            errorMessage = "Paused resume data is missing - unable to continue download"
+            return
+        }
+
+        notifyTransferState(TransferAction.download, TransferState.resumed)
+        isDownloadPaused = false
+        let file = downloadQueue[currentDownloadIndex].file
+        currentDownloadFile = file.name
+        currentDownloadFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
+        downloadProgress = 0
+        downloadProgressPct = 0
+        isDownloading = true
+
+        var downloadStartTime = Date()
+        var bytesDownloadedSinceLastUpdate: Int64 = 0
+        var speedUpdateTimer: Timer?
+
+        let newID = UUID()
+        currentDownloadTaskID = newID
+
+        DownloadManager.shared.resume(
+            with: data,
+            id: newID,
+            progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
+                DispatchQueue.main.async {
+                    bytesDownloadedSinceLastUpdate += bytesWritten
+                    let elapsed = Date().timeIntervalSince(downloadStartTime)
+                    if elapsed >= Constants.downloadSpeedUpdateInterval {
+                        let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
+                        currentDownloadSpeed = downloadSpeed
+                        downloadStartTime = Date()
+                        bytesDownloadedSinceLastUpdate = 0
+                    }
+
+                    guard totalBytesExpected > 0 else {
+                        self.downloadProgress = 0
+                        self.downloadProgressPct = 0
+                        return
+                    }
+                    let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
+                    self.downloadProgress = prog
+                    self.downloadProgressPct = Int(prog * 100)
+                    self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
+                    self.currentDownloadFileSize = formatBytes(totalBytesExpected)
+                }
+            },
+            completion: { result in
+                DispatchQueue.main.async {
+                    speedUpdateTimer?.invalidate()
+                    pausedResumeData = nil
+
+                    switch result {
+                    case .success(let localURL):
+                        Log.info("✅ Resumed download finished: \(file.name)")
+                        FileDownloadHelper.handleDownloadCompletion(
+                            file: file,
+                            localURL: localURL,
+                            statusMessage: $statusMessage,
+                            errorTitle: $errorTitle,
+                            errorMessage: $errorMessage
+                        )
+                    case .failure(let err):
+                        Log.error("❌ Resumed download failed: \(err.localizedDescription)")
+                        self.errorMessage = "Download failed: \(err.localizedDescription)"
+                    }
+
+                    self.currentDownloadIndex += 1
+                    if self.currentDownloadIndex >= self.downloadQueue.count {
+                        self.downloadQueue.removeAll()
+                        self.currentDownloadIndex = 0
+                        self.isDownloading = false
+                        self.currentDownloadTaskID = nil
+                        self.showDownload = false
+                        self.downloadProgress = 0
+                    } else {
+                        self.startNextDownload()
+                    }
+                }
+            })
+
+        // Start speed update timer (optional; since closure is empty)
+        speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
     }
 
     // Call this to queue a single file for download from FileListView
@@ -2155,6 +2170,7 @@ struct FileListView: View {
     func resumeUpload() {
         if let fileHandle = currentFileHandle,
            let uploadURL = currentUploadURL {
+            notifyTransferState(TransferAction.upload, TransferState.resumed)
             isUploadPaused = false
             Log.info("▶️ Resuming upload for \(uploadURL.lastPathComponent)")
             // This is the simplest & safest way to resume since TUS supports resumable uploads by design
@@ -2164,7 +2180,7 @@ struct FileListView: View {
                 uploadURL: uploadURL
             )
         } else {
-            Log.error("Upload conditions not met")
+            Log.error("Resume upload conditions not met")
             errorTitle = "Resume Error"
             errorMessage = "File handle or upload URL missing - unable to continue upload"
         }

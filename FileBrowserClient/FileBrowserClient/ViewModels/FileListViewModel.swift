@@ -13,6 +13,35 @@ enum ModifyItem: String {
     case move = "Move"
 }
 
+enum TransferAction: String {
+    case upload = "Upload"
+    case download = "Download"
+}
+
+enum TransferState: String {
+    case paused, resumed, cancelled
+
+    var emoji: String {
+        switch self {
+        case .paused: return "⏸️"
+        case .resumed: return "▶️"
+        case .cancelled: return "❌"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .paused: return .yellow
+        case .resumed: return .green
+        case .cancelled: return .red
+        }
+    }
+
+    var prefix: String {
+        self == .resumed ? "from" : "at"
+    }
+}
+
 struct DownloadQueueItem: Identifiable {
     let id = UUID()
     let file: FileItem
