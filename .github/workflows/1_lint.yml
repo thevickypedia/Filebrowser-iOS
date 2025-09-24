@@ -17,8 +17,12 @@ jobs:
 
       - name: Install SwiftLint
         run: |
-          brew install swiftlint
+          if [[ ! $(command -v swiftlint) ]]; then
+            echo "SwiftLint not found. Installing..."
+            brew install swiftlint
+          fi
+          echo "::notice title=Swiftlint Version::$(swiftlint --version)"
+        shell: bash
 
       - name: Run SwiftLint
-        run: |
-          swiftlint
+        run: swiftlint
