@@ -67,8 +67,14 @@ struct FileListView: View {
     @State private var currentUploadFileSize: String?
     @State private var currentUploadedFileSize: String?
     @State private var isUploadCancelled = false
+    @State private var isUploadPaused = false
     @State private var currentUploadSpeed: Double = 0.0
     @State private var currentUploadFileIcon: String?
+
+    // Upload state vars
+    @State private var currentFileHandle: FileHandle?
+    @State private var currentUploadURL: URL?
+    @State private var currentUploadedOffset: Int = 0
 
     // Upload extra vars
     @State private var uploadTask: URLSessionUploadTask?
@@ -1117,6 +1123,14 @@ struct FileListView: View {
                             index: currentUploadIndex + 1,
                             totalCount: photoPickerStatus.totalSelected,
                             chunkSize: advancedSettings.chunkSize,
+                            isPaused: isUploadPaused,
+                            onPause: {
+                                isUploadPaused = true
+                                uploadTask?.cancel() // Optional: stop current chunk in progress
+                            },
+                            onResume: {
+                                resumeUpload()
+                            },
                             onCancel: {
                                 isUploadCancelled = true
                                 cancelUpload(fileHandle: nil, statusText: "❌ Upload cancelled by user.")
@@ -2127,6 +2141,20 @@ struct FileListView: View {
         return uploadQueue.count - currentUploadIndex
     }
 
+    func resumeUpload() {
+        guard !isUploading, !isUploadCancelled, !isUploadPaused else { return }
+
+        Log.info("▶️ Resuming upload from offset: \(currentUploadedOffset)")
+        isUploading = true
+        // FIXME: Re-uploading the same chunk causes 409 - Conflict
+        uploadFileInChunks(
+            fileHandle: currentFileHandle!,
+            fileURL: uploadQueue[currentUploadIndex],
+            to: currentUploadURL!,
+            startingAt: currentUploadedOffset
+        )
+    }
+
     func uploadFileInChunks(
         fileHandle: FileHandle,
         fileURL: URL,
@@ -2142,10 +2170,22 @@ struct FileListView: View {
         currentUploadFileIcon = systemIcon(for: fileName.lowercased(), extensionTypes: extensionTypes)
         var currentOffset = offset
 
+        currentUploadURL = uploadURL
+        currentFileHandle = fileHandle
+        currentUploadedOffset = offset
+
         var uploadStartTime = Date()
         var startOffset = currentOffset
 
         func uploadNext() {
+            // ⏸️ PAUSE Check
+            if isUploadPaused {
+                Log.info("⏸️ Upload paused at offset: \(currentOffset)")
+                uploadTask = nil
+                currentUploadedOffset = currentOffset
+                return
+            }
+
             // 🔁 Cancel check
             // MARK: Catches cancellation during mid-chunk
             if isUploadCancelled {
@@ -2177,10 +2217,12 @@ struct FileListView: View {
                 uploadTask = nil
                 uploadProgress = 1.0
                 currentUploadSpeed = 0.0
+                currentUploadedOffset = 0
                 uploadNextInQueue()
                 return
             }
 
+            // Read chunk
             fileHandle.seek(toFileOffset: UInt64(currentOffset))
             let data = fileHandle.readData(ofLength: chunkSize)
 
@@ -2196,6 +2238,7 @@ struct FileListView: View {
 
             uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
+                    // Re-check pause/cancel in async block
                     if isUploadCancelled {
                         Log.info("⏹️ Upload cancelled mid-chunk. \(fileName) may be incomplete.")
                         // Store statusText before cancelling
@@ -2204,6 +2247,13 @@ struct FileListView: View {
                             statusText += " Pending files: \(pendingUploads)"
                         }
                         cancelUpload(fileHandle: fileHandle, statusText: statusText)
+                        return
+                    }
+
+                    if isUploadPaused {
+                        Log.info("⏸️ Upload paused mid-chunk at offset: \(currentOffset)")
+                        uploadTask = nil
+                        currentUploadedOffset = currentOffset
                         return
                     }
 
@@ -2238,6 +2288,8 @@ struct FileListView: View {
                     uploadProgress = Double(currentOffset) / Double(fileSize)
                     uploadProgressPct = Int((uploadProgress * 100).rounded())
                     currentUploadedFileSize = sizeConverter(currentOffset)
+                    currentUploadedOffset = currentOffset
+
                     Log.trace("📤 Uploaded chunk — new offset: \(currentOffset)")
                     uploadNext()
                 }

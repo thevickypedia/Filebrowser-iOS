@@ -109,6 +109,11 @@ final class BackgroundTUSUploadManager: NSObject {
         }
     }
 
+    func pauseUpload(_ id: UUID) {
+        updateRecord(id) { $0.state = .paused }
+        // no further chunks will be scheduled
+    }
+
     /// Attempt to resume pending uploads on startup / when requested
     func resumePendingUploads() {
         recordsQueue.sync {

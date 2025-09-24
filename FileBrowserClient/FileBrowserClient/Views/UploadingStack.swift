@@ -18,6 +18,9 @@ struct UploadingStack: View {
     let index: Int
     let totalCount: Int
     let chunkSize: Int
+    let isPaused: Bool
+    let onPause: () -> Void
+    let onResume: () -> Void
     let onCancel: () -> Void
 
     var body: some View {
@@ -62,11 +65,32 @@ struct UploadingStack: View {
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
 
-            Button(action: onCancel) {
-                Label("Cancel Upload", systemImage: "xmark.circle.fill")
-                    .foregroundColor(.red)
+
+            // ⏸️ Pause, ▶️ Resume and ❌ Cancel
+            HStack(spacing: 20) {
+                if isPaused {
+                    Button(action: onResume) {
+                        Label("Resume", systemImage: "play.circle.fill")
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.green)
+                } else {
+                    Button(action: onPause) {
+                        Label("Pause", systemImage: "pause.circle.fill")
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.yellow)
+                }
+                Button(action: onCancel) {
+                    Label("Cancel", systemImage: "xmark.circle.fill")
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.red)
             }
-            .padding(.top, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
         .background(.ultraThinMaterial)
