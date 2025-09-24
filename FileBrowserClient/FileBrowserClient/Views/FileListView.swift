@@ -146,11 +146,6 @@ struct FileListView: View {
     let advancedSettings: AdvancedSettings
     let cacheExtensions: [String]
 
-    @State private var serverURL: String = ""
-    @State private var token: String = ""
-    @State private var tokenPayload: JWTPayload?
-    @State private var isAuthValid: Bool = false
-
     init(
         isLoggedIn: Binding<Bool>,
         pathStack: Binding<[String]>,
@@ -167,22 +162,8 @@ struct FileListView: View {
         self.cacheExtensions = cacheExtensions
     }
 
-    /// Runs on appear to set `serverURL`, `token`, and `tokenPayload`
-    private func validateAuth() {
-        guard let serverURL = auth.serverURL,
-              let token = auth.token,
-              let tokenPayload = auth.tokenPayload else {
-            Log.error("❌ Missing authentication credentials")
-            isAuthValid = false
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
-
-        self.serverURL = serverURL
-        self.token = token
-        self.tokenPayload = tokenPayload
-        self.isAuthValid = true
-        Log.debug("✅ Auth validation successful")
+    private var isAuthValid: Bool {
+        !auth.serverURL.isEmpty && !auth.token.isEmpty && auth.tokenPayload != nil
     }
 
     private var userPermissions: UserPermission? {
@@ -483,7 +464,7 @@ struct FileListView: View {
                 ForEach(knownServers, id: \.self) { knownServerURL in
                     HStack {
                         // Ensure you don't display the current authenticated server
-                        if knownServerURL != self.serverURL {
+                        if knownServerURL != auth.serverURL {
                             Text(knownServerURL)
                                 .lineLimit(1) // To prevent text from overflowing
                                 .truncationMode(.tail) // Ensure long URLs are truncated
@@ -659,7 +640,7 @@ struct FileListView: View {
             Section {
                 Button(role: .destructive) {
                     GlobalThumbnailLoader.shared.clearFailedPath()
-                    FileCache.shared.clearDiskCache(self.serverURL)
+                    FileCache.shared.clearDiskCache(auth.serverURL)
                     fetchClientStorageInfo()
                     settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)
                 } label: {
@@ -717,8 +698,8 @@ struct FileListView: View {
         // MARK: Messages within the settings sheet
         .modifier(StatusMessage(payload: $settingsMessage))
         .onAppear {
-            hideDotfiles = self.tokenPayload?.user.hideDotfiles ?? false
-            dateFormatExact = self.tokenPayload?.user.dateFormat ?? false
+            hideDotfiles = auth.tokenPayload?.user.hideDotfiles ?? false
+            dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
             fetchUsageInfo()
             fetchClientStorageInfo()
         }
@@ -865,7 +846,7 @@ struct FileListView: View {
             return false
         }
 
-        guard let components = URLComponents(string: serverURL + "/api/resources\(fullPath)") else {
+        guard let components = URLComponents(string: auth.serverURL + "/api/resources\(fullPath)") else {
             Log.error("❌ Failed to make URL components for path: \(fullPath)")
             errorMessage = "Invalid URL"
             return false
@@ -878,7 +859,7 @@ struct FileListView: View {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
         var exists = false
         let semaphore = DispatchSemaphore(value: 0)
@@ -961,7 +942,7 @@ struct FileListView: View {
 
             let urlAction = action == ModifyItem.move ? "rename" : "copy"
             let sourceForURL = encodedSource.hasPrefix("/") ? String(encodedSource.dropFirst()) : encodedSource
-            let urlString = "\(serverURL)/api/resources/\(sourceForURL)?action=\(urlAction)&destination=\(encodedDestination)&override=false&rename=false"
+            let urlString = "\(auth.serverURL)/api/resources/\(sourceForURL)" + "?action=\(urlAction)&destination=\(encodedDestination)&override=false&rename=false"
 
             Log.debug("\(action.rawValue): \(urlString)")
 
@@ -977,7 +958,7 @@ struct FileListView: View {
 
             var request = URLRequest(url: url)
             request.httpMethod = "PATCH"
-            request.setValue(token, forHTTPHeaderField: "X-Auth")
+            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
             let task = URLSession.shared.dataTask(with: request) { _, response, error in
                 defer { dispatchGroup.leave() }
@@ -1285,7 +1266,6 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
-            validateAuth()
             guard isAuthValid else { return }
 
             if !searchClicked && !searchInProgress {
@@ -1324,8 +1304,8 @@ struct FileListView: View {
         .sheet(isPresented: $isSharing) {
             if let filePath = sharePath {
                 ShareSheetView(
-                    serverURL: serverURL,
-                    token: token,
+                    serverURL: auth.serverURL,
+                    token: auth.token,
                     file: filePath,
                     onDismiss: { isSharing = false }
                 )
@@ -1536,9 +1516,9 @@ struct FileListView: View {
 
         // Build raw URL (same as FileDetailView)
         guard let url = buildAPIURL(
-            base: serverURL,
+            base: auth.serverURL,
             pathComponents: ["api", "raw", file.path],
-            queryItems: [ URLQueryItem(name: "auth", value: token) ]
+            queryItems: [ URLQueryItem(name: "auth", value: auth.token) ]
         ) else {
             errorMessage = "Invalid download URL for \(file.name)"
             isDownloading = false
@@ -1555,7 +1535,7 @@ struct FileListView: View {
         var speedUpdateTimer: Timer?
 
         // Kick off the download via DownloadManager
-        let taskID = DownloadManager.shared.download(from: url, token: token,
+        let taskID = DownloadManager.shared.download(from: url, token: auth.token,
             progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
                 DispatchQueue.main.async {
                     // Accumulate bytes downloaded
@@ -1667,7 +1647,7 @@ struct FileListView: View {
             return
         }
 
-        guard let url = getSearchURL(serverURL: serverURL, query: query) else {
+        guard let url = getSearchURL(serverURL: auth.serverURL, query: query) else {
             await MainActor.run {
                 errorMessage = "Invalid search: \(query)"
                 searchInProgress = false
@@ -1685,7 +1665,7 @@ struct FileListView: View {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
@@ -1771,8 +1751,8 @@ struct FileListView: View {
         FileDetailView(
             currentIndex: index,
             files: sortedFiles,
-            serverURL: self.serverURL,
-            token: self.token,
+            serverURL: auth.serverURL,
+            token: auth.token,
             // MARK: Pass a callback reference to fetchClientStorageInfo func
             onFileCached: { fetchClientStorageInfo() },
             extensionTypes: extensionTypes,
@@ -1794,8 +1774,8 @@ struct FileListView: View {
         if useThumbnail {
             RemoteThumbnail(
                 file: file,
-                serverURL: self.serverURL,
-                token: self.token,
+                serverURL: auth.serverURL,
+                token: auth.token,
                 advancedSettings: advancedSettings,
                 extensionTypes: extensionTypes,
                 width: style?.gridHeight ?? ViewStyle.listIconSize,
@@ -1997,7 +1977,7 @@ struct FileListView: View {
             return
         }
         guard let url = buildAPIURL(
-            base: serverURL,
+            base: auth.serverURL,
             pathComponents: ["api", "usage"],
             queryItems: []
         ) else {
@@ -2007,7 +1987,7 @@ struct FileListView: View {
         }
 
         var request = URLRequest(url: url)
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
@@ -2048,7 +2028,7 @@ struct FileListView: View {
         }
 
         let fileName = fileURL.lastPathComponent
-        guard let uploadURL = getUploadURL(serverURL: serverURL, encodedName: fileName) else {
+        guard let uploadURL = getUploadURL(serverURL: auth.serverURL, encodedName: fileName) else {
             Log.error("❌ Invalid upload URL")
             errorTitle = "Invalid upload URL"
             errorMessage = "Failed to construct upload URL for: \(fileName)"
@@ -2074,7 +2054,7 @@ struct FileListView: View {
         request.httpMethod = "POST"
         request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
         request.setValue("0", forHTTPHeaderField: "Content-Length")
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
         URLSession.shared.dataTask(with: request) { _, _, error in
             DispatchQueue.main.async {
@@ -2095,7 +2075,7 @@ struct FileListView: View {
         var request = URLRequest(url: uploadURL)
         request.httpMethod = "HEAD"
         request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-        request.setValue(self.token, forHTTPHeaderField: "X-Auth")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
         URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
@@ -2265,7 +2245,7 @@ struct FileListView: View {
             request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
             request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
             request.setValue("application/offset+octet-stream", forHTTPHeaderField: "Content-Type")
-            request.setValue(self.token, forHTTPHeaderField: "X-Auth")
+            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
             uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
@@ -2385,7 +2365,7 @@ struct FileListView: View {
             errorMessage = "Invalid authorization. Please log out and log back in."
             return nil
         }
-        guard var components = URLComponents(string: serverURL + endpoint) else {
+        guard var components = URLComponents(string: auth.serverURL + endpoint) else {
             Log.error("❌ Failed to make URL components for endpoint: \(endpoint)")
             errorMessage = "Failed to make URL components."
             return nil
@@ -2399,7 +2379,7 @@ struct FileListView: View {
 
         var request = URLRequest(url: url)
         request.httpMethod = method
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
         if method != "GET" && method != "DELETE" {
             request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         }
@@ -2453,9 +2433,9 @@ struct FileListView: View {
             return
         }
 
-        guard let currentSettings = tokenPayload?.user,
+        guard let currentSettings = auth.tokenPayload?.user,
               let url = buildAPIURL(
-                  base: serverURL,
+                  base: auth.serverURL,
                   pathComponents: ["api", "users", String(currentSettings.id)],
                   queryItems: []
               ) else {
@@ -2466,14 +2446,14 @@ struct FileListView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
         var updatedSettings = currentSettings
         updatedSettings.hideDotfiles = hideDotfiles
         updatedSettings.dateFormat = dateFormatExact
 
         // MARK: Set both current state, and auth state (since self is overriden with auth in init)
-        self.tokenPayload?.user = updatedSettings
+        auth.tokenPayload?.user = updatedSettings
         auth.tokenPayload?.user = updatedSettings
         Log.debug("🔄 Updated settings: \(updatedSettings)")
 
@@ -2492,8 +2472,8 @@ struct FileListView: View {
                 let body = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
                     Log.info("✅ Settings saved")
-                    self.tokenPayload?.user.hideDotfiles = hideDotfiles
-                    self.tokenPayload?.user.dateFormat = dateFormatExact
+                    auth.tokenPayload?.user.hideDotfiles = hideDotfiles
+                    auth.tokenPayload?.user.dateFormat = dateFormatExact
                     settingsMessage = StatusPayload(text: "✅ Settings saved")
                 } else {
                     Log.error("❌ Settings save failed: \(body)")
@@ -2523,7 +2503,7 @@ struct FileListView: View {
         let group = DispatchGroup()
         for item in selectedItems {
             guard let url = buildAPIURL(
-                base: self.serverURL,
+                base: auth.serverURL,
                 pathComponents: ["api", "resources", item.path],
                 queryItems: []
             ) else {
@@ -2534,7 +2514,7 @@ struct FileListView: View {
 
             var request = URLRequest(url: url)
             request.httpMethod = "DELETE"
-            request.setValue(token, forHTTPHeaderField: "X-Auth")
+            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
             group.enter()
             URLSession.shared.dataTask(with: request) { _, _, _ in

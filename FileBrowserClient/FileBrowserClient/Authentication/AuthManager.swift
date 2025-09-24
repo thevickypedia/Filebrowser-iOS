@@ -8,14 +8,10 @@
 import Foundation
 
 class AuthManager: ObservableObject {
-    @Published var token: String?
-    @Published var serverURL: String?
+    @Published var token: String = ""
+    @Published var serverURL: String = ""
     @Published var username: String?
     @Published var tokenPayload: JWTPayload?
-
-    var isAuthenticated: Bool {
-        return token != nil && serverURL != nil
-    }
 }
 
 struct JWTPayload: Codable {
