@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.45.3 (09/23/2025)
+--------------------
+- [d7df5ce](https://github.com/thevickypedia/Filebrowser-iOS/commit/d7df5cec6465ef38b3274ad4b9e1e8a9463754bb) chore: Release ``v1.45.3``
+- [c62264d](https://github.com/thevickypedia/Filebrowser-iOS/commit/c62264d8f73f2d13d4950d24e3d1c0281176ef2e) style: Change word wrap option for text viewer to a button inside the parent stack
+- [5eee054](https://github.com/thevickypedia/Filebrowser-iOS/commit/5eee0546566ae6a0bc3a54aaf620aa4cab6a87d8) style: Increase frame width for advanced settings view
+- [91bedf5](https://github.com/thevickypedia/Filebrowser-iOS/commit/91bedf55d99156622908b1ef85f80947edfec597) perf: Instantiate logger during both appear and change of advanced settings view
+- [ee133ee](https://github.com/thevickypedia/Filebrowser-iOS/commit/ee133ee0f2b9f90889d3732ec7c3186a35d3c236) chore: Update release notes for v1.45.2
+
 v1.45.2 (09/23/2025)
 --------------------
 - [b903a08](https://github.com/thevickypedia/Filebrowser-iOS/commit/b903a087b9c3e7ad2412e194c9f5a045889c8d3a) chore: Release ``v1.45.2``
