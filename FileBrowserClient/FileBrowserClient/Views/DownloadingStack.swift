@@ -17,6 +17,9 @@ struct DownloadingStack: View {
     let speed: Double
     let index: Int
     let totalCount: Int
+    let isPaused: Bool
+    let onPause: () -> Void
+    let onResume: () -> Void
     let onCancel: () -> Void
 
     var body: some View {
@@ -57,11 +60,35 @@ struct DownloadingStack: View {
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
 
-            Button(action: onCancel) {
-                Label("Cancel Download", systemImage: "xmark.circle.fill")
-                    .foregroundColor(.red)
+            // ▶️ Pause / Resume Button (First Row)
+            HStack {
+                if isPaused {
+                    Button(action: onResume) {
+                        Label("Resume", systemImage: "play.circle.fill")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                } else {
+                    Button(action: onPause) {
+                        Label("Pause", systemImage: "pause.circle.fill")
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                }
             }
-            .padding(.top, 8)
+
+            // ❌ Cancel Button (Second Row)
+            HStack {
+                Button(action: onCancel) {
+                    Label("Cancel", systemImage: "xmark.circle.fill")
+                        .foregroundColor(.red)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
+                }
+            }
         }
         .padding()
         .background(.ultraThinMaterial)

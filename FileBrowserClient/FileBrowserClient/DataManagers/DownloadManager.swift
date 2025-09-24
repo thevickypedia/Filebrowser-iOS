@@ -50,6 +50,20 @@ final class DownloadManager: NSObject, URLSessionDownloadDelegate {
         records.removeValue(forKey: id)
     }
 
+    func pause(_ id: UUID, completion: @escaping (Data?) -> Void) {
+        guard let rec = records[id] else { return }
+        rec.task.cancel(byProducingResumeData: completion)
+        records.removeValue(forKey: id)
+    }
+
+    func resume(with resumeData: Data, id: UUID,
+                progress: @escaping (Int64, Int64, Int64) -> Void,
+                completion: @escaping (Result<URL, Error>) -> Void) {
+        let task = session.downloadTask(withResumeData: resumeData)
+        records[id] = DownloadRecord(task: task, progress: progress, completion: completion)
+        task.resume()
+    }
+
     // MARK: URLSessionDownloadDelegate
 
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask,

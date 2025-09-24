@@ -52,6 +52,8 @@ struct FileListView: View {
     @State private var currentDownloadedFileSize: String?
     @State private var currentDownloadTaskID: UUID?
     @State private var isDownloadCancelled = false
+    @State private var isDownloadPaused = false
+    @State private var pausedResumeData: Data? = nil
     @State private var currentDownloadSpeed: Double = 0.0
     @State private var currentDownloadFileIcon: String?
 
@@ -1114,9 +1116,101 @@ struct FileListView: View {
                             speed: currentDownloadSpeed,
                             index: currentDownloadIndex + 1,
                             totalCount: downloadQueue.count,
+                            isPaused: isDownloadPaused,
+                            onPause: {
+                                isDownloadPaused = true
+                                if let id = currentDownloadTaskID {
+                                    DownloadManager.shared.pause(id) { data in
+                                        pausedResumeData = data
+                                    }
+                                }
+                            },
+                            onResume: {
+                                guard let data = pausedResumeData else { return }
+
+                                isDownloadPaused = false
+                                let file = downloadQueue[currentDownloadIndex].file
+                                currentDownloadFile = file.name
+                                currentDownloadFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
+                                downloadProgress = 0
+                                downloadProgressPct = 0
+                                isDownloading = true
+
+                                var downloadStartTime = Date()
+                                var bytesDownloadedSinceLastUpdate: Int64 = 0
+                                var speedUpdateTimer: Timer?
+
+                                let newID = UUID()
+                                currentDownloadTaskID = newID
+
+                                DownloadManager.shared.resume(
+                                    with: data,
+                                    id: newID,
+                                    progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
+                                        DispatchQueue.main.async {
+                                            bytesDownloadedSinceLastUpdate += bytesWritten
+                                            let elapsed = Date().timeIntervalSince(downloadStartTime)
+                                            if elapsed >= Constants.downloadSpeedUpdateInterval {
+                                                let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
+                                                currentDownloadSpeed = downloadSpeed
+                                                downloadStartTime = Date()
+                                                bytesDownloadedSinceLastUpdate = 0
+                                            }
+
+                                            guard totalBytesExpected > 0 else {
+                                                self.downloadProgress = 0
+                                                self.downloadProgressPct = 0
+                                                return
+                                            }
+                                            let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
+                                            self.downloadProgress = prog
+                                            self.downloadProgressPct = Int(prog * 100)
+                                            self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
+                                            self.currentDownloadFileSize = formatBytes(totalBytesExpected)
+                                        }
+                                    },
+                                    completion: { result in
+                                        DispatchQueue.main.async {
+                                            speedUpdateTimer?.invalidate()
+                                            pausedResumeData = nil
+
+                                            switch result {
+                                            case .success(let localURL):
+                                                Log.info("✅ Resumed download finished: \(file.name)")
+                                                FileDownloadHelper.handleDownloadCompletion(
+                                                    file: file,
+                                                    localURL: localURL,
+                                                    statusMessage: $statusMessage,
+                                                    errorTitle: $errorTitle,
+                                                    errorMessage: $errorMessage
+                                                )
+                                            case .failure(let err):
+                                                Log.error("❌ Resumed download failed: \(err.localizedDescription)")
+                                                self.errorMessage = "Download failed: \(err.localizedDescription)"
+                                            }
+
+                                            self.currentDownloadIndex += 1
+                                            if self.currentDownloadIndex >= self.downloadQueue.count {
+                                                self.downloadQueue.removeAll()
+                                                self.currentDownloadIndex = 0
+                                                self.isDownloading = false
+                                                self.currentDownloadTaskID = nil
+                                                self.showDownload = false
+                                                self.downloadProgress = 0
+                                            } else {
+                                                self.startNextDownload()
+                                            }
+                                        }
+                                    })
+
+                                // Start speed update timer (optional; since closure is empty)
+                                speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
+                            },
                             onCancel: {
                                 isDownloadCancelled = true
-                                if let id = currentDownloadTaskID { DownloadManager.shared.cancel(id) }
+                                if let id = currentDownloadTaskID {
+                                    DownloadManager.shared.cancel(id)
+                                }
                                 downloadQueue.removeAll()
                                 currentDownloadIndex = 0
                                 downloadProgress = 0.0
