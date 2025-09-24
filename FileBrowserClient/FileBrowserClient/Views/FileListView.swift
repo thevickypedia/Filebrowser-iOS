@@ -1069,15 +1069,23 @@ struct FileListView: View {
         return uploadQueue.count < photoPickerStatus.totalSelected
     }
 
-    private func notifyDownloadState(_ state: String) {
+    enum LoadState: String {
+        case Upload
+        case Download
+    }
+
+    private func notifyLoadState(_ action: LoadState, _ state: String) {
         let emojiMap = ["paused": "⏸️", "resumed": "▶️", "cancelled": "❌"]
         let colorMap = ["paused": Color.yellow, "resumed": Color.green, "cancelled": Color.red]
+        let currentFile = action == LoadState.Upload ? currentUploadFile : currentDownloadFile
+        let currentState = action == LoadState.Upload ? "[\(currentUploadIndex + 1)/\(uploadQueue.count)]" : "[\(currentDownloadIndex + 1)/\(downloadQueue.count)]"
+        let percent = action == LoadState.Upload ? uploadProgressPct : downloadProgressPct
 
         var text: String
-        if let fileName = currentDownloadFile {
-            text = "\(emojiMap[state] ?? "") Download [\(currentDownloadIndex + 1)/\(downloadQueue.count)] - \(fileName) - \(state) \(state == "resumed" ? "from" : "at") \(downloadProgressPct)%"
+        if let fileName = currentFile {
+            text = "\(emojiMap[state] ?? "") \(action) \(currentState) - \(fileName) - \(state) \(state == "resumed" ? "from" : "at") \(percent)%"
         } else {
-            text = "\(emojiMap[state] ?? "") Download \(state)"
+            text = "\(emojiMap[state] ?? "") \(action) \(state)"
         }
 
         statusMessage = StatusPayload(
@@ -1125,15 +1133,18 @@ struct FileListView: View {
                             chunkSize: advancedSettings.chunkSize,
                             isPaused: isUploadPaused,
                             onPause: {
+                                notifyLoadState(LoadState.Upload, "paused")
                                 isUploadPaused = true
-                                uploadTask?.cancel() // Optional: stop current chunk in progress
+                                uploadTask?.cancel()
                             },
                             onResume: {
+                                notifyLoadState(LoadState.Upload, "resumed")
                                 resumeUpload()
                             },
                             onCancel: {
+                                notifyLoadState(LoadState.Upload, "resumed")
                                 isUploadCancelled = true
-                                cancelUpload(fileHandle: nil, statusText: "❌ Upload cancelled by user.")
+                                cancelUpload(fileHandle: nil, statusText: nil)
                             }
                         )
                     }
@@ -1153,7 +1164,7 @@ struct FileListView: View {
                             isPaused: isDownloadPaused,
                             onPause: {
                                 isDownloadPaused = true
-                                notifyDownloadState("paused")
+                                notifyLoadState(LoadState.Download, "paused")
                                 if let id = currentDownloadTaskID {
                                     DownloadManager.shared.pause(id) { data in
                                         pausedResumeData = data
@@ -1163,7 +1174,7 @@ struct FileListView: View {
                             onResume: {
                                 guard let data = pausedResumeData else { return }
 
-                                notifyDownloadState("resumed")
+                                notifyLoadState(LoadState.Download, "resumed")
                                 isDownloadPaused = false
                                 let file = downloadQueue[currentDownloadIndex].file
                                 currentDownloadFile = file.name
@@ -1244,7 +1255,7 @@ struct FileListView: View {
                             },
                             onCancel: {
                                 isDownloadCancelled = true
-                                notifyDownloadState("cancelled")
+                                notifyLoadState(LoadState.Download, "cancelled")
                                 if let id = currentDownloadTaskID {
                                     DownloadManager.shared.cancel(id)
                                 }
@@ -2142,17 +2153,21 @@ struct FileListView: View {
     }
 
     func resumeUpload() {
-        guard !isUploading, !isUploadCancelled, !isUploadPaused else { return }
-
-        Log.info("▶️ Resuming upload from offset: \(currentUploadedOffset)")
-        isUploading = true
-        // FIXME: Re-uploading the same chunk causes 409 - Conflict
-        uploadFileInChunks(
-            fileHandle: currentFileHandle!,
-            fileURL: uploadQueue[currentUploadIndex],
-            to: currentUploadURL!,
-            startingAt: currentUploadedOffset
-        )
+        if let fileHandle = currentFileHandle,
+           let uploadURL = currentUploadURL {
+            isUploadPaused = false
+            Log.info("▶️ Resuming upload for \(uploadURL.lastPathComponent)")
+            // This is the simplest & safest way to resume since TUS supports resumable uploads by design
+            getUploadOffset(
+                fileHandle: fileHandle,
+                fileURL: uploadQueue[currentUploadIndex],
+                uploadURL: uploadURL
+            )
+        } else {
+            Log.error("Upload conditions not met")
+            errorTitle = "Resume Error"
+            errorMessage = "File handle or upload URL missing - unable to continue upload"
+        }
     }
 
     func uploadFileInChunks(
