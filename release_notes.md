@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.46.0 (09/23/2025)
+--------------------
+- [ceb5a28](https://github.com/thevickypedia/Filebrowser-iOS/commit/ceb5a28d33922b8e2fa57166fa97f5167844bc05) chore: Release ``v1.46.0``
+- [25c8390](https://github.com/thevickypedia/Filebrowser-iOS/commit/25c8390ad1c038d9074d2782353a0244af30c19b) fix: Add ``buttonStyle`` to address button overlap between ``pause`` and ``cancel``
+- [a12c665](https://github.com/thevickypedia/Filebrowser-iOS/commit/a12c665a5088458cab27a029eca11841f24e1c3e) feat: Implement pause-able downloads in list view
+- [83ebcc4](https://github.com/thevickypedia/Filebrowser-iOS/commit/83ebcc40b1e47e171d5729ce50f012877d718b2c) chore: Update release notes for v1.45.3
+
 v1.45.3 (09/23/2025)
 --------------------
 - [d7df5ce](https://github.com/thevickypedia/Filebrowser-iOS/commit/d7df5cec6465ef38b3274ad4b9e1e8a9463754bb) chore: Release ``v1.45.3``
