@@ -61,34 +61,35 @@ struct DownloadingStack: View {
             .padding(.top, 8)
 
             // ▶️ Pause / Resume Button (First Row)
-            HStack {
-                if isPaused {
-                    Button(action: onResume) {
-                        Label("Resume", systemImage: "play.circle.fill")
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .contentShape(Rectangle())
-                    }
-                } else {
-                    Button(action: onPause) {
-                        Label("Pause", systemImage: "pause.circle.fill")
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .contentShape(Rectangle())
-                    }
-                }
-            }
-
-            // ❌ Cancel Button (Second Row)
-            HStack {
-                Button(action: onCancel) {
-                    Label("Cancel", systemImage: "xmark.circle.fill")
-                        .foregroundColor(.red)
+            if isPaused {
+                Button(action: onResume) {
+                    Label("Resume", systemImage: "play.circle.fill")
                         .padding()
                         .frame(maxWidth: .infinity)
                         .contentShape(Rectangle())
+                        .foregroundColor(.blue)
                 }
+                .buttonStyle(.plain)
+            } else {
+                Button(action: onPause) {
+                    Label("Pause", systemImage: "pause.circle.fill")
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
+                        .foregroundColor(.yellow)
+                }
+                .buttonStyle(.plain)
             }
+
+            // ❌ Cancel Button (Second Row)
+            Button(action: onCancel) {
+                Label("Cancel", systemImage: "xmark.circle.fill")
+                    .foregroundColor(.red)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
         .padding()
         .background(.ultraThinMaterial)
