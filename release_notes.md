@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.47.0 (09/24/2025)
+--------------------
+- [578ebb3](https://github.com/thevickypedia/Filebrowser-iOS/commit/578ebb328a171514e26d987e0e1e4bffeef1b052) chore: Release ``v1.47.0``
+- [9bbbe6d](https://github.com/thevickypedia/Filebrowser-iOS/commit/9bbbe6d9824f20597c9122b3326b8ecc7342fbf3) lint: Fix line breaks and case sentivity in enums
+- [7505142](https://github.com/thevickypedia/Filebrowser-iOS/commit/75051426817567086158218a956eac466e0001e3) fix: Simply re-start the upload when resumed since ``PATCH`` includes ``upload-offset``
+- [dc58e70](https://github.com/thevickypedia/Filebrowser-iOS/commit/dc58e703cebb9e5f0af0b512e795085124fe3cd9) feat: Implement pause-able uploads in list view
+- [9279c64](https://github.com/thevickypedia/Filebrowser-iOS/commit/9279c6492716cb0e372c96501d5a6864ff7fd4e7) chore: Update release notes for v1.46.1
+
 v1.46.1 (09/23/2025)
 --------------------
 - [f28fe25](https://github.com/thevickypedia/Filebrowser-iOS/commit/f28fe25ae286b448c36994d052b887be25a04749) chore: Release ``v1.46.1``
