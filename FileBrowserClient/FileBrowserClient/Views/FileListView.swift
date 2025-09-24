@@ -53,7 +53,7 @@ struct FileListView: View {
     @State private var currentDownloadTaskID: UUID?
     @State private var isDownloadCancelled = false
     @State private var isDownloadPaused = false
-    @State private var pausedResumeData: Data? = nil
+    @State private var pausedResumeData: Data?
     @State private var currentDownloadSpeed: Double = 0.0
     @State private var currentDownloadFileIcon: String?
 
@@ -1063,6 +1063,26 @@ struct FileListView: View {
         return uploadQueue.count < photoPickerStatus.totalSelected
     }
 
+    private func notifyDownloadState(_ state: String) {
+        let emojiMap = ["paused": "⏸️", "resumed": "▶️", "cancelled": "❌"]
+        let colorMap = ["paused": Color.yellow, "resumed": Color.green, "cancelled": Color.red]
+
+        var text: String
+        if let fileName = currentDownloadFile {
+            text = "\(emojiMap[state] ?? "") Download [\(currentDownloadIndex + 1)/\(downloadQueue.count)] - \(fileName) - \(state) \(state == "resumed" ? "from" : "at") \(downloadProgressPct)%"
+        } else {
+            text = "\(emojiMap[state] ?? "") Download \(state)"
+        }
+
+        statusMessage = StatusPayload(
+            text: text,
+            color: colorMap[state] ?? .gray,
+            duration: 3
+        )
+
+        Log.info(text)
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             List {
@@ -1119,6 +1139,7 @@ struct FileListView: View {
                             isPaused: isDownloadPaused,
                             onPause: {
                                 isDownloadPaused = true
+                                notifyDownloadState("paused")
                                 if let id = currentDownloadTaskID {
                                     DownloadManager.shared.pause(id) { data in
                                         pausedResumeData = data
@@ -1128,6 +1149,7 @@ struct FileListView: View {
                             onResume: {
                                 guard let data = pausedResumeData else { return }
 
+                                notifyDownloadState("resumed")
                                 isDownloadPaused = false
                                 let file = downloadQueue[currentDownloadIndex].file
                                 currentDownloadFile = file.name
@@ -1208,6 +1230,7 @@ struct FileListView: View {
                             },
                             onCancel: {
                                 isDownloadCancelled = true
+                                notifyDownloadState("cancelled")
                                 if let id = currentDownloadTaskID {
                                     DownloadManager.shared.cancel(id)
                                 }
