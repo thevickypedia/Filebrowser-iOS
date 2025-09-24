@@ -60,36 +60,31 @@ struct DownloadingStack: View {
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
 
-            // ▶️ Pause / Resume Button (First Row)
-            if isPaused {
-                Button(action: onResume) {
-                    Label("Resume", systemImage: "play.circle.fill")
-                        .padding()
-                        .frame(maxWidth: .infinity)
+            // ⏸️ Pause, ▶️ Resume and ❌ Cancel
+            HStack(spacing: 20) {
+                if isPaused {
+                    Button(action: onResume) {
+                        Label("Resume", systemImage: "play.circle.fill")
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.green)
+                } else {
+                    Button(action: onPause) {
+                        Label("Pause", systemImage: "pause.circle.fill")
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.yellow)
+                }
+                Button(action: onCancel) {
+                    Label("Cancel", systemImage: "xmark.circle.fill")
                         .contentShape(Rectangle())
-                        .foregroundColor(.blue)
                 }
                 .buttonStyle(.plain)
-            } else {
-                Button(action: onPause) {
-                    Label("Pause", systemImage: "pause.circle.fill")
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .contentShape(Rectangle())
-                        .foregroundColor(.yellow)
-                }
-                .buttonStyle(.plain)
+                .foregroundColor(.red)
             }
-
-            // ❌ Cancel Button (Second Row)
-            Button(action: onCancel) {
-                Label("Cancel", systemImage: "xmark.circle.fill")
-                    .foregroundColor(.red)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
         .background(.ultraThinMaterial)
