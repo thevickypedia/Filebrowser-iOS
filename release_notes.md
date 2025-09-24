@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.47.1 (09/24/2025)
+--------------------
+- [da000ef](https://github.com/thevickypedia/Filebrowser-iOS/commit/da000ef5550726d9c10edc7d582b7173e6f457e3) chore: Release ``v1.47.1``
+- [8c35163](https://github.com/thevickypedia/Filebrowser-iOS/commit/8c35163184a0094b374ab5fb93aa83363e93abfa) refactor: Replace boiler plate code with enums and structured switch cases
+- [d86e3a9](https://github.com/thevickypedia/Filebrowser-iOS/commit/d86e3a93f20bc122a12f3e19f2dbbc5180c01e03) ci: Install ``swiftlint`` only when unavailable
+- [f3eefba](https://github.com/thevickypedia/Filebrowser-iOS/commit/f3eefbacf59562bd9457a6563f7dbb6ead230483) chore: Update release notes for v1.47.0
+
 v1.47.0 (09/24/2025)
 --------------------
 - [578ebb3](https://github.com/thevickypedia/Filebrowser-iOS/commit/578ebb328a171514e26d987e0e1e4bffeef1b052) chore: Release ``v1.47.0``
