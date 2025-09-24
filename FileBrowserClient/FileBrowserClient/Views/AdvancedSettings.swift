@@ -46,7 +46,7 @@ struct AdvancedSettingsView: View {
                     }
                 }
                 .pickerStyle(MenuPickerStyle())
-                .frame(width: 80)
+                .frame(width: 120)
             }
             Toggle("Cache Images", isOn: $cacheImage)
             Toggle("Cache PDFs", isOn: $cachePDF)
@@ -55,7 +55,7 @@ struct AdvancedSettingsView: View {
             Toggle("Cache Thumbnails", isOn: $cacheThumbnail)
             Toggle("Animate GIF Files", isOn: $animateGIF)
             HStack {
-                Text("Log option")
+                Text("Log Option")
                 Spacer()
                 Picker("", selection: $logOption) {
                     ForEach([LogOptions.stdout, LogOptions.file, LogOptions.both], id: \.self) { option in
@@ -63,10 +63,10 @@ struct AdvancedSettingsView: View {
                     }
                 }
                 .pickerStyle(MenuPickerStyle())
-                .frame(width: 80)
+                .frame(width: 120)
             }
             HStack {
-                Text("Log level")
+                Text("Log Level")
                 Spacer()
                 Picker("", selection: $logLevel) {
                     ForEach([LogLevel.trace, LogLevel.debug, LogLevel.info, LogLevel.warning, LogLevel.error], id: \.self) { level in
@@ -74,9 +74,9 @@ struct AdvancedSettingsView: View {
                     }
                 }
                 .pickerStyle(MenuPickerStyle())
-                .frame(width: 80)
+                .frame(width: 120)
             }
-            Toggle("Verbose logging", isOn: $verboseLogging)
+            Toggle("Verbose Logging", isOn: $verboseLogging)
         }
     }
 }
