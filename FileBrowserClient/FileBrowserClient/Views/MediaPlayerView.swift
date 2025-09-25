@@ -35,6 +35,7 @@ struct MediaPlayerView: View {
     @State private var npArtwork: MPMediaItemArtwork?    // stable artwork (in memory only)
     @State private var npBaseInfo: [String: Any] = [:]   // stable Now Playing bas
     @State private var notifTokens: [NSObjectProtocol] = []
+    @State private var currentPlaybackTime: Double = 0
     @State private var lastSavedTime: Double = 0
     @State private var resumePromptData: ResumePromptData?
     @State private var pendingPlayer: AVPlayer?
@@ -87,6 +88,11 @@ struct MediaPlayerView: View {
                 object: nil,
                 queue: .main
             ) { _ in
+                // 👇 Intentionally NOT saving progress here.
+                // Rationale: Don't persist position if user backgrounded app suddenly
+                // without interacting (e.g., paused or just browsing).
+                //
+                // Playback progress is auto-saved periodically or on screen exit.
                 if let player = player, player.timeControlStatus != .playing {
                     Log.info("▶️ Resuming playback on background entry")
                     player.play()
@@ -103,6 +109,9 @@ struct MediaPlayerView: View {
         }
         .onDisappear {
             isVisible = false
+            if currentPlaybackTime > Constants.mediaResumeThreshold {
+                PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentPlaybackTime)
+            }
             cleanupPlayer()
             clearNowPlayingInfo()
         }
@@ -521,6 +530,8 @@ struct MediaPlayerView: View {
 
             let currentTime = CMTimeGetSeconds(player.currentTime())
             if currentTime.isFinite && !currentTime.isNaN {
+                // Always track the current playback time
+                self.currentPlaybackTime = currentTime
                 // MARK: Auto save progress every N [mediaResumeThreshold] seconds
                 // NOTE: "currentTime - lastSavedTime" will become negative if video is rewinded
                 if lastSavedTime == 0 || abs(currentTime - lastSavedTime) >= Constants.mediaResumeThreshold {
