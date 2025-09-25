@@ -78,11 +78,11 @@ struct FileListView: View {
     @State private var currentDisplayPath: String = "/"
     @State private var isNavigating = false
 
-    @State private var logFiles: [URL] = []
+    @State private var localFiles: [URL] = []
     @State private var showOnlyLogFiles: Bool = true
-    @State private var showLogFilePicker: Bool = false
-    @State private var showLogFileContent: Bool = false
-    @State private var selectedLogFile: URL?
+    @State private var showLocalFilePicker: Bool = false
+    @State private var showLocalFileContent: Bool = false
+    @State private var selectedLocalFile: URL?
 
     private var viewMode: ViewMode {
         get { ViewMode(rawValue: viewModeRawValue) ?? .list }
@@ -500,44 +500,51 @@ struct FileListView: View {
         .presentationDetents([.fraction(0.3)]) // 30% of the screen height
     }
 
-    private var filteredLogFiles: [URL] {
+    private var filteredLocalFiles: [URL] {
         if showOnlyLogFiles {
-            return logFiles.filter { $0.pathExtension == "log" }
+            return localFiles.filter { $0.pathExtension == "log" }
         } else {
-            return logFiles
+            return localFiles
         }
     }
 
-    private func fetchLogFiles() -> [URL] {
+    private func fetchLocalFiles() -> [URL] {
         let fileManager = FileManager.default
-        let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let filesDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         do {
-            let allFiles = try fileManager.contentsOfDirectory(at: logsDirectory, includingPropertiesForKeys: nil)
-            Log.debug("logsDirectory contents: \(allFiles)")
+            let allFiles = try fileManager.contentsOfDirectory(at: filesDirectory, includingPropertiesForKeys: nil)
+            Log.debug("filesDirectory contents: \(allFiles)")
             return allFiles
         } catch {
             errorTitle = "Fetch Error"
-            errorMessage = "❌ Error fetching logs: \(error.localizedDescription)"
+            errorMessage = "❌ Error fetching files: \(error.localizedDescription)"
             return []
         }
     }
 
-    private func deleteLogFile(_ logFile: URL) {
-        do {
-            try FileManager.default.removeItem(at: logFile)
-            // Remove from the state array
-            logFiles.removeAll { $0 == logFile }
-            Log.info("🗑️ Deleted log file: \(logFile.lastPathComponent)")
-        } catch {
-            errorTitle = "Delete Failed"
-            errorMessage = "❌ Failed to delete \(logFile.lastPathComponent)\n\(error.localizedDescription)"
+    private func deleteLocalFiles(at offsets: IndexSet) {
+        for index in offsets {
+            let localFile = localFiles[index]
+            deleteLocalFile(localFile)
         }
     }
 
-    private var logFileListView: some View {
+    private func deleteLocalFile(_ localFile: URL) {
+        do {
+            try FileManager.default.removeItem(at: localFile)
+            // Remove from the state array
+            localFiles.removeAll { $0 == localFile }
+            Log.info("🗑️ Deleted file: \(localFile.lastPathComponent)")
+        } catch {
+            errorTitle = "Delete Failed"
+            errorMessage = "❌ Failed to delete \(localFile.lastPathComponent)\n\(error.localizedDescription)"
+        }
+    }
+
+    private var localFilesListView: some View {
         NavigationView {
             Group {
-                if filteredLogFiles.isEmpty {
+                if filteredLocalFiles.isEmpty {
                     VStack(spacing: 16) {
                         Text("❌ No log files found")
                             .font(.footnote)
@@ -550,8 +557,8 @@ struct FileListView: View {
                         }
 
                         Section {
-                            ForEach(filteredLogFiles, id: \.self) { logFile in
-                                NavigationLink(destination: logFileContentView(for: logFile)) {
+                            ForEach(filteredLocalFiles, id: \.self) { logFile in
+                                NavigationLink(destination: localFileContentView(for: logFile)) {
                                     HStack {
                                         Text(logFile.lastPathComponent)
                                             .foregroundColor(.primary)
@@ -565,16 +572,16 @@ struct FileListView: View {
                                     }
                                 }
                             }
-                            .onDelete(perform: deleteLogFiles)
+                            .onDelete(perform: deleteLocalFiles)
                         }
                     }
                 }
             }
-            .navigationTitle("Log Files")
+            .navigationTitle("Local Files")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
-                        showLogFilePicker = false
+                        showLocalFilePicker = false
                     }
                 }
 
@@ -583,17 +590,10 @@ struct FileListView: View {
                 }
             }
             .onAppear {
-                if logFiles.isEmpty {
-                    logFiles = fetchLogFiles()
+                if localFiles.isEmpty {
+                    localFiles = fetchLocalFiles()
                 }
             }
-        }
-    }
-
-    private func deleteLogFiles(at offsets: IndexSet) {
-        for index in offsets {
-            let logFile = logFiles[index]
-            deleteLogFile(logFile)
         }
     }
 
@@ -617,12 +617,12 @@ struct FileListView: View {
             }
 
             Section {
-                Button("View Log Files") {
-                    showLogFilePicker = true
+                Button("Files") {
+                    showLocalFilePicker = true
                 }
             }
-            .fullScreenCover(isPresented: $showLogFilePicker) {
-                logFileListView
+            .fullScreenCover(isPresented: $showLocalFilePicker) {
+                localFilesListView
             }
 
             Section(header: Text("Client Storage")) {

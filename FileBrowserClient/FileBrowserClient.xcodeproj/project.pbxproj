@@ -18,6 +18,7 @@
 		987C617E2E47EC0900C5DE8E /* ServerURLMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987C617D2E47EC0900C5DE8E /* ServerURLMenu.swift */; };
 		987C61872E48F97F00C5DE8E /* ViewVisibilityModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */; };
 		987C61892E4A986500C5DE8E /* SearchType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 987C61882E4A986500C5DE8E /* SearchType.swift */; };
+		988166512E857068003C0CD8 /* LocalFileContentContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988166502E857068003C0CD8 /* LocalFileContentContainer.swift */; };
 		98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */; };
 		98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823ED02E1AFADA004CBB11 /* ContentView.swift */; };
 		98823ED32E1AFADC004CBB11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 98823ED22E1AFADC004CBB11 /* Assets.xcassets */; };
@@ -30,7 +31,6 @@
 		98836BAF2E7291230053170A /* ResumePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98836BAE2E7291230053170A /* ResumePromptView.swift */; };
 		98836BCD2E79214B0053170A /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98836BCC2E79214B0053170A /* DownloadManager.swift */; };
 		988D9DE82E43915400C37B15 /* FileListAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988D9DE72E43915000C37B15 /* FileListAlerts.swift */; };
-		98A3FE992E82C170005B3109 /* LogFileContentContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A3FE982E82C170005B3109 /* LogFileContentContainer.swift */; };
 		98B1AC4D2E7AF663000210BC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC4C2E7AF660000210BC /* Constants.swift */; };
 		98B1AC762E7C6AB9000210BC /* FileList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC752E7C6AB2000210BC /* FileList.swift */; };
 		98B1ACD92E80CC43000210BC /* FileDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */; };
@@ -86,6 +86,7 @@
 		987C617D2E47EC0900C5DE8E /* ServerURLMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLMenu.swift; sourceTree = "<group>"; };
 		987C61862E48F97F00C5DE8E /* ViewVisibilityModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewVisibilityModifier.swift; sourceTree = "<group>"; };
 		987C61882E4A986500C5DE8E /* SearchType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchType.swift; sourceTree = "<group>"; };
+		988166502E857068003C0CD8 /* LocalFileContentContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalFileContentContainer.swift; sourceTree = "<group>"; };
 		98823ECB2E1AFADA004CBB11 /* FileBrowserClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FileBrowserClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		98823ECE2E1AFADA004CBB11 /* FileBrowserClientApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientApp.swift; sourceTree = "<group>"; };
 		98823ED02E1AFADA004CBB11 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -101,7 +102,6 @@
 		98836BAE2E7291230053170A /* ResumePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumePromptView.swift; sourceTree = "<group>"; };
 		98836BCC2E79214B0053170A /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
 		988D9DE72E43915000C37B15 /* FileListAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListAlerts.swift; sourceTree = "<group>"; };
-		98A3FE982E82C170005B3109 /* LogFileContentContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogFileContentContainer.swift; sourceTree = "<group>"; };
 		98B1AC4C2E7AF660000210BC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		98B1AC752E7C6AB2000210BC /* FileList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileList.swift; sourceTree = "<group>"; };
 		98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDownloadHelper.swift; sourceTree = "<group>"; };
@@ -221,7 +221,7 @@
 		98B1AC502E7C5B9A000210BC /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				98A3FE982E82C170005B3109 /* LogFileContentContainer.swift */,
+				988166502E857068003C0CD8 /* LocalFileContentContainer.swift */,
 				98B1ACDE2E80E4B4000210BC /* UploadingStack.swift */,
 				98B1ACDC2E80E4AD000210BC /* DownloadingStack.swift */,
 				98B1ACDA2E80D89F000210BC /* PDFViewerScreen.swift */,
@@ -477,7 +477,6 @@
 				F85295442E303AF900498675 /* Log.swift in Sources */,
 				F854861C2E1B1C5000115F18 /* FileListView.swift in Sources */,
 				98B600272E50B1F900F24FB8 /* ShareLinkRow.swift in Sources */,
-				98A3FE992E82C170005B3109 /* LogFileContentContainer.swift in Sources */,
 				F8BE8BBA2E379B8500967D18 /* RemoteThumbnail.swift in Sources */,
 				98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */,
 				98D563ED2E45194700DE0079 /* StatusMessage.swift in Sources */,
@@ -486,6 +485,7 @@
 				984F17062E46A8AA003502DF /* ZoomableImageView.swift in Sources */,
 				F87456282E1CABD70041EDDF /* FileDetailView.swift in Sources */,
 				98B1ACDF2E80E4B4000210BC /* UploadingStack.swift in Sources */,
+				988166512E857068003C0CD8 /* LocalFileContentContainer.swift in Sources */,
 				987C617E2E47EC0900C5DE8E /* ServerURLMenu.swift in Sources */,
 				98836BAD2E7285F90053170A /* PlaybackProgressStore.swift in Sources */,
 				98D563D12E44354700DE0079 /* FileExtensions.swift in Sources */,

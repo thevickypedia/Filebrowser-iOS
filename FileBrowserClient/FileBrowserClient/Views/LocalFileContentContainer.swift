@@ -1,18 +1,18 @@
 //
-//  LogFileContentContainer.swift
+//  LocalFileContentContainer.swift
 //  FileBrowserClient
 //
-//  Created by Vignesh Rao on 9/23/25.
+//  Created by Vignesh Rao on 9/25/25.
 //
 
 import SwiftUI
 
-func logFileContentView(for logFile: URL) -> some View {
-    LogFileContentContainer(logFile: logFile)
+func localFileContentView(for localFile: URL) -> some View {
+    LocalFileContentContainer(localFile: localFile)
 }
 
-struct LogFileContentContainer: View {
-    let logFile: URL
+struct LocalFileContentContainer: View {
+    let localFile: URL
     @State private var content: String?
     @State private var isLoaded = false
     @State private var errorMessage: String?
@@ -25,7 +25,7 @@ struct LogFileContentContainer: View {
                 }
             } else if let error = errorMessage {
                 VStack(spacing: 8) {
-                    Text("Unable to load log file")
+                    Text("Unable to load file")
                         .foregroundColor(.red)
                     Text(error)
                         .font(.caption)
@@ -35,10 +35,10 @@ struct LogFileContentContainer: View {
                     }
                 }
             } else {
-                ProgressView("Loading log file...")
+                ProgressView("Loading file...")
             }
         }
-        .navigationTitle(logFile.lastPathComponent)
+        .navigationTitle(localFile.lastPathComponent)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if !isLoaded {
@@ -52,8 +52,8 @@ struct LogFileContentContainer: View {
         errorMessage = nil
 
         do {
-            print("🔍 Loading file: \(logFile.lastPathComponent)")
-            content = try String(contentsOf: logFile, encoding: .utf8)
+            print("🔍 Loading file: \(localFile.lastPathComponent)")
+            content = try String(contentsOf: localFile, encoding: .utf8)
             print("✅ Successfully loaded file, length: \(content?.count ?? 0)")
         } catch {
             print("❌ Error reading file: \(error)")
