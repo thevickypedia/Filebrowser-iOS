@@ -37,6 +37,7 @@ struct MediaPlayerView: View {
     @State private var notifTokens: [NSObjectProtocol] = []
     @State private var currentPlaybackTime: Double = 0
     @State private var lastSavedTime: Double = 0
+    @State private var isSeeking = false
     @State private var resumePromptData: ResumePromptData?
     @State private var pendingPlayer: AVPlayer?
     @State private var pendingItem: AVPlayerItem?
@@ -228,11 +229,15 @@ struct MediaPlayerView: View {
 
         // Time jumped (seek), playback stalled, access log entries → immediately republish full info
         let nc1 = NotificationCenter.default.addObserver(forName: .AVPlayerItemTimeJumped, object: item, queue: .main) { _ in
+            self.isSeeking = true
             self.publishNowPlaying()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { self.isSeeking = false }
         }
+        // Playback stalled (e.g., buffering, network hiccup) → update Now Playing to reflect paused state
         let nc2 = NotificationCenter.default.addObserver(forName: .AVPlayerItemPlaybackStalled, object: item, queue: .main) { _ in
             self.publishNowPlaying()
         }
+        // Access log updated (e.g., new segment loaded or resumed from network) → refresh metadata proactively
         let nc3 = NotificationCenter.default.addObserver(forName: .AVPlayerItemNewAccessLogEntry, object: item, queue: .main) { _ in
             self.publishNowPlaying()
         }
@@ -354,7 +359,9 @@ struct MediaPlayerView: View {
 
         if let seekTime = time {
             let target = CMTime(seconds: seekTime, preferredTimescale: 1)
+            isSeeking = true
             player.seek(to: target) { _ in
+                isSeeking = false
                 Log.info("⏮ Resumed playback at \(seekTime)s for \(file.name)")
                 if autoPlay {
                     player.play()
@@ -528,15 +535,17 @@ struct MediaPlayerView: View {
         ) { _ in
             self.updateNowPlayingPlaybackState(isPlaying: player.timeControlStatus == .playing)
 
-            let currentTime = CMTimeGetSeconds(player.currentTime())
-            if currentTime.isFinite && !currentTime.isNaN {
-                // Always track the current playback time
-                self.currentPlaybackTime = currentTime
-                // MARK: Auto save progress every N [mediaResumeThreshold] seconds
-                // NOTE: "currentTime - lastSavedTime" will become negative if video is rewinded
-                if lastSavedTime == 0 || abs(currentTime - lastSavedTime) >= Constants.mediaResumeThreshold {
-                    lastSavedTime = currentTime
-                    PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
+            if !isSeeking {
+                let currentTime = CMTimeGetSeconds(player.currentTime())
+                if currentTime.isFinite && !currentTime.isNaN {
+                    // Always track the current playback time
+                    self.currentPlaybackTime = currentTime
+                    // MARK: Auto save progress every N [mediaResumeThreshold] seconds
+                    // NOTE: "currentTime - lastSavedTime" will become negative if video is rewinded
+                    if lastSavedTime == 0 || abs(currentTime - lastSavedTime) >= Constants.mediaResumeThreshold {
+                        lastSavedTime = currentTime
+                        PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
+                    }
                 }
             }
 
