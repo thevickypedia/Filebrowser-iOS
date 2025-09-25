@@ -41,35 +41,14 @@ struct FileListView: View {
     @State private var showDownload = false
     @State private var sheetPathStack: [FileItem] = []
 
+    @State private var transferState: TransferState = TransferState()
     // Download vars
     @State private var downloadQueue: [DownloadQueueItem] = []
-    @State private var currentDownloadIndex = 0
-    @State private var downloadProgress: Double = 0.0
-    @State private var downloadProgressPct: Int = 0
-    @State private var isDownloading = false
-    @State private var currentDownloadFile: String?
-    @State private var currentDownloadFileSize: String?
-    @State private var currentDownloadedFileSize: String?
     @State private var currentDownloadTaskID: UUID?
-    @State private var isDownloadCancelled = false
-    @State private var isDownloadPaused = false
     @State private var pausedResumeData: Data?
-    @State private var currentDownloadSpeed: Double = 0.0
-    @State private var currentDownloadFileIcon: String?
 
     // Upload vars
     @State private var uploadQueue: [URL] = []
-    @State private var currentUploadIndex = 0
-    @State private var uploadProgress: Double = 0.0
-    @State private var uploadProgressPct: Int = 0
-    @State private var isUploading = false
-    @State private var currentUploadFile: String?
-    @State private var currentUploadFileSize: String?
-    @State private var currentUploadedFileSize: String?
-    @State private var isUploadCancelled = false
-    @State private var isUploadPaused = false
-    @State private var currentUploadSpeed: Double = 0.0
-    @State private var currentUploadFileIcon: String?
 
     // Upload state vars
     @State private var currentFileHandle: FileHandle?
@@ -278,9 +257,9 @@ struct FileListView: View {
     }
 
     private func nextUploadInQueue() -> String? {
-        if currentUploadIndex + 1 < uploadQueue.count {
-            return "Next up: \(uploadQueue[currentUploadIndex + 1].lastPathComponent)"
-        } else if !isUploading {
+        if transferState.currentTransferIndex + 1 < uploadQueue.count {
+            return "Next up: \(uploadQueue[transferState.currentTransferIndex + 1].lastPathComponent)"
+        } else if transferState.transferType == nil {
             return "Processing \(pendingUploads) pending files"
         }
         return nil
@@ -1050,15 +1029,13 @@ struct FileListView: View {
         return uploadQueue.count < photoPickerStatus.totalSelected
     }
 
-    private func notifyTransferState(_ action: TransferAction, _ state: TransferState) {
-        let currentFile = action == .upload ? currentUploadFile : currentDownloadFile
+    private func notifyTransferState(_ action: TransferType, _ state: TransferStatus) {
         let currentState = action == .upload
-            ? "[\(currentUploadIndex + 1)/\(uploadQueue.count)]"
-            : "[\(currentDownloadIndex + 1)/\(downloadQueue.count)]"
-        let percent = action == .upload ? uploadProgressPct : downloadProgressPct
+            ? "[\(transferState.currentTransferIndex + 1)/\(uploadQueue.count)]"
+            : "[\(transferState.currentTransferIndex + 1)/\(downloadQueue.count)]"
 
-        let text = currentFile.map {
-            "\(state.emoji) \(action.rawValue) \(currentState) - \($0) - \(state.rawValue) \(state.prefix) \(percent)%"
+        let text = transferState.currentTransferFile.map {
+            "\(state.emoji) \(action.rawValue) \(currentState) - \($0) - \(state.rawValue) \(state.prefix) \(transferState.transferProgressPct)%"
         } ?? "\(state.emoji) \(action.rawValue) \(state.rawValue)"
 
         statusMessage = StatusPayload(
@@ -1068,6 +1045,54 @@ struct FileListView: View {
         )
 
         Log.info(text)
+    }
+
+    private var uploadStack: some View {
+        UploadingStack(
+            fileName: transferState.currentTransferFile,
+            fileIcon: transferState.currentTransferFileIcon,
+            uploaded: transferState.currentTransferedFileSize,
+            total: transferState.currentTransferFileSize,
+            progress: transferState.transferProgress,
+            progressPct: transferState.transferProgressPct,
+            speed: transferState.currentTransferSpeed,
+            index: transferState.currentTransferIndex + 1,
+            totalCount: photoPickerStatus.totalSelected,
+            chunkSize: advancedSettings.chunkSize,
+            isPaused: transferState.isTransferPaused,
+            onPause: {
+                notifyTransferState(TransferType.upload, TransferStatus.paused)
+                transferState.isTransferPaused = true
+                uploadTask?.cancel()
+            },
+            onResume: { resumeUpload() },
+            onCancel: {
+                notifyTransferState(TransferType.upload, TransferStatus.cancelled)
+                transferState.isTransferCancelled = true
+                cancelUpload(fileHandle: nil, statusText: nil)
+            }
+        )
+    }
+
+    private var downloadStack: some View {
+        DownloadingStack(
+            fileName: transferState.currentTransferFile,
+            fileIcon: transferState.currentTransferFileIcon,
+            downloaded: transferState.currentTransferedFileSize,
+            total: transferState.currentTransferFileSize,
+            progress: transferState.transferProgress,
+            progressPct: transferState.transferProgressPct,
+            speed: transferState.currentTransferSpeed,
+            index: transferState.currentTransferIndex + 1,
+            totalCount: downloadQueue.count,
+            isPaused: transferState.isTransferPaused,
+            onPause: { pauseDownload() },
+            onResume: { resumeDownload() },
+            onCancel: {
+                notifyTransferState(TransferType.download, TransferStatus.cancelled)
+                cancelDownload()
+            }
+        )
     }
 
     var body: some View {
@@ -1092,62 +1117,17 @@ struct FileListView: View {
                     if photoPickerStatus.isPreparingUpload {
                         preparingUploadStack
                     }
-                    if isUploading || retainUploadingStack() {
-                        UploadingStack(
-                            fileName: currentUploadFile,
-                            fileIcon: currentUploadFileIcon,
-                            uploaded: currentUploadedFileSize,
-                            total: currentUploadFileSize,
-                            progress: uploadProgress,
-                            progressPct: uploadProgressPct,
-                            speed: currentUploadSpeed,
-                            index: currentUploadIndex + 1,
-                            totalCount: photoPickerStatus.totalSelected,
-                            chunkSize: advancedSettings.chunkSize,
-                            isPaused: isUploadPaused,
-                            onPause: {
-                                notifyTransferState(TransferAction.upload, TransferState.paused)
-                                isUploadPaused = true
-                                uploadTask?.cancel()
-                            },
-                            onResume: {
-                                // Conditional notification
-                                resumeUpload()
-                            },
-                            onCancel: {
-                                notifyTransferState(TransferAction.upload, TransferState.cancelled)
-                                isUploadCancelled = true
-                                cancelUpload(fileHandle: nil, statusText: nil)
-                            }
-                        )
-                    }
 
-                    // Download UI
-                    if showDownload || isDownloading {
-                        DownloadingStack(
-                            fileName: currentDownloadFile,
-                            fileIcon: currentDownloadFileIcon,
-                            downloaded: currentDownloadedFileSize,
-                            total: currentDownloadFileSize,
-                            progress: downloadProgress,
-                            progressPct: downloadProgressPct,
-                            speed: currentDownloadSpeed,
-                            index: currentDownloadIndex + 1,
-                            totalCount: downloadQueue.count,
-                            isPaused: isDownloadPaused,
-                            onPause: {
-                                // Conditional notification
-                                pauseDownload()
-                            },
-                            onResume: {
-                                // Conditional notification
-                                resumeDownload()
-                            },
-                            onCancel: {
-                                notifyTransferState(TransferAction.download, TransferState.cancelled)
-                                cancelDownload()
-                            }
-                        )
+                    if let transferType = transferState.transferType {
+                        switch transferType {
+                        case .upload:
+                            uploadStack
+                        case .download:
+                            downloadStack
+                        }
+                    } else {
+                        if retainUploadingStack() { uploadStack }
+                        if showDownload { downloadStack }
                     }
 
                     if viewModel.isLoading {
@@ -1276,7 +1256,7 @@ struct FileListView: View {
             }
             viewModel.reconcilePendingUploads()
             progressObserver = NotificationCenter.default.addObserver(
-                forName: .BackgroundTUSUploadProgress,
+                forName: .BackgroundTUSUploadProgress,  // Fixed
                 object: nil, queue: .main
             ) { note in
                 guard let info = note.userInfo,
@@ -1285,7 +1265,7 @@ struct FileListView: View {
                       let filePath = info["filePath"] as? String ?? findFilePathForUploadId(id) else {
                     return
                 }
-                viewModel.setUploadProgress(forPath: filePath, progress: progress)
+                viewModel.setUploadProgress(forPath: filePath, progress: progress)  // Fixed
             }
         }
         .onDisappear {
@@ -1335,7 +1315,7 @@ struct FileListView: View {
                 onFilePicked: { url in
                     isPhotoUpload = true
                     uploadQueue.append(url)
-                    if !isUploading {
+                    if transferState.transferType == nil {
                         uploadNextInQueue()
                     }
                 }
@@ -1350,7 +1330,7 @@ struct FileListView: View {
             case .success(let urls):
                 isFileUpload = true
                 uploadQueue = urls
-                currentUploadIndex = 0
+                transferState.currentTransferIndex = 0
                 uploadNextInQueue()
             case .failure(let error):
                 isFileUpload = false
@@ -1368,9 +1348,9 @@ struct FileListView: View {
     }
 
     private func pauseDownload() {
-        isDownloadPaused = true
+        transferState.isTransferPaused = true
         if let id = currentDownloadTaskID {
-            notifyTransferState(TransferAction.download, TransferState.paused)
+            notifyTransferState(TransferType.download, TransferStatus.paused)
             DownloadManager.shared.pause(id) { data in
                 pausedResumeData = data
             }
@@ -1382,14 +1362,14 @@ struct FileListView: View {
     }
 
     private func cancelDownload() {
-        isDownloadCancelled = true
+        transferState.isTransferCancelled = true
         if let id = currentDownloadTaskID {
             DownloadManager.shared.cancel(id)
         }
         downloadQueue.removeAll()
-        currentDownloadIndex = 0
-        downloadProgress = 0.0
-        isDownloading = false
+        transferState.currentTransferIndex = 0
+        transferState.transferProgress = 0.0
+        transferState.transferType = nil
         showDownload = false
     }
 
@@ -1401,14 +1381,14 @@ struct FileListView: View {
             return
         }
 
-        notifyTransferState(TransferAction.download, TransferState.resumed)
-        isDownloadPaused = false
-        let file = downloadQueue[currentDownloadIndex].file
-        currentDownloadFile = file.name
-        currentDownloadFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
-        downloadProgress = 0
-        downloadProgressPct = 0
-        isDownloading = true
+        notifyTransferState(TransferType.download, TransferStatus.resumed)
+        transferState.isTransferPaused = false
+        let file = downloadQueue[transferState.currentTransferIndex].file
+        transferState.currentTransferFile = file.name
+        transferState.currentTransferFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
+        transferState.transferProgress = 0
+        transferState.transferProgressPct = 0
+        transferState.transferType = TransferType.download
 
         var downloadStartTime = Date()
         var bytesDownloadedSinceLastUpdate: Int64 = 0
@@ -1426,21 +1406,21 @@ struct FileListView: View {
                     let elapsed = Date().timeIntervalSince(downloadStartTime)
                     if elapsed >= Constants.downloadSpeedUpdateInterval {
                         let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
-                        currentDownloadSpeed = downloadSpeed
+                        transferState.currentTransferSpeed = downloadSpeed
                         downloadStartTime = Date()
                         bytesDownloadedSinceLastUpdate = 0
                     }
 
                     guard totalBytesExpected > 0 else {
-                        self.downloadProgress = 0
-                        self.downloadProgressPct = 0
+                        self.transferState.transferProgress = 0
+                        self.transferState.transferProgressPct = 0
                         return
                     }
                     let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
-                    self.downloadProgress = prog
-                    self.downloadProgressPct = Int(prog * 100)
-                    self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
-                    self.currentDownloadFileSize = formatBytes(totalBytesExpected)
+                    self.transferState.transferProgress = prog
+                    self.transferState.transferProgressPct = Int(prog * 100)
+                    self.transferState.currentTransferedFileSize = formatBytes(totalBytesWritten)
+                    self.transferState.currentTransferFileSize = formatBytes(totalBytesExpected)
                 }
             },
             completion: { result in
@@ -1463,14 +1443,14 @@ struct FileListView: View {
                         self.errorMessage = "Download failed: \(err.localizedDescription)"
                     }
 
-                    self.currentDownloadIndex += 1
-                    if self.currentDownloadIndex >= self.downloadQueue.count {
+                    self.transferState.currentTransferIndex += 1
+                    if self.transferState.currentTransferIndex >= self.downloadQueue.count {
                         self.downloadQueue.removeAll()
-                        self.currentDownloadIndex = 0
-                        self.isDownloading = false
+                        self.transferState.currentTransferIndex = 0
+                        self.transferState.transferType = nil
                         self.currentDownloadTaskID = nil
                         self.showDownload = false
-                        self.downloadProgress = 0
+                        self.transferState.transferProgress = 0
                     } else {
                         self.startNextDownload()
                     }
@@ -1487,7 +1467,7 @@ struct FileListView: View {
         downloadQueue.append(item)
         showDownload = true
         // start if idle
-        if !isDownloading {
+        if transferState.transferType == nil {
             startNextDownload()
         }
     }
@@ -1496,23 +1476,23 @@ struct FileListView: View {
     private func startNextDownload() {
         guard !downloadQueue.isEmpty else {
             // nothing to do
-            isDownloading = false
+            transferState.transferType = nil
             showDownload = false
-            downloadProgress = 0
-            currentDownloadIndex = 0
+            transferState.transferProgress = 0
+            transferState.currentTransferIndex = 0
             currentDownloadTaskID = nil
             return
         }
 
-        let item = downloadQueue[currentDownloadIndex]
+        let item = downloadQueue[transferState.currentTransferIndex]
         let file = item.file
-        currentDownloadFile = file.name
-        downloadProgress = 0
-        downloadProgressPct = 0
-        isDownloading = true
+        transferState.currentTransferFile = file.name
+        transferState.transferProgress = 0
+        transferState.transferProgressPct = 0
+        transferState.transferType = TransferType.download
 
         // Set the download file icon
-        currentDownloadFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
+        transferState.currentTransferFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
 
         // Build raw URL (same as FileDetailView)
         guard let url = buildAPIURL(
@@ -1521,13 +1501,13 @@ struct FileListView: View {
             queryItems: [ URLQueryItem(name: "auth", value: auth.token) ]
         ) else {
             errorMessage = "Invalid download URL for \(file.name)"
-            isDownloading = false
+            transferState.transferType = nil
             return
         }
 
         // Variables to track download speed
         var downloadStartTime = Date()
-        // Instead of updating currentDownloadSpeed immediately with each chunk,
+        // Instead of updating transferState.currentTransferSpeed immediately with each chunk,
         // we accumulate the bytes downloaded and calculate the speed at certain intervals
         var bytesDownloadedSinceLastUpdate: Int64 = 0
 
@@ -1544,23 +1524,23 @@ struct FileListView: View {
                     let elapsed = Date().timeIntervalSince(downloadStartTime)
                     if elapsed >= Constants.downloadSpeedUpdateInterval {
                         let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
-                        currentDownloadSpeed = downloadSpeed
+                        transferState.currentTransferSpeed = downloadSpeed
                         // Reset counters for the next period
                         downloadStartTime = Date()
                         bytesDownloadedSinceLastUpdate = 0
                     }
                     // Update progress
                     guard totalBytesExpected > 0 else {
-                        self.downloadProgress = 0
-                        self.downloadProgressPct = 0
+                        self.transferState.transferProgress = 0
+                        self.transferState.transferProgressPct = 0
                         return
                     }
                     let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
-                    self.downloadProgress = prog
-                    self.downloadProgressPct = Int(prog * 100)
+                    self.transferState.transferProgress = prog
+                    self.transferState.transferProgressPct = Int(prog * 100)
                     // Optional size strings
-                    self.currentDownloadedFileSize = formatBytes(totalBytesWritten)
-                    self.currentDownloadFileSize = formatBytes(totalBytesExpected)
+                    self.transferState.currentTransferedFileSize = formatBytes(totalBytesWritten)
+                    self.transferState.currentTransferFileSize = formatBytes(totalBytesExpected)
                 }
             },
             completion: { result in
@@ -1583,15 +1563,15 @@ struct FileListView: View {
                     }
 
                     // Move to next item
-                    self.currentDownloadIndex += 1
-                    if self.currentDownloadIndex >= self.downloadQueue.count {
+                    self.transferState.currentTransferIndex += 1
+                    if self.transferState.currentTransferIndex >= self.downloadQueue.count {
                         // Finished all
                         self.downloadQueue.removeAll()
-                        self.currentDownloadIndex = 0
-                        self.isDownloading = false
+                        self.transferState.currentTransferIndex = 0
+                        self.transferState.transferType = nil
                         self.currentDownloadTaskID = nil
                         self.showDownload = false
-                        self.downloadProgress = 0
+                        self.transferState.transferProgress = 0
                     } else {
                         // Start next
                         self.startNextDownload()
@@ -2142,21 +2122,21 @@ struct FileListView: View {
 
     private var pendingUploads: Int {
         if isPhotoUpload {
-            return photoPickerStatus.totalSelected - currentUploadIndex
+            return photoPickerStatus.totalSelected - transferState.currentTransferIndex
         }
-        return uploadQueue.count - currentUploadIndex
+        return uploadQueue.count - transferState.currentTransferIndex
     }
 
     func resumeUpload() {
         if let fileHandle = currentFileHandle,
            let uploadURL = currentUploadURL {
-            notifyTransferState(TransferAction.upload, TransferState.resumed)
-            isUploadPaused = false
+            notifyTransferState(TransferType.upload, TransferStatus.resumed)
+            transferState.isTransferPaused = false
             Log.info("▶️ Resuming upload for \(uploadURL.lastPathComponent)")
             // This is the simplest & safest way to resume since TUS supports resumable uploads by design
             getUploadOffset(
                 fileHandle: fileHandle,
-                fileURL: uploadQueue[currentUploadIndex],
+                fileURL: uploadQueue[transferState.currentTransferIndex],
                 uploadURL: uploadURL
             )
         } else {
@@ -2176,9 +2156,9 @@ struct FileListView: View {
 
         let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
         let fileName = fileURL.lastPathComponent
-        currentUploadFile = fileName
-        currentUploadFileSize = sizeConverter(fileSize)
-        currentUploadFileIcon = systemIcon(for: fileName.lowercased(), extensionTypes: extensionTypes)
+        transferState.currentTransferFile = fileName
+        transferState.currentTransferFileSize = sizeConverter(fileSize)
+        transferState.currentTransferFileIcon = systemIcon(for: fileName.lowercased(), extensionTypes: extensionTypes)
         var currentOffset = offset
 
         currentUploadURL = uploadURL
@@ -2190,7 +2170,7 @@ struct FileListView: View {
 
         func uploadNext() {
             // ⏸️ PAUSE Check
-            if isUploadPaused {
+            if transferState.isTransferPaused {
                 Log.info("⏸️ Upload paused at offset: \(currentOffset)")
                 uploadTask = nil
                 currentUploadedOffset = currentOffset
@@ -2199,7 +2179,7 @@ struct FileListView: View {
 
             // 🔁 Cancel check
             // MARK: Catches cancellation during mid-chunk
-            if isUploadCancelled {
+            if transferState.isTransferCancelled {
                 Log.info("⏹️ Upload cancelled by user.")
                 // Store statusText before cancelling
                 var statusText = "⚠️ Upload cancelled"
@@ -2224,10 +2204,10 @@ struct FileListView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.uploadCleanupDelay)) {
                     FileCache.shared.removeTempFile(at: fileURL)
                 }
-                currentUploadIndex += 1
+                transferState.currentTransferIndex += 1
                 uploadTask = nil
-                uploadProgress = 1.0
-                currentUploadSpeed = 0.0
+                transferState.transferProgress = 1.0
+                transferState.currentTransferSpeed = 0.0
                 currentUploadedOffset = 0
                 uploadNextInQueue()
                 return
@@ -2250,7 +2230,7 @@ struct FileListView: View {
             uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
                     // Re-check pause/cancel in async block
-                    if isUploadCancelled {
+                    if transferState.isTransferCancelled {
                         Log.info("⏹️ Upload cancelled mid-chunk. \(fileName) may be incomplete.")
                         // Store statusText before cancelling
                         var statusText = "⚠️ Upload cancelled mid-chunk, '\(fileName)' may be incomplete."
@@ -2261,7 +2241,7 @@ struct FileListView: View {
                         return
                     }
 
-                    if isUploadPaused {
+                    if transferState.isTransferPaused {
                         Log.info("⏸️ Upload paused mid-chunk at offset: \(currentOffset)")
                         uploadTask = nil
                         currentUploadedOffset = currentOffset
@@ -2292,13 +2272,13 @@ struct FileListView: View {
                     let elapsed = Date().timeIntervalSince(uploadStartTime)
                     let bytesSent = currentOffset + data.count - startOffset
                     if elapsed > 0 {
-                        currentUploadSpeed = Double(bytesSent) / elapsed / (1024 * 1024)
+                        transferState.currentTransferSpeed = Double(bytesSent) / elapsed / (1024 * 1024)
                     }
 
                     currentOffset += data.count
-                    uploadProgress = Double(currentOffset) / Double(fileSize)
-                    uploadProgressPct = Int((uploadProgress * 100).rounded())
-                    currentUploadedFileSize = sizeConverter(currentOffset)
+                    transferState.transferProgress = Double(currentOffset) / Double(fileSize)
+                    transferState.transferProgressPct = Int((transferState.transferProgress * 100).rounded())
+                    transferState.currentTransferedFileSize = sizeConverter(currentOffset)
                     currentUploadedOffset = currentOffset
 
                     Log.trace("📤 Uploaded chunk — new offset: \(currentOffset)")
@@ -2313,10 +2293,10 @@ struct FileListView: View {
     func clearUploadStatus() {
         Log.debug("Resetting all upload attributes")
         uploadTask = nil
-        isUploading = false
+        transferState.transferType = nil
         uploadQueue = []
-        currentUploadIndex = 0
-        uploadProgress = 0.0
+        transferState.currentTransferIndex = 0
+        transferState.transferProgress = 0.0
     }
 
     func clearPickerStatus() {
@@ -2327,10 +2307,10 @@ struct FileListView: View {
     }
 
     func uploadNextInQueue() {
-        guard currentUploadIndex < uploadQueue.count else {
-            isUploading = false
+        guard transferState.currentTransferIndex < uploadQueue.count else {
+            transferState.transferType = nil
             if pendingUploads == 0 {
-                statusMessage = StatusPayload(text: "📤 Uploaded \(currentUploadIndex) \(currentUploadIndex == 1 ? "file" : "files")")
+                statusMessage = StatusPayload(text: "📤 Uploaded \(transferState.currentTransferIndex) \(transferState.currentTransferIndex == 1 ? "file" : "files")")
                 endUpload()
             } else {
                 Log.trace("Unprocessed files: \(pendingUploads)")
@@ -2338,10 +2318,10 @@ struct FileListView: View {
             return
         }
 
-        isUploading = true
-        isUploadCancelled = false
-        uploadProgress = 0.0
-        let fileURL = uploadQueue[currentUploadIndex]
+        transferState.transferType = TransferType.upload
+        transferState.isTransferCancelled = false
+        transferState.transferProgress = 0.0
+        let fileURL = uploadQueue[transferState.currentTransferIndex]
         if isFileUpload {
             guard fileURL.startAccessingSecurityScopedResource() else {
                 Log.error("❌ Failed to access file: \(fileURL)")

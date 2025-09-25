@@ -13,12 +13,12 @@ enum ModifyItem: String {
     case move = "Move"
 }
 
-enum TransferAction: String {
+enum TransferType: String {
     case upload = "Upload"
     case download = "Download"
 }
 
-enum TransferState: String {
+enum TransferStatus: String {
     case paused, resumed, cancelled
 
     var emoji: String {
@@ -40,6 +40,20 @@ enum TransferState: String {
     var prefix: String {
         self == .resumed ? "from" : "at"
     }
+}
+
+struct TransferState {
+    var transferType: TransferType?
+    var currentTransferIndex = 0
+    var transferProgress: Double = 0.0
+    var transferProgressPct: Int = 0
+    var currentTransferFile: String?
+    var currentTransferFileSize: String?
+    var currentTransferedFileSize: String?
+    var isTransferCancelled = false
+    var isTransferPaused = false
+    var currentTransferSpeed: Double = 0.0
+    var currentTransferFileIcon: String?
 }
 
 struct DownloadQueueItem: Identifiable {
