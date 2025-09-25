@@ -79,6 +79,7 @@ struct FileListView: View {
     @State private var isNavigating = false
 
     @State private var logFiles: [URL] = []
+    @State private var showOnlyLogFiles: Bool = true
     @State private var showLogFilePicker: Bool = false
     @State private var showLogFileContent: Bool = false
     @State private var selectedLogFile: URL?
@@ -499,14 +500,21 @@ struct FileListView: View {
         .presentationDetents([.fraction(0.3)]) // 30% of the screen height
     }
 
+    private var filteredLogFiles: [URL] {
+        if showOnlyLogFiles {
+            return logFiles.filter { $0.pathExtension == "log" }
+        } else {
+            return logFiles
+        }
+    }
+
     private func fetchLogFiles() -> [URL] {
         let fileManager = FileManager.default
         let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         do {
-            let logFiles = try fileManager.contentsOfDirectory(at: logsDirectory, includingPropertiesForKeys: nil)
-            Log.debug("logsDirectory contents: \(logFiles)")
-            let logs = logFiles.filter { $0.pathExtension == "log" }
-            return logs
+            let allFiles = try fileManager.contentsOfDirectory(at: logsDirectory, includingPropertiesForKeys: nil)
+            Log.debug("logsDirectory contents: \(allFiles)")
+            return allFiles
         } catch {
             errorTitle = "Fetch Error"
             errorMessage = "❌ Error fetching logs: \(error.localizedDescription)"
@@ -529,7 +537,7 @@ struct FileListView: View {
     private var logFileListView: some View {
         NavigationView {
             Group {
-                if logFiles.isEmpty {
+                if filteredLogFiles.isEmpty {
                     VStack(spacing: 16) {
                         Text("❌ No log files found")
                             .font(.footnote)
@@ -537,23 +545,28 @@ struct FileListView: View {
                     }
                 } else {
                     List {
-                        ForEach(logFiles, id: \.self) { logFile in
-                            NavigationLink(destination: logFileContentView(for: logFile)) {
-                                HStack {
-                                    Text(logFile.lastPathComponent)
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                    // Optional: Add file size or date info
-                                    if let attributes = try? FileManager.default.attributesOfItem(atPath: logFile.path),
-                                       let fileSize = attributes[.size] as? Int64 {
-                                        Text(formatBytes(fileSize))
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                        Section {
+                            Toggle("Show only .log files", isOn: $showOnlyLogFiles)
+                        }
+
+                        Section {
+                            ForEach(filteredLogFiles, id: \.self) { logFile in
+                                NavigationLink(destination: logFileContentView(for: logFile)) {
+                                    HStack {
+                                        Text(logFile.lastPathComponent)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                        if let attributes = try? FileManager.default.attributesOfItem(atPath: logFile.path),
+                                           let fileSize = attributes[.size] as? Int64 {
+                                            Text(formatBytes(fileSize))
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
                                     }
                                 }
                             }
+                            .onDelete(perform: deleteLogFiles)
                         }
-                        .onDelete(perform: deleteLogFiles)
                     }
                 }
             }
