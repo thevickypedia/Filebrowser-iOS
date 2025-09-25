@@ -504,11 +504,12 @@ struct FileListView: View {
         let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
         do {
             let logFiles = try fileManager.contentsOfDirectory(at: logsDirectory, includingPropertiesForKeys: nil)
+            Log.debug("logsDirectory contents: \(logFiles)")
             let logs = logFiles.filter { $0.pathExtension == "log" }
-            // TODO: Include more information on logs' status
             return logs
         } catch {
-            print("❌ Error fetching logs: \(error)")
+            errorTitle = "Fetch Error"
+            errorMessage = "❌ Error fetching logs: \(error.localizedDescription)"
             return []
         }
     }
@@ -518,11 +519,10 @@ struct FileListView: View {
             try FileManager.default.removeItem(at: logFile)
             // Remove from the state array
             logFiles.removeAll { $0 == logFile }
-            print("🗑️ Deleted log file: \(logFile.lastPathComponent)")
+            Log.info("🗑️ Deleted log file: \(logFile.lastPathComponent)")
         } catch {
-            print("❌ Error deleting log file: \(error)")
             errorTitle = "Delete Failed"
-            errorMessage = "❌ Failed to delete \(logFile.lastPathComponent)"
+            errorMessage = "❌ Failed to delete \(logFile.lastPathComponent)\n\(error.localizedDescription)"
         }
     }
 
