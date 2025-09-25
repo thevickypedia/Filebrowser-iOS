@@ -230,6 +230,7 @@ struct FileListView: View {
                         .foregroundColor(.red)
                         .font(.system(size: 24))
                 }
+                .buttonStyle(.plain)
                 .padding(.trailing, 0)
             }
             .padding(.horizontal)
@@ -247,7 +248,8 @@ struct FileListView: View {
                             .background(searchType == type ? Color.blue.opacity(0.2) : Color.clear)
                             .clipShape(Circle())
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
+                    .disabled(searchInProgress)
                 }
             }
         }
