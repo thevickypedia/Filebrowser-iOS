@@ -38,6 +38,7 @@ struct MediaPlayerView: View {
     @State private var currentPlaybackTime: Double = 0
     @State private var lastSavedTime: Double = 0
     @State private var isSeeking = false
+    @State private var seekResetWorkItem: DispatchWorkItem?
     @State private var resumePromptData: ResumePromptData?
     @State private var pendingPlayer: AVPlayer?
     @State private var pendingItem: AVPlayerItem?
@@ -230,8 +231,13 @@ struct MediaPlayerView: View {
         // Time jumped (seek), playback stalled, access log entries → immediately republish full info
         let nc1 = NotificationCenter.default.addObserver(forName: .AVPlayerItemTimeJumped, object: item, queue: .main) { _ in
             self.isSeeking = true
+            seekResetWorkItem?.cancel()
             self.publishNowPlaying()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { self.isSeeking = false }
+            let workItem = DispatchWorkItem {
+                self.isSeeking = false
+            }
+            seekResetWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: workItem)
         }
         // Playback stalled (e.g., buffering, network hiccup) → update Now Playing to reflect paused state
         let nc2 = NotificationCenter.default.addObserver(forName: .AVPlayerItemPlaybackStalled, object: item, queue: .main) { _ in
