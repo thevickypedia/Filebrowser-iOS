@@ -9,7 +9,7 @@ import Foundation
 
 struct PlaybackProgressStore {
     static func saveProgress(for hash: String, time: Double) {
-        Log.debug("Storing play back progress with hash: \(hash)")
+        Log.trace("Storing play back progress with hash: \(hash) at \(time)s")
         UserDefaults.standard.set(time, forKey: hash)
     }
 
