@@ -522,7 +522,8 @@ struct MediaPlayerView: View {
             let currentTime = CMTimeGetSeconds(player.currentTime())
             if currentTime.isFinite && !currentTime.isNaN {
                 // MARK: Auto save progress every N [mediaResumeThreshold] seconds
-                if lastSavedTime == 0 || currentTime - lastSavedTime >= CGFloat(Constants.mediaResumeThreshold) {
+                // NOTE: "currentTime - lastSavedTime" will become negative if video is rewinded
+                if lastSavedTime == 0 || abs(currentTime - lastSavedTime) >= Constants.mediaResumeThreshold {
                     lastSavedTime = currentTime
                     PlaybackProgressStore.saveProgress(for: createHash(for: file.path), time: currentTime)
                 }
