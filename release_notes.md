@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.47.2 (09/24/2025)
+--------------------
+- [c8f5821](https://github.com/thevickypedia/Filebrowser-iOS/commit/c8f582120f94c25cdf877a69decd761b2bb1a477) chore: Release ``v1.47.2``
+- [0700e9f](https://github.com/thevickypedia/Filebrowser-iOS/commit/0700e9fbac0a927c6c929d7c99b51634c7dea44f) style: Disable search type buttons when search is in progress
+- [b0063cd](https://github.com/thevickypedia/Filebrowser-iOS/commit/b0063cd44ca5a7f302f2dc44b31d075d8b08b4ac) style: Include emoji icon to indicate upload vs download in the resp progress bar
+- [1787ff9](https://github.com/thevickypedia/Filebrowser-iOS/commit/1787ff9b28b2e21a2580c51b3d301252f1f39218) refactor: Merge download and upload attributes into one stack and simplify view render
+- [aa6782d](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa6782d486d0d2463d573900bd84fbb16a9b61f4) refactor: Re-use auth state, removing duplicate from list view
+- [754804a](https://github.com/thevickypedia/Filebrowser-iOS/commit/754804a5b54a85c2ff527e905e78fbc8cf773640) chore: Update release notes for v1.47.1
+
 v1.47.1 (09/24/2025)
 --------------------
 - [da000ef](https://github.com/thevickypedia/Filebrowser-iOS/commit/da000ef5550726d9c10edc7d582b7173e6f457e3) chore: Release ``v1.47.1``
