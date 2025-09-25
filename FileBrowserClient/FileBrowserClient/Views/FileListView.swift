@@ -41,7 +41,9 @@ struct FileListView: View {
     @State private var showDownload = false
     @State private var sheetPathStack: [FileItem] = []
 
+    // Common Handler (for both upload and download)
     @State private var transferState: TransferState = TransferState()
+
     // Download vars
     @State private var downloadQueue: [DownloadQueueItem] = []
     @State private var currentDownloadTaskID: UUID?
@@ -49,17 +51,12 @@ struct FileListView: View {
 
     // Upload vars
     @State private var uploadQueue: [URL] = []
-
-    // Upload state vars
     @State private var currentFileHandle: FileHandle?
     @State private var currentUploadURL: URL?
     @State private var currentUploadedOffset: Int = 0
-
-    // Upload extra vars
     @State private var uploadTask: URLSessionUploadTask?
     @State private var isFileUpload = false
     @State private var isPhotoUpload = false
-
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
 

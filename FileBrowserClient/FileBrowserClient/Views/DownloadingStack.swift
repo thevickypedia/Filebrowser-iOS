@@ -55,7 +55,7 @@ struct DownloadingStack: View {
             ProgressView(value: progress, total: 1.0) {
                 EmptyView()
             } currentValueLabel: {
-                Text("\(progressPct)%")
+                Text("⬇️ \(progressPct)%")
             }
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
