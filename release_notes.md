@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.48.0 (09/25/2025)
+--------------------
+- [67a3f55](https://github.com/thevickypedia/Filebrowser-iOS/commit/67a3f55dfbfe7e94e4332fb2de0036b05afb9ed9) chore: Release ``v1.48.0``
+- [21f7e5e](https://github.com/thevickypedia/Filebrowser-iOS/commit/21f7e5e4cb1dc64c7548ef450bdb5ff9c3530855) perf: Create a dispatch work item to avoid piling up aync queue to set ``isSeeking`` flag
+- [c0cb652](https://github.com/thevickypedia/Filebrowser-iOS/commit/c0cb6526d28080770866c39a912aa49fdfe67abc) fix: Avoid saving progress when seek is in progress for media player
+- [a521a23](https://github.com/thevickypedia/Filebrowser-iOS/commit/a521a230a8b387423772a02aede719123eeb0ba8) feat: Check current play back time against media threshold to store progress upon player exit
+- [923c707](https://github.com/thevickypedia/Filebrowser-iOS/commit/923c707a9151e206e13c6c6a5183bc038fdeb555) fix: Avoid media progress save condition becoming negative
+- [c42a7e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/c42a7e0ca6cd4fc1f2883cb847c4a366ec91ea62) chore: Update release notes for v1.47.2
+
 v1.47.2 (09/24/2025)
 --------------------
 - [c8f5821](https://github.com/thevickypedia/Filebrowser-iOS/commit/c8f582120f94c25cdf877a69decd761b2bb1a477) chore: Release ``v1.47.2``
