@@ -1061,6 +1061,7 @@ struct FileListView: View {
 
     private var uploadStack: some View {
         UploadingStack(
+            isUploading: transferState.transferType == .upload,
             fileName: transferState.currentTransferFile,
             fileIcon: transferState.currentTransferFileIcon,
             uploaded: transferState.currentTransferedFileSize,
@@ -1068,7 +1069,7 @@ struct FileListView: View {
             progress: transferState.transferProgress,
             progressPct: transferState.transferProgressPct,
             speed: transferState.currentTransferSpeed,
-            index: transferState.transferType == .upload ? transferState.currentTransferIndex + 1: transferState.currentTransferIndex,
+            index: transferState.currentTransferIndex,
             totalCount: photoPickerStatus.totalSelected,
             chunkSize: advancedSettings.chunkSize,
             isPaused: transferState.isTransferPaused,

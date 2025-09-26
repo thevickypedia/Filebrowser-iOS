@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct UploadingStack: View {
+    let isUploading: Bool
     let fileName: String?
     let fileIcon: String?
     let uploaded: String?
@@ -29,26 +30,28 @@ struct UploadingStack: View {
 
             // 🗂️ File Info
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: fileIcon ?? "doc.fill")
+                Image(systemName: isUploading ? (fileIcon ?? "doc.fill") : "doc.fill")
                     .foregroundColor(.blue)
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(fileName ?? "Unknown").font(.headline)
-                    Text("\(uploaded ?? "0") / \(total ?? "0")")
-                        .font(.subheadline).foregroundColor(.gray)
+                    Text(isUploading ? (fileName ?? "Unknown") : "--").font(.headline)
+                    if isUploading {
+                        Text("\(uploaded ?? "0") / \(total ?? "0")")
+                            .font(.subheadline).foregroundColor(.gray)
+                    }
                 }
             }
 
             // 🔄 Queue
             HStack(spacing: 12) {
-                Image(systemName: "list.number").foregroundColor(.indigo)
-                Text("\(index) of \(totalCount)").font(.body)
+                Image(systemName: isUploading ? "list.number" : "clock").foregroundColor(.indigo)
+                Text("\(index + 1) of \(totalCount)").font(.body)
             }
 
             // 🚀 Speed
             HStack(spacing: 12) {
                 Image(systemName: "speedometer").foregroundColor(.green)
-                Text(String(format: "%.2f MB/s", speed)).font(.body)
+                Text(isUploading ? String(format: "%.2f MB/s", speed) : "--").font(.body)
             }
 
             // 📤 Chunk Size
@@ -61,7 +64,7 @@ struct UploadingStack: View {
             ProgressView(value: progress, total: 1.0) {
                 EmptyView()
             } currentValueLabel: {
-                Text("⬆️ \(progressPct)%")
+                Text(isUploading ? "⬆️ \(progressPct)%" : "⬆️ 0%")
             }
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
