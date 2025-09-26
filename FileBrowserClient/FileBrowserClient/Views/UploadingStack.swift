@@ -69,6 +69,7 @@ struct UploadingStack: View {
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
 
+            // ⏭️ Next Up
             if let nextUp = nextUploadInQueue() {
                 Text(nextUp)
                     .font(.footnote)
