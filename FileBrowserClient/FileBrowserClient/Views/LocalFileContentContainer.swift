@@ -7,23 +7,21 @@
 
 import SwiftUI
 
-func localFileContentView(for localFile: URL) -> some View {
-    LocalFileContentContainer(localFile: localFile)
+func localFileContentView(for localFile: URL, with extensionTypes: ExtensionTypes) -> some View {
+    LocalFileContentContainer(localFile: localFile, extensionTypes: extensionTypes)
 }
 
+// FIXME: File keeps closing automatically
 struct LocalFileContentContainer: View {
     let localFile: URL
-    @State private var content: String?
+    let extensionTypes: ExtensionTypes
+    @State private var loadedView: AnyView?
     @State private var isLoaded = false
     @State private var errorMessage: String?
 
     var body: some View {
         Group {
-            if let content = content {
-                ScrollView {
-                    CopyableTextContainer(text: content)
-                }
-            } else if let error = errorMessage {
+            if let error = errorMessage {
                 VStack(spacing: 8) {
                     Text("Unable to load file")
                         .foregroundColor(.red)
@@ -34,6 +32,8 @@ struct LocalFileContentContainer: View {
                         loadContent()
                     }
                 }
+            } else if let loadedView = loadedView {
+                loadedView
             } else {
                 ProgressView("Loading file...")
             }
@@ -50,13 +50,32 @@ struct LocalFileContentContainer: View {
     private func loadContent() {
         isLoaded = true
         errorMessage = nil
+        loadedView = nil
 
         do {
-            print("🔍 Loading file: \(localFile.lastPathComponent)")
-            content = try String(contentsOf: localFile, encoding: .utf8)
-            print("✅ Successfully loaded file, length: \(content?.count ?? 0)")
+            let fileName = localFile.lastPathComponent.lowercased()
+            let content = try Data(contentsOf: localFile)
+
+            if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
+                if let text = String(data: content, encoding: .utf8) {
+                    loadedView = AnyView(
+                        ScrollView {
+                            CopyableTextContainer(text: text)
+                        }
+                    )
+                } else {
+                    throw NSError(domain: "DecodeError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not decode text"])
+                }
+            } else if fileName.hasSuffix(".pdf") {
+                loadedView = AnyView(PDFViewerScreen(content: content))
+            } else {
+                loadedView = AnyView(
+                    Text("⚠️ File preview not supported for this type.")
+                        .foregroundColor(.gray)
+                )
+            }
         } catch {
-            print("❌ Error reading file: \(error)")
+            Log.warn("❌ Error loading file: \(error)")
             errorMessage = error.localizedDescription
         }
     }
