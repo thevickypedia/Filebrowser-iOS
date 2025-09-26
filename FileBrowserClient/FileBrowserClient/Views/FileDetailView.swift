@@ -64,6 +64,8 @@ struct FileDetailView: View {
     @State private var showingDeleteConfirm = false
     @State private var statusMessage: StatusPayload?
     @State private var isDownloading = false
+    @State private var downloadedFileURL: URL?
+    @State private var showShareSheet = false
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var auth: AuthManager
 
@@ -248,6 +250,17 @@ struct FileDetailView: View {
             }
             .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
             .modifier(StatusMessage(payload: $statusMessage))
+            // File save/export sheet
+            .sheet(isPresented: $showShareSheet) {
+                guard let fileURL = downloadedFileURL else {
+                    Log.error("Showing share sheet, but no download URL found.")
+                    self.errorTitle = "Resource conflict"
+                    self.errorMessage = "Showing share sheet, but no download URL found."
+                    return AnyView(EmptyView())
+                }
+                return AnyView(FileExporter(fileURL: fileURL))
+            }
+            // Create sharable link
             .sheet(isPresented: $isSharing) {
                 ShareSheetView(
                     serverURL: serverURL,
@@ -480,13 +493,8 @@ struct FileDetailView: View {
                     self.isDownloading = false
                     switch result {
                     case .success(let localURL):
-                        FileDownloadHelper.handleDownloadCompletion(
-                            file: file,
-                            localURL: localURL,
-                            statusMessage: $statusMessage,
-                            errorTitle: $errorTitle,
-                            errorMessage: $errorMessage
-                        )
+                        self.downloadedFileURL = localURL
+                        self.showShareSheet = true
                     case .failure(let error):
                         self.error = "Download failed: \(error.localizedDescription)"
                     }
@@ -607,18 +615,12 @@ struct FileDetailView: View {
                 let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
                 do {
                     try cached.write(to: tempURL, options: .atomic)
-                    FileDownloadHelper.handleDownloadCompletion(
-                        file: file,
-                        localURL: tempURL,
-                        statusMessage: $statusMessage,
-                        errorTitle: $errorTitle,
-                        errorMessage: $errorMessage
-                    )
+                    self.downloadedFileURL = tempURL
+                    self.showShareSheet = true
                 } catch {
-                    self.error = "Failed to save cached file: \(error.localizedDescription)"
+                    Log.warn("Failed to save cached file: \(error.localizedDescription)")
                 }
             }
-            return
         }
 
         guard let url = buildAPIURL(
@@ -665,13 +667,8 @@ struct FileDetailView: View {
                     let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
                     do {
                         try data.write(to: tempURL, options: .atomic)
-                        FileDownloadHelper.handleDownloadCompletion(
-                            file: file,
-                            localURL: tempURL,
-                            statusMessage: $statusMessage,
-                            errorTitle: $errorTitle,
-                            errorMessage: $errorMessage
-                        )
+                        self.downloadedFileURL = tempURL
+                        self.showShareSheet = true
                     } catch {
                         self.error = "Failed to save file: \(error.localizedDescription)"
                     }
