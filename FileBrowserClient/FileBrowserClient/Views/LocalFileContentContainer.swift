@@ -11,7 +11,6 @@ func localFileContentView(for localFile: URL, with extensionTypes: ExtensionType
     LocalFileContentContainer(localFile: localFile, extensionTypes: extensionTypes)
 }
 
-// FIXME: File keeps closing automatically
 struct LocalFileContentContainer: View {
     let localFile: URL
     let extensionTypes: ExtensionTypes
