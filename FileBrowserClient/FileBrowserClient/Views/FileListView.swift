@@ -84,59 +84,6 @@ struct FileListView: View {
     @State private var showLocalFileContent: Bool = false
     @State private var selectedLocalFile: URL?
 
-    @State private var isDragging = false
-    @State private var dragStartLocation: CGPoint = .zero
-    @State private var dragCurrentLocation: CGPoint = .zero
-    @State private var itemPositions: [String: CGRect] = [:]
-    @State private var initialSelection: Set<FileItem> = []
-
-    // Add this helper function to track item positions
-    private func trackItemPosition(for file: FileItem, geometry: GeometryProxy) {
-        let frame = geometry.frame(in: .named("FileListContainer"))
-        itemPositions[file.id] = frame
-    }
-
-    // Add this function to handle drag selection logic
-    private func handleDragSelection(start: CGPoint, current: CGPoint) {
-        let minX = min(start.x, current.x)
-        let maxX = max(start.x, current.x)
-        let minY = min(start.y, current.y)
-        let maxY = max(start.y, current.y)
-
-        let dragRect = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
-
-        var newSelection = initialSelection
-
-        for (fileId, position) in itemPositions {
-            if dragRect.intersects(position) {
-                if let file = viewModel.files.first(where: { $0.id == fileId }) {
-                    newSelection.insert(file)
-                }
-            }
-        }
-
-        selectedItems = newSelection
-    }
-
-    // Add drag selection overlay
-    private var dragSelectionOverlay: some View {
-        ZStack {
-            if isDragging {
-                let minX = min(dragStartLocation.x, dragCurrentLocation.x)
-                let maxX = max(dragStartLocation.x, dragCurrentLocation.x)
-                let minY = min(dragStartLocation.y, dragCurrentLocation.y)
-                let maxY = max(dragStartLocation.y, dragCurrentLocation.y)
-
-                Rectangle()
-                    .stroke(Color.blue, lineWidth: 2)
-                    .background(Color.blue.opacity(0.1))
-                    .frame(width: maxX - minX, height: maxY - minY)
-                    .position(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
-                    .animation(.easeInOut(duration: 0.1), value: dragCurrentLocation)
-            }
-        }
-    }
-
     private var viewMode: ViewMode {
         get { ViewMode(rawValue: viewModeRawValue) ?? .list }
         set { viewModeRawValue = newValue.rawValue }
@@ -1216,28 +1163,6 @@ struct FileListView: View {
                     }
                 }
             }
-            .coordinateSpace(name: "FileListContainer")
-            .overlay(dragSelectionOverlay)
-            .gesture(
-                selectionMode ?
-                DragGesture(coordinateSpace: .named("FileListContainer"))
-                    .onChanged { value in
-                        if !isDragging {
-                            isDragging = true
-                            dragStartLocation = value.startLocation
-                            initialSelection = selectedItems
-                        }
-                        dragCurrentLocation = value.location
-                        handleDragSelection(start: dragStartLocation, current: dragCurrentLocation)
-                    }
-                    .onEnded { _ in
-                        isDragging = false
-                        dragStartLocation = .zero
-                        dragCurrentLocation = .zero
-                        initialSelection = []
-                    }
-                : nil
-            )
 
             // 🌗 Floating Theme Toggle
             Button(action: {
@@ -1993,17 +1918,6 @@ struct FileListView: View {
             LazyVGrid(columns: adaptiveColumns(module: module), spacing: 12) {
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
                     gridCell(for: file, at: index, in: fileList, module: module)
-                        .background(
-                            GeometryReader { geometry in
-                                Color.clear
-                                    .onAppear {
-                                        trackItemPosition(for: file, geometry: geometry)
-                                    }
-                                    .onChange(of: geometry.frame(in: .named("FileListContainer"))) { newFrame in
-                                        itemPositions[file.id] = newFrame
-                                    }
-                            }
-                        )
                 }
             }
             .padding(.horizontal, 16)
