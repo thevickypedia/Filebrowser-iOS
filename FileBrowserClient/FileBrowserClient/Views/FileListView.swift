@@ -1883,24 +1883,7 @@ struct FileListView: View {
                     Spacer()
                 }
                 .contentShape(Rectangle())
-                // .onTapGesture { toggleSelection(for: file) }
-                // FIXME: Drag feature is not so great/useful in list view
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear
-                            .onAppear {
-                                trackItemPosition(for: file, geometry: geometry)
-                            }
-                            .onChange(of: geometry.frame(in: .named("FileListContainer"))) { newFrame in
-                                itemPositions[file.id] = newFrame
-                            }
-                    }
-                )
-                .onTapGesture {
-                    if !isDragging {
-                        toggleSelection(for: file)
-                    }
-                }
+                .onTapGesture { toggleSelection(for: file) }
             } else {
                 if file.isDir {
                     NavigationLink(value: fullPath(for: file, with: currentPath)) {
