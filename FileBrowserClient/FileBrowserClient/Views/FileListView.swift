@@ -522,13 +522,6 @@ struct FileListView: View {
         }
     }
 
-    private func deleteLocalFiles(at offsets: IndexSet) {
-        for index in offsets {
-            let localFile = localFiles[index]
-            deleteLocalFile(localFile)
-        }
-    }
-
     private func deleteLocalFile(_ localFile: URL) {
         do {
             try FileManager.default.removeItem(at: localFile)
@@ -572,7 +565,10 @@ struct FileListView: View {
                                     }
                                 }
                             }
-                            .onDelete(perform: deleteLocalFiles)
+                            .onDelete { indexSet in
+                                let filesToDelete = indexSet.map { filteredLocalFiles[$0] }
+                                filesToDelete.forEach { deleteLocalFile($0) }
+                            }
                         }
                     }
                 }
