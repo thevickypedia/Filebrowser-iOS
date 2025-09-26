@@ -1068,7 +1068,7 @@ struct FileListView: View {
             progress: transferState.transferProgress,
             progressPct: transferState.transferProgressPct,
             speed: transferState.currentTransferSpeed,
-            index: transferState.currentTransferIndex + 1,
+            index: transferState.transferType == .upload ? transferState.currentTransferIndex + 1: transferState.currentTransferIndex,
             totalCount: photoPickerStatus.totalSelected,
             chunkSize: advancedSettings.chunkSize,
             isPaused: transferState.isTransferPaused,
@@ -1082,7 +1082,8 @@ struct FileListView: View {
                 notifyTransferState(TransferType.upload, TransferStatus.cancelled)
                 transferState.isTransferCancelled = true
                 cancelUpload(fileHandle: nil, statusText: nil)
-            }
+            },
+            nextUploadInQueue: { nextUploadInQueue() }
         )
     }
 

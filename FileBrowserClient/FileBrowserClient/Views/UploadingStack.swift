@@ -22,6 +22,7 @@ struct UploadingStack: View {
     let onPause: () -> Void
     let onResume: () -> Void
     let onCancel: () -> Void
+    let nextUploadInQueue: () -> String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -64,6 +65,13 @@ struct UploadingStack: View {
             }
             .progressViewStyle(LinearProgressViewStyle())
             .padding(.top, 8)
+
+            if let nextUp = nextUploadInQueue() {
+                Text(nextUp)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            }
 
             // ⏸️ Pause, ▶️ Resume and ❌ Cancel
             HStack(spacing: 20) {
