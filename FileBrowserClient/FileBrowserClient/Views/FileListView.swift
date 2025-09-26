@@ -547,9 +547,6 @@ struct FileListView: View {
                     List {
                         Section {
                             Toggle("Show only .log files", isOn: $showOnlyLogFiles)
-                                .onChange(of: showOnlyLogFiles) { _ in
-                                    localFiles = fetchLocalFiles()
-                                }
                         }
 
                         Section {
@@ -589,10 +586,9 @@ struct FileListView: View {
                 }
             }
             .onAppear {
-                localFiles = fetchLocalFiles()
-            }
-            .onDisappear {
-                localFiles.removeAll()
+                if localFiles.isEmpty {
+                    localFiles = fetchLocalFiles()
+                }
             }
         }
     }
@@ -693,6 +689,10 @@ struct FileListView: View {
             dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
             fetchUsageInfo()
             fetchClientStorageInfo()
+        }
+        .onDisappear {
+            Log.debug("Clearing localFiles queue")
+            localFiles.removeAll()
         }
     }
 
