@@ -85,54 +85,35 @@ struct FileListView: View {
     @State private var selectedLocalFile: URL?
 
     @State private var isDragging = false
-    @State private var dragStartLocation: CGPoint = .zero
-    @State private var dragCurrentLocation: CGPoint = .zero
     @State private var itemPositions: [String: CGRect] = [:]
     @State private var initialSelection: Set<FileItem> = []
+    @State private var lastDraggedItem: FileItem?
 
-    // Add this helper function to track item positions
-    private func trackItemPosition(for file: FileItem, geometry: GeometryProxy) {
-        let frame = geometry.frame(in: .named("FileListContainer"))
-        itemPositions[file.id] = frame
-    }
-
-    // Add this function to handle drag selection logic
-    private func handleDragSelection(start: CGPoint, current: CGPoint) {
-        let minX = min(start.x, current.x)
-        let maxX = max(start.x, current.x)
-        let minY = min(start.y, current.y)
-        let maxY = max(start.y, current.y)
-
-        let dragRect = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
-
-        var newSelection = initialSelection
-
-        for (fileId, position) in itemPositions {
-            if dragRect.intersects(position) {
-                if let file = viewModel.files.first(where: { $0.id == fileId }) {
-                    newSelection.insert(file)
-                }
+    /// Helper function to find item at drag location
+    private func itemAt(location: CGPoint) -> FileItem? {
+        for (fileId, rect) in itemPositions {
+            if rect.contains(location) {
+                return viewModel.files.first { $0.id == fileId }
             }
         }
-
-        selectedItems = newSelection
+        return nil
     }
 
-    // Add drag selection overlay
-    private var dragSelectionOverlay: some View {
-        ZStack {
-            if isDragging {
-                let minX = min(dragStartLocation.x, dragCurrentLocation.x)
-                let maxX = max(dragStartLocation.x, dragCurrentLocation.x)
-                let minY = min(dragStartLocation.y, dragCurrentLocation.y)
-                let maxY = max(dragStartLocation.y, dragCurrentLocation.y)
+    /// Handle drag selection for grid items
+    private func handleDragSelection(at location: CGPoint) {
+        guard let draggedItem = itemAt(location: location) else { return }
 
-                Rectangle()
-                    .stroke(Color.blue, lineWidth: 2)
-                    .background(Color.blue.opacity(0.1))
-                    .frame(width: maxX - minX, height: maxY - minY)
-                    .position(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
-                    .animation(.easeInOut(duration: 0.1), value: dragCurrentLocation)
+        // Only update if we've moved to a different item
+        if draggedItem != lastDraggedItem {
+            lastDraggedItem = draggedItem
+
+            // Toggle selection for the item under drag
+            if initialSelection.contains(draggedItem) {
+                // If initially selected, remove it
+                selectedItems.remove(draggedItem)
+            } else {
+                // If not initially selected, add it
+                selectedItems.insert(draggedItem)
             }
         }
     }
@@ -1216,28 +1197,6 @@ struct FileListView: View {
                     }
                 }
             }
-            .coordinateSpace(name: "FileListContainer")
-            .overlay(dragSelectionOverlay)
-            .gesture(
-                selectionMode ?
-                DragGesture(coordinateSpace: .named("FileListContainer"))
-                    .onChanged { value in
-                        if !isDragging {
-                            isDragging = true
-                            dragStartLocation = value.startLocation
-                            initialSelection = selectedItems
-                        }
-                        dragCurrentLocation = value.location
-                        handleDragSelection(start: dragStartLocation, current: dragCurrentLocation)
-                    }
-                    .onEnded { _ in
-                        isDragging = false
-                        dragStartLocation = .zero
-                        dragCurrentLocation = .zero
-                        initialSelection = []
-                    }
-                : nil
-            )
 
             // 🌗 Floating Theme Toggle
             Button(action: {
@@ -1883,24 +1842,7 @@ struct FileListView: View {
                     Spacer()
                 }
                 .contentShape(Rectangle())
-                // .onTapGesture { toggleSelection(for: file) }
-                // FIXME: Drag feature is not so great/useful in list view
-                .background(
-                    GeometryReader { geometry in
-                        Color.clear
-                            .onAppear {
-                                trackItemPosition(for: file, geometry: geometry)
-                            }
-                            .onChange(of: geometry.frame(in: .named("FileListContainer"))) { newFrame in
-                                itemPositions[file.id] = newFrame
-                            }
-                    }
-                )
-                .onTapGesture {
-                    if !isDragging {
-                        toggleSelection(for: file)
-                    }
-                }
+                .onTapGesture { toggleSelection(for: file) }
             } else {
                 if file.isDir {
                     NavigationLink(value: fullPath(for: file, with: currentPath)) {
@@ -1930,6 +1872,8 @@ struct FileListView: View {
     @ViewBuilder
     func gridCell(for file: FileItem, at index: Int, in fileList: [FileItem], module: Bool) -> some View {
         let style = ViewStyle.gridStyle(module: module)
+        let isSelected = selectedItems.contains(file)
+        let isBeingDragged = isDragging && lastDraggedItem == file
 
         let handleFileTap = {
             if selectionMode {
@@ -1967,13 +1911,36 @@ struct FileListView: View {
             }
 
             if selectionMode {
-                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .resizable()
                     .frame(width: style.selectionSize, height: style.selectionSize)
-                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                    .foregroundColor(isSelected ? .blue : .gray)
+                    .background(Circle().fill(Color.white).scaleEffect(0.8))
                     .padding(6)
+                    .scaleEffect(isBeingDragged ? 1.1 : 1.0)
+                    .animation(.easeInOut(duration: 0.15), value: isBeingDragged)
             }
         }
+        .scaleEffect(isSelected ? 0.95 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isSelected ? Color.blue.opacity(0.1) : Color.clear)
+                .animation(.easeInOut(duration: 0.2), value: isSelected)
+        )
+        .overlay(
+            // Position tracking
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        let frame = geometry.frame(in: .named("GridContainer"))
+                        itemPositions[file.id] = frame
+                    }
+                    .onChange(of: geometry.frame(in: .named("GridContainer"))) { newFrame in
+                        itemPositions[file.id] = newFrame
+                    }
+            }
+        )
     }
 
     @ViewBuilder
@@ -2010,22 +1977,36 @@ struct FileListView: View {
             LazyVGrid(columns: adaptiveColumns(module: module), spacing: 12) {
                 ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
                     gridCell(for: file, at: index, in: fileList, module: module)
-                        .background(
-                            GeometryReader { geometry in
-                                Color.clear
-                                    .onAppear {
-                                        trackItemPosition(for: file, geometry: geometry)
-                                    }
-                                    .onChange(of: geometry.frame(in: .named("FileListContainer"))) { newFrame in
-                                        itemPositions[file.id] = newFrame
-                                    }
-                            }
-                        )
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
         }
+        .coordinateSpace(name: "GridContainer")
+        .simultaneousGesture(
+            DragGesture(coordinateSpace: .named("GridContainer"))
+                .onChanged { value in
+                    if !isDragging {
+                        isDragging = true
+                        initialSelection = selectedItems
+                        lastDraggedItem = nil
+
+                        // Haptic feedback when drag starts
+                        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+                        impactFeedback.impactOccurred()
+                    }
+                    handleDragSelection(at: value.location)
+                }
+                .onEnded { _ in
+                    isDragging = false
+                    lastDraggedItem = nil
+                    initialSelection = []
+
+                    // Haptic feedback when drag ends
+                    let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                    impactFeedback.impactOccurred()
+                }
+        )
     }
 
     @ViewBuilder
