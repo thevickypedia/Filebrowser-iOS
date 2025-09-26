@@ -92,7 +92,8 @@ struct FileDetailView: View {
         } else if let error = self.error {
             Text("Error: \(error)").foregroundColor(.red)
 
-        } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
+        // MARK: Check if either of the share sheet is presented to avoid overlap
+        } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) && !(showShareSheet || isSharing) {
             MediaPlayerView(
                 file: file,
                 serverURL: serverURL,
