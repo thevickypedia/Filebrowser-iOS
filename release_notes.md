@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.49.1 (09/25/2025)
+--------------------
+- [8380c0a](https://github.com/thevickypedia/Filebrowser-iOS/commit/8380c0ad42de89c0828a90ae27b46a971703325e) chore: Release ``v1.49.1``
+- [1f4881d](https://github.com/thevickypedia/Filebrowser-iOS/commit/1f4881d19a5b43ac7be70ba8d2a17fcb5e4e48d0) feat: Include an option to export local files
+- [613f920](https://github.com/thevickypedia/Filebrowser-iOS/commit/613f92067eb9b72ea85043a08c66d963052808f8) chore: Update release notes for v1.49.0
+
 v1.49.0 (09/25/2025)
 --------------------
 - [e840143](https://github.com/thevickypedia/Filebrowser-iOS/commit/e840143f961667606ef336270120e3f4cb9715a7) chore: Release ``v1.49.0``
