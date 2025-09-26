@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.49.0 (09/25/2025)
+--------------------
+- [e840143](https://github.com/thevickypedia/Filebrowser-iOS/commit/e840143f961667606ef336270120e3f4cb9715a7) chore: Release ``v1.49.0``
+- [7bcb22b](https://github.com/thevickypedia/Filebrowser-iOS/commit/7bcb22b9303fb1506e9dcba3337ac76c5602c6e1) revert: Replace unloading local files' list only when ``localFilesListView`` is closed
+- [794c932](https://github.com/thevickypedia/Filebrowser-iOS/commit/794c9322ae7803a3820567b24b734e68dc973cfe) feat: Allow opening all text and PDF files via local files list view
+- [f6419aa](https://github.com/thevickypedia/Filebrowser-iOS/commit/f6419aae75ed7d188efb4e83262257eaf8f57d24) fix: Load local files when files sheet appears, disappears or when log option is toggled
+- [dc59078](https://github.com/thevickypedia/Filebrowser-iOS/commit/dc59078b7507831cdeb9746774800a6c97882d17) fix: Delete local files using the filename instead of its index
+- [9ee4a8b](https://github.com/thevickypedia/Filebrowser-iOS/commit/9ee4a8b6d37062b0dbfa8eae854ae249115087d5) refactor: Rename all references to log files' views and structs
+- [648005d](https://github.com/thevickypedia/Filebrowser-iOS/commit/648005db28e34b03ef783dd847664eceef344209) feat: Add a filter option to show non-log files
+- [74c578e](https://github.com/thevickypedia/Filebrowser-iOS/commit/74c578efaf4774684d84bd2022a2f4318e7b2faf) style: Include error messages when failed to fetch/delete log files
+- [4db22b8](https://github.com/thevickypedia/Filebrowser-iOS/commit/4db22b8d2d4e424c1323fff6d4ae6b9ebe1db531) perf: Add timestamp to media player progress saver and set to trace level
+- [6c26d8e](https://github.com/thevickypedia/Filebrowser-iOS/commit/6c26d8e64dac8c90c1e41e5bfee27b2bf94c05d6) chore: Update release notes for v1.48.0
+
 v1.48.0 (09/25/2025)
 --------------------
 - [67a3f55](https://github.com/thevickypedia/Filebrowser-iOS/commit/67a3f55dfbfe7e94e4332fb2de0036b05afb9ed9) chore: Release ``v1.48.0``
