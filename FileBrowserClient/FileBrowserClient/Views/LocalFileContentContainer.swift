@@ -18,6 +18,7 @@ struct LocalFileContentContainer: View {
     @State private var loadedView: AnyView?
     @State private var isLoaded = false
     @State private var errorMessage: String?
+    @State private var showExporter = false
 
     var body: some View {
         Group {
@@ -44,6 +45,18 @@ struct LocalFileContentContainer: View {
             if !isLoaded {
                 loadContent()
             }
+        }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showExporter = true
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+            }
+        }
+        .sheet(isPresented: $showExporter) {
+            FileExporter(fileURL: localFile)
         }
     }
 
