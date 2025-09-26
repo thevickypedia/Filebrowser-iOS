@@ -547,11 +547,14 @@ struct FileListView: View {
                     List {
                         Section {
                             Toggle("Show only .log files", isOn: $showOnlyLogFiles)
+                                .onChange(of: showOnlyLogFiles) { _ in
+                                    localFiles = fetchLocalFiles()
+                                }
                         }
 
                         Section {
                             ForEach(filteredLocalFiles, id: \.self) { logFile in
-                                NavigationLink(destination: localFileContentView(for: logFile)) {
+                                NavigationLink(destination: localFileContentView(for: logFile, with: extensionTypes)) {
                                     HStack {
                                         Text(logFile.lastPathComponent)
                                             .foregroundColor(.primary)
@@ -586,9 +589,10 @@ struct FileListView: View {
                 }
             }
             .onAppear {
-                if localFiles.isEmpty {
-                    localFiles = fetchLocalFiles()
-                }
+                localFiles = fetchLocalFiles()
+            }
+            .onDisappear {
+                localFiles.removeAll()
             }
         }
     }
