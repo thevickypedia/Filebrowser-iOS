@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.49.2 (09/26/2025)
+--------------------
+- [10bac0d](https://github.com/thevickypedia/Filebrowser-iOS/commit/10bac0d3d83ea669dc37c1381b60e290870eb7a1) chore: Release ``v1.49.2``
+- [4a7b9ff](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a7b9ff057d7e9a1455665b4c7860e62b944a0c6) feat: Distinguish uploading vs pending state in uploading view
+- [2b43753](https://github.com/thevickypedia/Filebrowser-iOS/commit/2b4375395f427ac0940aedf6f2f9be219b1ecc50) fix: Index count mismatch for upload queue and restore next up functionality
+- [18b1e3b](https://github.com/thevickypedia/Filebrowser-iOS/commit/18b1e3bbea81b8e464583f417adae9c1f8089688) chore: Update release notes for v1.49.1
+
 v1.49.1 (09/25/2025)
 --------------------
 - [8380c0a](https://github.com/thevickypedia/Filebrowser-iOS/commit/8380c0ad42de89c0828a90ae27b46a971703325e) chore: Release ``v1.49.1``
