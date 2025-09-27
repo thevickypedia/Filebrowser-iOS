@@ -338,7 +338,7 @@ struct FileDetailView: View {
                 }
             }
             .task(id: currentIndex) {
-                checkContentAndReload(fileName: fileName)
+                checkCacheAndLoadPreview(fileName: fileName)
             }
             .gesture(
                 DragGesture()
@@ -364,7 +364,7 @@ struct FileDetailView: View {
             )
     }
 
-    func checkContentAndReload(fileName: String) {
+    func checkCacheAndLoadPreview(fileName: String) {
         self.content = nil
         self.error = nil
         if cacheExtensions.contains(where: fileName.hasSuffix),
@@ -373,7 +373,7 @@ struct FileDetailView: View {
            ) {
             self.content = cached
         } else {
-            reloadFile(
+            reloadFilePreview(
                 fileName: fileName,
                 extensionTypes: extensionTypes
             )
@@ -390,7 +390,7 @@ struct FileDetailView: View {
         currentIndex -= 1
     }
 
-    func reloadFile(
+    func reloadFilePreview(
         fileName: String,
         extensionTypes: ExtensionTypes
     ) {
@@ -398,7 +398,7 @@ struct FileDetailView: View {
         self.error = nil
         if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
             // ✅ Only load if preview is supported
-            downloadFile(
+            downloadFilePreview(
                 fileName: fileName,
                 extensionTypes: extensionTypes
             )
@@ -504,7 +504,7 @@ struct FileDetailView: View {
         )
     }
 
-    func downloadFile(fileName: String, extensionTypes: ExtensionTypes) {
+    func downloadFilePreview(fileName: String, extensionTypes: ExtensionTypes) {
         if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
             Log.debug("🖼️ Detected image file. Using preview API")
             downloadPreview()
@@ -514,22 +514,12 @@ struct FileDetailView: View {
         } else if fileName.hasSuffix(".pdf") {
             Log.debug("📄 Detected PDF file. Using raw API")
             downloadRaw()
-        } else {
-            Log.debug("📥 Defaulting to raw download for: \(fileName)")
-            downloadRaw()
         }
     }
 
     func downloadPreview() {
         // Try to load preview from cache
         let fileName = file.name.lowercased()
-        if cacheExtensions.contains(where: fileName.hasSuffix),
-           let cached = FileCache.shared.retrieve(
-            for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
-        ) {
-            self.content = cached
-            return
-        }
 
         guard let url = buildAPIURL(
             base: serverURL,
@@ -552,6 +542,52 @@ struct FileDetailView: View {
                 }
                 Log.debug("Fetch preview complete")
                 self.content = data
+                // Store cache-able extensions in FileCache
+                if cacheExtensions.contains(where: fileName.hasSuffix),
+                   let data = data {
+                    FileCache.shared.store(
+                        for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
+                    )
+                    // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
+                    // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
+                    onFileCached?()
+                }
+            }
+        }.resume()
+    }
+
+    func downloadRaw() {
+        // Try to load raw file from cache
+        let fileName = file.name.lowercased()
+
+        guard let url = buildAPIURL(
+            base: serverURL,
+            pathComponents: ["api", "raw", file.path],
+            queryItems: [
+                URLQueryItem(name: "auth", value: token)
+            ]
+        ) else {
+            self.error = "Invalid raw URL"
+            isDownloading = false
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        Log.debug("🔗 Fetching raw content from: \(urlPath(url))")
+
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            DispatchQueue.main.async {
+                self.isDownloading = false
+                if let error = error {
+                    self.error = error.localizedDescription
+                    Log.error("❌ Raw download failed: \(error.localizedDescription)")
+                    return
+                }
+                Log.debug("Fetch raw content complete")
+                self.content = data
+
                 // Store cache-able extensions in FileCache
                 if cacheExtensions.contains(where: fileName.hasSuffix),
                    let data = data {
@@ -599,80 +635,6 @@ struct FileDetailView: View {
                 } catch {
                     self.error = error.localizedDescription
                     Log.error("❌ Metadata decode error: \(error.localizedDescription)")
-                }
-            }
-        }.resume()
-    }
-
-    func downloadRaw(showSave: Bool = false) {
-        // Try to load raw file from cache
-        let fileName = file.name.lowercased()
-        if cacheExtensions.contains(where: fileName.hasSuffix),
-           let cached = FileCache.shared.retrieve(
-            for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
-        ) {
-            self.content = cached
-            if showSave {
-                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
-                do {
-                    try cached.write(to: tempURL, options: .atomic)
-                    self.downloadedFileURL = tempURL
-                    self.showShareSheet = true
-                } catch {
-                    Log.warn("Failed to save cached file: \(error.localizedDescription)")
-                }
-            }
-        }
-
-        guard let url = buildAPIURL(
-            base: serverURL,
-            pathComponents: ["api", "raw", file.path],
-            queryItems: [
-                URLQueryItem(name: "auth", value: token)
-            ]
-        ) else {
-            self.error = "Invalid raw URL"
-            isDownloading = false
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        Log.debug("🔗 Fetching raw content from: \(urlPath(url))")
-
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            DispatchQueue.main.async {
-                self.isDownloading = false
-                if let error = error {
-                    self.error = error.localizedDescription
-                    Log.error("❌ Raw download failed: \(error.localizedDescription)")
-                    return
-                }
-                Log.debug("Fetch raw content complete")
-                self.content = data
-
-                // Store cache-able extensions in FileCache
-                if cacheExtensions.contains(where: fileName.hasSuffix),
-                   let data = data {
-                    FileCache.shared.store(
-                        for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
-                    )
-                    // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
-                    // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
-                    onFileCached?()
-                }
-
-                if showSave, let data = data {
-                    // Write data to temp file and reuse unified completion
-                    let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(file.name)
-                    do {
-                        try data.write(to: tempURL, options: .atomic)
-                        self.downloadedFileURL = tempURL
-                        self.showShareSheet = true
-                    } catch {
-                        self.error = "Failed to save file: \(error.localizedDescription)"
-                    }
                 }
             }
         }.resume()
