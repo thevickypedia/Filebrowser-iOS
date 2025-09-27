@@ -27,7 +27,6 @@
 		98823EE02E1AFADC004CBB11 /* FileBrowserClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EDF2E1AFADC004CBB11 /* FileBrowserClientTests.swift */; };
 		98823EEA2E1AFADD004CBB11 /* FileBrowserClientUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EE92E1AFADD004CBB11 /* FileBrowserClientUITests.swift */; };
 		98823EEC2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */; };
-		988368072E6793FF0053170A /* BackgroundTUSUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988368062E6793FF0053170A /* BackgroundTUSUploadManager.swift */; };
 		98836BAD2E7285F90053170A /* PlaybackProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98836BAC2E7285F90053170A /* PlaybackProgressStore.swift */; };
 		98836BAF2E7291230053170A /* ResumePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98836BAE2E7291230053170A /* ResumePromptView.swift */; };
 		98836BCD2E79214B0053170A /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98836BCC2E79214B0053170A /* DownloadManager.swift */; };
@@ -100,7 +99,6 @@
 		98823EE52E1AFADD004CBB11 /* FileBrowserClientUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FileBrowserClientUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		98823EE92E1AFADD004CBB11 /* FileBrowserClientUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientUITests.swift; sourceTree = "<group>"; };
 		98823EEB2E1AFADD004CBB11 /* FileBrowserClientUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileBrowserClientUITestsLaunchTests.swift; sourceTree = "<group>"; };
-		988368062E6793FF0053170A /* BackgroundTUSUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTUSUploadManager.swift; sourceTree = "<group>"; };
 		98836BAC2E7285F90053170A /* PlaybackProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackProgressStore.swift; sourceTree = "<group>"; };
 		98836BAE2E7291230053170A /* ResumePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumePromptView.swift; sourceTree = "<group>"; };
 		98836BCC2E79214B0053170A /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
@@ -274,7 +272,6 @@
 			isa = PBXGroup;
 			children = (
 				98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */,
-				988368062E6793FF0053170A /* BackgroundTUSUploadManager.swift */,
 				98836BCC2E79214B0053170A /* DownloadManager.swift */,
 				986F5A662E39A78A0058E2C4 /* FileCache.swift */,
 				F8BE8BB92E379B8500967D18 /* RemoteThumbnail.swift */,
@@ -503,7 +500,6 @@
 				98B600392E52103D00F24FB8 /* AdvancedSettings.swift in Sources */,
 				F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */,
 				98B1ACD92E80CC43000210BC /* FileDownloadHelper.swift in Sources */,
-				988368072E6793FF0053170A /* BackgroundTUSUploadManager.swift in Sources */,
 				984F170C2E46D5D5003502DF /* KeychainHelper.swift in Sources */,
 				F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */,
 				98B1ACDD2E80E4AD000210BC /* DownloadingStack.swift in Sources */,

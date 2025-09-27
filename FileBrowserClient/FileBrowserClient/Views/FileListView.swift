@@ -1273,19 +1273,6 @@ struct FileListView: View {
                 Log.debug("📂 FileListView appeared for path: \(targetPath)")
                 fetchFiles(at: targetPath)
             }
-            viewModel.reconcilePendingUploads()
-            progressObserver = NotificationCenter.default.addObserver(
-                forName: .BackgroundTUSUploadProgress,  // Fixed
-                object: nil, queue: .main
-            ) { note in
-                guard let info = note.userInfo,
-                      let id = info["id"] as? UUID,
-                      let progress = info["progress"] as? Double,
-                      let filePath = info["filePath"] as? String ?? findFilePathForUploadId(id) else {
-                    return
-                }
-                viewModel.setUploadProgress(forPath: filePath, progress: progress)  // Fixed
-            }
         }
         .onDisappear {
             if let obs = progressObserver {

@@ -87,15 +87,6 @@ class FileListViewModel: ObservableObject {
         }
     }
 
-    func reconcilePendingUploads() {
-        // get snapshot of manager records
-        let records = BackgroundTUSUploadManager.shared.records.values
-        for rec in records {
-            let progress = Double(rec.offset) / Double(max(1, rec.totalSize))
-            _uploadProgress[rec.fileURL.path] = progress
-        }
-    }
-
     func cancelCurrentFetch() {
         currentTask?.cancel()
     }

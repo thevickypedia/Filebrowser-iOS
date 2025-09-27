@@ -80,11 +80,3 @@ func saveToFiles(fileURL: URL, fileName: String) -> URL? {
         return nil
     }
 }
-
-func findFilePathForUploadId(_ id: UUID) -> String? {
-    // If you didn't add filePath to notifications, this helper searches manager records for id
-    if let rec = BackgroundTUSUploadManager.shared.records[id] {
-        return rec.fileURL.path
-    }
-    return nil
-}
