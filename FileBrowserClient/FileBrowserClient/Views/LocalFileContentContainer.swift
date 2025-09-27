@@ -73,12 +73,22 @@ struct LocalFileContentContainer: View {
 
     private func loadContent() {
         errorMessage = nil
+        content = nil
 
-        do {
-            self.content = try Data(contentsOf: localFile)
-        } catch {
-            Log.warn("❌ Error loading file: \(error)")
-            errorMessage = error.localizedDescription
+        // DispatchQueue.main.async - Main thread where all UI updates happen
+        // DispatchQueue.global(qos:) - Background thread used for non-UI tasks
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let data = try Data(contentsOf: localFile)
+                DispatchQueue.main.async {
+                    self.content = data
+                }
+            } catch {
+                Log.warn("❌ Error loading file: \(error)")
+                DispatchQueue.main.async {
+                    errorMessage = error.localizedDescription
+                }
+            }
         }
     }
 }
