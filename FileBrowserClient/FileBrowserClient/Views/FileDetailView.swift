@@ -90,7 +90,16 @@ struct FileDetailView: View {
             .background(Color.black.opacity(0.2))
 
         } else if let errorPayload = self.previewError {
-            Text("Error: \(errorPayload.text)").foregroundColor(errorPayload.color)
+            VStack(spacing: 8) {
+                Text("Unable to load file")
+                    .foregroundColor(.red)
+                Text(errorPayload.text)
+                    .font(.caption)
+                    .foregroundColor(errorPayload.color)
+                Button("Retry") {
+                    reloadFilePreview(fileName: fileName)
+                }
+            }
 
         // MARK: Check if either of the share sheet is presented to avoid overlap
         } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) && !(showShareSheet || isSharing) {
