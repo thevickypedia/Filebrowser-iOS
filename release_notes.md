@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+v1.49.3 (09/27/2025)
+--------------------
+- [41630f4](https://github.com/thevickypedia/Filebrowser-iOS/commit/41630f45d766a92f95316f45a8971dd807c0e3a0) chore: Release ``v1.49.3``
+- [e9ccd2f](https://github.com/thevickypedia/Filebrowser-iOS/commit/e9ccd2fe9f4ce2a9f60ff9f0ddc332a25e1ae81b) refactor: Load local files' view asynchronously
+- [cec8d48](https://github.com/thevickypedia/Filebrowser-iOS/commit/cec8d481e7610eb0c0d2bdd714c98079d5464a70) refactor: Simplify local files' view and keep it similar to file detail view
+- [cda3015](https://github.com/thevickypedia/Filebrowser-iOS/commit/cda301541dcb78a72dee81c2b1ff1cd0dd8ca7dd) fix: Reset rename input and new resource name upon successful action
+- [f84dcac](https://github.com/thevickypedia/Filebrowser-iOS/commit/f84dcacf999446f1b4f44d20530e833d49bc31e9) fix: Avoid sheet overlap between media resume prompt and file export
+- [5cceab2](https://github.com/thevickypedia/Filebrowser-iOS/commit/5cceab204c7df732c61c3856ba453491c955ee97) refactor: Always show file export options when downloading files in detail view
+- [f245ce7](https://github.com/thevickypedia/Filebrowser-iOS/commit/f245ce78a670be1a39b064f8160b595b3bec2c7b) revert: New drag to select feature
+- [a5c1cb6](https://github.com/thevickypedia/Filebrowser-iOS/commit/a5c1cb6ede32635d8a4b706b98aad65fde17569b) style: Remove drag selection for list view
+- [adea3d8](https://github.com/thevickypedia/Filebrowser-iOS/commit/adea3d87bb9c5fe28c3b409a70f2a029cafa529e) revert: Style update for drag selection
+- [a98b6d3](https://github.com/thevickypedia/Filebrowser-iOS/commit/a98b6d32320513acb1186255472266cc792a005d) style: Update styling for drag selection
+- [5883d7b](https://github.com/thevickypedia/Filebrowser-iOS/commit/5883d7b7f11f06b79de69c02341ec789bd70e78b) feat: Include a new drag to select feature
+- [6d73862](https://github.com/thevickypedia/Filebrowser-iOS/commit/6d73862fab17efc774bb471909d362af422457c0) chore: Update release notes for v1.49.2
+
 v1.49.2 (09/26/2025)
 --------------------
 - [10bac0d](https://github.com/thevickypedia/Filebrowser-iOS/commit/10bac0d3d83ea669dc37c1381b60e290870eb7a1) chore: Release ``v1.49.2``
