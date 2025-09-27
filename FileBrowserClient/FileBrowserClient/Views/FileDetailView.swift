@@ -364,29 +364,6 @@ struct FileDetailView: View {
             )
     }
 
-    func safePreviewLimit() -> Bool {
-        // 100 MB preview limit
-        let sizeLimit = 100_000_000
-        let formattedSizeLimit = formatBytes(Int64(sizeLimit))
-
-        let byteSize = file.size ?? metadata?.size
-        if let fileSize = byteSize {
-            let formattedFileSize = formatBytes(Int64(fileSize))
-            if fileSize < sizeLimit {
-                Log.debug("✅ File size [\(formattedFileSize)] within limit \(formattedSizeLimit)")
-                return true
-            }
-            let warning = "⚠️ File size [\(formattedFileSize)] exceeded preview limit \(formattedSizeLimit)"
-            Log.warn(warning)
-            self.previewError = PreviewErrorPayload(text: warning)
-        } else {
-            let warning = "⚠️ Unable to get file size, preview not available."
-            Log.warn(warning)
-            self.previewError = PreviewErrorPayload(text: warning)
-        }
-        return false
-    }
-
     func goToNext() {
         guard currentIndex < files.count - 1 else { return }
         currentIndex += 1
@@ -416,7 +393,10 @@ struct FileDetailView: View {
         fetchMetadata()
 
         if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
-            guard safePreviewLimit() else { return }
+            if let warning = unsafeFileSize(byteSize: file.size ?? metadata?.size) {
+                self.previewError = PreviewErrorPayload(text: warning)
+                return
+            }
             // Only load if preview is supported
             downloadFilePreview(fileName: fileName)
         } else if !extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {

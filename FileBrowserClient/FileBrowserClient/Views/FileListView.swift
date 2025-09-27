@@ -551,18 +551,18 @@ struct FileListView: View {
 
                         Section {
                             ForEach(filteredLocalFiles, id: \.self) { localFile in
+                                let fileSize = (try? FileManager.default.attributesOfItem(atPath: localFile.path))?[.size] as? Int
                                 NavigationLink(
                                     destination: LocalFileContentContainer(
-                                        localFile: localFile, extensionTypes: extensionTypes
+                                        localFile: localFile, fileSize: fileSize, extensionTypes: extensionTypes
                                     )
                                 ) {
                                     HStack {
                                         Text(localFile.lastPathComponent)
                                             .foregroundColor(.primary)
                                         Spacer()
-                                        if let attributes = try? FileManager.default.attributesOfItem(atPath: localFile.path),
-                                           let fileSize = attributes[.size] as? Int64 {
-                                            Text(formatBytes(fileSize))
+                                        if let size = fileSize {
+                                            Text(formatBytes(Int64(size)))
                                                 .font(.caption)
                                                 .foregroundColor(.secondary)
                                         }

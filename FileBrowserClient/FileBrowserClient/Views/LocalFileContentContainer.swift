@@ -9,21 +9,22 @@ import SwiftUI
 
 struct LocalFileContentContainer: View {
     let localFile: URL
+    let fileSize: Int?
     let extensionTypes: ExtensionTypes
     @State private var content: Data?
-    @State private var errorMessage: String?
     @State private var showExporter = false
+    @State private var previewError: PreviewErrorPayload?
 
     var body: some View {
         let fileName = localFile.lastPathComponent.lowercased()
         Group {
-            if let error = errorMessage {
+            if let errorPayload = previewError {
                 VStack(spacing: 8) {
                     Text("Unable to load file")
                         .foregroundColor(.red)
-                    Text(error)
+                    Text(errorPayload.text)
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(errorPayload.color)
                     Button("Retry") {
                         loadContent()
                     }
@@ -72,8 +73,12 @@ struct LocalFileContentContainer: View {
     }
 
     private func loadContent() {
-        errorMessage = nil
+        previewError = nil
         content = nil
+        if let warning = unsafeFileSize(byteSize: fileSize) {
+            previewError = PreviewErrorPayload(text: warning)
+            return
+        }
 
         // DispatchQueue.main.async - Main thread where all UI updates happen
         // DispatchQueue.global(qos:) - Background thread used for non-UI tasks
@@ -86,7 +91,7 @@ struct LocalFileContentContainer: View {
             } catch {
                 Log.warn("❌ Error loading file: \(error)")
                 DispatchQueue.main.async {
-                    errorMessage = error.localizedDescription
+                    previewError = PreviewErrorPayload(text: error.localizedDescription)
                 }
             }
         }
