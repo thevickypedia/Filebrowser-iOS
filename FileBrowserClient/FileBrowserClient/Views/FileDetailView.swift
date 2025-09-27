@@ -418,10 +418,7 @@ struct FileDetailView: View {
         if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
             guard safePreviewLimit() else { return }
             // Only load if preview is supported
-            downloadFilePreview(
-                fileName: fileName,
-                extensionTypes: extensionTypes
-            )
+            downloadFilePreview(fileName: fileName)
         } else if !extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
             Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
         }
@@ -523,7 +520,7 @@ struct FileDetailView: View {
         )
     }
 
-    func downloadFilePreview(fileName: String, extensionTypes: ExtensionTypes) {
+    func downloadFilePreview(fileName: String) {
         if extensionTypes.imageExtensions.contains(where: fileName.hasSuffix) {
             Log.debug("🖼️ Detected image file. Using preview API")
             downloadPreview()
