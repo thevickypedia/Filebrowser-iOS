@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v1.49.4 (09/27/2025)
+--------------------
+- [844ba8a](https://github.com/thevickypedia/Filebrowser-iOS/commit/844ba8aac113043a247d7019c33cfed7432fe440) chore: Release ``v1.49.4``
+- [f2d5ff4](https://github.com/thevickypedia/Filebrowser-iOS/commit/f2d5ff4aeb7120acc105a5d53e12749514bfa7ea) style: Update preview error style to match sandbox view
+- [ecbbaa7](https://github.com/thevickypedia/Filebrowser-iOS/commit/ecbbaa755aaff8194e8620d9fe65e4b062cd0ced) feat: Check for unsafe file preview limit in sandbox file viewer
+- [70ff181](https://github.com/thevickypedia/Filebrowser-iOS/commit/70ff181f5cf3fcbf2830e857a872ce3d1ecd995c) refactor: Remove unwanted local arguments
+- [b57cb20](https://github.com/thevickypedia/Filebrowser-iOS/commit/b57cb20cd88c964d674e5818446dc9eadf0fb041) refactor: Load file preview in detail view only if its within preview size limit
+- [7a70ca3](https://github.com/thevickypedia/Filebrowser-iOS/commit/7a70ca368a27418b184ffab98cdd8b24242e4aa9) refactor: Create dedicated module for UI alerts
+- [c99c93a](https://github.com/thevickypedia/Filebrowser-iOS/commit/c99c93a9178edce634a51c26f596cb840c7a04e3) refactor: Differentiate preview error vs error alert
+- [a18cf1b](https://github.com/thevickypedia/Filebrowser-iOS/commit/a18cf1be4754ea2585ef9353be59afe0d4126ddd) refactor: Cleanup unused code in detail view
+- [da73056](https://github.com/thevickypedia/Filebrowser-iOS/commit/da73056df72fd5d1805cde55290289888f7ead21) chore: Update release notes for v1.49.3
+
 v1.49.3 (09/27/2025)
 --------------------
 - [41630f4](https://github.com/thevickypedia/Filebrowser-iOS/commit/41630f45d766a92f95316f45a8971dd807c0e3a0) chore: Release ``v1.49.3``
