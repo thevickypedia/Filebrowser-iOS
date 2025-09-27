@@ -219,7 +219,7 @@ struct FileDetailView: View {
                                             .aspectRatio(contentMode: .fit)
                                             .frame(width: 24, height: 24)
                                             .foregroundColor(.blue)
-                                        Text("Sharable Links")
+                                        Text("Share")
                                     }
                                 }
                             }

@@ -2558,6 +2558,7 @@ struct FileListView: View {
                     selectionMode = false
                     fetchFiles(at: currentPath)
                     statusMessage = StatusPayload(text: "📝 Renamed \(item.name) → \(renameInput)", color: .yellow, duration: 3)
+                    renameInput = ""
                 }
             }
         }
@@ -2627,6 +2628,7 @@ struct FileListView: View {
                     Log.info("✅ \(resourceType) created successfully")
                     fetchFiles(at: currentPath)
                     statusMessage = StatusPayload(text: "\(emoji) \(newResourceName) created")
+                    newResourceName = ""
                 } else {
                     Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")
                     errorTitle = "Create Failed"
