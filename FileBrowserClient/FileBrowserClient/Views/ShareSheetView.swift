@@ -12,7 +12,7 @@ import SwiftUI
 /// Bindings:
 /// - isPresented: controls sheet presentation
 /// - sharedObjects: backing dictionary for generated links
-/// - shareMessage: StatusPayload used by your StatusMessage modifier
+/// - shareMessage: ToastMessagePayload used by your StatusMessage modifier
 struct ShareSheetView: View {
     let serverURL: String
     let token: String
@@ -27,7 +27,7 @@ struct ShareSheetView: View {
     @State private var sharePassword = ""
     let shareDurationOptions = ["seconds", "minutes", "hours", "days"]
     @State private var sharedObjects: [String: ShareLinks] = [:]
-    @State private var shareMessage: StatusPayload?
+    @State private var shareMessage: ToastMessagePayload?
     // Display as alerts
     @State private var errorTitle: String?
     @State private var errorMessage: String?
@@ -104,7 +104,7 @@ struct ShareSheetView: View {
 
                         Button(action: {
                             guard let expiry = Int(durationDigit), expiry > 0 else {
-                                shareMessage = StatusPayload(text: "❌ Input time should be more than 0", color: .red, duration: 3)
+                                shareMessage = ToastMessagePayload(text: "❌ Input time should be more than 0", color: .red, duration: 3)
                                 return
                             }
                             submitShare()
@@ -122,7 +122,7 @@ struct ShareSheetView: View {
                 }
             }
             .navigationBarTitle("Share", displayMode: .inline)
-            .modifier(StatusMessage(payload: $shareMessage))
+            .modifier(ToastMessage(payload: $shareMessage))
             .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
         }
     }
@@ -168,7 +168,7 @@ struct ShareSheetView: View {
                     return
                 }
                 sharedObjects.removeValue(forKey: file.path)
-                shareMessage = StatusPayload(text: "🗑️ Share link for \(file.name) has been removed", color: .red)
+                shareMessage = ToastMessagePayload(text: "🗑️ Share link for \(file.name) has been removed", color: .red)
             }
         }.resume()
     }
@@ -177,7 +177,7 @@ struct ShareSheetView: View {
         if let existing = sharedObjects[file.path],
            existing.unsigned != nil,
            existing.presigned != nil {
-            shareMessage = StatusPayload(
+            shareMessage = ToastMessagePayload(
                 text: "⚠️ A share for \(file.name) already exists!",
                 color: .yellow
             )
@@ -185,7 +185,7 @@ struct ShareSheetView: View {
         }
         isShareInProgress = true
         guard let expiryTime = Int(durationDigit), expiryTime > 0 else {
-            shareMessage = StatusPayload(
+            shareMessage = ToastMessagePayload(
                 text: "❌ Input time should be more than 0",
                 color: .red
             )
@@ -278,11 +278,11 @@ struct ShareSheetView: View {
                         let delay = Double(sharedLink.expire) - Date().timeIntervalSince1970
                         if delay > 0 {
                             Log.info("Shared link will be cleared after \(expiryTime) \(shareDuration) [\(delay)s]")
-                            shareMessage = StatusPayload(
+                            shareMessage = ToastMessagePayload(
                                 text: "🔗 Share link for \(file.name) has been created", color: .green
                             )
                             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                                shareMessage = StatusPayload(
+                                shareMessage = ToastMessagePayload(
                                     text: "⚠️ Shared link for \(file.name) has expired",
                                     color: .yellow,
                                     duration: 3

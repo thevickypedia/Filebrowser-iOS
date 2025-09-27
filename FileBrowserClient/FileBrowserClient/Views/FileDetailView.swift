@@ -56,13 +56,13 @@ struct FileDetailView: View {
     let animateGIF: Bool
 
     @State private var content: Data?
-    @State private var previewError: String?
     @State private var metadata: ResourceMetadata?
     @State private var showInfo = false
     @State private var isRenaming = false
     @State private var newName = ""
     @State private var showingDeleteConfirm = false
-    @State private var statusMessage: StatusPayload?
+    @State private var previewError: PreviewErrorPayload?
+    @State private var toastMessage: ToastMessagePayload?
     @State private var isDownloading = false
     @State private var downloadedFileURL: URL?
     @State private var showShareSheet = false
@@ -89,8 +89,8 @@ struct FileDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black.opacity(0.2))
 
-        } else if let error = self.previewError {
-            Text("Error: \(error)").foregroundColor(.red)
+        } else if let errorPayload = self.previewError {
+            Text("Error: \(errorPayload.text)").foregroundColor(errorPayload.color)
 
         // MARK: Check if either of the share sheet is presented to avoid overlap
         } else if extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) && !(showShareSheet || isSharing) {
@@ -250,7 +250,7 @@ struct FileDetailView: View {
                 Text("Are you sure you want to delete \(file.name)?")
             }
             .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
-            .modifier(StatusMessage(payload: $statusMessage))
+            .modifier(ToastMessage(payload: $toastMessage))
             // File save/export sheet
             .sheet(isPresented: $showShareSheet) {
                 guard let fileURL = downloadedFileURL else {
@@ -367,6 +367,32 @@ struct FileDetailView: View {
     func checkCacheAndLoadPreview(fileName: String) {
         self.content = nil
         self.previewError = nil
+
+        self.metadata = nil
+        fetchMetadata()
+
+        // FIXME: Prevents mp4 files - should only apply for text and pdf files
+        // 100 MB preview limit
+        let sizeLimit = 100_000_000
+        let formattedSizeLimit = formatBytes(Int64(sizeLimit))
+
+        let byteSize = file.size ?? metadata?.size
+        if let fileSize = byteSize {
+            let formattedFileSize = formatBytes(Int64(fileSize))
+            if fileSize > sizeLimit {
+                let warning = "⚠️ File size [\(formattedFileSize)] exceeded preview limit \(formattedSizeLimit)"
+                Log.warn(warning)
+                self.previewError = PreviewErrorPayload(text: warning)
+                return
+            }
+            Log.debug("✅ File size [\(formattedFileSize)] within limit \(formattedSizeLimit)")
+        } else {
+            let warning = "⚠️ Unable to get file size, preview not available."
+            Log.warn(warning)
+            self.previewError = PreviewErrorPayload(text: warning)
+            return
+        }
+
         if cacheExtensions.contains(where: fileName.hasSuffix),
            let cached = FileCache.shared.retrieve(
             for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
@@ -527,7 +553,7 @@ struct FileDetailView: View {
                 URLQueryItem(name: "auth", value: token)
             ]
         ) else {
-            self.previewError = "Invalid preview URL"
+            self.previewError = PreviewErrorPayload(text: "Invalid preview URL")
             return
         }
 
@@ -536,7 +562,7 @@ struct FileDetailView: View {
         URLSession.shared.dataTask(with: url) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.previewError = "Preview download failed: \(error.localizedDescription)"
+                    self.previewError = PreviewErrorPayload(text: "Preview download failed: \(error.localizedDescription)")
                     return
                 }
                 Log.debug("Fetch preview complete")
@@ -566,7 +592,7 @@ struct FileDetailView: View {
                 URLQueryItem(name: "auth", value: token)
             ]
         ) else {
-            self.previewError = "Invalid raw URL"
+            self.previewError = PreviewErrorPayload(text: "Invalid raw URL")
             isDownloading = false
             return
         }
@@ -580,7 +606,7 @@ struct FileDetailView: View {
             DispatchQueue.main.async {
                 self.isDownloading = false
                 if let error = error {
-                    self.previewError = error.localizedDescription
+                    self.previewError = PreviewErrorPayload(text: error.localizedDescription)
                     Log.error("❌ Raw download failed: \(error.localizedDescription)")
                     return
                 }

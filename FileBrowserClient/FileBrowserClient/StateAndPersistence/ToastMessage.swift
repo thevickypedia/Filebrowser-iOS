@@ -1,20 +1,14 @@
 //
-//  StatusMessage.swift
+//  ToastMessage.swift
 //  FileBrowserClient
 //
-//  Created by Vignesh Rao on 8/7/25.
+//  Created by Vignesh Rao on 9/27/25.
 //
 
 import SwiftUI
 
-struct StatusPayload {
-    var text: String?
-    var color: Color = .green
-    var duration: TimeInterval = 2.5
-}
-
-struct StatusMessage: ViewModifier {
-    @Binding var payload: StatusPayload?
+struct ToastMessage: ViewModifier {
+    @Binding var payload: ToastMessagePayload?
 
     @State private var workItem: DispatchWorkItem?
 

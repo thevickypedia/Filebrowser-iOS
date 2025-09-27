@@ -24,7 +24,7 @@ struct FileDownloadHelper {
     static func handleDownloadCompletion(
         file: FileItem,
         localURL: URL,
-        statusMessage: Binding<StatusPayload?>,
+        toastMessage: Binding<ToastMessagePayload?>,
         errorTitle: Binding<String?>,
         errorMessage: Binding<String?>
     ) {
@@ -34,7 +34,7 @@ struct FileDownloadHelper {
             // Save to Photos
             saveToPhotos(fileURL: localURL, fileType: utType) { success, error in
                 if success {
-                    statusMessage.wrappedValue = StatusPayload(
+                    toastMessage.wrappedValue = ToastMessagePayload(
                         text: "📸 Saved to Photos: \(file.name)",
                         color: .green,
                         duration: 2
@@ -48,7 +48,7 @@ struct FileDownloadHelper {
         } else {
             // Save to Files
             if let savedURL = saveToFiles(fileURL: localURL, fileName: file.name) {
-                statusMessage.wrappedValue = StatusPayload(
+                toastMessage.wrappedValue = ToastMessagePayload(
                     text: "📂 Saved to Files: \(file.name)",
                     color: .green,
                     duration: 2

@@ -32,6 +32,8 @@
 		98836BAF2E7291230053170A /* ResumePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98836BAE2E7291230053170A /* ResumePromptView.swift */; };
 		98836BCD2E79214B0053170A /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98836BCC2E79214B0053170A /* DownloadManager.swift */; };
 		988D9DE82E43915400C37B15 /* FileListAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988D9DE72E43915000C37B15 /* FileListAlerts.swift */; };
+		989940B62E8839D0006A376A /* UIAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940B52E8839CE006A376A /* UIAlerts.swift */; };
+		989940B82E883D1A006A376A /* ToastMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940B72E883D1A006A376A /* ToastMessage.swift */; };
 		98B1AC4D2E7AF663000210BC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC4C2E7AF660000210BC /* Constants.swift */; };
 		98B1AC762E7C6AB9000210BC /* FileList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC752E7C6AB2000210BC /* FileList.swift */; };
 		98B1ACD92E80CC43000210BC /* FileDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */; };
@@ -45,7 +47,6 @@
 		98D563D52E44DDA800DE0079 /* SelectableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D42E44DDA800DE0079 /* SelectableTextView.swift */; };
 		98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */; };
 		98D563D92E44F27A00DE0079 /* CopyableTextContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D82E44F27A00DE0079 /* CopyableTextContainer.swift */; };
-		98D563ED2E45194700DE0079 /* StatusMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563EC2E45194700DE0079 /* StatusMessage.swift */; };
 		F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84264632E234B9A001A1BBC /* MediaPlayerView.swift */; };
 		F85295442E303AF900498675 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85295432E303AF800498675 /* Log.swift */; };
 		F85486182E1B19B000115F18 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85486172E1B19B000115F18 /* AuthManager.swift */; };
@@ -104,6 +105,8 @@
 		98836BAE2E7291230053170A /* ResumePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumePromptView.swift; sourceTree = "<group>"; };
 		98836BCC2E79214B0053170A /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
 		988D9DE72E43915000C37B15 /* FileListAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListAlerts.swift; sourceTree = "<group>"; };
+		989940B52E8839CE006A376A /* UIAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIAlerts.swift; sourceTree = "<group>"; };
+		989940B72E883D1A006A376A /* ToastMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastMessage.swift; sourceTree = "<group>"; };
 		98B1AC4C2E7AF660000210BC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		98B1AC752E7C6AB2000210BC /* FileList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileList.swift; sourceTree = "<group>"; };
 		98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDownloadHelper.swift; sourceTree = "<group>"; };
@@ -117,7 +120,6 @@
 		98D563D42E44DDA800DE0079 /* SelectableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextView.swift; sourceTree = "<group>"; };
 		98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableTextView.swift; sourceTree = "<group>"; };
 		98D563D82E44F27A00DE0079 /* CopyableTextContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableTextContainer.swift; sourceTree = "<group>"; };
-		98D563EC2E45194700DE0079 /* StatusMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusMessage.swift; sourceTree = "<group>"; };
 		F84264632E234B9A001A1BBC /* MediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerView.swift; sourceTree = "<group>"; };
 		F85295432E303AF800498675 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		F85486172E1B19B000115F18 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
@@ -292,8 +294,8 @@
 		98B1AC552E7C5CA8000210BC /* StateAndPersistence */ = {
 			isa = PBXGroup;
 			children = (
+				989940B72E883D1A006A376A /* ToastMessage.swift */,
 				98836BAC2E7285F90053170A /* PlaybackProgressStore.swift */,
-				98D563EC2E45194700DE0079 /* StatusMessage.swift */,
 				986F5A682E3A237D0058E2C4 /* ThemeManager.swift */,
 			);
 			path = StateAndPersistence;
@@ -320,6 +322,7 @@
 		98B1AC592E7C5D05000210BC /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				989940B52E8839CE006A376A /* UIAlerts.swift */,
 				988166542E862890003C0CD8 /* FileExporter.swift */,
 				F85295432E303AF800498675 /* Log.swift */,
 				98067D492E38E6CD00808541 /* Utils.swift */,
@@ -482,7 +485,6 @@
 				98B600272E50B1F900F24FB8 /* ShareLinkRow.swift in Sources */,
 				F8BE8BBA2E379B8500967D18 /* RemoteThumbnail.swift in Sources */,
 				98823ED12E1AFADA004CBB11 /* ContentView.swift in Sources */,
-				98D563ED2E45194700DE0079 /* StatusMessage.swift in Sources */,
 				98067D4A2E38E6CF00808541 /* Utils.swift in Sources */,
 				F8BE8BBC2E379CF300967D18 /* ExtensionTypes.swift in Sources */,
 				984F17062E46A8AA003502DF /* ZoomableImageView.swift in Sources */,
@@ -490,6 +492,7 @@
 				98B1ACDF2E80E4B4000210BC /* UploadingStack.swift in Sources */,
 				988166512E857068003C0CD8 /* LocalFileContentContainer.swift in Sources */,
 				987C617E2E47EC0900C5DE8E /* ServerURLMenu.swift in Sources */,
+				989940B62E8839D0006A376A /* UIAlerts.swift in Sources */,
 				98836BAD2E7285F90053170A /* PlaybackProgressStore.swift in Sources */,
 				98D563D12E44354700DE0079 /* FileExtensions.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
@@ -508,6 +511,7 @@
 				98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */,
 				987C61892E4A986500C5DE8E /* SearchType.swift in Sources */,
 				98B1AC4D2E7AF663000210BC /* Constants.swift in Sources */,
+				989940B82E883D1A006A376A /* ToastMessage.swift in Sources */,
 				98D563D52E44DDA800DE0079 /* SelectableTextView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -94,10 +94,10 @@ struct FileListView: View {
     @State private var errorMessage: String?
 
     // Display as disappearing labels
-    @State private var settingsMessage: StatusPayload?
-    @State private var statusMessage: StatusPayload?
-    @State private var modifyMessage: StatusPayload?
-    @State private var shareMessage: StatusPayload?
+    @State private var settingsMessage: ToastMessagePayload?
+    @State private var toastMessage: ToastMessagePayload?
+    @State private var modifyMessage: ToastMessagePayload?
+    @State private var shareMessage: ToastMessagePayload?
 
     // Specific for Grid view
     @State private var selectedFileIndex: Int?
@@ -213,7 +213,7 @@ struct FileListView: View {
                     if let task = searchTask {
                         Log.debug("🔙 Search cancelled mid request")
                         task.cancel()
-                        statusMessage = StatusPayload(
+                        toastMessage = ToastMessagePayload(
                             text: "✖️ Search cancelled",
                             color: .yellow,
                             duration: 3.5
@@ -633,7 +633,7 @@ struct FileListView: View {
                     GlobalThumbnailLoader.shared.clearFailedPath()
                     FileCache.shared.clearDiskCache(auth.serverURL)
                     fetchClientStorageInfo()
-                    settingsMessage = StatusPayload(text: "🗑️ Cache cleared", color: .yellow)
+                    settingsMessage = ToastMessagePayload(text: "🗑️ Cache cleared", color: .yellow)
                 } label: {
                     Label("Clear Local Cache", systemImage: "trash")
                 }
@@ -687,7 +687,7 @@ struct FileListView: View {
             }
         }
         // MARK: Messages within the settings sheet
-        .modifier(StatusMessage(payload: $settingsMessage))
+        .modifier(ToastMessage(payload: $settingsMessage))
         .onAppear {
             hideDotfiles = auth.tokenPayload?.user.hideDotfiles ?? false
             dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
@@ -807,7 +807,7 @@ struct FileListView: View {
                 viewModel.getFiles(at: currentSheetPath, modifySheet: true)
             }
         }
-        .modifier(StatusMessage(payload: $modifyMessage))
+        .modifier(ToastMessage(payload: $modifyMessage))
     }
 
     private func initializeSheetPath() {
@@ -896,7 +896,7 @@ struct FileListView: View {
         // Validate destination path
         guard !destinationPath.isEmpty else {
             Log.error("Empty destination path for \(logAction)")
-            statusMessage = StatusPayload(text: "Invalid destination path", color: .red, duration: 3)
+            toastMessage = ToastMessagePayload(text: "Invalid destination path", color: .red, duration: 3)
             return
         }
 
@@ -931,7 +931,7 @@ struct FileListView: View {
             if checkPathExists(encodedDestination) {
                 let msg = "⚠️ \(item.name) already exists at \(destinationPath)"
                 Log.error(msg)
-                modifyMessage = StatusPayload(text: msg, color: .primary, duration: 2)
+                modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
                 return
             }
 
@@ -944,7 +944,7 @@ struct FileListView: View {
             // Client side issue: Break loop without resetting flags, so sheet is still up
             guard let url = URL(string: urlString) else {
                 let msg = "Invalid URL for \(item.name)"
-                modifyMessage = StatusPayload(text: msg, color: .primary, duration: 2)
+                modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
                 Log.error(msg)
                 errorCount += 1
                 dispatchGroup.leave()
@@ -1001,19 +1001,19 @@ struct FileListView: View {
 
             // Show completion message
             if errorCount == 0 {
-                statusMessage = StatusPayload(
+                toastMessage = ToastMessagePayload(
                     text: "✅ \(statusActionPost) \(successCount) item\(successCount == 1 ? "" : "s")",
                     color: .green,
                     duration: 3
                 )
             } else if successCount > 0 {
-                statusMessage = StatusPayload(
+                toastMessage = ToastMessagePayload(
                     text: "⚠️ \(statusActionPost) \(successCount), \(errorCount) failed",
                     color: .yellow,
                     duration: 4
                 )
             } else {
-                statusMessage = StatusPayload(
+                toastMessage = ToastMessagePayload(
                     text: "❌ Failed to \(logAction) items",
                     color: .red,
                     duration: 3
@@ -1054,7 +1054,7 @@ struct FileListView: View {
             "\(state.emoji) \(action.rawValue) \(currentState) - \($0) - \(state.rawValue) \(state.prefix) \(transferState.transferProgressPct)%"
         } ?? "\(state.emoji) \(action.rawValue) \(state.rawValue)"
 
-        statusMessage = StatusPayload(
+        toastMessage = ToastMessagePayload(
             text: text,
             color: state.color,
             duration: 3
@@ -1241,7 +1241,7 @@ struct FileListView: View {
         }
         .id("filelist-\(currentDisplayPath)-\(pathStack.count)")
         // MARK: Messages on any listing page with no sheets presented
-        .modifier(StatusMessage(payload: $statusMessage))
+        .modifier(ToastMessage(payload: $toastMessage))
         .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
         .modifier(CreateFileAlert(
             createFile: $showCreateFile,
@@ -1452,7 +1452,7 @@ struct FileListView: View {
                         FileDownloadHelper.handleDownloadCompletion(
                             file: file,
                             localURL: localURL,
-                            statusMessage: $statusMessage,
+                            toastMessage: $toastMessage,
                             errorTitle: $errorTitle,
                             errorMessage: $errorMessage
                         )
@@ -1571,7 +1571,7 @@ struct FileListView: View {
                         FileDownloadHelper.handleDownloadCompletion(
                             file: file,
                             localURL: localURL,
-                            statusMessage: $statusMessage,
+                            toastMessage: $toastMessage,
                             errorTitle: $errorTitle,
                             errorMessage: $errorMessage
                         )
@@ -1614,7 +1614,7 @@ struct FileListView: View {
         if pathStack.isEmpty || currentPath == "/" {
             // No extra path component, search at /api/search
             searchLocation = ""
-            statusMessage = StatusPayload(
+            toastMessage = ToastMessagePayload(
                 text: "⚠️ Searching from the home page may take longer and be inaccurate",
                 color: .yellow,
                 duration: 3.5
@@ -1738,7 +1738,7 @@ struct FileListView: View {
             KeychainHelper.deleteKnownServers()
             message = "🗑️ Session cleared and known servers deleted, logging out..."
         }
-        settingsMessage = StatusPayload(text: message, color: .red, duration: 3.5)
+        settingsMessage = ToastMessagePayload(text: message, color: .red, duration: 3.5)
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
             logoutHandler(self.removeKnownServers)
         }
@@ -2044,7 +2044,7 @@ struct FileListView: View {
             errorTitle = "File Error"
             errorMessage = error.localizedDescription
             cancelUpload(fileHandle: nil, statusText: nil)
-            statusMessage = StatusPayload(text: "❌ Upload failed", color: .red)
+            toastMessage = ToastMessagePayload(text: "❌ Upload failed", color: .red)
             return
         }
 
@@ -2120,7 +2120,7 @@ struct FileListView: View {
         fetchFiles(at: currentPath)
         if let text = statusText {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                statusMessage = StatusPayload(text: text, color: .yellow, duration: 7)
+                toastMessage = ToastMessagePayload(text: text, color: .yellow, duration: 7)
             }
         }
         isPhotoUpload = false
@@ -2328,7 +2328,7 @@ struct FileListView: View {
         guard transferState.currentTransferIndex < uploadQueue.count else {
             transferState.transferType = nil
             if pendingUploads == 0 {
-                statusMessage = StatusPayload(text: "📤 Uploaded \(transferState.currentTransferIndex) \(transferState.currentTransferIndex == 1 ? "file" : "files")")
+                toastMessage = ToastMessagePayload(text: "📤 Uploaded \(transferState.currentTransferIndex) \(transferState.currentTransferIndex == 1 ? "file" : "files")")
                 endUpload()
             } else {
                 Log.trace("Unprocessed files: \(pendingUploads)")
@@ -2472,12 +2472,12 @@ struct FileListView: View {
                     Log.info("✅ Settings saved")
                     auth.tokenPayload?.user.hideDotfiles = hideDotfiles
                     auth.tokenPayload?.user.dateFormat = dateFormatExact
-                    settingsMessage = StatusPayload(text: "✅ Settings saved")
+                    settingsMessage = ToastMessagePayload(text: "✅ Settings saved")
                 } else {
                     Log.error("❌ Settings save failed: \(body)")
                     errorTitle = "Settings save failed"
                     errorMessage = body
-                    settingsMessage = StatusPayload(text: "❌ Settings save failed")
+                    settingsMessage = ToastMessagePayload(text: "❌ Settings save failed")
                 }
             }
         }.resume()
@@ -2526,7 +2526,7 @@ struct FileListView: View {
             selectedItems.removeAll()
             selectionMode = false
             fetchFiles(at: currentPath)
-            statusMessage = StatusPayload(text: "🗑️ Deleted \(count) \(count == 1 ? "item" : "items")", color: .red, duration: 3)
+            toastMessage = ToastMessagePayload(text: "🗑️ Deleted \(count) \(count == 1 ? "item" : "items")", color: .red, duration: 3)
         }
     }
 
@@ -2561,7 +2561,7 @@ struct FileListView: View {
                     isRenaming = false
                     selectionMode = false
                     fetchFiles(at: currentPath)
-                    statusMessage = StatusPayload(text: "📝 Renamed \(item.name) → \(renameInput)", color: .yellow, duration: 3)
+                    toastMessage = ToastMessagePayload(text: "📝 Renamed \(item.name) → \(renameInput)", color: .yellow, duration: 3)
                     renameInput = ""
                 }
             }
@@ -2631,7 +2631,7 @@ struct FileListView: View {
                 if http.statusCode == 200 {
                     Log.info("✅ \(resourceType) created successfully")
                     fetchFiles(at: currentPath)
-                    statusMessage = StatusPayload(text: "\(emoji) \(newResourceName) created")
+                    toastMessage = ToastMessagePayload(text: "\(emoji) \(newResourceName) created")
                     newResourceName = ""
                 } else {
                     Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")
