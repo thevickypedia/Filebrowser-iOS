@@ -338,7 +338,7 @@ struct FileDetailView: View {
                 }
             }
             .task(id: currentIndex) {
-                checkCacheAndLoadPreview(fileName: fileName)
+                reloadFilePreview(fileName: fileName)
             }
             .gesture(
                 DragGesture()
@@ -364,14 +364,7 @@ struct FileDetailView: View {
             )
     }
 
-    func checkCacheAndLoadPreview(fileName: String) {
-        self.content = nil
-        self.previewError = nil
-
-        self.metadata = nil
-        fetchMetadata()
-
-        // FIXME: Prevents mp4 files - should only apply for text and pdf files
+    func safePreviewLimit() -> Bool {
         // 100 MB preview limit
         let sizeLimit = 100_000_000
         let formattedSizeLimit = formatBytes(Int64(sizeLimit))
@@ -379,31 +372,19 @@ struct FileDetailView: View {
         let byteSize = file.size ?? metadata?.size
         if let fileSize = byteSize {
             let formattedFileSize = formatBytes(Int64(fileSize))
-            if fileSize > sizeLimit {
-                let warning = "⚠️ File size [\(formattedFileSize)] exceeded preview limit \(formattedSizeLimit)"
-                Log.warn(warning)
-                self.previewError = PreviewErrorPayload(text: warning)
-                return
+            if fileSize < sizeLimit {
+                Log.debug("✅ File size [\(formattedFileSize)] within limit \(formattedSizeLimit)")
+                return true
             }
-            Log.debug("✅ File size [\(formattedFileSize)] within limit \(formattedSizeLimit)")
+            let warning = "⚠️ File size [\(formattedFileSize)] exceeded preview limit \(formattedSizeLimit)"
+            Log.warn(warning)
+            self.previewError = PreviewErrorPayload(text: warning)
         } else {
             let warning = "⚠️ Unable to get file size, preview not available."
             Log.warn(warning)
             self.previewError = PreviewErrorPayload(text: warning)
-            return
         }
-
-        if cacheExtensions.contains(where: fileName.hasSuffix),
-           let cached = FileCache.shared.retrieve(
-            for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
-           ) {
-            self.content = cached
-        } else {
-            reloadFilePreview(
-                fileName: fileName,
-                extensionTypes: extensionTypes
-            )
-        }
+        return false
     }
 
     func goToNext() {
@@ -417,13 +398,26 @@ struct FileDetailView: View {
     }
 
     func reloadFilePreview(
-        fileName: String,
-        extensionTypes: ExtensionTypes
+        fileName: String
     ) {
         self.content = nil
         self.previewError = nil
+        if cacheExtensions.contains(where: fileName.hasSuffix),
+           let cached = FileCache.shared.retrieve(
+            for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
+           ) {
+            self.content = cached
+            // If cached data, return it without fetching metadata
+            return
+        }
+
+        // Reset metadata if not cached
+        self.metadata = nil
+        fetchMetadata()
+
         if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
-            // ✅ Only load if preview is supported
+            guard safePreviewLimit() else { return }
+            // Only load if preview is supported
             downloadFilePreview(
                 fileName: fileName,
                 extensionTypes: extensionTypes
