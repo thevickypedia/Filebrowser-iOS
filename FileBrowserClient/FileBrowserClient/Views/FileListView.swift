@@ -799,6 +799,7 @@ struct FileListView: View {
                     }
                 }
             }
+            .frame(maxHeight: .infinity, alignment: .top) // Pins VStack content to top
             .navigationTitle(getSheetNavigationTitle(sheetPathStack))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
