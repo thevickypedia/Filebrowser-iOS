@@ -7,19 +7,15 @@
 
 import SwiftUI
 
-func localFileContentView(for localFile: URL, with extensionTypes: ExtensionTypes) -> some View {
-    LocalFileContentContainer(localFile: localFile, extensionTypes: extensionTypes)
-}
-
 struct LocalFileContentContainer: View {
     let localFile: URL
     let extensionTypes: ExtensionTypes
-    @State private var loadedView: AnyView?
-    @State private var isLoaded = false
+    @State private var content: Data?
     @State private var errorMessage: String?
     @State private var showExporter = false
 
     var body: some View {
+        let fileName = localFile.lastPathComponent.lowercased()
         Group {
             if let error = errorMessage {
                 VStack(spacing: 8) {
@@ -32,16 +28,32 @@ struct LocalFileContentContainer: View {
                         loadContent()
                     }
                 }
-            } else if let loadedView = loadedView {
-                loadedView
+            } else if let content = self.content {
+                if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
+                    if let text = String(data: content, encoding: .utf8) {
+                        ScrollView {
+                            CopyableTextContainer(text: text)
+                        }
+                    } else {
+                        Text("Failed to decode text")
+                    }
+                } else if fileName.hasSuffix(".pdf") {
+                    PDFViewerScreen(content: content)
+                } else {
+                    Text("File preview not supported for this type.").foregroundColor(.gray)
+                }
             } else {
-                ProgressView("Loading file...")
+                if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
+                    ProgressView("Loading file...")
+                } else {
+                    Text("File preview not supported for this type.").foregroundColor(.gray)
+                }
             }
         }
         .navigationTitle(localFile.lastPathComponent)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            if !isLoaded {
+            if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) && self.content == nil {
                 loadContent()
             }
         }
@@ -60,32 +72,10 @@ struct LocalFileContentContainer: View {
     }
 
     private func loadContent() {
-        isLoaded = true
         errorMessage = nil
-        loadedView = nil
 
         do {
-            let fileName = localFile.lastPathComponent.lowercased()
-            let content = try Data(contentsOf: localFile)
-
-            if extensionTypes.textExtensions.contains(where: fileName.hasSuffix) {
-                if let text = String(data: content, encoding: .utf8) {
-                    loadedView = AnyView(
-                        ScrollView {
-                            CopyableTextContainer(text: text)
-                        }
-                    )
-                } else {
-                    throw NSError(domain: "DecodeError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not decode text"])
-                }
-            } else if fileName.hasSuffix(".pdf") {
-                loadedView = AnyView(PDFViewerScreen(content: content))
-            } else {
-                loadedView = AnyView(
-                    Text("⚠️ File preview not supported for this type.")
-                        .foregroundColor(.gray)
-                )
-            }
+            self.content = try Data(contentsOf: localFile)
         } catch {
             Log.warn("❌ Error loading file: \(error)")
             errorMessage = error.localizedDescription
