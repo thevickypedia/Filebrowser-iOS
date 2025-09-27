@@ -410,13 +410,10 @@ func logJsonData(data: Data, parseJSON: Bool = false) -> Bool {
 }
 
 func unsafeFileSize(byteSize: Int?) -> String? {
-    // 100 MB preview limit
-    let sizeLimit = 100_000_000
-    let formattedSizeLimit = formatBytes(Int64(sizeLimit))
-
     if let fileSize = byteSize {
+        let formattedSizeLimit = formatBytes(Int64(Constants.previewSizeLimit))
         let formattedFileSize = formatBytes(Int64(fileSize))
-        if fileSize < sizeLimit {
+        if fileSize < Constants.previewSizeLimit {
             Log.debug("✅ File size [\(formattedFileSize)] within limit \(formattedSizeLimit)")
             return nil
         }
