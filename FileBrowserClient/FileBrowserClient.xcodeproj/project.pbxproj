@@ -33,6 +33,8 @@
 		988D9DE82E43915400C37B15 /* FileListAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 988D9DE72E43915000C37B15 /* FileListAlerts.swift */; };
 		989940B62E8839D0006A376A /* UIAlerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940B52E8839CE006A376A /* UIAlerts.swift */; };
 		989940B82E883D1A006A376A /* ToastMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940B72E883D1A006A376A /* ToastMessage.swift */; };
+		989940BE2E88A52F006A376A /* MemoryUsage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940BD2E88A52F006A376A /* MemoryUsage.swift */; };
+		989940D42E88ADE9006A376A /* MemoryUsageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940D32E88ADE9006A376A /* MemoryUsageView.swift */; };
 		98B1AC4D2E7AF663000210BC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC4C2E7AF660000210BC /* Constants.swift */; };
 		98B1AC762E7C6AB9000210BC /* FileList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC752E7C6AB2000210BC /* FileList.swift */; };
 		98B1ACD92E80CC43000210BC /* FileDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */; };
@@ -105,6 +107,8 @@
 		988D9DE72E43915000C37B15 /* FileListAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileListAlerts.swift; sourceTree = "<group>"; };
 		989940B52E8839CE006A376A /* UIAlerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIAlerts.swift; sourceTree = "<group>"; };
 		989940B72E883D1A006A376A /* ToastMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastMessage.swift; sourceTree = "<group>"; };
+		989940BD2E88A52F006A376A /* MemoryUsage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryUsage.swift; sourceTree = "<group>"; };
+		989940D32E88ADE9006A376A /* MemoryUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryUsageView.swift; sourceTree = "<group>"; };
 		98B1AC4C2E7AF660000210BC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		98B1AC752E7C6AB2000210BC /* FileList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileList.swift; sourceTree = "<group>"; };
 		98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDownloadHelper.swift; sourceTree = "<group>"; };
@@ -223,6 +227,7 @@
 		98B1AC502E7C5B9A000210BC /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				989940D32E88ADE9006A376A /* MemoryUsageView.swift */,
 				988166502E857068003C0CD8 /* LocalFileContentContainer.swift */,
 				98B1ACDE2E80E4B4000210BC /* UploadingStack.swift */,
 				98B1ACDC2E80E4AD000210BC /* DownloadingStack.swift */,
@@ -319,6 +324,7 @@
 		98B1AC592E7C5D05000210BC /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				989940BD2E88A52F006A376A /* MemoryUsage.swift */,
 				989940B52E8839CE006A376A /* UIAlerts.swift */,
 				988166542E862890003C0CD8 /* FileExporter.swift */,
 				F85295432E303AF800498675 /* Log.swift */,
@@ -473,6 +479,7 @@
 				986F5A692E3A237D0058E2C4 /* ThemeManager.swift in Sources */,
 				98836BAF2E7291230053170A /* ResumePromptView.swift in Sources */,
 				986F5A6B2E3AC0190058E2C4 /* AnimatedImageView.swift in Sources */,
+				989940BE2E88A52F006A376A /* MemoryUsage.swift in Sources */,
 				987C61872E48F97F00C5DE8E /* ViewVisibilityModifier.swift in Sources */,
 				98836BCD2E79214B0053170A /* DownloadManager.swift in Sources */,
 				988D9DE82E43915400C37B15 /* FileListAlerts.swift in Sources */,
@@ -491,6 +498,7 @@
 				987C617E2E47EC0900C5DE8E /* ServerURLMenu.swift in Sources */,
 				989940B62E8839D0006A376A /* UIAlerts.swift in Sources */,
 				98836BAD2E7285F90053170A /* PlaybackProgressStore.swift in Sources */,
+				989940D42E88ADE9006A376A /* MemoryUsageView.swift in Sources */,
 				98D563D12E44354700DE0079 /* FileExtensions.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
 				98B600352E5149AC00F24FB8 /* ShareSheetView.swift in Sources */,
