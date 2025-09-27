@@ -56,7 +56,7 @@ struct FileDetailView: View {
     let animateGIF: Bool
 
     @State private var content: Data?
-    @State private var error: String?
+    @State private var previewError: String?
     @State private var metadata: ResourceMetadata?
     @State private var showInfo = false
     @State private var isRenaming = false
@@ -89,7 +89,7 @@ struct FileDetailView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color.black.opacity(0.2))
 
-        } else if let error = self.error {
+        } else if let error = self.previewError {
             Text("Error: \(error)").foregroundColor(.red)
 
         // MARK: Check if either of the share sheet is presented to avoid overlap
@@ -366,7 +366,7 @@ struct FileDetailView: View {
 
     func checkCacheAndLoadPreview(fileName: String) {
         self.content = nil
-        self.error = nil
+        self.previewError = nil
         if cacheExtensions.contains(where: fileName.hasSuffix),
            let cached = FileCache.shared.retrieve(
             for: serverURL, path: file.path, modified: file.modified, fileID: file.extension
@@ -395,7 +395,7 @@ struct FileDetailView: View {
         extensionTypes: ExtensionTypes
     ) {
         self.content = nil
-        self.error = nil
+        self.previewError = nil
         if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
             // ✅ Only load if preview is supported
             downloadFilePreview(
@@ -405,7 +405,6 @@ struct FileDetailView: View {
         } else if !extensionTypes.mediaExtensions.contains(where: fileName.hasSuffix) {
             Log.info("🚫 Skipping auto-download — no preview available for \(fileName)")
         }
-        fetchMetadata()
     }
 
     func makeEncodedURL(base: String, path: String, query: String? = nil) -> URL? {
@@ -434,7 +433,7 @@ struct FileDetailView: View {
                 URLQueryItem(name: "rename", value: "false")
             ]
         ) else {
-            self.error = "Invalid rename URL"
+            self.errorMessage = "Invalid rename URL"
             return
         }
 
@@ -445,12 +444,12 @@ struct FileDetailView: View {
         URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.error = "Rename failed: \(error.localizedDescription)"
+                    self.errorMessage = "Rename failed: \(error.localizedDescription)"
                     return
                 }
 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    self.error = "No response"
+                    self.errorMessage = "No response"
                     return
                 }
 
@@ -459,7 +458,7 @@ struct FileDetailView: View {
                     Log.info("✅ Rename successful")
                     dismiss() // ✅ Auto-go back to list
                 } else {
-                    self.error = "Rename failed: \(httpResponse.statusCode)"
+                    self.errorMessage = "Rename failed: \(httpResponse.statusCode)"
                 }
             }
         }.resume()
@@ -497,7 +496,7 @@ struct FileDetailView: View {
                         self.downloadedFileURL = localURL
                         self.showShareSheet = true
                     case .failure(let error):
-                        self.error = "Download failed: \(error.localizedDescription)"
+                        self.errorMessage = "Download failed: \(error.localizedDescription)"
                     }
                 }
             }
@@ -528,7 +527,7 @@ struct FileDetailView: View {
                 URLQueryItem(name: "auth", value: token)
             ]
         ) else {
-            self.error = "Invalid preview URL"
+            self.previewError = "Invalid preview URL"
             return
         }
 
@@ -537,7 +536,7 @@ struct FileDetailView: View {
         URLSession.shared.dataTask(with: url) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.error = "Preview download failed: \(error.localizedDescription)"
+                    self.previewError = "Preview download failed: \(error.localizedDescription)"
                     return
                 }
                 Log.debug("Fetch preview complete")
@@ -567,7 +566,7 @@ struct FileDetailView: View {
                 URLQueryItem(name: "auth", value: token)
             ]
         ) else {
-            self.error = "Invalid raw URL"
+            self.previewError = "Invalid raw URL"
             isDownloading = false
             return
         }
@@ -581,7 +580,7 @@ struct FileDetailView: View {
             DispatchQueue.main.async {
                 self.isDownloading = false
                 if let error = error {
-                    self.error = error.localizedDescription
+                    self.previewError = error.localizedDescription
                     Log.error("❌ Raw download failed: \(error.localizedDescription)")
                     return
                 }
@@ -610,7 +609,7 @@ struct FileDetailView: View {
                 URLQueryItem(name: "view", value: "info")
             ]
         ) else {
-            self.error = "Invalid metadata URL"
+            self.errorMessage = "Invalid metadata URL"
             return
         }
 
@@ -620,12 +619,12 @@ struct FileDetailView: View {
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    self.error = error.localizedDescription
+                    self.errorMessage = error.localizedDescription
                     return
                 }
 
                 guard let data = data else {
-                    self.error = "No metadata received"
+                    self.errorMessage = "No metadata received"
                     return
                 }
 
@@ -633,7 +632,7 @@ struct FileDetailView: View {
                     self.metadata = try JSONDecoder().decode(ResourceMetadata.self, from: data)
                     Log.debug("✅ Metadata loaded for \(file.name)")
                 } catch {
-                    self.error = error.localizedDescription
+                    self.errorMessage = error.localizedDescription
                     Log.error("❌ Metadata decode error: \(error.localizedDescription)")
                 }
             }
