@@ -84,7 +84,7 @@ struct FileListView: View {
     @State private var showLocalFileContent: Bool = false
     @State private var selectedLocalFile: URL?
 
-    @State private var showMemoryUsage: Bool = false
+    @State private var showDeviceMetrics: Bool = false
 
     private var viewMode: ViewMode {
         get { ViewMode(rawValue: viewModeRawValue) ?? .list }
@@ -536,7 +536,7 @@ struct FileListView: View {
         }
     }
 
-    private var showMemoryUsageView: some View {
+    private var showDeviceMetricsView: some View {
         NavigationView {
             MetricsView()
                 .frame(maxWidth: UIScreen.main.bounds.width * 0.8)
@@ -544,7 +544,7 @@ struct FileListView: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Close") {
-                            showLocalFilePicker = false
+                            showDeviceMetrics = false
                         }
                     }
                 }
@@ -643,12 +643,12 @@ struct FileListView: View {
             }
 
             Section {
-                Button("Memory Usage") {
-                    showMemoryUsage = true
+                Button("Device Metrics") {
+                    showDeviceMetrics = true
                 }
             }
-            .fullScreenCover(isPresented: $showMemoryUsage) {
-                showMemoryUsageView
+            .fullScreenCover(isPresented: $showDeviceMetrics) {
+                showDeviceMetricsView
             }
 
             Section(header: Text("Client Storage")) {

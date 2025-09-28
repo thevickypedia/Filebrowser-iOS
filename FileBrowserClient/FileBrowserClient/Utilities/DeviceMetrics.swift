@@ -47,13 +47,13 @@ func getCPUUsage() -> Double? {
 
     var totalUsageOfCPU = 0.0
 
-    for i in 0..<Int(threadCount) {
+    for index in 0..<Int(threadCount) {
         var threadInfo = thread_basic_info()
         var threadInfoCount = mach_msg_type_number_t(THREAD_INFO_MAX)
 
         let result = withUnsafeMutablePointer(to: &threadInfo) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(threadInfoCount)) {
-                thread_info(threads[i], thread_flavor_t(THREAD_BASIC_INFO), $0, &threadInfoCount)
+                thread_info(threads[index], thread_flavor_t(THREAD_BASIC_INFO), $0, &threadInfoCount)
             }
         }
 
