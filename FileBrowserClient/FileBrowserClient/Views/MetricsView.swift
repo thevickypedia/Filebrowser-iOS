@@ -7,6 +7,28 @@
 
 import SwiftUI
 
+enum PulseInterval: String, CaseIterable, Identifiable {
+    case halfSecond = "0.5s"
+    case oneSecond = "1s"
+    case threeSeconds = "3s"
+    case fiveSeconds = "5s"
+    case tenSeconds = "10s"
+    case never = "Never"
+
+    var id: String { rawValue }
+
+    var interval: TimeInterval? {
+        switch self {
+        case .halfSecond: return 0.5
+        case .oneSecond: return 1
+        case .threeSeconds: return 3
+        case .fiveSeconds: return 5
+        case .tenSeconds: return 10
+        case .never: return nil
+        }
+    }
+}
+
 enum ChartType: String, CaseIterable, Identifiable {
     case pie = "Pie"
     case bar = "Bar"
@@ -24,49 +46,74 @@ struct MetricsView: View {
     @AppStorage("cpuChartType") private var cpuChartType: ChartType = .pie
     @AppStorage("diskChartType") private var diskChartType: ChartType = .pie
 
+    @State private var pulseInterval: PulseInterval = .halfSecond
     @State private var timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 40) {
-                if let memory = memoryUsage {
-                    MetricChartView(
-                        title: "Memory",
-                        used: Double(memory.used),
-                        total: Double(memory.total),
-                        formatUsed: { formatBytes(Int64(memory.used)) },
-                        formatTotal: { formatBytes(Int64(memory.total)) },
-                        chartType: $memoryChartType
-                    )
-                }
-
-                if let cpu = cpuUsage {
-                    MetricChartView(
-                        title: "CPU",
-                        used: cpu,
-                        total: 100,
-                        formatUsed: { String(format: "%.1f%%", cpu) },
-                        formatTotal: { "100%" },
-                        chartType: $cpuChartType
-                    )
-                }
-
-                if let disk = diskUsage {
-                    MetricChartView(
-                        title: "Disk",
-                        used: Double(disk.used),
-                        total: Double(disk.total),
-                        formatUsed: { formatBytes(Int64(disk.used)) },
-                        formatTotal: { formatBytes(Int64(disk.total)) },
-                        chartType: $diskChartType
-                    )
+        VStack {
+            // Top Bar with Pulse Menu
+            HStack {
+                Spacer()
+                Menu {
+                    ForEach(PulseInterval.allCases) { interval in
+                        Button(action: {
+                            pulseInterval = interval
+                            updateTimer()
+                        }) {
+                            Label(interval.rawValue, systemImage: pulseInterval == interval ? "checkmark" : "")
+                        }
+                    }
+                } label: {
+                    Label("Pulse: \(pulseInterval.rawValue)", systemImage: "waveform.path.ecg")
+                        .padding(.horizontal)
                 }
             }
-            .padding()
-            .onAppear(perform: loadData)
-            .onReceive(timer) { _ in
-                loadData()
+            .padding(.top)
+
+            ScrollView {
+                VStack(spacing: 40) {
+                    if let memory = memoryUsage {
+                        MetricChartView(
+                            title: "Memory",
+                            used: Double(memory.used),
+                            total: Double(memory.total),
+                            formatUsed: { formatBytes(Int64(memory.used)) },
+                            formatTotal: { formatBytes(Int64(memory.total)) },
+                            chartType: $memoryChartType
+                        )
+                    }
+
+                    if let cpu = cpuUsage {
+                        MetricChartView(
+                            title: "CPU",
+                            used: cpu,
+                            total: 100,
+                            formatUsed: { String(format: "%.1f%%", cpu) },
+                            formatTotal: { "100%" },
+                            chartType: $cpuChartType
+                        )
+                    }
+
+                    if let disk = diskUsage {
+                        MetricChartView(
+                            title: "Disk",
+                            used: Double(disk.used),
+                            total: Double(disk.total),
+                            formatUsed: { formatBytes(Int64(disk.used)) },
+                            formatTotal: { formatBytes(Int64(disk.total)) },
+                            chartType: $diskChartType
+                        )
+                    }
+                }
+                .padding()
             }
+        }
+        .onAppear {
+            updateTimer()
+            loadData()
+        }
+        .onReceive(timer) { _ in
+            loadData()
         }
     }
 
@@ -74,6 +121,13 @@ struct MetricsView: View {
         memoryUsage = getMemoryUsage()
         cpuUsage = getCPUUsage()
         diskUsage = getDiskUsage()
+    }
+
+    private func updateTimer() {
+        timer.upstream.connect().cancel()
+        if let interval = pulseInterval.interval {
+            timer = Timer.publish(every: interval, on: .main, in: .common).autoconnect()
+        }
     }
 }
 
