@@ -75,23 +75,34 @@ struct Log {
         print("\(paddedLabel) - \(message)")
     }
 
+    private static let logDirectoryURL: URL = {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+    }()
+
+    // Log-specific formatter
+    private static let logFileDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd-MM-yyyy"
+        formatter.timeZone = .current
+        return formatter
+    }()
+
+    // Uses cached formatter instead of recreating one every time
+    private static var currentLogFileURL: URL {
+        let dateString = logFileDateFormatter.string(from: Date())
+        return logDirectoryURL.appendingPathComponent("filebrowser_\(dateString).log")
+    }
+
     private static func writeToFile(label: String, message: String) {
         fileWriteQueue.async {
-            let fileManager = FileManager.default
-            let logsDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
-            let formatter = DateFormatter()
-            formatter.dateFormat = "dd-MM-yyyy"
-            let dateString = formatter.string(from: Date())
-            let logFileURL = logsDirectory.appendingPathComponent("filebrowser_\(dateString).log")
-
             let logMessage = "\(label) - \(message)\n"
+            let logFileURL = currentLogFileURL
 
             do {
-                if fileManager.fileExists(atPath: logFileURL.path) {
+                if FileManager.default.fileExists(atPath: logFileURL.path) {
                     // Append to existing file
                     let fileHandle = try FileHandle(forWritingTo: logFileURL)
                     defer { fileHandle.closeFile() } // Ensure it's always closed
-
                     fileHandle.seekToEndOfFile()
                     if let data = logMessage.data(using: .utf8) {
                         fileHandle.write(data)
