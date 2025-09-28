@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.51.0 (09/28/2025)
+--------------------
+- [35aaf4b](https://github.com/thevickypedia/Filebrowser-iOS/commit/35aaf4b2e5557404fb63e4aea1d8f9a2eb0389de) chore: Release ``v1.51.0``
+- [1d774b4](https://github.com/thevickypedia/Filebrowser-iOS/commit/1d774b42351bdd8bcef86e8c6e0931a2fc451289) feat: Create new icon to reload sandbox files and move rollover logs button to local group
+- [58f2952](https://github.com/thevickypedia/Filebrowser-iOS/commit/58f2952a7aa382006c4ca13c0675cf54d11d9170) feat: Create a tool bar button to manually rotate log files
+- [3b17a22](https://github.com/thevickypedia/Filebrowser-iOS/commit/3b17a224bd1c94b13dc51579462fe1931938c108) perf: Auto create indexed log files based on number of lines
+- [f1b4a98](https://github.com/thevickypedia/Filebrowser-iOS/commit/f1b4a98cd258e981bacbb319beef00ad8aff50a6) perf: Offload some repeated computation in log framework to init
+- [bda8b41](https://github.com/thevickypedia/Filebrowser-iOS/commit/bda8b41c3cf81d4812b7e27db26677e12c305241) chore: Update release notes for v1.50.4
+
 v1.50.4 (09/28/2025)
 --------------------
 - [5a713fe](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a713fe276c4577c10ab855c306d860730aff9c8) chore: Release ``v1.50.4``
