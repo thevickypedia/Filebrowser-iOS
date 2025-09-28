@@ -48,6 +48,7 @@ struct MetricsView: View {
 
     @State private var pulseInterval: PulseInterval = .halfSecond
     @State private var timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+    @State private var lastUpdated: Date = Date()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -121,6 +122,12 @@ struct MetricsView: View {
                 }
                 .padding()
             }
+
+            // Footer with Last Updated
+            Text("Last updated: \(lastUpdated.formatted(.dateTime.hour().minute().second()))")
+                .font(.footnote)
+                .foregroundColor(.gray)
+                .padding(.bottom, 10)
         }
         .onAppear {
             updateTimer()
@@ -135,6 +142,7 @@ struct MetricsView: View {
         memoryUsage = getMemoryUsage()
         cpuUsage = getCPUUsage()
         diskUsage = getDiskUsage()
+        lastUpdated = Date()
     }
 
     private func updateTimer() {
