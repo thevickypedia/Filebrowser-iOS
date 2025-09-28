@@ -540,7 +540,7 @@ struct FileListView: View {
         NavigationView {
             MetricsView()
                 .frame(maxWidth: UIScreen.main.bounds.width * 0.8)
-                .navigationTitle("Memory Usage")
+                .navigationTitle("Device Metrics")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Close") {
