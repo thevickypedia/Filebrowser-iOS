@@ -538,7 +538,7 @@ struct FileListView: View {
 
     private var showMemoryUsageView: some View {
         NavigationView {
-            MemoryUsageView()
+            MetricsView()
                 .frame(maxWidth: UIScreen.main.bounds.width * 0.8)
                 .navigationTitle("Memory Usage")
                 .toolbar {
