@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.50.0 (09/27/2025)
+--------------------
+- [193055b](https://github.com/thevickypedia/Filebrowser-iOS/commit/193055b228d1c5cb01964f0a2df2538963207067) chore: Release ``v1.50.0``
+- [f40857e](https://github.com/thevickypedia/Filebrowser-iOS/commit/f40857e2282302b8d39fef5b69d4cc97479b24f6) fix: Fix label name for device metrics
+- [59a62d8](https://github.com/thevickypedia/Filebrowser-iOS/commit/59a62d8d9ea5408e7ac0865a349f6493a53062fe) style: Update styling for device metrics
+- [eded3ba](https://github.com/thevickypedia/Filebrowser-iOS/commit/eded3baf9ba672c13fadea60883918b4dfe38065) feat: Include disk and CPU metrics as pie charts
+- [07c60e6](https://github.com/thevickypedia/Filebrowser-iOS/commit/07c60e6b996f1afff0b96665856ca3fa7725e86f) style: Show memory usage as a pie chart with .5s as refresh interval
+- [4551005](https://github.com/thevickypedia/Filebrowser-iOS/commit/45510053ee7862ab22add52dd228f1dc0d18d75e) feat: Include a new view to show memory usage
+- [8632deb](https://github.com/thevickypedia/Filebrowser-iOS/commit/8632debcf1be1c9e99de367dae503181e0ffff93) refactor: Remove background TUS uploader
+- [a18fb25](https://github.com/thevickypedia/Filebrowser-iOS/commit/a18fb255757fcf420d876f66a477488d650feac0) refactor: Move preview file size limit to constants
+- [d2b0eac](https://github.com/thevickypedia/Filebrowser-iOS/commit/d2b0eacff7e46d60ae1a91774551bf9c5c569760) style: Ping modify sheet's ``VStack`` to top
+- [6f5f658](https://github.com/thevickypedia/Filebrowser-iOS/commit/6f5f658c4823e92b8baa1edadb74e74dfd8e6630) chore: Update release notes for v1.49.4
+
 v1.49.4 (09/27/2025)
 --------------------
 - [844ba8a](https://github.com/thevickypedia/Filebrowser-iOS/commit/844ba8aac113043a247d7019c33cfed7432fe440) chore: Release ``v1.49.4``
