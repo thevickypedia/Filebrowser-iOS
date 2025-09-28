@@ -25,6 +25,9 @@ struct Log {
     static var currentLevel: LogLevel = .trace
     static var verboseMode: Bool = false
     static var logOption: LogOptions = .both
+
+    private static let maxLinesPerFile = 1000
+    private static var rotationCheckTimer: Timer?
     private static let fileWriteQueue = DispatchQueue(label: "log.file.write", qos: .utility)
 
     static func initialize(logOption: LogOptions = .both,
@@ -33,6 +36,66 @@ struct Log {
         self.currentLevel = logLevel
         self.verboseMode = verboseMode
         self.logOption = logOption
+        startLogRotationChecker()
+    }
+
+    private static func startLogRotationChecker() {
+        rotationCheckTimer?.invalidate()
+        rotationCheckTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+            fileWriteQueue.async {
+                _ = rotateLogIfNeeded()
+            }
+        }
+    }
+
+    static func forceLogRotationCheck(completion: @escaping (URL?) -> Void) {
+        fileWriteQueue.async {
+            let result = rotateLogIfNeeded(force: true)
+            completion(result)
+        }
+    }
+
+    private static func rotateLogIfNeeded(force: Bool = false) -> URL? {
+        let currentLog = currentLogFileURL
+        guard FileManager.default.fileExists(atPath: currentLog.path) else { return nil }
+
+        do {
+            if force {
+                return rotateCurrentLogFile(currentLog: currentLog)
+            }
+            let content = try String(contentsOf: currentLog)
+            let lines = content.components(separatedBy: .newlines)
+            if lines.count > maxLinesPerFile {
+                return rotateCurrentLogFile(currentLog: currentLog)
+            }
+        } catch {
+            print("Failed to check log file for rotation: \(error)")
+        }
+        return nil
+    }
+
+    private static func rotateCurrentLogFile(currentLog: URL) -> URL? {
+        let dateString = logFileDateFormatter.string(from: Date())
+        let baseFileName = "filebrowser_\(dateString)"
+        let directory = logDirectoryURL
+
+        // Find the next available index
+        var index = 1
+        var newFileURL: URL
+        repeat {
+            newFileURL = directory.appendingPathComponent("\(baseFileName)-\(index).log")
+            index += 1
+        } while FileManager.default.fileExists(atPath: newFileURL.path)
+
+        do {
+            try FileManager.default.moveItem(at: currentLog, to: newFileURL)
+            // Create a fresh new log file
+            FileManager.default.createFile(atPath: currentLog.path, contents: nil, attributes: nil)
+            return newFileURL
+        } catch {
+            print("Failed to rotate log file: \(error)")
+        }
+        return nil
     }
 
     private static func log(_ message: () -> String,
