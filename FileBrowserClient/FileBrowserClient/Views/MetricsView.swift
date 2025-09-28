@@ -50,10 +50,20 @@ struct MetricsView: View {
     @State private var timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        VStack {
-            // Top Bar with Pulse Menu
+        VStack(spacing: 0) {
+            // Top Bar with Manual Refresh and Pulse
             HStack {
+                if pulseInterval == .never {
+                    Button(action: {
+                        loadData()
+                    }) {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+                    .padding(.leading)
+                }
+
                 Spacer()
+
                 Menu {
                     ForEach(PulseInterval.allCases) { interval in
                         Button(action: {
