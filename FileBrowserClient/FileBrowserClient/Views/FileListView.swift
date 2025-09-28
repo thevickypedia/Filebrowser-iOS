@@ -558,7 +558,7 @@ struct FileListView: View {
             Group {
                 if filteredLocalFiles.isEmpty {
                     VStack(spacing: 16) {
-                        Text("❌ No log files found")
+                        Text("❌ No files found in sandbox")
                             .font(.footnote)
                             .foregroundColor(.gray)
                     }
@@ -566,6 +566,31 @@ struct FileListView: View {
                     List {
                         Section {
                             Toggle("Show only .log files", isOn: $showOnlyLogFiles)
+
+                            Button(action: {
+                                rotatingLogs = true
+                                Log.forceLogRotationCheck { result in
+                                    if let url = result {
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                            localFilesMessage = ToastMessagePayload(
+                                                text: "Stored logs until now to: \(url.lastPathComponent)"
+                                            )
+                                            localFiles = fetchLocalFiles()
+                                            rotatingLogs = false
+                                        }
+                                    } else {
+                                        DispatchQueue.main.async {
+                                            localFilesMessage = ToastMessagePayload(
+                                                text: "Failed to rotate logs.", color: .red
+                                            )
+                                            rotatingLogs = false
+                                        }
+                                    }
+                                }
+                            }) {
+                                Label("Rollover Logs", systemImage: "arrow.triangle.2.circlepath")
+                            }
+                            .disabled(rotatingLogs)
                         }
 
                         Section {
@@ -605,32 +630,12 @@ struct FileListView: View {
                     }
                 }
 
-                // TODO: Use "arrow.clockwise" to "fetchLocalFiles" and create another labelled icon to rotate logs
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        rotatingLogs = true
-                        Log.forceLogRotationCheck { result in
-                            if let url = result {
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    localFilesMessage = ToastMessagePayload(
-                                        text: "Stored logs until now to: \(url.lastPathComponent)"
-                                    )
-                                    localFiles = fetchLocalFiles()
-                                    rotatingLogs = false
-                                }
-                            } else {
-                                DispatchQueue.main.async {
-                                    localFilesMessage = ToastMessagePayload(
-                                        text: "Failed to rotate logs.", color: .red
-                                    )
-                                    rotatingLogs = false
-                                }
-                            }
-                        }
+                        localFiles = fetchLocalFiles()
                     }) {
                         Image(systemName: "arrow.clockwise")
                     }
-                    .disabled(rotatingLogs)
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
