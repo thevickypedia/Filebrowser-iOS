@@ -80,6 +80,7 @@ struct MetricsView: View {
     @State private var timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
     @State private var lastUpdated: Date = Date()
     @State private var presentExportSheet = false
+    @State private var exportURL: URL?
 
     private func exportSnapshot() -> URL? {
         let snapshot = MetricsSnapshot.from(
@@ -95,8 +96,9 @@ struct MetricsView: View {
 
             let data = try encoder.encode(snapshot)
 
-            // TODO: Add timestamp in the filename
-            let url = FileManager.default.temporaryDirectory.appendingPathComponent("SystemMetrics.json")
+            let filename = "SystemMetrics_\(getTimeStamp()).json"
+            Log.info("Exporting device metrics snapshot as \(filename)")
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
             try data.write(to: url)
 
             return url
@@ -140,7 +142,10 @@ struct MetricsView: View {
 
                 Spacer()
 
-                Button(action: { presentExportSheet = true }) {
+                Button(action: {
+                    exportURL = exportSnapshot()
+                    presentExportSheet = exportURL != nil
+                }) {
                     Image(systemName: "square.and.arrow.up")
                 }
             }
@@ -198,8 +203,10 @@ struct MetricsView: View {
             loadData()
         }
         .sheet(isPresented: $presentExportSheet) {
-            if let exportURL = exportSnapshot() {
-                FileExporter(fileURL: exportURL)
+            if let url = exportURL {
+                FileExporter(fileURL: url)
+            } else {
+                ProgressView("Generating Snapshot")
             }
         }
     }

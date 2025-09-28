@@ -426,3 +426,10 @@ func unsafeFileSize(byteSize: Int?) -> String? {
         return warning
     }
 }
+
+func getTimeStamp(_ customFormat: String = "MMddyyyy_HHmmss") -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = customFormat
+    formatter.timeZone = .current
+    return formatter.string(from: Date())
+}
