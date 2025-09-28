@@ -539,7 +539,7 @@ struct FileListView: View {
     private var showDeviceMetricsView: some View {
         NavigationView {
             MetricsView()
-                .frame(maxWidth: UIScreen.main.bounds.width * 0.8)
+                .frame(maxWidth: UIScreen.main.bounds.width * 0.95)
                 .navigationTitle("Device Metrics")
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {

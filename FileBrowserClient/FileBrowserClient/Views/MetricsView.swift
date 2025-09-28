@@ -115,15 +115,9 @@ struct MetricsView: View {
                     Button(action: {
                         loadData()
                     }) {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        Image(systemName: "arrow.clockwise")
                     }
                     .padding(.leading)
-                }
-
-                Spacer()
-
-                Button(action: { presentExportSheet = true }) {
-                    Image(systemName: "square.and.arrow.up")
                 }
 
                 Menu {
@@ -142,6 +136,12 @@ struct MetricsView: View {
                 } label: {
                     Label("Pulse: \(pulseInterval.rawValue)", systemImage: "waveform.path.ecg")
                         .padding(.horizontal)
+                }
+
+                Spacer()
+
+                Button(action: { presentExportSheet = true }) {
+                    Image(systemName: "square.and.arrow.up")
                 }
             }
             .padding(.top)
