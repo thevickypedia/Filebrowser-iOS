@@ -80,6 +80,7 @@ struct FileListView: View {
 
     @State private var localFiles: [URL] = []
     @State private var showOnlyLogFiles: Bool = true
+    @State private var rotatingLogs: Bool = false
     @State private var showLocalFilePicker: Bool = false
     @State private var showLocalFileContent: Bool = false
     @State private var selectedLocalFile: URL?
@@ -100,6 +101,7 @@ struct FileListView: View {
     @State private var toastMessage: ToastMessagePayload?
     @State private var modifyMessage: ToastMessagePayload?
     @State private var shareMessage: ToastMessagePayload?
+    @State private var localFilesMessage: ToastMessagePayload?
 
     // Specific for Grid view
     @State private var selectedFileIndex: Int?
@@ -595,11 +597,40 @@ struct FileListView: View {
                 }
             }
             .navigationTitle("Local Files")
+            .modifier(ToastMessage(payload: $localFilesMessage))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
                         showLocalFilePicker = false
                     }
+                }
+
+                // TODO: Use "arrow.clockwise" to "fetchLocalFiles" and create another labelled icon to rotate logs
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        rotatingLogs = true
+                        Log.forceLogRotationCheck { result in
+                            if let url = result {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    localFilesMessage = ToastMessagePayload(
+                                        text: "Stored logs until now to: \(url.lastPathComponent)"
+                                    )
+                                    localFiles = fetchLocalFiles()
+                                    rotatingLogs = false
+                                }
+                            } else {
+                                DispatchQueue.main.async {
+                                    localFilesMessage = ToastMessagePayload(
+                                        text: "Failed to rotate logs.", color: .red
+                                    )
+                                    rotatingLogs = false
+                                }
+                            }
+                        }
+                    }) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                    .disabled(rotatingLogs)
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
