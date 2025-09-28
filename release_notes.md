@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.50.2 (09/28/2025)
+--------------------
+- [929989e](https://github.com/thevickypedia/Filebrowser-iOS/commit/929989e9dbd7db858079134494ac6157b9d5c60d) chore: Release ``v1.50.2``
+- [51e63e0](https://github.com/thevickypedia/Filebrowser-iOS/commit/51e63e0a7368149c56f0d1bafda8ddc0479ec08c) style: Add a last updated timestamp at the footer for device metrics
+- [875dcee](https://github.com/thevickypedia/Filebrowser-iOS/commit/875dcee719e408d5de5bb9bb1f489a7460bc0c47) feat: Include a button for manual refresh in device metrics when ``pulse`` is set to never
+- [4a7aae6](https://github.com/thevickypedia/Filebrowser-iOS/commit/4a7aae603a84e1642639cef240ddce3b6591074b) fix: Remove empty ``systemImage`` for unselected ``Pulse`` option in device metrics
+- [3890151](https://github.com/thevickypedia/Filebrowser-iOS/commit/3890151a37a5ba3f293a487babcef52f83bbe4ef) feat: Add an option for ``pulse`` to control the refresh interval on device metrics
+- [b419a6d](https://github.com/thevickypedia/Filebrowser-iOS/commit/b419a6da15d961e7941ea453fcb93a7caab31e37) chore: Update release notes for v1.50.1
+
 v1.50.1 (09/28/2025)
 --------------------
 - [8a36199](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a36199683bd10c056815674c13e722a8b64ea50) chore: Release ``v1.50.1``
