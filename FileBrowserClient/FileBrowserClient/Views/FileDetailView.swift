@@ -268,6 +268,7 @@ struct FileDetailView: View {
                     self.errorMessage = "Showing share sheet, but no download URL found."
                     return AnyView(EmptyView())
                 }
+                // TODO: Add success/cancel handler
                 return AnyView(FileExporter(fileURL: fileURL))
             }
             // Create sharable link
