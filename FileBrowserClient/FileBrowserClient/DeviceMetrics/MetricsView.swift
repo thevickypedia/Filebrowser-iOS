@@ -82,6 +82,10 @@ struct MetricsView: View {
     @State private var presentExportSheet = false
     @State private var exportURL: URL?
 
+    @State private var toastMessage: ToastMessagePayload?
+    @State private var errorTitle: String?
+    @State private var errorMessage: String?
+
     private func exportSnapshot() -> URL? {
         let snapshot = MetricsSnapshot.from(
             memory: memoryUsage,
@@ -103,8 +107,10 @@ struct MetricsView: View {
 
             return url
         } catch {
-            // TODO: Pop up error message
-            Log.error("Failed to export metrics: \(error)")
+            let msg = "Failed to export metrics: \(error.localizedDescription)"
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            Log.error(msg)
         }
         return nil
     }
@@ -209,6 +215,8 @@ struct MetricsView: View {
                 ProgressView("Generating Snapshot")
             }
         }
+        .modifier(ToastMessage(payload: $toastMessage))
+        .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
     }
 
     private func loadData() {
