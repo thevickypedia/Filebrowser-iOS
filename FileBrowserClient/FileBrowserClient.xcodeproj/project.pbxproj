@@ -183,6 +183,7 @@
 		98823ECD2E1AFADA004CBB11 /* FileBrowserClient */ = {
 			isa = PBXGroup;
 			children = (
+				989940DB2E89A87B006A376A /* DeviceMetrics */,
 				98823ED22E1AFADC004CBB11 /* Assets.xcassets */,
 				98B1AC572E7C5CDC000210BC /* AppEntry */,
 				98B1AC542E7C5C93000210BC /* Authentication */,
@@ -224,10 +225,18 @@
 			path = FileBrowserClientUITests;
 			sourceTree = "<group>";
 		};
+		989940DB2E89A87B006A376A /* DeviceMetrics */ = {
+			isa = PBXGroup;
+			children = (
+				989940D72E88B231006A376A /* DeviceMetrics.swift */,
+				989940D92E88B250006A376A /* MetricsView.swift */,
+			);
+			path = DeviceMetrics;
+			sourceTree = "<group>";
+		};
 		98B1AC502E7C5B9A000210BC /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				989940D92E88B250006A376A /* MetricsView.swift */,
 				988166502E857068003C0CD8 /* LocalFileContentContainer.swift */,
 				98B1ACDE2E80E4B4000210BC /* UploadingStack.swift */,
 				98B1ACDC2E80E4AD000210BC /* DownloadingStack.swift */,
@@ -324,7 +333,6 @@
 		98B1AC592E7C5D05000210BC /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				989940D72E88B231006A376A /* DeviceMetrics.swift */,
 				989940B52E8839CE006A376A /* UIAlerts.swift */,
 				988166542E862890003C0CD8 /* FileExporter.swift */,
 				F85295432E303AF800498675 /* Log.swift */,

@@ -864,17 +864,20 @@ struct FileListView: View {
     private func checkPathExists(_ fullPath: String) -> Bool {
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
             return false
         }
 
         guard let components = URLComponents(string: auth.serverURL + "/api/resources\(fullPath)") else {
             Log.error("❌ Failed to make URL components for path: \(fullPath)")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid URL"
             return false
         }
 
         guard let url = components.url else {
+            errorTitle = "Internal Error"
             errorMessage = "Failed to build URL"
             return false
         }
@@ -1472,7 +1475,8 @@ struct FileListView: View {
                         )
                     case .failure(let err):
                         Log.error("❌ Resumed download failed: \(err.localizedDescription)")
-                        self.errorMessage = "Download failed: \(err.localizedDescription)"
+                        errorTitle = "Resume Download Error"
+                        errorMessage = "Download failed: \(err.localizedDescription)"
                     }
 
                     self.transferState.currentTransferIndex += 1
@@ -1532,6 +1536,7 @@ struct FileListView: View {
             pathComponents: ["api", "raw", file.path],
             queryItems: [ URLQueryItem(name: "auth", value: auth.token) ]
         ) else {
+            errorTitle = "Internal Error"
             errorMessage = "Invalid download URL for \(file.name)"
             transferState.transferType = nil
             return
@@ -1591,7 +1596,8 @@ struct FileListView: View {
                         )
                     case .failure(let err):
                         Log.error("❌ Download failed: \(err.localizedDescription)")
-                        self.errorMessage = "Download failed: \(err.localizedDescription)"
+                        errorTitle = "Internal Error"
+                        errorMessage = "Download failed: \(err.localizedDescription)"
                     }
 
                     // Move to next item
@@ -1655,12 +1661,14 @@ struct FileListView: View {
         Log.debug("🔍 Searching for: \(query)")
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
 
         guard let url = getSearchURL(serverURL: auth.serverURL, query: query) else {
             await MainActor.run {
+                errorTitle = "User Error"
                 errorMessage = "Invalid search: \(query)"
                 searchInProgress = false
             }
@@ -1722,6 +1730,7 @@ struct FileListView: View {
                 }
             } catch let decodingError as DecodingError {
                 await MainActor.run {
+                    errorTitle = "Decode Error"
                     errorMessage = "Failed to parse search results"
                     viewModel.isLoading = false
                     searchInProgress = false
@@ -1985,6 +1994,7 @@ struct FileListView: View {
     func fetchUsageInfo() {
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
@@ -1994,6 +2004,7 @@ struct FileListView: View {
             queryItems: []
         ) else {
             Log.error("❌ Invalid URL")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid usage URL."
             return
         }
@@ -2035,6 +2046,7 @@ struct FileListView: View {
     func initiateTusUpload(for fileURL: URL) {
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
@@ -2374,17 +2386,20 @@ struct FileListView: View {
     ) -> URLSessionDataTask? {
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
             return nil
         }
         guard var components = URLComponents(string: auth.serverURL + endpoint) else {
             Log.error("❌ Failed to make URL components for endpoint: \(endpoint)")
+            errorTitle = "Internal Error"
             errorMessage = "Failed to make URL components."
             return nil
         }
 
         components.queryItems = queryItems
         guard let url = components.url else {
+            errorTitle = "Internal Error"
             errorMessage = "Failed to build URL"
             return nil
         }
@@ -2441,6 +2456,7 @@ struct FileListView: View {
     func saveSettings() {
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
@@ -2452,6 +2468,8 @@ struct FileListView: View {
                   queryItems: []
               ) else {
             Log.error("❌ Invalid user ID or URL")
+            errorTitle = "Internal Error"
+            errorMessage = "Invalid user ID or URL"
             return
         }
         Log.debug("⚙️ Current settings: \(currentSettings)")
@@ -2508,6 +2526,7 @@ struct FileListView: View {
     func deleteSelectedItems() {
         guard isAuthValid else {
             Log.error("❌ Auth not validated")
+            errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
@@ -2555,6 +2574,7 @@ struct FileListView: View {
         guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
               let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             Log.error("❌ Failed to encode paths")
+            errorTitle = "Encode Error"
             errorMessage = "Failed to rename \(item.name)"
             return
         }
