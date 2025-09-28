@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v1.50.4 (09/28/2025)
+--------------------
+- [5a713fe](https://github.com/thevickypedia/Filebrowser-iOS/commit/5a713fe276c4577c10ab855c306d860730aff9c8) chore: Release ``v1.50.4``
+- [1e55625](https://github.com/thevickypedia/Filebrowser-iOS/commit/1e556253203ae877bdba54b3c2c90b0d7d807461) style: Avoid filenames in toast messages when processing response from file exporter
+- [91b10ca](https://github.com/thevickypedia/Filebrowser-iOS/commit/91b10ca1f42b8c8a21aa8ae6712f4dda06e1957a) feat: Include ``activityType``, and ``activityError`` to track export response
+- [01a8712](https://github.com/thevickypedia/Filebrowser-iOS/commit/01a871296efcf5f6af108f44363431b629dc54a5) refactor: Create a reusable function to process response from ``FileExporter``
+- [e3cc073](https://github.com/thevickypedia/Filebrowser-iOS/commit/e3cc0735cd45c85ce24352162a95a6169ec06d03) feat: Extend success/cancel handler for file exporter to local file container and file detail view
+- [4c35a9f](https://github.com/thevickypedia/Filebrowser-iOS/commit/4c35a9f56ac3cb8967969506a10b705b1994dd09) feat: Include a success/cancel handler for file exporter
+- [ad828aa](https://github.com/thevickypedia/Filebrowser-iOS/commit/ad828aaa83bc90ce56f267bfe299e885869e2dd1) feat: Add error and toast message function to device metrics' export
+- [0490a78](https://github.com/thevickypedia/Filebrowser-iOS/commit/0490a780e550612f767426de478f8c499680d0ab) refactor: Restructure code for better readability and fix error titles in list view
+- [51853a1](https://github.com/thevickypedia/Filebrowser-iOS/commit/51853a182ace112cb961f41fbaee91985cf847f9) chore: Update release notes for v1.50.3
+
 v1.50.3 (09/28/2025)
 --------------------
 - [af62c4f](https://github.com/thevickypedia/Filebrowser-iOS/commit/af62c4f4816e98a3ede2973200f390188ef7766d) chore: Release ``v1.50.3``
