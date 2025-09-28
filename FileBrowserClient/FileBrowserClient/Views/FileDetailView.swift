@@ -268,8 +268,19 @@ struct FileDetailView: View {
                     self.errorMessage = "Showing share sheet, but no download URL found."
                     return AnyView(EmptyView())
                 }
-                // TODO: Add success/cancel handler
-                return AnyView(FileExporter(fileURL: fileURL))
+                return AnyView(
+                    FileExporter(fileURL: fileURL) { success in
+                        if success {
+                            let msg = "✔️ Export [\(fileURL.lastPathComponent)] successful"
+                            Log.debug(msg)
+                            toastMessage = ToastMessagePayload(text: msg)
+                        } else {
+                            let msg = "✖️ Export [\(fileURL.lastPathComponent)] cancelled"
+                            Log.debug(msg)
+                            toastMessage = ToastMessagePayload(text: msg, color: .yellow)
+                        }
+                    }
+                )
             }
             // Create sharable link
             .sheet(isPresented: $isSharing) {

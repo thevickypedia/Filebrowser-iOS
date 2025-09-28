@@ -14,6 +14,7 @@ struct LocalFileContentContainer: View {
     @State private var content: Data?
     @State private var showExporter = false
     @State private var previewError: PreviewErrorPayload?
+    @State private var toastMessage: ToastMessagePayload?
 
     var body: some View {
         let fileName = localFile.lastPathComponent.lowercased()
@@ -68,9 +69,19 @@ struct LocalFileContentContainer: View {
             }
         }
         .sheet(isPresented: $showExporter) {
-            // TODO: Add success/cancel handler
-            FileExporter(fileURL: localFile)
+            FileExporter(fileURL: localFile) { success in
+                if success {
+                    let msg = "✔️ Export [\(localFile.lastPathComponent)] successful"
+                    Log.debug(msg)
+                    toastMessage = ToastMessagePayload(text: msg)
+                } else {
+                    let msg = "✖️ Export [\(localFile.lastPathComponent)] cancelled"
+                    Log.debug(msg)
+                    toastMessage = ToastMessagePayload(text: msg, color: .yellow)
+                }
+            }
         }
+        .modifier(ToastMessage(payload: $toastMessage))
     }
 
     private func loadContent() {

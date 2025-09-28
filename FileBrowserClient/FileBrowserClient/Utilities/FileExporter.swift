@@ -15,7 +15,7 @@ struct FileExporter: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIActivityViewController {
         let activityVC = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
 
-        activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, activityError in
+        activityVC.completionWithItemsHandler = { _, completed, _, _ in
             // Call your completion handler
             completion?(completed)
         }
