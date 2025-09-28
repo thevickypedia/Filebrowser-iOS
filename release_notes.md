@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.50.3 (09/28/2025)
+--------------------
+- [af62c4f](https://github.com/thevickypedia/Filebrowser-iOS/commit/af62c4f4816e98a3ede2973200f390188ef7766d) chore: Release ``v1.50.3``
+- [2335849](https://github.com/thevickypedia/Filebrowser-iOS/commit/2335849853aa09578860c3209fcfaac094090be5) fix: Avoid repeated exports when metrics' export sheet is presented; Add a timestamp for filename
+- [b4c430e](https://github.com/thevickypedia/Filebrowser-iOS/commit/b4c430e8b6a9e7cde497c13c7672c5b5ace611a2) style: Change icon arrangement and page width for metrics view
+- [aebe5ed](https://github.com/thevickypedia/Filebrowser-iOS/commit/aebe5ed1fd11b5db62a5f12a9e50e5d7090a068e) feat: Add an option to export device metrics snapshot
+- [805c5fb](https://github.com/thevickypedia/Filebrowser-iOS/commit/805c5fb3f0d125bda284e99c9130eab050683d15) chore: Update release notes for v1.50.2
+
 v1.50.2 (09/28/2025)
 --------------------
 - [929989e](https://github.com/thevickypedia/Filebrowser-iOS/commit/929989e9dbd7db858079134494ac6157b9d5c60d) chore: Release ``v1.50.2``
