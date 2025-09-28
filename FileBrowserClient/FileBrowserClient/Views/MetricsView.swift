@@ -10,7 +10,7 @@ import SwiftUI
 enum ChartType: String, CaseIterable, Identifiable {
     case pie = "Pie"
     case bar = "Bar"
-    case histogram = "Histogram"
+    case stacked = "Stacked"
 
     var id: String { rawValue }
 }
@@ -130,8 +130,8 @@ struct MetricChartView: View {
                     formatTotal: formatTotal,
                     color: color
                 )
-            case .histogram:
-                HistogramChartView(
+            case .stacked:
+                StackedChartView(
                     title: title,
                     percentUsed: percentUsed,
                     formatUsed: formatUsed,
@@ -211,7 +211,7 @@ struct BarChartView: View {
     }
 }
 
-struct HistogramChartView: View {
+struct StackedChartView: View {
     let title: String
     let percentUsed: Double
     let formatUsed: () -> String
