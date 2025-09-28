@@ -269,8 +269,8 @@ struct FileDetailView: View {
                     return AnyView(EmptyView())
                 }
                 return AnyView(
-                    FileExporter(fileURL: fileURL) { success in
-                        toastMessage = processFileExporterResponse(fileURL: fileURL, success: success)
+                    FileExporter(fileURL: fileURL) { exportResult in
+                        toastMessage = processFileExporterResponse(fileURL: fileURL, exportResult: exportResult)
                     }
                 )
             }

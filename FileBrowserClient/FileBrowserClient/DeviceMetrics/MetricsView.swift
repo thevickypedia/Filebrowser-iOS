@@ -210,8 +210,8 @@ struct MetricsView: View {
         }
         .sheet(isPresented: $presentExportSheet) {
             if let url = exportURL {
-                FileExporter(fileURL: url) { success in
-                    toastMessage = processFileExporterResponse(fileURL: url, success: success)
+                FileExporter(fileURL: url) { exportResult in
+                    toastMessage = processFileExporterResponse(fileURL: url, exportResult: exportResult)
                 }
             } else {
                 ProgressView("Generating Snapshot")

@@ -69,8 +69,8 @@ struct LocalFileContentContainer: View {
             }
         }
         .sheet(isPresented: $showExporter) {
-            FileExporter(fileURL: localFile) { success in
-                toastMessage = processFileExporterResponse(fileURL: localFile, success: success)
+            FileExporter(fileURL: localFile) { exportResult in
+                toastMessage = processFileExporterResponse(fileURL: localFile, exportResult: exportResult)
             }
         }
         .modifier(ToastMessage(payload: $toastMessage))

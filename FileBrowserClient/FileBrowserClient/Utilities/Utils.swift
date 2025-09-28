@@ -434,14 +434,21 @@ func getTimeStamp(_ customFormat: String = "MMddyyyy_HHmmss") -> String {
     return formatter.string(from: Date())
 }
 
-func processFileExporterResponse(fileURL: URL, success: Bool) -> ToastMessagePayload {
-    if success {
-        let msg = "✔️ Export [\(fileURL.lastPathComponent)] successful"
+func processFileExporterResponse(fileURL: URL, exportResult: FileExportResult) -> ToastMessagePayload {
+    if exportResult.completed {
+        var msg = "✔️ Export [\(fileURL.lastPathComponent)] successful"
+        if let activityType = exportResult.activityType?.rawValue {
+            msg += " through \(activityType.components(separatedBy: ".").last ?? activityType)"
+        }
         Log.debug(msg)
         return ToastMessagePayload(text: msg)
+    } else if let error = exportResult.error {
+        var msg = "✖️ Failed to export \(fileURL.lastPathComponent) - \(error.localizedDescription)"
+        Log.error(msg)
+        return ToastMessagePayload(text: msg, color: .red)
     } else {
-        let msg = "✖️ Export [\(fileURL.lastPathComponent)] cancelled"
-        Log.debug(msg)
+        let msg = "➖ Export [\(fileURL.lastPathComponent)] cancelled"
+        Log.warn(msg)
         return ToastMessagePayload(text: msg, color: .yellow)
     }
 }

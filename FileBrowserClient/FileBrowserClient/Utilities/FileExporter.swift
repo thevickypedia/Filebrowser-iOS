@@ -8,16 +8,28 @@
 import SwiftUI
 import UIKit
 
+struct FileExportResult {
+    let activityType: UIActivity.ActivityType?
+    let completed: Bool
+    let returnedItems: [Any]?
+    let error: Error?
+}
+
 struct FileExporter: UIViewControllerRepresentable {
     let fileURL: URL
-    var completion: ((Bool) -> Void)? // true if completed, false if cancelled
+    var completion: ((FileExportResult) -> Void)?
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
         let activityVC = UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
 
-        activityVC.completionWithItemsHandler = { _, completed, _, _ in
-            // Call your completion handler
-            completion?(completed)
+        activityVC.completionWithItemsHandler = { activityType, completed, returnedItems, activityError in
+            // Call completion handler
+            completion?(FileExportResult(
+                activityType: activityType,
+                completed: completed,
+                returnedItems: returnedItems,
+                error: activityError
+            ))
         }
 
         return activityVC
