@@ -20,9 +20,9 @@ struct MetricsView: View {
     @State private var cpuUsage: Double?
     @State private var diskUsage: (used: UInt64, total: UInt64)?
 
-    @State private var memoryChartType: ChartType = .pie
-    @State private var cpuChartType: ChartType = .pie
-    @State private var diskChartType: ChartType = .pie
+    @AppStorage("memoryChartType") private var memoryChartType: ChartType = .pie
+    @AppStorage("cpuChartType") private var cpuChartType: ChartType = .pie
+    @AppStorage("diskChartType") private var diskChartType: ChartType = .pie
 
     @State private var timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
