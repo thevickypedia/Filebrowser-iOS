@@ -37,6 +37,36 @@ enum ChartType: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+struct MetricsSnapshot: Codable {
+    let timestamp: Date
+    let memory: UsageMetric?
+    let cpu: UsageMetric?
+    let disk: UsageMetric?
+
+    struct UsageMetric: Codable {
+        let used: String
+        let total: String
+        let percentUsed: Double
+    }
+
+    static func from(memory: MemoryUsage?, cpu: Double?, disk: (used: UInt64, total: UInt64)?) -> MetricsSnapshot {
+        func format(_ used: Double, _ total: Double) -> UsageMetric {
+            return UsageMetric(
+                used: formatBytes(Int64(used)),
+                total: formatBytes(Int64(total)),
+                percentUsed: total > 0 ? used / total : 0
+            )
+        }
+
+        return MetricsSnapshot(
+            timestamp: Date(),
+            memory: memory.map { format(Double($0.used), Double($0.total)) },
+            cpu: cpu.map { UsageMetric(used: String(format: "%.1f%%", $0), total: "100%", percentUsed: $0 / 100) },
+            disk: disk.map { format(Double($0.used), Double($0.total)) }
+        )
+    }
+}
+
 struct MetricsView: View {
     @State private var memoryUsage: MemoryUsage?
     @State private var cpuUsage: Double?
@@ -49,6 +79,33 @@ struct MetricsView: View {
     @State private var pulseInterval: PulseInterval = .halfSecond
     @State private var timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
     @State private var lastUpdated: Date = Date()
+    @State private var presentExportSheet = false
+
+    private func exportSnapshot() -> URL? {
+        let snapshot = MetricsSnapshot.from(
+            memory: memoryUsage,
+            cpu: cpuUsage,
+            disk: diskUsage
+        )
+
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.dateEncodingStrategy = .iso8601
+
+            let data = try encoder.encode(snapshot)
+
+            // TODO: Add timestamp in the filename
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent("SystemMetrics.json")
+            try data.write(to: url)
+
+            return url
+        } catch {
+            // TODO: Pop up error message
+            Log.error("Failed to export metrics: \(error)")
+        }
+        return nil
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -64,6 +121,10 @@ struct MetricsView: View {
                 }
 
                 Spacer()
+
+                Button(action: { presentExportSheet = true }) {
+                    Image(systemName: "square.and.arrow.up")
+                }
 
                 Menu {
                     ForEach(PulseInterval.allCases) { interval in
@@ -135,6 +196,11 @@ struct MetricsView: View {
         }
         .onReceive(timer) { _ in
             loadData()
+        }
+        .sheet(isPresented: $presentExportSheet) {
+            if let exportURL = exportSnapshot() {
+                FileExporter(fileURL: exportURL)
+            }
         }
     }
 
