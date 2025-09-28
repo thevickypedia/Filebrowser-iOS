@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.51.1 (09/28/2025)
+--------------------
+- [deae701](https://github.com/thevickypedia/Filebrowser-iOS/commit/deae70155f5c26f06e1a64f81e5317927dad115c) chore: Release ``v1.51.1``
+- [7102c3e](https://github.com/thevickypedia/Filebrowser-iOS/commit/7102c3e41d77b7a8ea526f03beb261a6871473bf) refactor: Separate ``showOnlyLogFiles`` toggle from file list to clarify empty states in sandbox view
+- [28e9400](https://github.com/thevickypedia/Filebrowser-iOS/commit/28e94009d403797c4bfe28a5039a80f6ba1ce2cd) chore: Update release notes for v1.51.0
+
 v1.51.0 (09/28/2025)
 --------------------
 - [35aaf4b](https://github.com/thevickypedia/Filebrowser-iOS/commit/35aaf4b2e5557404fb63e4aea1d8f9a2eb0389de) chore: Release ``v1.51.0``
