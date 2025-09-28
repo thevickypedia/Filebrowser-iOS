@@ -60,7 +60,11 @@ struct MetricsView: View {
                             pulseInterval = interval
                             updateTimer()
                         }) {
-                            Label(interval.rawValue, systemImage: pulseInterval == interval ? "checkmark" : "")
+                            if pulseInterval == interval {
+                                Label(interval.rawValue, systemImage: "checkmark")
+                            } else {
+                                Text(interval.rawValue)
+                            }
                         }
                     }
                 } label: {
