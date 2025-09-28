@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.50.1 (09/28/2025)
+--------------------
+- [8a36199](https://github.com/thevickypedia/Filebrowser-iOS/commit/8a36199683bd10c056815674c13e722a8b64ea50) chore: Release ``v1.50.1``
+- [a459368](https://github.com/thevickypedia/Filebrowser-iOS/commit/a45936890ab6b67dc7bf07ac98f0e127fe0221c8) refactor: Persist the chosen metrics view style option
+- [ebd4a45](https://github.com/thevickypedia/Filebrowser-iOS/commit/ebd4a4597909364d992f93189d89a612f3472ccf) style: Change naming convention for ``histogram`` to ``stacked``
+- [0fb1857](https://github.com/thevickypedia/Filebrowser-iOS/commit/0fb18576f233f7a8c61157d12935bb812b3cf8dc) feat: Add selection options for metrics view like ``piechart``, ``bar`` and ``histogram``
+- [f40de2e](https://github.com/thevickypedia/Filebrowser-iOS/commit/f40de2eee0fe1f5727c4a253aec3e18dc77d2ea2) chore: Update release notes for v1.50.0
+
 v1.50.0 (09/27/2025)
 --------------------
 - [193055b](https://github.com/thevickypedia/Filebrowser-iOS/commit/193055b228d1c5cb01964f0a2df2538963207067) chore: Release ``v1.50.0``
