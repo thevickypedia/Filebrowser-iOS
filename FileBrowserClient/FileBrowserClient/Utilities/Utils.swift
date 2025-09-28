@@ -433,3 +433,15 @@ func getTimeStamp(_ customFormat: String = "MMddyyyy_HHmmss") -> String {
     formatter.timeZone = .current
     return formatter.string(from: Date())
 }
+
+func processFileExporterResponse(fileURL: URL, success: Bool) -> ToastMessagePayload {
+    if success {
+        let msg = "✔️ Export [\(fileURL.lastPathComponent)] successful"
+        Log.debug(msg)
+        return ToastMessagePayload(text: msg)
+    } else {
+        let msg = "✖️ Export [\(fileURL.lastPathComponent)] cancelled"
+        Log.debug(msg)
+        return ToastMessagePayload(text: msg, color: .yellow)
+    }
+}

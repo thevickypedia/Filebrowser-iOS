@@ -270,15 +270,7 @@ struct FileDetailView: View {
                 }
                 return AnyView(
                     FileExporter(fileURL: fileURL) { success in
-                        if success {
-                            let msg = "✔️ Export [\(fileURL.lastPathComponent)] successful"
-                            Log.debug(msg)
-                            toastMessage = ToastMessagePayload(text: msg)
-                        } else {
-                            let msg = "✖️ Export [\(fileURL.lastPathComponent)] cancelled"
-                            Log.debug(msg)
-                            toastMessage = ToastMessagePayload(text: msg, color: .yellow)
-                        }
+                        toastMessage = processFileExporterResponse(fileURL: fileURL, success: success)
                     }
                 )
             }

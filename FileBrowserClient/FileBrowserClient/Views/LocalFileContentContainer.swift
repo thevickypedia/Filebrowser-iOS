@@ -70,15 +70,7 @@ struct LocalFileContentContainer: View {
         }
         .sheet(isPresented: $showExporter) {
             FileExporter(fileURL: localFile) { success in
-                if success {
-                    let msg = "✔️ Export [\(localFile.lastPathComponent)] successful"
-                    Log.debug(msg)
-                    toastMessage = ToastMessagePayload(text: msg)
-                } else {
-                    let msg = "✖️ Export [\(localFile.lastPathComponent)] cancelled"
-                    Log.debug(msg)
-                    toastMessage = ToastMessagePayload(text: msg, color: .yellow)
-                }
+                toastMessage = processFileExporterResponse(fileURL: localFile, success: success)
             }
         }
         .modifier(ToastMessage(payload: $toastMessage))

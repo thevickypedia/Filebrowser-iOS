@@ -211,15 +211,7 @@ struct MetricsView: View {
         .sheet(isPresented: $presentExportSheet) {
             if let url = exportURL {
                 FileExporter(fileURL: url) { success in
-                    if success {
-                        let msg = "✔️ Export [\(url.lastPathComponent)] successful"
-                        Log.debug(msg)
-                        toastMessage = ToastMessagePayload(text: msg)
-                    } else {
-                        let msg = "✖️ Export [\(url.lastPathComponent)] cancelled"
-                        Log.debug(msg)
-                        toastMessage = ToastMessagePayload(text: msg, color: .yellow)
-                    }
+                    toastMessage = processFileExporterResponse(fileURL: url, success: success)
                 }
             } else {
                 ProgressView("Generating Snapshot")
