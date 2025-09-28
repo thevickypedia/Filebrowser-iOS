@@ -555,73 +555,72 @@ struct FileListView: View {
 
     private var localFilesListView: some View {
         NavigationView {
-            Group {
-                if filteredLocalFiles.isEmpty {
-                    VStack(spacing: 16) {
-                        Text("❌ No files found in sandbox")
+            List {
+                // Section with toggle and rollover logs button
+                Section {
+                    Toggle("Show only .log files", isOn: $showOnlyLogFiles)
+
+                    Button(action: {
+                        rotatingLogs = true
+                        Log.forceLogRotationCheck { result in
+                            DispatchQueue.main.async {
+                                if let url = result {
+                                    localFilesMessage = ToastMessagePayload(
+                                        text: "Stored logs until now to: \(url.lastPathComponent)"
+                                    )
+                                    localFiles = fetchLocalFiles()
+                                } else {
+                                    localFilesMessage = ToastMessagePayload(
+                                        text: "Failed to rotate logs.", color: .red
+                                    )
+                                }
+                                rotatingLogs = false
+                            }
+                        }
+                    }) {
+                        Label("Rollover Logs", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .disabled(rotatingLogs)
+                }
+
+                // Section for file list or empty state
+                Section {
+                    if filteredLocalFiles.isEmpty {
+                        Text(showOnlyLogFiles ? "❌ No .log files found in sandbox" : "❌ No files found in sandbox")
                             .font(.footnote)
                             .foregroundColor(.gray)
-                    }
-                } else {
-                    List {
-                        Section {
-                            Toggle("Show only .log files", isOn: $showOnlyLogFiles)
-
-                            Button(action: {
-                                rotatingLogs = true
-                                Log.forceLogRotationCheck { result in
-                                    if let url = result {
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                            localFilesMessage = ToastMessagePayload(
-                                                text: "Stored logs until now to: \(url.lastPathComponent)"
-                                            )
-                                            localFiles = fetchLocalFiles()
-                                            rotatingLogs = false
-                                        }
-                                    } else {
-                                        DispatchQueue.main.async {
-                                            localFilesMessage = ToastMessagePayload(
-                                                text: "Failed to rotate logs.", color: .red
-                                            )
-                                            rotatingLogs = false
-                                        }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding()
+                    } else {
+                        ForEach(filteredLocalFiles, id: \.self) { localFile in
+                            let fileSize = (try? FileManager.default.attributesOfItem(atPath: localFile.path))?[.size] as? Int
+                            NavigationLink(
+                                destination: LocalFileContentContainer(
+                                    localFile: localFile,
+                                    fileSize: fileSize,
+                                    extensionTypes: extensionTypes
+                                )
+                            ) {
+                                HStack {
+                                    Text(localFile.lastPathComponent)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    if let size = fileSize {
+                                        Text(formatBytes(Int64(size)))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
                                     }
                                 }
-                            }) {
-                                Label("Rollover Logs", systemImage: "arrow.triangle.2.circlepath")
                             }
-                            .disabled(rotatingLogs)
                         }
-
-                        Section {
-                            ForEach(filteredLocalFiles, id: \.self) { localFile in
-                                let fileSize = (try? FileManager.default.attributesOfItem(atPath: localFile.path))?[.size] as? Int
-                                NavigationLink(
-                                    destination: LocalFileContentContainer(
-                                        localFile: localFile, fileSize: fileSize, extensionTypes: extensionTypes
-                                    )
-                                ) {
-                                    HStack {
-                                        Text(localFile.lastPathComponent)
-                                            .foregroundColor(.primary)
-                                        Spacer()
-                                        if let size = fileSize {
-                                            Text(formatBytes(Int64(size)))
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                }
-                            }
-                            .onDelete { indexSet in
-                                let filesToDelete = indexSet.map { filteredLocalFiles[$0] }
-                                filesToDelete.forEach { deleteLocalFile($0) }
-                            }
+                        .onDelete { indexSet in
+                            let filesToDelete = indexSet.map { filteredLocalFiles[$0] }
+                            filesToDelete.forEach { deleteLocalFile($0) }
                         }
                     }
                 }
             }
-            .navigationTitle("Local Files")
+            .navigationTitle("Sandbox Files")
             .modifier(ToastMessage(payload: $localFilesMessage))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
