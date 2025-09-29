@@ -32,7 +32,7 @@ enum PulseInterval: String, CaseIterable, Identifiable {
 enum ChartType: String, CaseIterable, Identifiable {
     case pie = "Pie"
     case bar = "Bar"
-    case live = "Live"
+    case line = "Line"
     case stacked = "Stacked"
 
     var id: String { rawValue }
@@ -315,8 +315,8 @@ struct MetricChartView: View {
                     formatTotal: formatTotal,
                     color: color
                 )
-            case .live:
-                PulseLineChart(
+            case .line:
+                LineChartView(
                     title: title,
                     values: liveValues(),
                     maxValue: 100,
@@ -341,7 +341,7 @@ struct MetricChartView: View {
     }
 }
 
-struct PulseLineChart: View {
+struct LineChartView: View {
     let title: String
     let values: [Double]
     let maxValue: Double
@@ -350,17 +350,9 @@ struct PulseLineChart: View {
 
     @State private var offsetX: CGFloat = 0
 
-    var titleText: String {
-        if let percentUsed = values.last {
-            return "\(title) - \(String(format: "%.1f%% used", percentUsed))"
-        } else {
-            return title
-        }
-    }
-
     var body: some View {
         VStack(spacing: 8) {
-            Text(titleText)
+            Text(title)
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .center)
 
@@ -403,6 +395,11 @@ struct PulseLineChart: View {
             .frame(height: 80)
             .padding(.horizontal)
             .clipped()
+        }
+        if let percentUsed = values.last {
+            Text(String(format: "%.1f%% used", percentUsed))
+                .font(.caption)
+                .foregroundColor(.gray)
         }
     }
 }
