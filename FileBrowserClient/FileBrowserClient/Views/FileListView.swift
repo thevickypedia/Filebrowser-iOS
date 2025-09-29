@@ -669,8 +669,10 @@ struct FileListView: View {
             }
 
             Section {
-                Button("Files") {
+                Button {
                     showLocalFilePicker = true
+                } label: {
+                    Label("Sandbox Files", systemImage: "internaldrive")
                 }
             }
             .fullScreenCover(isPresented: $showLocalFilePicker) {
@@ -678,8 +680,10 @@ struct FileListView: View {
             }
 
             Section {
-                Button("Device Metrics") {
+                Button {
                     showDeviceMetrics = true
+                } label: {
+                    Label("Device Metrics", systemImage: "cpu")
                 }
             }
             .fullScreenCover(isPresented: $showDeviceMetrics) {

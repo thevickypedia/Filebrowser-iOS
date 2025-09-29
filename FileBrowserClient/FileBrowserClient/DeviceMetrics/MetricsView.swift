@@ -77,8 +77,8 @@ struct MetricsView: View {
     @AppStorage("cpuChartType") private var cpuChartType: ChartType = .pie
     @AppStorage("diskChartType") private var diskChartType: ChartType = .pie
 
-    @State private var pulseInterval: PulseInterval = .halfSecond
-    @State private var timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+    @State private var pulseInterval: PulseInterval = .oneSecond
+    @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var lastUpdated: Date = Date()
     @State private var presentExportSheet = false
     @State private var exportURL: URL?
