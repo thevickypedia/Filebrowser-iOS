@@ -38,6 +38,11 @@ enum ChartType: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+struct UpTimeStats {
+    let bootTime: String
+    let bootTimeAgo: String
+}
+
 struct MetricsView: View {
     @State private var memoryUsage: GenericUsage?
     @State private var cpuUsage: Double?
@@ -50,7 +55,7 @@ struct MetricsView: View {
     @State private var pulseInterval: PulseInterval = .oneSecond
     @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var lastUpdated: Date = Date()
-    @State private var systemUptime: TimeInterval?
+    @State private var systemUptime: UpTimeStats?
     @State private var presentExportSheet = false
     @State private var exportURL: URL?
 
@@ -87,6 +92,16 @@ struct MetricsView: View {
             Log.error(msg)
         }
         return nil
+    }
+
+    private func getSystemUptimeStats() -> UpTimeStats? {
+        guard let upTime = getSystemUptime() else { return nil }
+        let bootDate = Date(timeIntervalSince1970: upTime)
+        let timeInterval = Date().timeIntervalSince(bootDate)
+        let timeZone = TimeZone.current
+        let bootTimeAgo = timeAgoString(from: calculateTimeDifference(timeInterval: timeInterval))
+        let bootTime = "\(getTimeStamp(from: bootDate, as: "MM/dd/yyyy HH:mm:ss", timezone: timeZone)) \(timeZone.abbreviation() ?? "")"
+        return UpTimeStats(bootTime: bootTime, bootTimeAgo: bootTimeAgo)
     }
 
     var body: some View {
@@ -134,18 +149,13 @@ struct MetricsView: View {
             ScrollView {
                 VStack(spacing: 40) {
                     if let upTime = systemUptime {
-                        let bootDate = Date(timeIntervalSince1970: upTime)
-                        let timeInterval = Date().timeIntervalSince(bootDate)
-                        let timeZone = TimeZone.current
-                        let bootTimeAgo = timeAgoString(from: calculateTimeDifference(timeInterval: timeInterval))
-                        let bootTime = "\(getTimeStamp(from: bootDate, as: "MM/dd/yyyy HH:mm:ss", timezone: timeZone)) \(timeZone.abbreviation() ?? "")"
                         VStack {
                             Text("Boot Time")
                                 .font(.headline)
                             Spacer()
-                            Text(bootTimeAgo)
+                            Text(upTime.bootTimeAgo)
                                 .font(.subheadline)
-                            Text(bootTime)
+                            Text(upTime.bootTime)
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
@@ -204,7 +214,9 @@ struct MetricsView: View {
         .onAppear {
             updateTimer()
             loadData()
-            systemUptime = getSystemUptime()
+            if systemUptime == nil {
+                systemUptime = getSystemUptimeStats()
+            }
         }
         .onDisappear {
             history.removeAll()
