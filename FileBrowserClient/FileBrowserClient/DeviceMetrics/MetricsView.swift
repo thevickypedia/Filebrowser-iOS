@@ -259,31 +259,53 @@ struct MetricsView: View {
 }
 
 struct PulseLineChart: View {
-    let values: [Double] // e.g., [12.5, 25.0, 30.0, 50.0]
+    let values: [Double]
     let maxValue: Double
+    let maxVisibleCount: Int = 100
+
+    @State private var offsetX: CGFloat = 0
 
     var body: some View {
         GeometryReader { geometry in
             let height = geometry.size.height
             let width = geometry.size.width
-            let stepX = width / CGFloat(max(values.count - 1, 1))
+            let stepX = width / CGFloat(maxVisibleCount - 1)
             let scaleY = maxValue > 0 ? height / maxValue : 0
 
+            // We take last maxVisibleCount values
+            let visibleValues = Array(values.suffix(maxVisibleCount))
+            let count = visibleValues.count
+
             Path { path in
-                for (index, value) in values.enumerated() {
-                    let x = CGFloat(index) * stepX
-                    let y = height - CGFloat(value) * scaleY
+                for (index, value) in visibleValues.enumerated() {
+                    // The *newest* point is the *last* in visibleValues
+                    // We want index=last => x = width + offsetX (right edge + offset)
+                    // So we reverse index position:
+                    let reversedIndex = (count - 1) - index
+                    let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
+                    let yAxis = height - CGFloat(value) * scaleY
+
                     if index == 0 {
-                        path.move(to: CGPoint(x: x, y: y))
+                        path.move(to: CGPoint(x: xAxis, y: yAxis))
                     } else {
-                        path.addLine(to: CGPoint(x: x, y: y))
+                        path.addLine(to: CGPoint(x: xAxis, y: yAxis))
                     }
                 }
             }
             .stroke(Color.green, lineWidth: 2)
-            .animation(.easeOut(duration: 0.3), value: values)
+            .clipped()
+            .onChange(of: values.count) { _ in
+                withAnimation(.linear(duration: 0.3)) {
+                    offsetX -= stepX
+                    if offsetX <= -stepX {
+                        offsetX += stepX
+                    }
+                }
+            }
         }
         .frame(height: 80)
+        .padding(.horizontal)
+        .clipped()
     }
 }
 
