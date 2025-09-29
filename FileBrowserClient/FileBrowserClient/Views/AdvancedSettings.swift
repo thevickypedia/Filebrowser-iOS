@@ -54,6 +54,8 @@ struct AdvancedSettingsView: View {
             Toggle("Display Thumbnails", isOn: $displayThumbnail)
             Toggle("Cache Thumbnails", isOn: $cacheThumbnail)
             Toggle("Animate GIF Files", isOn: $animateGIF)
+        }
+        DisclosureGroup("Logging Settings") {
             HStack {
                 Text("Log Option")
                 Spacer()
