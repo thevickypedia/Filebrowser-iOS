@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.51.3 (09/29/2025)
+--------------------
+- [64ba526](https://github.com/thevickypedia/Filebrowser-iOS/commit/64ba5269d19f501f89eaf0ff517adcb4265d7b2b) chore: Release ``v1.51.3``
+- [ae8375e](https://github.com/thevickypedia/Filebrowser-iOS/commit/ae8375ed027a45cebc13e56d61a01abc1bd4bc2a) perf: Avoid fetching system uptime repeatedly when metric is in view
+- [e25c75e](https://github.com/thevickypedia/Filebrowser-iOS/commit/e25c75e06c49c9be8453f27c71e23aa230a26174) feat: Include boot/up time in device metrics and optimize utils code
+- [b365240](https://github.com/thevickypedia/Filebrowser-iOS/commit/b36524091fcd291567f88ab3c24b083c15318be8) refactor: Replace tuple for usage metrics with generic struct
+- [7d87184](https://github.com/thevickypedia/Filebrowser-iOS/commit/7d87184bbb4192b70d2900a47f491a8cb06427df) refactor: Move device metrics' structs to individual modules
+- [942c19b](https://github.com/thevickypedia/Filebrowser-iOS/commit/942c19be533922f79b2bba2cf8f2b108392c9418) chore: Update release notes for v1.51.2
+
 v1.51.2 (09/29/2025)
 --------------------
 - [169a99a](https://github.com/thevickypedia/Filebrowser-iOS/commit/169a99a797c8122d726050d1df959bba901309e7) chore: Release ``v1.51.2``
