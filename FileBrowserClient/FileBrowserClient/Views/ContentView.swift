@@ -31,6 +31,7 @@ struct ContentView: View {
     @StateObject private var fileListViewModel = FileListViewModel()
 
     @State private var showAdvancedOptions = false
+    @State private var reauthTimer: Timer?
 
     @AppStorage("cacheImage") private var cacheImage = true
     @AppStorage("cachePDF") private var cachePDF = true
@@ -56,6 +57,51 @@ struct ContentView: View {
             cacheExtensions: cacheExtensions
         )
         .environmentObject(fileListViewModel)
+    }
+
+    private func startReauthTimer() {
+        // Invalidate existing timer before creating a new one - since called from both regular login and faceID login
+        reauthTimer?.invalidate()
+
+        // Only start the timer if Face ID is enabled and a session exists
+        // Password is stored in keychain only when FaceID is enabled
+        guard useFaceID, let session = KeychainHelper.loadSession() else {
+            Log.warn("FaceID or session unavailable to start re-auth timer")
+            return
+        }
+
+        // TODO: Set interval to 5 min before expiry and force it - also probably make it async on main thread
+        reauthTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
+            Task {
+                await reauthenticateWithStoredSession(session)
+            }
+        }
+    }
+
+    private func reauthenticateWithStoredSession(_ session: StoredSession) async {
+        guard session.serverURL == self.serverURL else { return }
+
+        guard let payload = decodeJWT(jwt: session.token) else {
+            Log.warn("⚠️ Background reauth failed: could not decode token")
+            return
+        }
+
+        let now = Date().timeIntervalSince1970
+        if now >= payload.exp {
+            Log.info("🔄 Token expired. Refreshing in background.")
+            if let password = session.password {
+                DispatchQueue.main.async {
+                    self.username = session.username
+                    self.password = password
+                    self.transitProtection = session.transitProtection
+                }
+                await login()
+            } else {
+                Log.warn("❌ Token expired but no password saved. Cannot reauthenticate.")
+            }
+        } else {
+            Log.debug("✅ Token still valid. No need to refresh.")
+        }
     }
 
     var body: some View {
@@ -322,6 +368,8 @@ struct ContentView: View {
             username = ""
         }
         password = ""
+        reauthTimer?.invalidate()
+        reauthTimer = nil
 
         statusMessage = "⚠️ Logout successful!"
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
@@ -429,6 +477,7 @@ struct ContentView: View {
                         statusMessage = "✅ Login successful!"
                         logTokenInfo()
                         updateLastUsedServer()
+                        startReauthTimer()
                         if rememberMe || useFaceID {
                             KeychainHelper.saveSession(
                                 session: StoredSession(
@@ -567,7 +616,8 @@ struct ContentView: View {
                 Log.info("✅ Face ID login successful")
                 logTokenInfo()
                 updateLastUsedServer()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                startReauthTimer()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     statusMessage = nil
                 }
             }

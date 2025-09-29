@@ -643,6 +643,7 @@ struct FileListView: View {
             }
             .onAppear {
                 if localFiles.isEmpty {
+                    Log.debug("Updating localFiles queue")
                     localFiles = fetchLocalFiles()
                 }
             }
@@ -759,6 +760,7 @@ struct FileListView: View {
             fetchUsageInfo()
             fetchClientStorageInfo()
         }
+        // MARK: Disappear check should be for showSettingsSheet, because localFilesListView will close when opening a file
         .onDisappear {
             Log.debug("Clearing localFiles queue")
             localFiles.removeAll()
