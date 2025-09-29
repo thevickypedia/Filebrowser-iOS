@@ -26,7 +26,6 @@ struct Log {
     static var verboseMode: Bool = false
     static var logOption: LogOptions = .both
 
-    private static let maxLinesPerFile = 1000
     private static var rotationCheckTimer: Timer?
     private static let fileWriteQueue = DispatchQueue(label: "log.file.write", qos: .utility)
 
@@ -65,18 +64,18 @@ struct Log {
             }
             let content = try String(contentsOf: currentLog)
             let lines = content.components(separatedBy: .newlines)
-            if lines.count > maxLinesPerFile {
+            if lines.count > Constants.maxLinesPerLogFile {
                 return rotateCurrentLogFile(currentLog: currentLog)
             }
         } catch {
-            print("Failed to check log file for rotation: \(error)")
+            print("Failed to check log file for rotation: \(error.localizedDescription)")
         }
         return nil
     }
 
     private static func rotateCurrentLogFile(currentLog: URL) -> URL? {
         let dateString = logFileDateFormatter.string(from: Date())
-        let baseFileName = "filebrowser_\(dateString)"
+        let baseFileName = "\(Constants.logFilePrefix)_\(dateString)"
         let directory = logDirectoryURL
 
         // Find the next available index
@@ -153,7 +152,7 @@ struct Log {
     // Uses cached formatter instead of recreating one every time
     private static var currentLogFileURL: URL {
         let dateString = logFileDateFormatter.string(from: Date())
-        return logDirectoryURL.appendingPathComponent("filebrowser_\(dateString).log")
+        return logDirectoryURL.appendingPathComponent("\(Constants.logFilePrefix)_\(dateString).log")
     }
 
     private static func writeToFile(label: String, message: String) {

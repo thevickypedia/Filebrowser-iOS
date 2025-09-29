@@ -36,4 +36,9 @@ struct Constants {
     // Utils
     // 100 MB preview limit
     static let previewSizeLimit: Int = 100_000_000
+
+    // Log
+    // Maximum number of lines in a log file before the file is appending with an index
+    static let maxLinesPerLogFile: Int = 1_000
+    static let logFilePrefix: String = "filebrowser"
 }
