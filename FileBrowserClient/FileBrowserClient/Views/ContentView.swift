@@ -60,7 +60,7 @@ struct ContentView: View {
         .environmentObject(fileListViewModel)
     }
 
-    private func startReauthTimer() {
+    private func startReauthTimer(at startTime: TimeInterval) {
         // Invalidate existing timer before creating a new one - since called from both regular login and faceID login
         reauthTimer?.invalidate()
         reauthDispatchWorkItem?.cancel()
@@ -74,8 +74,6 @@ struct ContentView: View {
             return
         }
 
-        // TODO: Should check for remainder of the session validity in seconds instead of static 2h since token is re-used
-        // Schedule a delayed task (120 minutes = 7200 seconds)
         let workItem = DispatchWorkItem {
             self.reauthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
                 Task {
@@ -86,11 +84,27 @@ struct ContentView: View {
             RunLoop.main.add(self.reauthTimer!, forMode: .common)
         }
         reauthDispatchWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 7200, execute: workItem)
+
+        let delay = startTime - Date().timeIntervalSince1970 - 30  // Add a 30s buffer
+        if delay > 0 {
+            let fireDate = Date(timeIntervalSince1970: startTime)
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMMM d, yyyy HH:mm:ss"
+            let formattedDate = formatter.string(from: fireDate)
+            Log.info("Session is still valid for \(Int(delay / 60)) minutes, workItem will be initiated on: \(formattedDate)")
+            let deadline = DispatchTime.now() + delay
+            DispatchQueue.main.asyncAfter(deadline: deadline, execute: workItem)
+        } else {
+            Log.error("Session has already expired or near expiry, initiating workItem immediately.")
+            DispatchQueue.main.async(execute: workItem)
+        }
     }
 
     private func reauthenticateWithStoredSession(_ session: StoredSession) async {
-        guard session.serverURL == self.serverURL else { return }
+        guard session.serverURL == self.serverURL else {
+            Log.warn("⚠️ Background reauth failed: Mismatched serverURL")
+            return
+        }
 
         guard let payload = decodeJWT(jwt: session.token) else {
             Log.warn("⚠️ Background reauth failed: could not decode token")
@@ -106,12 +120,13 @@ struct ContentView: View {
                     self.password = password
                     self.transitProtection = session.transitProtection
                 }
+                // MARK: After a successful login, the startReauthTimer will kick off with new expiration time
                 await login()
             } else {
                 Log.warn("❌ Token expired but no password saved. Cannot reauthenticate.")
             }
         } else {
-            Log.debug("✅ Token still valid. No need to refresh.")
+            Log.trace("✅ Token still valid. No need to refresh.")
         }
     }
 
@@ -492,7 +507,7 @@ struct ContentView: View {
                         statusMessage = "✅ Login successful!"
                         logTokenInfo()
                         updateLastUsedServer()
-                        startReauthTimer()
+                        startReauthTimer(at: payload.exp)
                         if rememberMe || useFaceID {
                             KeychainHelper.saveSession(
                                 session: StoredSession(
@@ -631,7 +646,7 @@ struct ContentView: View {
                 Log.info("✅ Face ID login successful")
                 logTokenInfo()
                 updateLastUsedServer()
-                startReauthTimer()
+                startReauthTimer(at: tokenPayload.exp)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     statusMessage = nil
                 }
