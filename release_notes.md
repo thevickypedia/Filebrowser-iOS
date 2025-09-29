@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.51.4 (09/29/2025)
+--------------------
+- [ba5782f](https://github.com/thevickypedia/Filebrowser-iOS/commit/ba5782fc1776399f995dbadbabf7ee92237d1657) chore: Release ``v1.51.4``
+- [ecf8ba7](https://github.com/thevickypedia/Filebrowser-iOS/commit/ecf8ba7261ad4938d8a4ec70e7c41675adee3f16) style: Ensure only one ``DisclosureGroup`` is expanded at a time in ``AdvancedSettingsView``
+- [d326513](https://github.com/thevickypedia/Filebrowser-iOS/commit/d326513a090b749153a67530806bd288c1506f32) style: Break ``advancedSettings`` and ``loggingSettings`` into individual disclosure groups
+- [2c496c4](https://github.com/thevickypedia/Filebrowser-iOS/commit/2c496c4f6467b5c727f3f4b801bc57ce2711c4d1) style: Update datetime format for boot time in device metrics
+- [8b5051b](https://github.com/thevickypedia/Filebrowser-iOS/commit/8b5051b211c3b9573eb3c864ed61052c02cf47ec) refactor: Move all timezone controls to a single constant
+- [be0e76d](https://github.com/thevickypedia/Filebrowser-iOS/commit/be0e76d09b85014ad52f74d8513046b7896f9c2b) chore: Update release notes for v1.51.3
+
 v1.51.3 (09/29/2025)
 --------------------
 - [64ba526](https://github.com/thevickypedia/Filebrowser-iOS/commit/64ba5269d19f501f89eaf0ff517adcb4265d7b2b) chore: Release ``v1.51.3``
