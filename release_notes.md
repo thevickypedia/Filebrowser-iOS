@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.52.0 (09/29/2025)
+--------------------
+- [d2f0136](https://github.com/thevickypedia/Filebrowser-iOS/commit/d2f0136a9cfae0891503eb8e16031bb4a5359fda) chore: Release ``v1.52.0``
+- [983f6fa](https://github.com/thevickypedia/Filebrowser-iOS/commit/983f6fa0ef0af5976d43ae7b62b2f4fab96ec4f1) perf: Repeat re-authentication only when session is near expiry
+- [383fa26](https://github.com/thevickypedia/Filebrowser-iOS/commit/383fa266bc2df76c63f7eb2f972ffc753abbc993) perf: Run re-authentication every 5s only after 2h - when session expires
+- [2001e71](https://github.com/thevickypedia/Filebrowser-iOS/commit/2001e7127b926acd157499ab346658360e601c6b) feat: Automatically re-authenticate with a repeat timer in the background
+- [dfd7fab](https://github.com/thevickypedia/Filebrowser-iOS/commit/dfd7fab55a162ee987bb3f5f74a41c727ef4b24b) chore: Update release notes for v1.51.4
+
 v1.51.4 (09/29/2025)
 --------------------
 - [ba5782f](https://github.com/thevickypedia/Filebrowser-iOS/commit/ba5782fc1776399f995dbadbabf7ee92237d1657) chore: Release ``v1.51.4``
