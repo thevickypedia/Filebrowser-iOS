@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+v1.51.2 (09/29/2025)
+--------------------
+- [169a99a](https://github.com/thevickypedia/Filebrowser-iOS/commit/169a99a797c8122d726050d1df959bba901309e7) chore: Release ``v1.51.2``
+- [78362bb](https://github.com/thevickypedia/Filebrowser-iOS/commit/78362bb935745a4d066262c12210391d332d7bb5) perf: When pulse is set to ``never`` disable line chart for device metrics
+- [ea5a18a](https://github.com/thevickypedia/Filebrowser-iOS/commit/ea5a18a68938338947a397796d46c6166eb6acff) perf: Reset history used for line chart in device metrics
+- [f56689e](https://github.com/thevickypedia/Filebrowser-iOS/commit/f56689e12ce828aec5a041156bd4f83910340ac5) style: Add labels with system images for sandbox files and device metrics
+- [447d92c](https://github.com/thevickypedia/Filebrowser-iOS/commit/447d92cb39edf527ccbb4c037df4ae55c05177a2) refactor: Movie hard coded variables for line chart to constants
+- [c46bfc7](https://github.com/thevickypedia/Filebrowser-iOS/commit/c46bfc77b053fadc9a6f82de24c58967b19ddad5) style: Include usage percent on the left side of grid layout for device metrics
+- [52b8108](https://github.com/thevickypedia/Filebrowser-iOS/commit/52b8108f348c320a7df73ccfba5cb4e5984669d2) style: Create a grid layout for line chart view for device metrics
+- [2f12ff8](https://github.com/thevickypedia/Filebrowser-iOS/commit/2f12ff8865f27f70044143f230468dae76eaef7f) style: Display text on line chart view as a caption for device metrics
+- [1ec8eae](https://github.com/thevickypedia/Filebrowser-iOS/commit/1ec8eae6f41bdc15e402eef3c8b62690f915d438) style: Include usage percent along with the title in live view for device metrics
+- [ba3edd3](https://github.com/thevickypedia/Filebrowser-iOS/commit/ba3edd3df1d6563a5cd4f316ee80604528f1ae0d) style: Make live view a selectable option along side pie, bar, and stacked views
+- [304ebc3](https://github.com/thevickypedia/Filebrowser-iOS/commit/304ebc34328c8bb8543f9c7d50c6f5959be5bd36) style: Make CPU history appear similar to macOS' activity monitor
+- [0966ee6](https://github.com/thevickypedia/Filebrowser-iOS/commit/0966ee64b0c554961873d34fffd900ca9d48f127) feat: Include an ECG like pulse view for CPU metrics
+- [6235ff1](https://github.com/thevickypedia/Filebrowser-iOS/commit/6235ff15bf8783c520de1a1d82505028d6328b71) refactor: Move hard coded variables to constants module
+- [03d41f8](https://github.com/thevickypedia/Filebrowser-iOS/commit/03d41f817cd5ce6715a6d7e5d7b0610a9c494c40) chore: Update release notes for v1.51.1
+
 v1.51.1 (09/28/2025)
 --------------------
 - [deae701](https://github.com/thevickypedia/Filebrowser-iOS/commit/deae70155f5c26f06e1a64f81e5317927dad115c) chore: Release ``v1.51.1``
