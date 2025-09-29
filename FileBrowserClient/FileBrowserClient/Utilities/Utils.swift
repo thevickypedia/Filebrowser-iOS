@@ -83,23 +83,10 @@ func timeAgoString(from diff: [String: Double]) -> String {
 }
 
 func parseDateTime(from dateString: String, defaultResult: Date? = nil) throws -> Date {
-    let formats = [
-        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX",  // SSSSSS → 6 digits of fractional seconds
-        "yyyy-MM-dd'T'HH:mm:ssXXXXX",         // ISO 8601 with timezone
-        "yyyy-MM-dd'T'HH:mm:ssZ",             // ISO 8601 with Z
-        "yyyy-MM-dd HH:mm:ss",                // Common DB format
-        "yyyy/MM/dd HH:mm:ss",
-        "MM/dd/yyyy HH:mm:ss",
-        "dd-MM-yyyy HH:mm:ss",
-        "yyyy-MM-dd",
-        "MM/dd/yyyy",
-        "dd-MM-yyyy"
-    ]
-
     let formatter = DateFormatter()
     formatter.locale = Locale(identifier: "en_US_POSIX")
 
-    for format in formats {
+    for format in Constants.dateTimeFormats {
         formatter.dateFormat = format
         if let date = formatter.date(from: dateString) {
             return date
@@ -124,23 +111,10 @@ func parseGridDate(from dateString: String?, defaultResult: String = "") -> Stri
         return defaultResult
     }
 
-    let formats = [
-        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX",  // SSSSSS → 6 digits of fractional seconds
-        "yyyy-MM-dd'T'HH:mm:ssXXXXX",         // ISO 8601 with timezone
-        "yyyy-MM-dd'T'HH:mm:ssZ",             // ISO 8601 with Z
-        "yyyy-MM-dd HH:mm:ss",                // Common DB format
-        "yyyy/MM/dd HH:mm:ss",
-        "MM/dd/yyyy HH:mm:ss",
-        "dd-MM-yyyy HH:mm:ss",
-        "yyyy-MM-dd",
-        "MM/dd/yyyy",
-        "dd-MM-yyyy"
-    ]
-
     let formatter = DateFormatter()
     formatter.locale = Locale(identifier: "en_US_POSIX")
 
-    for format in formats {
+    for format in Constants.dateTimeFormats {
         formatter.dateFormat = format
         if let date = formatter.date(from: dateString) {
             formatter.dateFormat = "yyyy-MM-dd"
@@ -151,7 +125,7 @@ func parseGridDate(from dateString: String?, defaultResult: String = "") -> Stri
     return defaultResult
 }
 
-func calculateTimeDifference(dateString: String?) -> [String: Double] {
+func calculateTimeDifference(dateString: String? = nil, timeInterval: TimeInterval? = nil) -> [String: Double] {
     let defaultResult: [String: Double] = [
         "seconds": 0.0,
         "minutes": 0.0,
@@ -162,29 +136,33 @@ func calculateTimeDifference(dateString: String?) -> [String: Double] {
         "years": 0.0
     ]
 
-    guard let dateString = dateString else {
-        Log.warn("Input dateString is nil.")
+    var finalInterval: TimeInterval
+
+    if let dateString = dateString {
+        do {
+            let date = try parseDateTime(from: dateString)
+            let now = Date()
+            finalInterval = abs(now.timeIntervalSince(date))
+        } catch {
+            Log.error("Invalid date format: \(dateString)")
+            return defaultResult
+        }
+    } else if let interval = timeInterval {
+        finalInterval = abs(interval)
+    } else {
+        Log.warn("Both dateString and timeInterval are nil.")
         return defaultResult
     }
 
-    do {
-        let date = try parseDateTime(from: dateString)
-        let now = Date()
-        let timeInterval = abs(now.timeIntervalSince(date)) // in seconds
-
-        return [
-            "seconds": timeInterval,
-            "minutes": timeInterval / 60,
-            "hours": timeInterval / 3600,
-            "days": timeInterval / (24 * 3600),
-            "weeks": timeInterval / (7 * 24 * 3600),
-            "months": timeInterval / (30 * 24 * 3600), // Approximate
-            "years": timeInterval / (365 * 24 * 3600) // Approximate
-        ]
-    } catch {
-        Log.error("Invalid date format: \(dateString)")
-        return defaultResult
-    }
+    return [
+        "seconds": finalInterval,
+        "minutes": finalInterval / 60,
+        "hours": finalInterval / 3600,
+        "days": finalInterval / (24 * 3600),
+        "weeks": finalInterval / (7 * 24 * 3600),
+        "months": finalInterval / (30 * 24 * 3600), // Approximate
+        "years": finalInterval / (365 * 24 * 3600)  // Approximate
+    ]
 }
 
 func systemIcon(for fileName: String, extensionTypes: ExtensionTypes) -> String? {
@@ -427,10 +405,13 @@ func unsafeFileSize(byteSize: Int?) -> String? {
     }
 }
 
-func getTimeStamp(as customFormat: String = "MMddyyyy_HHmmss") -> String {
+func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HHmmss", timezone: TimeZone = .current) -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = customFormat
     formatter.timeZone = .current
+    if let customDate = date {
+        return formatter.string(from: customDate)
+    }
     return formatter.string(from: Date())
 }
 

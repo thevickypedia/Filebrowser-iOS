@@ -8,6 +8,10 @@
 import Foundation
 import MachO
 
+import CoreMotion
+
+let motionManager = CMMotionManager()
+
 struct GenericUsage {
     let used: UInt64
     let total: UInt64
@@ -32,6 +36,27 @@ func getMemoryUsage() -> GenericUsage? {
                  (String(cString: mach_error_string(kerr), encoding: .ascii) ?? "unknown error"))
         return nil
     }
+}
+
+func getSystemUptime() -> TimeInterval? {
+    var uptime = timeval()
+    var size = MemoryLayout<timeval>.size
+
+    let result = sysctlbyname("kern.boottime", &uptime, &size, nil, 0)
+
+    if result == 0 {
+        return TimeInterval(uptime.tv_sec)
+    } else {
+        return nil
+    }
+}
+
+func getDeviceOrientation() -> CMAttitude? {
+    if motionManager.isDeviceMotionAvailable {
+        motionManager.startDeviceMotionUpdates()
+        return motionManager.deviceMotion?.attitude
+    }
+    return nil
 }
 
 func getCPUUsage() -> Double? {

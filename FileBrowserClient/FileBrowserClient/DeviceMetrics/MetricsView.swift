@@ -50,6 +50,7 @@ struct MetricsView: View {
     @State private var pulseInterval: PulseInterval = .oneSecond
     @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State private var lastUpdated: Date = Date()
+    @State private var systemUptime: TimeInterval?
     @State private var presentExportSheet = false
     @State private var exportURL: URL?
 
@@ -132,6 +133,24 @@ struct MetricsView: View {
 
             ScrollView {
                 VStack(spacing: 40) {
+                    if let upTime = systemUptime {
+                        let bootDate = Date(timeIntervalSince1970: upTime)
+                        let timeInterval = Date().timeIntervalSince(bootDate)
+                        let timeZone = TimeZone.current
+                        let bootTimeAgo = timeAgoString(from: calculateTimeDifference(timeInterval: timeInterval))
+                        let bootTime = "\(getTimeStamp(from: bootDate, as: "MM/dd/yyyy HH:mm:ss", timezone: timeZone)) \(timeZone.abbreviation() ?? "")"
+                        VStack {
+                            Text("Boot Time")
+                                .font(.headline)
+                            Spacer()
+                            Text(bootTimeAgo)
+                                .font(.subheadline)
+                            Text(bootTime)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+
                     if let memory = memoryUsage {
                         MetricChartView(
                             title: "Memory",
@@ -175,14 +194,17 @@ struct MetricsView: View {
             }
 
             // Footer with Last Updated
-            Text("Last updated: \(lastUpdated.formatted(.dateTime.hour().minute().second()))")
-                .font(.footnote)
-                .foregroundColor(.gray)
-                .padding(.bottom, 10)
+            if pulseInterval == .never {
+                Text("Last updated: \(lastUpdated.formatted(.dateTime.hour().minute().second()))")
+                    .font(.footnote)
+                    .foregroundColor(.gray)
+                    .padding(.bottom, 10)
+            }
         }
         .onAppear {
             updateTimer()
             loadData()
+            systemUptime = getSystemUptime()
         }
         .onDisappear {
             history.removeAll()

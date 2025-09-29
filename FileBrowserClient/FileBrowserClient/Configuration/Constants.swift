@@ -33,10 +33,6 @@ struct Constants {
     // Maximum number of tasks that copy files to temp directory before upload
     static let maxUploadStagingLimit: Int = 5
 
-    // Utils
-    // 100 MB preview limit
-    static let previewSizeLimit: Int = 100_000_000
-
     // Log
     // Maximum number of lines in a log file before the file is appending with an index
     static let maxLinesPerLogFile: Int = 1_000
@@ -45,4 +41,20 @@ struct Constants {
     // MetricsView
     static let lineChartMaxVisibleCount: Int = 100
     static let lineChartGridLineCount: Int = 4
+
+    // Utils
+    // 100 MB preview limit
+    static let previewSizeLimit: Int = 100_000_000
+    static let dateTimeFormats = [
+        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXXXX",  // SSSSSS → 6 digits of fractional seconds
+        "yyyy-MM-dd'T'HH:mm:ssXXXXX",         // ISO 8601 with timezone
+        "yyyy-MM-dd'T'HH:mm:ssZ",             // ISO 8601 with Z
+        "yyyy-MM-dd HH:mm:ss",                // Common DB format
+        "yyyy/MM/dd HH:mm:ss",
+        "MM/dd/yyyy HH:mm:ss",
+        "dd-MM-yyyy HH:mm:ss",
+        "yyyy-MM-dd",
+        "MM/dd/yyyy",
+        "dd-MM-yyyy"
+    ]
 }
