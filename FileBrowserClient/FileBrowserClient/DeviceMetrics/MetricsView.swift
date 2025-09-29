@@ -167,6 +167,7 @@ struct MetricsView: View {
                             title: "Memory",
                             used: Double(memory.used),
                             total: Double(memory.total),
+                            pulseInterval: pulseInterval,
                             formatUsed: { formatBytes(Int64(memory.used)) },
                             formatTotal: { formatBytes(Int64(memory.total)) },
                             chartType: $memoryChartType,
@@ -179,6 +180,7 @@ struct MetricsView: View {
                             title: "CPU",
                             used: cpu,
                             total: 100,
+                            pulseInterval: pulseInterval,
                             formatUsed: { String(format: "%.1f%%", cpu) },
                             formatTotal: { "100%" },
                             chartType: $cpuChartType,
@@ -191,6 +193,7 @@ struct MetricsView: View {
                             title: "Disk",
                             used: Double(disk.used),
                             total: Double(disk.total),
+                            pulseInterval: pulseInterval,
                             formatUsed: { formatBytes(Int64(disk.used)) },
                             formatTotal: { formatBytes(Int64(disk.total)) },
                             chartType: $diskChartType,
@@ -216,6 +219,19 @@ struct MetricsView: View {
         }
         .onReceive(timer) { _ in
             loadData()
+        }
+        .onChange(of: pulseInterval) { newInterval in
+            if newInterval == .never {
+                if memoryChartType == .line {
+                    memoryChartType = .bar
+                }
+                if cpuChartType == .line {
+                    cpuChartType = .bar
+                }
+                if diskChartType == .line {
+                    diskChartType = .bar
+                }
+            }
         }
         .sheet(isPresented: $presentExportSheet) {
             if let url = exportURL {
@@ -260,11 +276,12 @@ struct MetricChartView: View {
     let title: String
     let used: Double
     let total: Double
+    let pulseInterval: PulseInterval  // <-- rename to camelCase for Swift style
     let formatUsed: () -> String
     let formatTotal: () -> String
 
     @Binding var chartType: ChartType
-    let history: [MetricsSnapshot]  // <-- add history here
+    let history: [MetricsSnapshot]
 
     var percentUsed: Double {
         total > 0 ? used / total : 0
@@ -283,10 +300,18 @@ struct MetricChartView: View {
         }
     }
 
+    // Filtered chart types based on pulseInterval
+    var availableChartTypes: [ChartType] {
+        if pulseInterval == .never {
+            return ChartType.allCases.filter { $0 != .line }
+        }
+        return ChartType.allCases
+    }
+
     var body: some View {
         VStack(spacing: 16) {
             Picker("Chart Type", selection: $chartType) {
-                ForEach(ChartType.allCases) { type in
+                ForEach(availableChartTypes) { type in
                     Text(type.rawValue).tag(type)
                 }
             }
@@ -329,7 +354,6 @@ struct MetricChartView: View {
         }
     }
 
-    // Helper to get the right values array based on metric type
     func liveValues() -> [Double] {
         switch title {
         case "CPU":
