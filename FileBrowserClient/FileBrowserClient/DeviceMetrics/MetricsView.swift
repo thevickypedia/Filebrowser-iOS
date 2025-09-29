@@ -86,6 +86,8 @@ struct MetricsView: View {
     @State private var errorTitle: String?
     @State private var errorMessage: String?
 
+    @State private var history: [MetricsSnapshot] = []
+
     private func exportSnapshot() -> URL? {
         let snapshot = MetricsSnapshot.from(
             memory: memoryUsage,
@@ -181,6 +183,15 @@ struct MetricsView: View {
                         )
                     }
 
+                    if !history.isEmpty {
+                        Section(header: Text("Live CPU Pulse")) {
+                            PulseLineChart(
+                                values: history.compactMap { $0.cpu.map { $0.percentUsed * 100 } },
+                                maxValue: 100
+                            )
+                        }
+                    }
+
                     if let disk = diskUsage {
                         MetricChartView(
                             title: "Disk",
@@ -226,6 +237,17 @@ struct MetricsView: View {
         cpuUsage = getCPUUsage()
         diskUsage = getDiskUsage()
         lastUpdated = Date()
+
+        history.append(MetricsSnapshot.from(
+            memory: memoryUsage,
+            cpu: cpuUsage,
+            disk: diskUsage
+        ))
+
+        // Optional: keep only last 100 data points
+        if history.count > 100 {
+            history.removeFirst()
+        }
     }
 
     private func updateTimer() {
@@ -233,6 +255,35 @@ struct MetricsView: View {
         if let interval = pulseInterval.interval {
             timer = Timer.publish(every: interval, on: .main, in: .common).autoconnect()
         }
+    }
+}
+
+struct PulseLineChart: View {
+    let values: [Double] // e.g., [12.5, 25.0, 30.0, 50.0]
+    let maxValue: Double
+
+    var body: some View {
+        GeometryReader { geometry in
+            let height = geometry.size.height
+            let width = geometry.size.width
+            let stepX = width / CGFloat(max(values.count - 1, 1))
+            let scaleY = maxValue > 0 ? height / maxValue : 0
+
+            Path { path in
+                for (index, value) in values.enumerated() {
+                    let x = CGFloat(index) * stepX
+                    let y = height - CGFloat(value) * scaleY
+                    if index == 0 {
+                        path.move(to: CGPoint(x: x, y: y))
+                    } else {
+                        path.addLine(to: CGPoint(x: x, y: y))
+                    }
+                }
+            }
+            .stroke(Color.green, lineWidth: 2)
+            .animation(.easeOut(duration: 0.3), value: values)
+        }
+        .frame(height: 80)
     }
 }
 
