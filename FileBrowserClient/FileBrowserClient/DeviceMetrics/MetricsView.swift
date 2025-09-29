@@ -32,6 +32,7 @@ enum PulseInterval: String, CaseIterable, Identifiable {
 enum ChartType: String, CaseIterable, Identifiable {
     case pie = "Pie"
     case bar = "Bar"
+    case live = "Live"
     case stacked = "Stacked"
 
     var id: String { rawValue }
@@ -168,7 +169,8 @@ struct MetricsView: View {
                             total: Double(memory.total),
                             formatUsed: { formatBytes(Int64(memory.used)) },
                             formatTotal: { formatBytes(Int64(memory.total)) },
-                            chartType: $memoryChartType
+                            chartType: $memoryChartType,
+                            history: history
                         )
                     }
 
@@ -179,17 +181,9 @@ struct MetricsView: View {
                             total: 100,
                             formatUsed: { String(format: "%.1f%%", cpu) },
                             formatTotal: { "100%" },
-                            chartType: $cpuChartType
+                            chartType: $cpuChartType,
+                            history: history
                         )
-                    }
-
-                    if !history.isEmpty {
-                        Section(header: Text("Live CPU Pulse")) {
-                            PulseLineChart(
-                                values: history.compactMap { $0.cpu.map { $0.percentUsed * 100 } },
-                                maxValue: 100
-                            )
-                        }
                     }
 
                     if let disk = diskUsage {
@@ -199,7 +193,8 @@ struct MetricsView: View {
                             total: Double(disk.total),
                             formatUsed: { formatBytes(Int64(disk.used)) },
                             formatTotal: { formatBytes(Int64(disk.total)) },
-                            chartType: $diskChartType
+                            chartType: $diskChartType,
+                            history: history
                         )
                     }
                 }
@@ -259,6 +254,7 @@ struct MetricsView: View {
 }
 
 struct PulseLineChart: View {
+    let title: String
     let values: [Double]
     let maxValue: Double
     let maxVisibleCount: Int = 100
@@ -266,46 +262,51 @@ struct PulseLineChart: View {
     @State private var offsetX: CGFloat = 0
 
     var body: some View {
-        GeometryReader { geometry in
-            let height = geometry.size.height
-            let width = geometry.size.width
-            let stepX = width / CGFloat(maxVisibleCount - 1)
-            let scaleY = maxValue > 0 ? height / maxValue : 0
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .center)
 
-            // We take last maxVisibleCount values
-            let visibleValues = Array(values.suffix(maxVisibleCount))
-            let count = visibleValues.count
+            GeometryReader { geometry in
+                let height = geometry.size.height
+                let width = geometry.size.width
+                let stepX = width / CGFloat(maxVisibleCount - 1)
+                let scaleY = maxValue > 0 ? height / maxValue : 0
 
-            Path { path in
-                for (index, value) in visibleValues.enumerated() {
-                    // The *newest* point is the *last* in visibleValues
-                    // We want index=last => x = width + offsetX (right edge + offset)
-                    // So we reverse index position:
-                    let reversedIndex = (count - 1) - index
-                    let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
-                    let yAxis = height - CGFloat(value) * scaleY
+                let visibleValues = Array(values.suffix(maxVisibleCount))
+                let count = visibleValues.count
 
-                    if index == 0 {
-                        path.move(to: CGPoint(x: xAxis, y: yAxis))
-                    } else {
-                        path.addLine(to: CGPoint(x: xAxis, y: yAxis))
+                Path { path in
+                    for (index, value) in visibleValues.enumerated() {
+                        // The *newest* point is the *last* in visibleValues
+                        // We want index=last => x = width + offsetX (right edge + offset)
+                        // So we reverse index position:
+                        let reversedIndex = (count - 1) - index
+                        let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
+                        let yAxis = height - CGFloat(value) * scaleY
+
+                        if index == 0 {
+                            path.move(to: CGPoint(x: xAxis, y: yAxis))
+                        } else {
+                            path.addLine(to: CGPoint(x: xAxis, y: yAxis))
+                        }
+                    }
+                }
+                .stroke(Color.green, lineWidth: 2)
+                .clipped()
+                .onChange(of: values.count) { _ in
+                    withAnimation(.linear(duration: 0.3)) {
+                        offsetX -= stepX
+                        if offsetX <= -stepX {
+                            offsetX += stepX
+                        }
                     }
                 }
             }
-            .stroke(Color.green, lineWidth: 2)
+            .frame(height: 80)
+            .padding(.horizontal)
             .clipped()
-            .onChange(of: values.count) { _ in
-                withAnimation(.linear(duration: 0.3)) {
-                    offsetX -= stepX
-                    if offsetX <= -stepX {
-                        offsetX += stepX
-                    }
-                }
-            }
         }
-        .frame(height: 80)
-        .padding(.horizontal)
-        .clipped()
     }
 }
 
@@ -317,6 +318,7 @@ struct MetricChartView: View {
     let formatTotal: () -> String
 
     @Binding var chartType: ChartType
+    let history: [MetricsSnapshot]  // <-- add history here
 
     var percentUsed: Double {
         total > 0 ? used / total : 0
@@ -370,7 +372,27 @@ struct MetricChartView: View {
                     formatTotal: formatTotal,
                     color: color
                 )
+            case .live:
+                PulseLineChart(
+                    title: title,
+                    values: liveValues(),
+                    maxValue: 100
+                )
             }
+        }
+    }
+
+    // Helper to get the right values array based on metric type
+    func liveValues() -> [Double] {
+        switch title {
+        case "CPU":
+            return history.compactMap { $0.cpu?.percentUsed }.map { $0 * 100 }
+        case "Memory":
+            return history.compactMap { $0.memory?.percentUsed }.map { $0 * 100 }
+        case "Disk":
+            return history.compactMap { $0.disk?.percentUsed }.map { $0 * 100 }
+        default:
+            return []
         }
     }
 }
