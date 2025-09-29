@@ -253,63 +253,6 @@ struct MetricsView: View {
     }
 }
 
-struct PulseLineChart: View {
-    let title: String
-    let values: [Double]
-    let maxValue: Double
-    let maxVisibleCount: Int = 100
-
-    @State private var offsetX: CGFloat = 0
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            GeometryReader { geometry in
-                let height = geometry.size.height
-                let width = geometry.size.width
-                let stepX = width / CGFloat(maxVisibleCount - 1)
-                let scaleY = maxValue > 0 ? height / maxValue : 0
-
-                let visibleValues = Array(values.suffix(maxVisibleCount))
-                let count = visibleValues.count
-
-                Path { path in
-                    for (index, value) in visibleValues.enumerated() {
-                        // The *newest* point is the *last* in visibleValues
-                        // We want index=last => x = width + offsetX (right edge + offset)
-                        // So we reverse index position:
-                        let reversedIndex = (count - 1) - index
-                        let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
-                        let yAxis = height - CGFloat(value) * scaleY
-
-                        if index == 0 {
-                            path.move(to: CGPoint(x: xAxis, y: yAxis))
-                        } else {
-                            path.addLine(to: CGPoint(x: xAxis, y: yAxis))
-                        }
-                    }
-                }
-                .stroke(Color.green, lineWidth: 2)
-                .clipped()
-                .onChange(of: values.count) { _ in
-                    withAnimation(.linear(duration: 0.3)) {
-                        offsetX -= stepX
-                        if offsetX <= -stepX {
-                            offsetX += stepX
-                        }
-                    }
-                }
-            }
-            .frame(height: 80)
-            .padding(.horizontal)
-            .clipped()
-        }
-    }
-}
-
 struct MetricChartView: View {
     let title: String
     let used: Double
@@ -376,7 +319,8 @@ struct MetricChartView: View {
                 PulseLineChart(
                     title: title,
                     values: liveValues(),
-                    maxValue: 100
+                    maxValue: 100,
+                    color: color
                 )
             }
         }
@@ -393,6 +337,72 @@ struct MetricChartView: View {
             return history.compactMap { $0.disk?.percentUsed }.map { $0 * 100 }
         default:
             return []
+        }
+    }
+}
+
+struct PulseLineChart: View {
+    let title: String
+    let values: [Double]
+    let maxValue: Double
+    let color: Color
+    let maxVisibleCount: Int = 100
+
+    @State private var offsetX: CGFloat = 0
+
+    var titleText: String {
+        if let percentUsed = values.last {
+            return "\(title) - \(String(format: "%.1f%% used", percentUsed))"
+        } else {
+            return title
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Text(titleText)
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            GeometryReader { geometry in
+                let height = geometry.size.height
+                let width = geometry.size.width
+                let stepX = width / CGFloat(maxVisibleCount - 1)
+                let scaleY = maxValue > 0 ? height / maxValue : 0
+
+                let visibleValues = Array(values.suffix(maxVisibleCount))
+                let count = visibleValues.count
+
+                Path { path in
+                    for (index, value) in visibleValues.enumerated() {
+                        // The *newest* point is the *last* in visibleValues
+                        // We want index=last => x = width + offsetX (right edge + offset)
+                        // So we reverse index position:
+                        let reversedIndex = (count - 1) - index
+                        let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
+                        let yAxis = height - CGFloat(value) * scaleY
+
+                        if index == 0 {
+                            path.move(to: CGPoint(x: xAxis, y: yAxis))
+                        } else {
+                            path.addLine(to: CGPoint(x: xAxis, y: yAxis))
+                        }
+                    }
+                }
+                .stroke(color, lineWidth: 2)
+                .clipped()
+                .onChange(of: values.count) { _ in
+                    withAnimation(.linear(duration: 0.3)) {
+                        offsetX -= stepX
+                        if offsetX <= -stepX {
+                            offsetX += stepX
+                        }
+                    }
+                }
+            }
+            .frame(height: 80)
+            .padding(.horizontal)
+            .clipped()
         }
     }
 }
