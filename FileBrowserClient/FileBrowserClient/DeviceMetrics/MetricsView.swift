@@ -347,6 +347,7 @@ struct LineChartView: View {
     let maxValue: Double
     let color: Color
     let maxVisibleCount: Int = 100
+    let gridLineCount: Int = 4
 
     @State private var offsetX: CGFloat = 0
 
@@ -361,27 +362,45 @@ struct LineChartView: View {
                 let width = geometry.size.width
                 let stepX = width / CGFloat(maxVisibleCount - 1)
                 let scaleY = maxValue > 0 ? height / maxValue : 0
-
                 let visibleValues = Array(values.suffix(maxVisibleCount))
                 let count = visibleValues.count
 
-                Path { path in
-                    for (index, value) in visibleValues.enumerated() {
-                        // The *newest* point is the *last* in visibleValues
-                        // We want index=last => x = width + offsetX (right edge + offset)
-                        // So we reverse index position:
-                        let reversedIndex = (count - 1) - index
-                        let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
-                        let yAxis = height - CGFloat(value) * scaleY
+                ZStack {
+                    // Grid background
+                    Path { path in
+                        // Horizontal lines
+                        for i in 0...gridLineCount {
+                            let y = height / CGFloat(gridLineCount) * CGFloat(i)
+                            path.move(to: CGPoint(x: 0, y: y))
+                            path.addLine(to: CGPoint(x: width, y: y))
+                        }
 
-                        if index == 0 {
-                            path.move(to: CGPoint(x: xAxis, y: yAxis))
-                        } else {
-                            path.addLine(to: CGPoint(x: xAxis, y: yAxis))
+                        // Vertical lines
+                        let verticalSpacing = max(1, maxVisibleCount / 10)
+                        for i in 0...maxVisibleCount where i % verticalSpacing == 0 {
+                            let x = CGFloat(i) * stepX
+                            path.move(to: CGPoint(x: x, y: 0))
+                            path.addLine(to: CGPoint(x: x, y: height))
                         }
                     }
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+
+                    // Line chart path
+                    Path { path in
+                        for (index, value) in visibleValues.enumerated() {
+                            let reversedIndex = (count - 1) - index
+                            let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
+                            let yAxis = height - CGFloat(value) * scaleY
+
+                            if index == 0 {
+                                path.move(to: CGPoint(x: xAxis, y: yAxis))
+                            } else {
+                                path.addLine(to: CGPoint(x: xAxis, y: yAxis))
+                            }
+                        }
+                    }
+                    .stroke(color, lineWidth: 2)
                 }
-                .stroke(color, lineWidth: 2)
                 .clipped()
                 .onChange(of: values.count) { _ in
                     withAnimation(.linear(duration: 0.3)) {
@@ -395,11 +414,12 @@ struct LineChartView: View {
             .frame(height: 80)
             .padding(.horizontal)
             .clipped()
-        }
-        if let percentUsed = values.last {
-            Text(String(format: "%.1f%% used", percentUsed))
-                .font(.caption)
-                .foregroundColor(.gray)
+
+            if let percentUsed = values.last {
+                Text(String(format: "%.1f%% used", percentUsed))
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
         }
     }
 }
