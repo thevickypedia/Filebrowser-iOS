@@ -346,8 +346,6 @@ struct LineChartView: View {
     let values: [Double]
     let maxValue: Double
     let color: Color
-    let maxVisibleCount: Int = 100
-    let gridLineCount: Int = 4
 
     private let yLabelWidth: CGFloat = 30
 
@@ -363,22 +361,22 @@ struct LineChartView: View {
                 let fullWidth = geometry.size.width
                 let height = geometry.size.height
                 let chartWidth = fullWidth - yLabelWidth
-                let stepX = chartWidth / CGFloat(maxVisibleCount - 1)
+                let stepX = chartWidth / CGFloat(Constants.lineChartMaxVisibleCount - 1)
                 let scaleY = maxValue > 0 ? height / maxValue : 0
 
-                let visibleValues = Array(values.suffix(maxVisibleCount))
+                let visibleValues = Array(values.suffix(Constants.lineChartMaxVisibleCount))
                 let count = visibleValues.count
 
                 HStack(alignment: .top, spacing: 0) {
                     // Y-Axis Labels
                     VStack(alignment: .trailing, spacing: 0) {
-                        ForEach(0...gridLineCount, id: \.self) { i in
-                            let percent = 100 - (i * (100 / gridLineCount))
+                        ForEach(0...Constants.lineChartGridLineCount, id: \.self) { idx in
+                            let percent = 100 - (idx * (100 / Constants.lineChartGridLineCount))
                             Text("\(percent)%")
                                 .font(.caption2)
                                 .foregroundColor(.gray)
                                 .frame(
-                                    height: height / CGFloat(gridLineCount),
+                                    height: height / CGFloat(Constants.lineChartGridLineCount),
                                     alignment: .top
                                 )
                         }
@@ -390,18 +388,18 @@ struct LineChartView: View {
                         // Grid lines
                         Path { path in
                             // Horizontal grid lines
-                            for i in 0...gridLineCount {
-                                let y = height / CGFloat(gridLineCount) * CGFloat(i)
-                                path.move(to: CGPoint(x: 0, y: y))
-                                path.addLine(to: CGPoint(x: chartWidth, y: y))
+                            for idx in 0...Constants.lineChartGridLineCount {
+                                let yAxis = height / CGFloat(Constants.lineChartGridLineCount) * CGFloat(idx)
+                                path.move(to: CGPoint(x: 0, y: yAxis))
+                                path.addLine(to: CGPoint(x: chartWidth, y: yAxis))
                             }
 
                             // Vertical grid lines
-                            let verticalSpacing = max(1, maxVisibleCount / 10)
-                            for i in 0...maxVisibleCount where i % verticalSpacing == 0 {
-                                let x = CGFloat(i) * stepX
-                                path.move(to: CGPoint(x: x, y: 0))
-                                path.addLine(to: CGPoint(x: x, y: height))
+                            let verticalSpacing = max(1, Constants.lineChartMaxVisibleCount / 10)
+                            for idx in 0...Constants.lineChartMaxVisibleCount where idx % verticalSpacing == 0 {
+                                let xAxis = CGFloat(idx) * stepX
+                                path.move(to: CGPoint(x: xAxis, y: 0))
+                                path.addLine(to: CGPoint(x: xAxis, y: height))
                             }
                         }
                         .stroke(Color.gray.opacity(0.2), lineWidth: 1)

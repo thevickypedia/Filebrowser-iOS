@@ -41,4 +41,8 @@ struct Constants {
     // Maximum number of lines in a log file before the file is appending with an index
     static let maxLinesPerLogFile: Int = 1_000
     static let logFilePrefix: String = "filebrowser"
+
+    // MetricsView
+    static let lineChartMaxVisibleCount: Int = 100
+    static let lineChartGridLineCount: Int = 4
 }
