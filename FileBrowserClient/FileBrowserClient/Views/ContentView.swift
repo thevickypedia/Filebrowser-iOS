@@ -32,6 +32,7 @@ struct ContentView: View {
 
     @State private var showAdvancedOptions = false
     @State private var reauthTimer: Timer?
+    @State private var reauthDispatchWorkItem: DispatchWorkItem?
 
     @AppStorage("cacheImage") private var cacheImage = true
     @AppStorage("cachePDF") private var cachePDF = true
@@ -62,20 +63,30 @@ struct ContentView: View {
     private func startReauthTimer() {
         // Invalidate existing timer before creating a new one - since called from both regular login and faceID login
         reauthTimer?.invalidate()
+        reauthDispatchWorkItem?.cancel()
 
         // Only start the timer if Face ID is enabled and a session exists
         // Password is stored in keychain only when FaceID is enabled
-        guard useFaceID, let session = KeychainHelper.loadSession() else {
+        guard useFaceID,
+              let session = KeychainHelper.loadSession(),
+              session.password != nil else {
             Log.warn("FaceID or session unavailable to start re-auth timer")
             return
         }
 
-        // TODO: Set interval to 5 min before expiry and force it - also probably make it async on main thread
-        reauthTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
-            Task {
-                await reauthenticateWithStoredSession(session)
+        // TODO: Should check for remainder of the session validity in seconds instead of static 2h since token is re-used
+        // Schedule a delayed task (120 minutes = 7200 seconds)
+        let workItem = DispatchWorkItem {
+            self.reauthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+                Task {
+                    await self.reauthenticateWithStoredSession(session)
+                }
             }
+            // Ensure timer is added to the main run loop
+            RunLoop.main.add(self.reauthTimer!, forMode: .common)
         }
+        reauthDispatchWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7200, execute: workItem)
     }
 
     private func reauthenticateWithStoredSession(_ session: StoredSession) async {
@@ -368,8 +379,12 @@ struct ContentView: View {
             username = ""
         }
         password = ""
+
+        // Reset auth timer and reauth work item
         reauthTimer?.invalidate()
         reauthTimer = nil
+        reauthDispatchWorkItem?.cancel()
+        reauthDispatchWorkItem = nil
 
         statusMessage = "⚠️ Logout successful!"
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
