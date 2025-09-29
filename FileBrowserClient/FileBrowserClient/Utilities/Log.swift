@@ -145,7 +145,7 @@ struct Log {
     private static let logFileDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd-MM-yyyy"
-        formatter.timeZone = .current
+        formatter.timeZone = Constants.timezone
         return formatter
     }()
 

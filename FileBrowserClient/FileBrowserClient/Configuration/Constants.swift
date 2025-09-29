@@ -57,4 +57,7 @@ struct Constants {
         "MM/dd/yyyy",
         "dd-MM-yyyy"
     ]
+
+    // Shared
+    static let timezone: TimeZone = .current
 }

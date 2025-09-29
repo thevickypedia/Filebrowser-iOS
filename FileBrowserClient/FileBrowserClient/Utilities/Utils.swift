@@ -283,7 +283,7 @@ func timeStampToString(from timestamp: TimeInterval?) -> String {
     let date = Date(timeIntervalSince1970: timestamp)
     let formatter = DateFormatter()
     formatter.dateFormat = "MMM dd, yyyy hh:mm a zzz"
-    formatter.timeZone = .current
+    formatter.timeZone = Constants.timezone
     return formatter.string(from: date)
 }
 
@@ -405,10 +405,10 @@ func unsafeFileSize(byteSize: Int?) -> String? {
     }
 }
 
-func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HHmmss", timezone: TimeZone = .current) -> String {
+func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HHmmss") -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = customFormat
-    formatter.timeZone = .current
+    formatter.timeZone = Constants.timezone
     if let customDate = date {
         return formatter.string(from: customDate)
     }

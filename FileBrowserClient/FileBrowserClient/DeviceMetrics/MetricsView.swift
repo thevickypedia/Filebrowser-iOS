@@ -98,9 +98,8 @@ struct MetricsView: View {
         guard let upTime = getSystemUptime() else { return nil }
         let bootDate = Date(timeIntervalSince1970: upTime)
         let timeInterval = Date().timeIntervalSince(bootDate)
-        let timeZone = TimeZone.current
         let bootTimeAgo = timeAgoString(from: calculateTimeDifference(timeInterval: timeInterval))
-        let bootTime = "\(getTimeStamp(from: bootDate, as: "MM/dd/yyyy HH:mm:ss", timezone: timeZone)) \(timeZone.abbreviation() ?? "")"
+        let bootTime = "\(getTimeStamp(from: bootDate, as: "MM/dd/yyyy HH:mm:ss")) \(Constants.timezone.abbreviation() ?? "")"
         return UpTimeStats(bootTime: bootTime, bootTimeAgo: bootTimeAgo)
     }
 
