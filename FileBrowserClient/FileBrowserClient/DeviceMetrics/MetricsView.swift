@@ -211,6 +211,9 @@ struct MetricsView: View {
             updateTimer()
             loadData()
         }
+        .onDisappear {
+            history.removeAll()
+        }
         .onReceive(timer) { _ in
             loadData()
         }
