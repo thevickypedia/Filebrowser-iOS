@@ -349,6 +349,8 @@ struct LineChartView: View {
     let maxVisibleCount: Int = 100
     let gridLineCount: Int = 4
 
+    private let yLabelWidth: CGFloat = 30
+
     @State private var offsetX: CGFloat = 0
 
     var body: some View {
@@ -358,62 +360,83 @@ struct LineChartView: View {
                 .frame(maxWidth: .infinity, alignment: .center)
 
             GeometryReader { geometry in
+                let fullWidth = geometry.size.width
                 let height = geometry.size.height
-                let width = geometry.size.width
-                let stepX = width / CGFloat(maxVisibleCount - 1)
+                let chartWidth = fullWidth - yLabelWidth
+                let stepX = chartWidth / CGFloat(maxVisibleCount - 1)
                 let scaleY = maxValue > 0 ? height / maxValue : 0
+
                 let visibleValues = Array(values.suffix(maxVisibleCount))
                 let count = visibleValues.count
 
-                ZStack {
-                    // Grid background
-                    Path { path in
-                        // Horizontal lines
-                        for i in 0...gridLineCount {
-                            let y = height / CGFloat(gridLineCount) * CGFloat(i)
-                            path.move(to: CGPoint(x: 0, y: y))
-                            path.addLine(to: CGPoint(x: width, y: y))
-                        }
-
-                        // Vertical lines
-                        let verticalSpacing = max(1, maxVisibleCount / 10)
-                        for i in 0...maxVisibleCount where i % verticalSpacing == 0 {
-                            let x = CGFloat(i) * stepX
-                            path.move(to: CGPoint(x: x, y: 0))
-                            path.addLine(to: CGPoint(x: x, y: height))
+                HStack(alignment: .top, spacing: 0) {
+                    // Y-Axis Labels
+                    VStack(alignment: .trailing, spacing: 0) {
+                        ForEach(0...gridLineCount, id: \.self) { i in
+                            let percent = 100 - (i * (100 / gridLineCount))
+                            Text("\(percent)%")
+                                .font(.caption2)
+                                .foregroundColor(.gray)
+                                .frame(
+                                    height: height / CGFloat(gridLineCount),
+                                    alignment: .top
+                                )
                         }
                     }
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    .frame(width: yLabelWidth)
 
-                    // Line chart path
-                    Path { path in
-                        for (index, value) in visibleValues.enumerated() {
-                            let reversedIndex = (count - 1) - index
-                            let xAxis = width - CGFloat(reversedIndex) * stepX + offsetX
-                            let yAxis = height - CGFloat(value) * scaleY
+                    // Grid + Line Chart
+                    ZStack {
+                        // Grid lines
+                        Path { path in
+                            // Horizontal grid lines
+                            for i in 0...gridLineCount {
+                                let y = height / CGFloat(gridLineCount) * CGFloat(i)
+                                path.move(to: CGPoint(x: 0, y: y))
+                                path.addLine(to: CGPoint(x: chartWidth, y: y))
+                            }
 
-                            if index == 0 {
-                                path.move(to: CGPoint(x: xAxis, y: yAxis))
-                            } else {
-                                path.addLine(to: CGPoint(x: xAxis, y: yAxis))
+                            // Vertical grid lines
+                            let verticalSpacing = max(1, maxVisibleCount / 10)
+                            for i in 0...maxVisibleCount where i % verticalSpacing == 0 {
+                                let x = CGFloat(i) * stepX
+                                path.move(to: CGPoint(x: x, y: 0))
+                                path.addLine(to: CGPoint(x: x, y: height))
                             }
                         }
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+
+                        // Line path
+                        Path { path in
+                            for (index, value) in visibleValues.enumerated() {
+                                let reversedIndex = (count - 1) - index
+                                let xAxis = chartWidth - CGFloat(reversedIndex) * stepX + offsetX
+                                let yAxis = height - CGFloat(value) * scaleY
+
+                                if index == 0 {
+                                    path.move(to: CGPoint(x: xAxis, y: yAxis))
+                                } else {
+                                    path.addLine(to: CGPoint(x: xAxis, y: yAxis))
+                                }
+                            }
+                        }
+                        .stroke(color, lineWidth: 2)
                     }
-                    .stroke(color, lineWidth: 2)
-                }
-                .clipped()
-                .onChange(of: values.count) { _ in
-                    withAnimation(.linear(duration: 0.3)) {
-                        offsetX -= stepX
-                        if offsetX <= -stepX {
-                            offsetX += stepX
+                    .frame(width: chartWidth, height: height)
+                    .clipped()
+                    .onChange(of: values.count) { _ in
+                        withAnimation(.linear(duration: 0.3)) {
+                            offsetX -= stepX
+                            if offsetX <= -stepX {
+                                offsetX += stepX
+                            }
                         }
                     }
                 }
             }
-            .frame(height: 80)
+            .frame(height: 100)
             .padding(.horizontal)
-            .clipped()
+            .padding(.bottom, 4) // Bottom padding to avoid cutting off
 
             if let percentUsed = values.last {
                 Text(String(format: "%.1f%% used", percentUsed))
