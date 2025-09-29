@@ -99,7 +99,7 @@ struct MetricsView: View {
         let bootDate = Date(timeIntervalSince1970: upTime)
         let timeInterval = Date().timeIntervalSince(bootDate)
         let bootTimeAgo = timeAgoString(from: calculateTimeDifference(timeInterval: timeInterval))
-        let bootTime = "\(getTimeStamp(from: bootDate, as: "MM/dd/yyyy HH:mm:ss")) \(Constants.timezone.abbreviation() ?? "")"
+        let bootTime = "\(getTimeStamp(from: bootDate, as: "MMMM d, yyyy - HH:mm:ss")) \(Constants.timezone.abbreviation() ?? "")"
         return UpTimeStats(bootTime: bootTime, bootTimeAgo: bootTimeAgo)
     }
 
@@ -154,6 +154,7 @@ struct MetricsView: View {
                             Spacer()
                             Text(upTime.bootTimeAgo)
                                 .font(.subheadline)
+                            Spacer()
                             Text(upTime.bootTime)
                                 .font(.caption)
                                 .foregroundColor(.gray)
