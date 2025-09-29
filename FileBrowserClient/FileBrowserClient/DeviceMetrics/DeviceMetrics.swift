@@ -8,12 +8,12 @@
 import Foundation
 import MachO
 
-struct MemoryUsage {
+struct GenericUsage {
     let used: UInt64
     let total: UInt64
 }
 
-func getMemoryUsage() -> MemoryUsage? {
+func getMemoryUsage() -> GenericUsage? {
     var info = mach_task_basic_info()
     var count = mach_msg_type_number_t(MemoryLayout.size(ofValue: info)) / 4
 
@@ -26,7 +26,7 @@ func getMemoryUsage() -> MemoryUsage? {
     if kerr == KERN_SUCCESS {
         let used = info.resident_size
         let total = ProcessInfo.processInfo.physicalMemory
-        return MemoryUsage(used: used, total: total)
+        return GenericUsage(used: used, total: total)
     } else {
         Log.error("Error with task_info(): " +
                  (String(cString: mach_error_string(kerr), encoding: .ascii) ?? "unknown error"))
@@ -71,13 +71,13 @@ func getCPUUsage() -> Double? {
     return totalUsageOfCPU
 }
 
-func getDiskUsage() -> (used: UInt64, total: UInt64)? {
+func getDiskUsage() -> GenericUsage? {
     do {
         let attrs = try FileManager.default.attributesOfFileSystem(forPath: "/")
         if let freeSpace = attrs[.systemFreeSize] as? UInt64,
            let totalSpace = attrs[.systemSize] as? UInt64 {
             let usedSpace = totalSpace - freeSpace
-            return (used: usedSpace, total: totalSpace)
+            return GenericUsage(used: usedSpace, total: totalSpace)
         }
     } catch {
         Log.error("Error getting disk usage: \(error)")

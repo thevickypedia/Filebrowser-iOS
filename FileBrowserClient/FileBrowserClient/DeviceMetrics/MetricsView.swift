@@ -39,9 +39,9 @@ enum ChartType: String, CaseIterable, Identifiable {
 }
 
 struct MetricsView: View {
-    @State private var memoryUsage: MemoryUsage?
+    @State private var memoryUsage: GenericUsage?
     @State private var cpuUsage: Double?
-    @State private var diskUsage: (used: UInt64, total: UInt64)?
+    @State private var diskUsage: GenericUsage?
 
     @AppStorage("memoryChartType") private var memoryChartType: ChartType = .pie
     @AppStorage("cpuChartType") private var cpuChartType: ChartType = .pie

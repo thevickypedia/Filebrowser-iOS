@@ -19,7 +19,11 @@ struct MetricsSnapshot: Codable {
         let percentUsed: Double
     }
 
-    static func from(memory: MemoryUsage?, cpu: Double?, disk: (used: UInt64, total: UInt64)?) -> MetricsSnapshot {
+    static func from(
+        memory: GenericUsage?,
+        cpu: Double?,
+        disk: GenericUsage?
+    ) -> MetricsSnapshot {
         func format(_ used: Double, _ total: Double) -> UsageMetric {
             return UsageMetric(
                 used: formatBytes(Int64(used)),
