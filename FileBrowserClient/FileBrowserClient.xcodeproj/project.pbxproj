@@ -41,6 +41,7 @@
 		989940E32E8AAF13006A376A /* PieChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940E22E8AAF13006A376A /* PieChartView.swift */; };
 		989940E52E8AAF1C006A376A /* BarChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940E42E8AAF1C006A376A /* BarChartView.swift */; };
 		989940E82E8AAF3F006A376A /* StackedChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940E72E8AAF3F006A376A /* StackedChartView.swift */; };
+		989940EB2E8C8EEB006A376A /* BackgroundLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940EA2E8C8EE7006A376A /* BackgroundLogin.swift */; };
 		98B1AC4D2E7AF663000210BC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC4C2E7AF660000210BC /* Constants.swift */; };
 		98B1AC762E7C6AB9000210BC /* FileList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC752E7C6AB2000210BC /* FileList.swift */; };
 		98B1ACD92E80CC43000210BC /* FileDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */; };
@@ -121,6 +122,7 @@
 		989940E22E8AAF13006A376A /* PieChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieChartView.swift; sourceTree = "<group>"; };
 		989940E42E8AAF1C006A376A /* BarChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarChartView.swift; sourceTree = "<group>"; };
 		989940E72E8AAF3F006A376A /* StackedChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackedChartView.swift; sourceTree = "<group>"; };
+		989940EA2E8C8EE7006A376A /* BackgroundLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundLogin.swift; sourceTree = "<group>"; };
 		98B1AC4C2E7AF660000210BC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		98B1AC752E7C6AB2000210BC /* FileList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileList.swift; sourceTree = "<group>"; };
 		98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDownloadHelper.swift; sourceTree = "<group>"; };
@@ -351,6 +353,7 @@
 		98B1AC592E7C5D05000210BC /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				989940EA2E8C8EE7006A376A /* BackgroundLogin.swift */,
 				989940B52E8839CE006A376A /* UIAlerts.swift */,
 				988166542E862890003C0CD8 /* FileExporter.swift */,
 				F85295432E303AF800498675 /* Log.swift */,
@@ -541,6 +544,7 @@
 				984F170C2E46D5D5003502DF /* KeychainHelper.swift in Sources */,
 				989940E52E8AAF1C006A376A /* BarChartView.swift in Sources */,
 				F854862B2E1BA3F900115F18 /* FileListViewModel.swift in Sources */,
+				989940EB2E8C8EEB006A376A /* BackgroundLogin.swift in Sources */,
 				98B1ACDD2E80E4AD000210BC /* DownloadingStack.swift in Sources */,
 				986F5A672E39A7900058E2C4 /* FileCache.swift in Sources */,
 				98823ECF2E1AFADA004CBB11 /* FileBrowserClientApp.swift in Sources */,

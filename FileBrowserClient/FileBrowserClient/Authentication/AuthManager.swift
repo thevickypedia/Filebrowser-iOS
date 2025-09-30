@@ -47,7 +47,7 @@ struct UserPermission: Codable {
 
 extension AuthManager {
 
-    func serverHandShake(for userID: String, token: String, serverURL: String) async -> String? {
+    func serverHandShake(for userID: String) async -> String? {
         guard let url = URL(string: "\(serverURL)/api/users/\(userID)") else {
             return "❌ Failed to construct url for: \(serverURL)"
         }

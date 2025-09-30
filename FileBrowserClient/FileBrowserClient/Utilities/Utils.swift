@@ -11,6 +11,13 @@ enum ValidationError: Error {
     case invalidDateFormat
 }
 
+func convertStringToHex(_ str: String) -> String {
+    return str.unicodeScalars.map {
+        let hex = String($0.value, radix: 16)
+        return String(repeating: "0", count: 4 - hex.count) + hex
+    }.joined(separator: "\\u")
+}
+
 func sanitizer(_ input: String, replacement: Character = "_") -> String {
     let allowed = CharacterSet.alphanumerics
     let replaced = input.map { char in

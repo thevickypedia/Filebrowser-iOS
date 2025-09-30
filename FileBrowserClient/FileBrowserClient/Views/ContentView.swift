@@ -31,8 +31,6 @@ struct ContentView: View {
     @StateObject private var fileListViewModel = FileListViewModel()
 
     @State private var showAdvancedOptions = false
-    @State private var reauthTimer: Timer?
-    @State private var reauthDispatchWorkItem: DispatchWorkItem?
 
     @AppStorage("cacheImage") private var cacheImage = true
     @AppStorage("cachePDF") private var cachePDF = true
@@ -46,6 +44,19 @@ struct ContentView: View {
     @AppStorage("verboseLogging") private var verboseLogging = false
     @State private var chunkSizeText: String = "1"
 
+    @State private var backgroundLogin: BackgroundLogin?
+
+    private func initialize() {
+        backgroundLogin = BackgroundLogin(
+            auth: auth,
+            serverURL: serverURL,
+            username: username,
+            password: password,
+            transitProtection: transitProtection,
+            useFaceID: useFaceID
+        )
+    }
+
     private func fileListView(advancedSettings: AdvancedSettings,
                               extensionTypes: ExtensionTypes,
                               cacheExtensions: [String]) -> some View {
@@ -58,76 +69,6 @@ struct ContentView: View {
             cacheExtensions: cacheExtensions
         )
         .environmentObject(fileListViewModel)
-    }
-
-    private func startReauthTimer(at startTime: TimeInterval) {
-        // Invalidate existing timer before creating a new one - since called from both regular login and faceID login
-        reauthTimer?.invalidate()
-        reauthDispatchWorkItem?.cancel()
-
-        // Only start the timer if Face ID is enabled and a session exists
-        // Password is stored in keychain only when FaceID is enabled
-        guard useFaceID,
-              let session = KeychainHelper.loadSession(),
-              session.password != nil else {
-            Log.warn("FaceID or session unavailable to start re-auth timer")
-            return
-        }
-
-        let workItem = DispatchWorkItem {
-            self.reauthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
-                Task {
-                    await self.reauthenticateWithStoredSession(session)
-                }
-            }
-            // Ensure timer is added to the main run loop
-            RunLoop.main.add(self.reauthTimer!, forMode: .common)
-        }
-        reauthDispatchWorkItem = workItem
-
-        let delay = startTime - Date().timeIntervalSince1970 - 30  // NOTE: Add a 30s buffer
-        if delay > 0 {
-            let fireDate = Date(timeIntervalSince1970: startTime)
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMMM d, yyyy HH:mm:ss"
-            let formattedDate = formatter.string(from: fireDate)
-            Log.info("Session is still valid for \(Int(delay / 60)) minutes, workItem will be initiated on: \(formattedDate)")
-            let deadline = DispatchTime.now() + delay
-            DispatchQueue.main.asyncAfter(deadline: deadline, execute: workItem)
-        } else {
-            Log.error("Session has already expired or near expiry, initiating workItem immediately.")
-            DispatchQueue.main.async(execute: workItem)
-        }
-    }
-
-    private func reauthenticateWithStoredSession(_ session: StoredSession) async {
-        guard session.serverURL == self.serverURL else {
-            Log.warn("⚠️ Background reauth failed: Mismatched serverURL")
-            return
-        }
-
-        guard let payload = decodeJWT(jwt: session.token) else {
-            Log.warn("⚠️ Background reauth failed: could not decode token")
-            return
-        }
-
-        let now = Date().timeIntervalSince1970
-        if now >= payload.exp - 30 {  // NOTE: Add a 30s buffer
-            Log.info("🔄 Token expired. Refreshing in background.")
-            if let password = session.password {
-                DispatchQueue.main.async {
-                    self.username = session.username
-                    self.password = password
-                    self.transitProtection = session.transitProtection
-                }
-                // MARK: After a successful login, the startReauthTimer will kick off with new expiration time
-                await login()
-            } else {
-                Log.warn("❌ Token expired but no password saved. Cannot reauthenticate.")
-            }
-        } else {
-            Log.trace("✅ Token still valid. No need to refresh.")
-        }
     }
 
     var body: some View {
@@ -296,6 +237,9 @@ struct ContentView: View {
                 .onAppear {
                     chunkSizeText = String(chunkSize)
                     applyLogSettings()
+                    if backgroundLogin == nil {
+                        initialize()
+                    }
                 }
                 .onChange(of: currentLoggingSettings) { logSettings in
                     applyLogSettings(logSettings)
@@ -395,11 +339,6 @@ struct ContentView: View {
         }
         password = ""
 
-        // Reset auth timer and reauth work item
-        reauthTimer?.invalidate()
-        reauthTimer = nil
-        reauthDispatchWorkItem?.cancel()
-        reauthDispatchWorkItem = nil
 
         statusMessage = "⚠️ Logout successful!"
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
@@ -416,13 +355,6 @@ struct ContentView: View {
             knownServers.removeAll()
             serverURL = ""
         }
-    }
-
-    func convertStringToHex(_ str: String) -> String {
-        return str.unicodeScalars.map {
-            let hex = String($0.value, radix: 16)
-            return String(repeating: "0", count: 4 - hex.count) + hex
-        }.joined(separator: "\\u")
     }
 
     private func loginFailed(_ msg: String) {
@@ -505,9 +437,11 @@ struct ContentView: View {
                         isLoggedIn = true
                         // Show success message
                         statusMessage = "✅ Login successful!"
-                        logTokenInfo()
                         updateLastUsedServer()
-                        startReauthTimer(at: payload.exp)
+                        DispatchQueue.main.async {
+                            backgroundLogin?.logTokenInfo()
+                            backgroundLogin?.startReauthTimer(at: payload.exp)
+                        }
                         if rememberMe || useFaceID {
                             KeychainHelper.saveSession(
                                 session: StoredSession(
@@ -550,13 +484,6 @@ struct ContentView: View {
         }
         Log.debug("After update: \(knownServersCopy)")
         KeychainHelper.saveKnownServers(knownServersCopy)
-    }
-
-    func logTokenInfo() {
-        Log.info("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")")
-        Log.info("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))")
-        Log.info("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))")
-        Log.info("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))")
     }
 
     func reauth(_ session: StoredSession) {
@@ -625,7 +552,7 @@ struct ContentView: View {
                 auth.username = session.username
                 auth.serverURL = session.serverURL
                 auth.tokenPayload = tokenPayload
-                if let err = await auth.serverHandShake(for: String(tokenPayload.user.id), token: session.token, serverURL: session.serverURL) {
+                if let err = await auth.serverHandShake(for: String(tokenPayload.user.id)) {
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
                         if ["401"].contains(err) {
@@ -644,9 +571,11 @@ struct ContentView: View {
                     statusMessage = "✅ Face ID login successful!"
                 }
                 Log.info("✅ Face ID login successful")
-                logTokenInfo()
                 updateLastUsedServer()
-                startReauthTimer(at: tokenPayload.exp)
+                DispatchQueue.main.async {
+                    backgroundLogin?.logTokenInfo()
+                    backgroundLogin?.startReauthTimer(at: tokenPayload.exp)
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     statusMessage = nil
                 }
