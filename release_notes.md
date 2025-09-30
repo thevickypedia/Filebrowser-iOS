@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.52.1 (09/30/2025)
+--------------------
+- [7f295df](https://github.com/thevickypedia/Filebrowser-iOS/commit/7f295dfe008713354be2763ca76cfe48a0fb3bde) chore: Release ``v1.52.1``
+- [33281de](https://github.com/thevickypedia/Filebrowser-iOS/commit/33281decdea2b9c7f14682dedc582ba56f18d45d) refactor: Move background login to a struct of it's own
+- [4f3249a](https://github.com/thevickypedia/Filebrowser-iOS/commit/4f3249ac6e27e104e5ca9e03ad85b16e8c921811) perf: Renew auth token 30s before it's expiry
+- [825adc3](https://github.com/thevickypedia/Filebrowser-iOS/commit/825adc3e8f2187f0d928186cd6fba72427a4242e) chore: Update release notes for v1.52.0
+
 v1.52.0 (09/29/2025)
 --------------------
 - [d2f0136](https://github.com/thevickypedia/Filebrowser-iOS/commit/d2f0136a9cfae0891503eb8e16031bb4a5359fda) chore: Release ``v1.52.0``
