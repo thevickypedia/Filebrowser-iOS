@@ -85,7 +85,7 @@ struct ContentView: View {
         }
         reauthDispatchWorkItem = workItem
 
-        let delay = startTime - Date().timeIntervalSince1970 - 30  // Add a 30s buffer
+        let delay = startTime - Date().timeIntervalSince1970 - 30  // NOTE: Add a 30s buffer
         if delay > 0 {
             let fireDate = Date(timeIntervalSince1970: startTime)
             let formatter = DateFormatter()
@@ -112,7 +112,7 @@ struct ContentView: View {
         }
 
         let now = Date().timeIntervalSince1970
-        if now >= payload.exp {
+        if now >= payload.exp - 30 {  // NOTE: Add a 30s buffer
             Log.info("🔄 Token expired. Refreshing in background.")
             if let password = session.password {
                 DispatchQueue.main.async {
