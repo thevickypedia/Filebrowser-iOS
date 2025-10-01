@@ -7,11 +7,6 @@
 
 import SwiftUI
 
-struct ServerResponse {
-    let ok: Bool
-    let text: String
-}
-
 struct BackgroundLogin {
     var auth: AuthManager
 

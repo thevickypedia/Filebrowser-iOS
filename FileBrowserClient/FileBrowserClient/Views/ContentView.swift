@@ -349,6 +349,19 @@ struct ContentView: View {
         errorMessage = msgF
     }
 
+    private func processHealthCheck() {
+        toastMessage = ToastMessagePayload(text: "⏳ Checking server health")
+        Task {
+            let healthCheck = await checkServerHealth(for: serverURL)
+            if healthCheck.ok {
+                Log.info(healthCheck.text)
+            } else {
+                Log.error(healthCheck.text)
+                errorMessage = healthCheck.text
+            }
+        }
+    }
+
     func login() async {
         if serverURL.isEmpty || username.isEmpty || password.isEmpty {
             errorMessage = "Credentials are required to login!"
@@ -361,6 +374,7 @@ struct ContentView: View {
         if serverURL.hasSuffix("/") {
             serverURL.removeLast()
         }
+        processHealthCheck()
         guard let url = URL(string: "\(serverURL)/api/login") else {
             loginFailed("Invalid URL")
             return
@@ -424,7 +438,7 @@ struct ContentView: View {
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
                         // Show success message
-                        toastMessage = ToastMessagePayload(text: "✅ Login successful!")
+                        toastMessage = ToastMessagePayload(text: "✅ Login successful!", color: .green)
                         updateLastUsedServer()
                         DispatchQueue.main.async {
                             backgroundLogin?.logTokenInfo()
@@ -494,6 +508,7 @@ struct ContentView: View {
     }
 
     func biometricSignIn(session: StoredSession) {
+        processHealthCheck()
         // Force remembering username whenever FaceID is toggled
         rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
@@ -557,7 +572,7 @@ struct ContentView: View {
                     }
                     return
                 }
-                toastMessage = ToastMessagePayload(text: "✅ Face ID login successful!")
+                toastMessage = ToastMessagePayload(text: "✅ Face ID login successful!", color: .green)
                 fileListViewModel.configure(token: session.token, serverURL: session.serverURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true

@@ -11,6 +11,11 @@ enum ValidationError: Error {
     case invalidDateFormat
 }
 
+struct ServerResponse {
+    let ok: Bool
+    let text: String
+}
+
 func convertStringToHex(_ str: String) -> String {
     return str.unicodeScalars.map {
         let hex = String($0.value, radix: 16)
@@ -420,6 +425,43 @@ func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HH
         return formatter.string(from: customDate)
     }
     return formatter.string(from: Date())
+}
+
+func checkServerHealth(for url: String) async -> ServerResponse {
+    var serverURL = url
+    if serverURL.hasSuffix("/") {
+        serverURL.removeLast()
+    }
+    guard let url = URL(string: "\(serverURL)/health") else {
+        return ServerResponse(ok: false, text: "Invalid URL - \(serverURL)/health")
+    }
+
+    // Create a custom session with timeout
+    let config = URLSessionConfiguration.default
+    config.timeoutIntervalForRequest = 3 // ⏱️ Timeout for request
+    config.timeoutIntervalForResource = 3 // ⏱️ Timeout for entire resource load
+    let session = URLSession(configuration: config)
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "GET"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    do {
+        let (data, response) = try await session.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            return ServerResponse(ok: false, text: "Invalid response")
+        }
+        let responseText = "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+        guard httpResponse.statusCode == 200 else {
+            return ServerResponse(ok: false, text: responseText)
+        }
+        guard let responseData = String(data: data, encoding: .utf8) else {
+            return ServerResponse(ok: true, text: responseText)
+        }
+        return ServerResponse(ok: true, text: responseData)
+    } catch {
+        return ServerResponse(ok: false, text: error.localizedDescription)
+    }
 }
 
 func processFileExporterResponse(fileURL: URL, exportResult: FileExportResult) -> ToastMessagePayload {
