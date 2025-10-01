@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct LoginResponse {
+struct ServerResponse {
     let ok: Bool
     let text: String
 }
@@ -27,13 +27,13 @@ struct BackgroundLogin {
         reauthDispatchWorkItem = nil
     }
 
-    func loginResponse(_ responseText: String, ok: Bool = false) -> LoginResponse {
+    func loginResponse(_ responseText: String, ok: Bool = false) -> ServerResponse {
         if ok {
             Log.info(responseText)
         } else {
             Log.error(responseText)
         }
-        return LoginResponse(ok: ok, text: responseText)
+        return ServerResponse(ok: ok, text: responseText)
     }
 
     @MainActor
@@ -42,7 +42,7 @@ struct BackgroundLogin {
         auth.tokenPayload = payload
     }
 
-    func attemptLogin() async -> LoginResponse {
+    func attemptLogin() async -> ServerResponse {
         if auth.serverURL.isEmpty || auth.username.isEmpty || auth.password.isEmpty {
             return loginResponse("❌ serverURL or username or password is empty!")
         }

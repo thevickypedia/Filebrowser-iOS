@@ -25,7 +25,7 @@ struct ContentView: View {
     @EnvironmentObject var auth: AuthManager
     @State private var isLoggedIn = false
     @State private var showLogoutMessage = false
-    @State private var statusMessage: String?
+    @State private var toastMessage: ToastMessagePayload?
     @EnvironmentObject var themeManager: ThemeManager
 
     @StateObject private var fileListViewModel = FileListViewModel()
@@ -97,6 +97,7 @@ struct ContentView: View {
                              cacheExtensions: cacheExtensions)
             }
         }
+        .modifier(ToastMessage(payload: $toastMessage))
     }
 
     private struct LoggingSettings: Equatable {
@@ -238,14 +239,6 @@ struct ContentView: View {
                 }
             }
 
-            if let statusMessage = statusMessage {
-                Text(statusMessage)
-                    .font(.caption)
-                    .foregroundColor(statusMessage.contains("Logout") ? .orange : .green)
-                    .padding()
-                    .transition(.opacity)
-            }
-
             Spacer()
 
             // 🌗 Theme toggle
@@ -335,10 +328,7 @@ struct ContentView: View {
         password = ""
         backgroundLogin?.backgroundLogout()
 
-        statusMessage = "⚠️ Logout successful!"
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            statusMessage = nil
-        }
+        toastMessage = ToastMessagePayload(text: "⚠️ Logout successful!", color: .yellow, duration: 3.5)
         // If neither remember nor useFaceID is enabled, remove any saved session
         if !(rememberMe || useFaceID) {
             KeychainHelper.deleteSession()
@@ -434,7 +424,7 @@ struct ContentView: View {
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
                         // Show success message
-                        statusMessage = "✅ Login successful!"
+                        toastMessage = ToastMessagePayload(text: "✅ Login successful!")
                         updateLastUsedServer()
                         DispatchQueue.main.async {
                             backgroundLogin?.logTokenInfo()
@@ -567,19 +557,16 @@ struct ContentView: View {
                     }
                     return
                 }
+                toastMessage = ToastMessagePayload(text: "✅ Face ID login successful!")
                 fileListViewModel.configure(token: session.token, serverURL: session.serverURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true
-                    statusMessage = "✅ Face ID login successful!"
                 }
                 Log.info("✅ Face ID login successful")
                 updateLastUsedServer()
                 DispatchQueue.main.async {
                     backgroundLogin?.logTokenInfo()
                     backgroundLogin?.startReauthTimer(at: tokenPayload.exp)
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    statusMessage = nil
                 }
             }
         }
