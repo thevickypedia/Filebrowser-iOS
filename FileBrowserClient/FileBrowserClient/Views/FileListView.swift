@@ -129,19 +129,6 @@ struct FileListView: View {
         self.backgroundLogin = backgroundLogin
     }
 
-    private var isAuthValid: Bool {
-        !auth.serverURL.isEmpty && !auth.token.isEmpty && auth.tokenPayload != nil
-    }
-
-    private var userPermissions: UserPermission? {
-        return auth.tokenPayload?.user.perm
-    }
-
-    private var hasModifyPermissions: Bool {
-        let permissions = userPermissions
-        return permissions?.rename == true || permissions?.delete == true || permissions?.share == true
-    }
-
     private func fetchFiles(at path: String) {
         // Update display immediately for smooth UI
         currentDisplayPath = path
@@ -149,7 +136,7 @@ struct FileListView: View {
         // Cancel any existing fetch
         viewModel.cancelCurrentFetch()
 
-        guard isAuthValid else { return }
+        guard auth.isValid else { return }
         viewModel.fetchFiles(at: path)
     }
 
@@ -257,7 +244,7 @@ struct FileListView: View {
 
     private var actionsTabStack: some View {
         return Menu {
-            if userPermissions?.create == true {
+            if auth.userPermissions?.create == true {
                 Button("Create File", systemImage: "doc.badge.plus", action: {
                     showCreateFile = true
                 })
@@ -286,7 +273,7 @@ struct FileListView: View {
 
     private var selectionStack: some View {
         return Menu {
-            if !viewModel.files.isEmpty && hasModifyPermissions {
+            if !viewModel.files.isEmpty && auth.hasModifyPermissions {
                 Button(action: { selectionMode = true }) {
                     Label("Select", systemImage: "checkmark.circle")
                 }
@@ -332,7 +319,7 @@ struct FileListView: View {
 
     private var selectedStack: some View {
         return Menu {
-            if userPermissions?.download == true {
+            if auth.userPermissions?.download == true {
                 // 📥 Download
                 Button(action: {
                     for item in selectedItems {
@@ -345,7 +332,7 @@ struct FileListView: View {
                 }
             }
 
-            if userPermissions?.modify == true {
+            if auth.userPermissions?.modify == true {
                 // ➡️ Move
                 Button(action: {
                     showMove = true
@@ -354,7 +341,7 @@ struct FileListView: View {
                 }
             }
 
-            if userPermissions?.execute == true {
+            if auth.userPermissions?.execute == true {
                 // 📋 Copy
                 Button(action: {
                     showCopy = true
@@ -365,7 +352,7 @@ struct FileListView: View {
 
             // 📝 Rename and Share links only when exactly 1 item is selected
             if selectedItems.count == 1 {
-                if userPermissions?.rename == true {
+                if auth.userPermissions?.rename == true {
                     Button(action: {
                         if let item = selectedItems.first {
                             renameInput = item.name
@@ -376,7 +363,7 @@ struct FileListView: View {
                     }
                 }
 
-                if userPermissions?.share == true {
+                if auth.userPermissions?.share == true {
                     Button(action: {
                         if let item = selectedItems.first {
                             sharePath = item
@@ -399,7 +386,7 @@ struct FileListView: View {
                     }
                 }
             }
-            if userPermissions?.delete == true {
+            if auth.userPermissions?.delete == true {
                 // 🗑️ Delete
                 Button(role: .destructive, action: {
                     if selectedItems.isEmpty { return }
@@ -596,7 +583,7 @@ struct FileListView: View {
     }
 
     private func checkPathExists(_ fullPath: String) -> Bool {
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -1028,7 +1015,7 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
-            guard isAuthValid else { return }
+            guard auth.isValid else { return }
 
             if !searchClicked && !searchInProgress {
                 let targetPath = currentPath
@@ -1393,7 +1380,7 @@ struct FileListView: View {
 
     func searchFiles(query: String) async {
         Log.debug("🔍 Searching for: \(query)")
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -1705,7 +1692,7 @@ struct FileListView: View {
     }
 
     func fetchUsageInfo() {
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -1757,7 +1744,7 @@ struct FileListView: View {
     }
 
     func initiateTusUpload(for fileURL: URL) {
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -2097,7 +2084,7 @@ struct FileListView: View {
         contentType: String = "application/json",
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) -> URLSessionDataTask? {
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -2167,7 +2154,7 @@ struct FileListView: View {
     }
 
     func saveSettings() {
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -2237,7 +2224,7 @@ struct FileListView: View {
     }
 
     func deleteSelectedItems() {
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorTitle = "Auth Error"
             errorMessage = "Invalid authorization. Please log out and log back in."
@@ -2324,7 +2311,7 @@ struct FileListView: View {
     }
 
     func createResource(isDirectory: Bool) {
-        guard isAuthValid else {
+        guard auth.isValid else {
             Log.error("❌ Auth not validated")
             errorMessage = "Invalid authorization. Please log out and log back in."
             return

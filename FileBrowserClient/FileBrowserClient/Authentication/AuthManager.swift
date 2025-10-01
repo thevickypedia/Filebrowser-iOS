@@ -14,6 +14,19 @@ class AuthManager: ObservableObject {
     @Published var password: String = ""
     @Published var transitProtection: Bool = false
     @Published var tokenPayload: JWTPayload?
+
+    var isValid: Bool {
+        !self.serverURL.isEmpty && !self.token.isEmpty && self.tokenPayload != nil
+    }
+
+    var userPermissions: UserPermission? {
+        return self.tokenPayload?.user.perm
+    }
+
+    var hasModifyPermissions: Bool {
+        let permissions = userPermissions
+        return permissions?.rename == true || permissions?.delete == true || permissions?.share == true
+    }
 }
 
 struct JWTPayload: Codable {

@@ -293,7 +293,7 @@ struct AdvancedServerSettingsView: View {
             .fullScreenCover(isPresented: $showLocalFilePicker) {
                 localFilesListView
             }
-            
+
             Section {
                 Button {
                     showDeviceMetrics = true
@@ -304,7 +304,7 @@ struct AdvancedServerSettingsView: View {
             .fullScreenCover(isPresented: $showDeviceMetrics) {
                 showDeviceMetricsView
             }
-            
+
             Section {
                 Button {
                     Task {
@@ -343,7 +343,7 @@ struct AdvancedServerSettingsView: View {
                 deleteOptionsKSStack
                     .padding()
             }
-            
+
             // Delete Stored Session (will logout)
             Section {
                 Button(role: .destructive) {
