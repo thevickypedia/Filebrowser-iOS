@@ -381,6 +381,7 @@ struct AdvancedServerSettingsView: View {
             }
         }
         .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
+        .modifier(ToastMessage(payload: $settingsMessage))
         .onAppear {
             fetchClientStorageInfo()
         }
