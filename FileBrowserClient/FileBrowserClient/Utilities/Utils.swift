@@ -429,7 +429,7 @@ func processFileExporterResponse(fileURL: URL, exportResult: FileExportResult) -
             msg += " through \(activityType.components(separatedBy: ".").last ?? activityType)"
         }
         Log.debug(msg + ": [\(fileURL.lastPathComponent)]")
-        return ToastMessagePayload(text: msg)
+        return ToastMessagePayload(text: msg, color: .green)
     } else if let error = exportResult.error {
         let msg = "✖️ Failed to export - \(error.localizedDescription)"
         Log.error(msg + ": [\(fileURL.lastPathComponent)]")

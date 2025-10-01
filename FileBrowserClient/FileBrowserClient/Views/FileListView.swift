@@ -556,7 +556,6 @@ struct FileListView: View {
         }
     }
 
-    // TODO: Move this to it's own struct
     private var localFilesListView: some View {
         NavigationView {
             List {
@@ -570,7 +569,8 @@ struct FileListView: View {
                             DispatchQueue.main.async {
                                 if let url = result {
                                     localFilesMessage = ToastMessagePayload(
-                                        text: "Stored logs until now to: \(url.lastPathComponent)"
+                                        text: "Stored logs until now to: \(url.lastPathComponent)",
+                                        color: .green
                                     )
                                     localFiles = fetchLocalFiles()
                                 } else {
@@ -1018,7 +1018,7 @@ struct FileListView: View {
             if checkPathExists(encodedDestination) {
                 let msg = "⚠️ \(item.name) already exists at \(destinationPath)"
                 Log.error(msg)
-                modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
+                modifyMessage = ToastMessagePayload(text: msg, color: .yellow, duration: 2)
                 return
             }
 
@@ -2411,7 +2411,7 @@ struct FileListView: View {
         guard transferState.currentTransferIndex < uploadQueue.count else {
             transferState.transferType = nil
             if pendingUploads == 0 {
-                toastMessage = ToastMessagePayload(text: "📤 Uploaded \(transferState.currentTransferIndex) \(transferState.currentTransferIndex == 1 ? "file" : "files")")
+                toastMessage = ToastMessagePayload(text: "📤 Uploaded \(transferState.currentTransferIndex) \(transferState.currentTransferIndex == 1 ? "file" : "files")", color: .green)
                 endUpload()
             } else {
                 Log.trace("Unprocessed files: \(pendingUploads)")
@@ -2561,12 +2561,12 @@ struct FileListView: View {
                     Log.info("✅ Settings saved")
                     auth.tokenPayload?.user.hideDotfiles = hideDotfiles
                     auth.tokenPayload?.user.dateFormat = dateFormatExact
-                    settingsMessage = ToastMessagePayload(text: "✅ Settings saved")
+                    settingsMessage = ToastMessagePayload(text: "✅ Settings saved", color: .green)
                 } else {
                     Log.error("❌ Settings save failed: \(body)")
                     errorTitle = "Settings save failed"
                     errorMessage = body
-                    settingsMessage = ToastMessagePayload(text: "❌ Settings save failed")
+                    settingsMessage = ToastMessagePayload(text: "❌ Settings save failed", color: .red)
                 }
             }
         }.resume()
@@ -2722,7 +2722,7 @@ struct FileListView: View {
                 if http.statusCode == 200 {
                     Log.info("✅ \(resourceType) created successfully")
                     fetchFiles(at: currentPath)
-                    toastMessage = ToastMessagePayload(text: "\(emoji) \(newResourceName) created")
+                    toastMessage = ToastMessagePayload(text: "\(emoji) \(newResourceName) created", color: .green)
                     newResourceName = ""
                 } else {
                     Log.error("❌ \(resourceType) creation failed with status code: \(http.statusCode)")

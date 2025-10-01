@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ToastMessagePayload {
     var text: String?
-    var color: Color = .green
+    var color: Color = .accentColor
     var duration: TimeInterval = 2.5
 }
 
