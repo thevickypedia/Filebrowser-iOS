@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v1.52.2 (09/30/2025)
+--------------------
+- [d6603ef](https://github.com/thevickypedia/Filebrowser-iOS/commit/d6603ef1c22c673c20719261e22470664c81929e) chore: Release ``v1.52.2``
+- [e373eb5](https://github.com/thevickypedia/Filebrowser-iOS/commit/e373eb5407423bbfe388cc9aa717f2e4c3578294) revert: Center align all server information in settings view
+- [e912a39](https://github.com/thevickypedia/Filebrowser-iOS/commit/e912a398c355ba8ac5cca5247b635d122a98c19d) style: Center align all server information in settings view
+- [8f721d3](https://github.com/thevickypedia/Filebrowser-iOS/commit/8f721d3659d8007ebb388925d0608bc253df7f2e) fix: Stop re-auth timer when logged out
+- [2cd057c](https://github.com/thevickypedia/Filebrowser-iOS/commit/2cd057c6c3efa48ad8e4623d98f95d411c241527) refactor: Move buffer time for repeat background login to constants
+- [5d690f8](https://github.com/thevickypedia/Filebrowser-iOS/commit/5d690f81cc2354d7056f56c3d94b3ddb31674fff) feat: Display background login response as a toast message
+- [d7749b6](https://github.com/thevickypedia/Filebrowser-iOS/commit/d7749b622e1443b5c2385cfb0ecc142788dcde2a) perf: Store password in auth environment object and re-use that for background login
+- [87702e7](https://github.com/thevickypedia/Filebrowser-iOS/commit/87702e79d2382d89d8f822a90f432b2f23642f08) feat: Include a manual control to renew authentication in settings view
+- [7bb768c](https://github.com/thevickypedia/Filebrowser-iOS/commit/7bb768ccb3b7e864e156e04fcf0c84e8e1338f11) chore: Update release notes for v1.52.1
+
 v1.52.1 (09/30/2025)
 --------------------
 - [7f295df](https://github.com/thevickypedia/Filebrowser-iOS/commit/7f295dfe008713354be2763ca76cfe48a0fb3bde) chore: Release ``v1.52.1``
