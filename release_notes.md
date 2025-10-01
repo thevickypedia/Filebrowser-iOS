@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.52.3 (10/01/2025)
+--------------------
+- [30ecdec](https://github.com/thevickypedia/Filebrowser-iOS/commit/30ecdec21b0790ed32cc6e323eef5b3839acc64b) chore: Release ``v1.52.3``
+- [3961ff4](https://github.com/thevickypedia/Filebrowser-iOS/commit/3961ff4acd8aa360020fa3ac90c2fe5601e84877) feat: Include a server health check before any type of login attempt
+- [eeef1a0](https://github.com/thevickypedia/Filebrowser-iOS/commit/eeef1a0e9365351e11415865465356045e4e3005) refactor: Change default color for toast message to match accent
+- [d74faf5](https://github.com/thevickypedia/Filebrowser-iOS/commit/d74faf517a5260a72903572721d0d2c363c0cb2a) refactor: Re-use toast message in ``ContentView`` instead of a one off state object
+- [d62ff27](https://github.com/thevickypedia/Filebrowser-iOS/commit/d62ff27d19318426cab0966c573468abab4b0b06) chore: Update release notes for v1.52.2
+
 v1.52.2 (09/30/2025)
 --------------------
 - [d6603ef](https://github.com/thevickypedia/Filebrowser-iOS/commit/d6603ef1c22c673c20719261e22470664c81929e) chore: Release ``v1.52.2``
