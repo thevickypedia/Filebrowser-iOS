@@ -697,11 +697,12 @@ struct FileListView: View {
 
             Section {
                 Button(role: .cancel) {
-                    backgroundLogin.attemptLogin()
-                    // TODO: Check for status once interim issues are resolved
-                    settingsMessage = ToastMessagePayload(text: "✅ Authentication Renewed", color: .yellow)
+                    Task {
+                        let response = await backgroundLogin.attemptLogin()
+                        settingsMessage = ToastMessagePayload(text: response.text, color: response.ok ? .white : .red)
+                    }
                 } label: {
-                    Label("Renew Authentication", systemImage: "exclamationmark.triangle.fill")
+                    Label("Renew Authentication", systemImage: "exclamationmark.triangle")
                 }
             }
 

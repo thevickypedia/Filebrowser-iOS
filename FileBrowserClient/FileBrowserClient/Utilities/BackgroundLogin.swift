@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+struct LoginResponse {
+    let ok: Bool
+    let text: String
+}
+
 struct BackgroundLogin {
     var auth: AuthManager
 
@@ -21,19 +26,33 @@ struct BackgroundLogin {
         reauthDispatchWorkItem = nil
     }
 
-    // TODO: Make func return a status struct
-    func attemptLogin() {
-        // TODO: This is always empty, as @State is not persisted in non-Views
-        if auth.serverURL.isEmpty || auth.username.isEmpty || auth.password.isEmpty {
-            Log.error("serverURL or username or password is empty!")
-            return
+    func loginResponse(_ responseText: String, ok: Bool = false) -> LoginResponse {
+        if ok {
+            Log.info(responseText)
+        } else {
+            Log.error(responseText)
         }
+        return LoginResponse(ok: ok, text: responseText)
+    }
+
+    @MainActor
+    func updateAuthState(token: String, payload: JWTPayload) {
+        auth.token = token
+        auth.tokenPayload = payload
+    }
+
+    func attemptLogin() async -> LoginResponse {
+        if auth.serverURL.isEmpty || auth.username.isEmpty || auth.password.isEmpty {
+            return loginResponse("❌ serverURL or username or password is empty!")
+        }
+
         if auth.serverURL.hasSuffix("/") {
             auth.serverURL.removeLast()
         }
-        guard let url = URL(string: "\(auth.serverURL)/api/login") else {
-            Log.error("Invalid URL")
-            return
+
+        let loginURL = "\(auth.serverURL)/api/login"
+        guard let url = URL(string: loginURL) else {
+            return loginResponse("❌ Invalid URL: \(loginURL)")
         }
 
         var request = URLRequest(url: url)
@@ -44,14 +63,13 @@ struct BackgroundLogin {
             let hexUsername = convertStringToHex(auth.username)
             let hexPassword = convertStringToHex(auth.password)
             let hexRecaptcha = convertStringToHex("")
-            
+
             let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
-            
+
             guard let payload = combined.data(using: .utf8)?.base64EncodedString() else {
-                Log.error("Failed to encode credentials")
-                return
+                return loginResponse("❌ Failed to encode credentials")
             }
-            
+
             request.setValue(payload, forHTTPHeaderField: "Authorization")
             request.httpBody = nil
         } else {
@@ -59,41 +77,31 @@ struct BackgroundLogin {
                 "username": auth.username,
                 "password": auth.password
             ]
-            
+
             do {
                 request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
             } catch {
-                Log.error("Failed to encode credentials")
-                return
+                return loginResponse("❌ Failed to encode credentials")
             }
         }
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse else {
-                Log.error("Invalid response")
-                return
+                return loginResponse("❌ Invalid response")
             }
             guard httpResponse.statusCode == 200 else {
-                Log.error("\(httpResponse.statusCode)")
-                return
+                return loginResponse("❌ HTTP error \(httpResponse.statusCode)")
             }
-            guard let responseData = data else {
-                Log.error("No response data received")
-                return
-            }
-            guard let jwt = String(data: responseData, encoding: .utf8) else {
-                Log.error("Failed to extract JWT")
-                return
+            guard let jwt = String(data: data, encoding: .utf8) else {
+                return loginResponse("❌ Failed to extract JWT")
             }
             guard let payload = decodeJWT(jwt: jwt) else {
-                Log.error("Failed to decode token")
-                return
+                return loginResponse("❌ Failed to decode token")
             }
-            // MARK: Set auth params
-            DispatchQueue.main.async {
-                auth.token = jwt
-                auth.tokenPayload = payload
-            }
+
+            await updateAuthState(token: jwt, payload: payload)
+
             logTokenInfo()
             KeychainHelper.saveSession(
                 session: StoredSession(
@@ -101,11 +109,13 @@ struct BackgroundLogin {
                     username: auth.username,
                     serverURL: auth.serverURL,
                     transitProtection: auth.transitProtection,
-                    // MARK: Always store during background login
                     password: auth.password
                 )
             )
-        }.resume()
+            return loginResponse("✅ Login Successful", ok: true)
+        } catch {
+            return loginResponse("❌ Network error: \(error.localizedDescription)")
+        }
     }
 
     func logTokenInfo() {
@@ -170,7 +180,7 @@ struct BackgroundLogin {
             Log.info("🔄 Token expired. Refreshing in background.")
             if session.password != nil {
                 // MARK: After a successful login, the startReauthTimer will kick off with new expiration time
-                attemptLogin()
+                _ = await attemptLogin()
             } else {
                 Log.warn("❌ Token expired but no password saved. Cannot reauthenticate.")
             }
