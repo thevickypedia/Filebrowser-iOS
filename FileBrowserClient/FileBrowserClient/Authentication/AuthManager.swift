@@ -10,7 +10,9 @@ import Foundation
 class AuthManager: ObservableObject {
     @Published var token: String = ""
     @Published var serverURL: String = ""
-    @Published var username: String?
+    @Published var username: String = ""
+    @Published var password: String = ""
+    @Published var transitProtection: Bool = false
     @Published var tokenPayload: JWTPayload?
 }
 

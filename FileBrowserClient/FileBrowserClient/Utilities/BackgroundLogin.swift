@@ -10,12 +10,6 @@ import SwiftUI
 struct BackgroundLogin {
     var auth: AuthManager
 
-    @State var serverURL: String
-    @State var username: String
-    @State var password: String
-    @State var transitProtection: Bool
-    @State var useFaceID: Bool
-
     @State private var reauthTimer: Timer?
     @State private var reauthDispatchWorkItem: DispatchWorkItem?
 
@@ -30,14 +24,14 @@ struct BackgroundLogin {
     // TODO: Make func return a status struct
     func attemptLogin() {
         // TODO: This is always empty, as @State is not persisted in non-Views
-        if serverURL.isEmpty || username.isEmpty || password.isEmpty {
+        if auth.serverURL.isEmpty || auth.username.isEmpty || auth.password.isEmpty {
             Log.error("serverURL or username or password is empty!")
             return
         }
-        if serverURL.hasSuffix("/") {
-            self.serverURL.removeLast()
+        if auth.serverURL.hasSuffix("/") {
+            auth.serverURL.removeLast()
         }
-        guard let url = URL(string: "\(serverURL)/api/login") else {
+        guard let url = URL(string: "\(auth.serverURL)/api/login") else {
             Log.error("Invalid URL")
             return
         }
@@ -46,9 +40,9 @@ struct BackgroundLogin {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        if transitProtection {
-            let hexUsername = convertStringToHex(username)
-            let hexPassword = convertStringToHex(password)
+        if auth.transitProtection {
+            let hexUsername = convertStringToHex(auth.username)
+            let hexPassword = convertStringToHex(auth.password)
             let hexRecaptcha = convertStringToHex("")
             
             let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
@@ -62,8 +56,8 @@ struct BackgroundLogin {
             request.httpBody = nil
         } else {
             let credentials = [
-                "username": username,
-                "password": password
+                "username": auth.username,
+                "password": auth.password
             ]
             
             do {
@@ -96,19 +90,19 @@ struct BackgroundLogin {
                 return
             }
             // MARK: Set auth params
-            auth.token = jwt
-            auth.username = username
-            auth.serverURL = serverURL
-            auth.tokenPayload = payload
+            DispatchQueue.main.async {
+                auth.token = jwt
+                auth.tokenPayload = payload
+            }
             logTokenInfo()
             KeychainHelper.saveSession(
                 session: StoredSession(
                     token: jwt,
-                    username: username,
-                    serverURL: serverURL,
-                    transitProtection: transitProtection,
-                    // MARK: Store password only when FaceID is enabled
-                    password: useFaceID ? password : nil
+                    username: auth.username,
+                    serverURL: auth.serverURL,
+                    transitProtection: auth.transitProtection,
+                    // MARK: Always store during background login
+                    password: auth.password
                 )
             )
         }.resume()
@@ -128,8 +122,7 @@ struct BackgroundLogin {
 
         // Only start the timer if Face ID is enabled and a session exists
         // Password is stored in keychain only when FaceID is enabled
-        guard useFaceID,
-              let session = KeychainHelper.loadSession(),
+        guard let session = KeychainHelper.loadSession(),
               session.password != nil else {
             Log.warn("FaceID or session unavailable to start re-auth timer")
             return
@@ -162,7 +155,7 @@ struct BackgroundLogin {
     }
 
     private func reauthenticateWithStoredSession(_ session: StoredSession) async {
-        guard session.serverURL == self.serverURL else {
+        guard session.serverURL == auth.serverURL else {
             Log.warn("⚠️ Background reauth failed: Mismatched serverURL")
             return
         }

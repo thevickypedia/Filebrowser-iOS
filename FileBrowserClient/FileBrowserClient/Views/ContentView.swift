@@ -48,14 +48,7 @@ struct ContentView: View {
 
     private func initialize() -> BackgroundLogin {
         Log.info("Initializing background login struct")
-        return BackgroundLogin(
-            auth: auth,
-            serverURL: serverURL,
-            username: username,
-            password: password,
-            transitProtection: transitProtection,
-            useFaceID: useFaceID
-        )
+        return BackgroundLogin(auth: auth)
     }
 
     private func fileListView(advancedSettings: AdvancedSettings,
@@ -434,6 +427,9 @@ struct ContentView: View {
                         auth.username = username
                         auth.serverURL = serverURL
                         auth.tokenPayload = payload
+                        // Extras
+                        auth.password = password
+                        auth.transitProtection = transitProtection
 
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
@@ -554,6 +550,10 @@ struct ContentView: View {
                 auth.username = session.username
                 auth.serverURL = session.serverURL
                 auth.tokenPayload = tokenPayload
+                // Extras
+                auth.password = session.password ?? password
+                auth.transitProtection = session.transitProtection
+
                 if let err = await auth.serverHandShake(for: String(tokenPayload.user.id)) {
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
