@@ -48,9 +48,6 @@ struct FileDetailView: View {
 
     var file: FileItem { files[currentIndex] }
 
-    // Use a closure callback to pass as argument in FileListView
-    let onFileCached: (() -> Void)?
-
     let extensionTypes: ExtensionTypes
     let cacheExtensions: [String]
     let animateGIF: Bool
@@ -557,9 +554,6 @@ struct FileDetailView: View {
                     FileCache.shared.store(
                         for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
                     )
-                    // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
-                    // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
-                    onFileCached?()
                 }
             }
         }.resume()
@@ -603,9 +597,6 @@ struct FileDetailView: View {
                     FileCache.shared.store(
                         for: serverURL, data: data, path: file.path, modified: file.modified, fileID: file.extension
                     )
-                    // Use callback trigger a refresh, since cached previews may change size after large uploads and deletions
-                    // Alternate: Trigger a refresh in onDisappear of FileDetailView, but that’s less immediate and less precise
-                    onFileCached?()
                 }
             }
         }.resume()
