@@ -19,8 +19,6 @@ struct BackgroundLogin {
     @State private var reauthTimer: Timer?
     @State private var reauthDispatchWorkItem: DispatchWorkItem?
 
-    private func loginFailed(_ msg: String) {}
-
     func backgroundLogout() {
         // Reset auth timer and reauth work item
         reauthTimer?.invalidate()
@@ -29,7 +27,9 @@ struct BackgroundLogin {
         reauthDispatchWorkItem = nil
     }
 
-    func backgroundLogin() {
+    // TODO: Make func return a status struct
+    func attemptLogin() {
+        // TODO: This is always empty, as @State is not persisted in non-Views
         if serverURL.isEmpty || username.isEmpty || password.isEmpty {
             Log.error("serverURL or username or password is empty!")
             return
@@ -84,15 +84,15 @@ struct BackgroundLogin {
                 return
             }
             guard let responseData = data else {
-                loginFailed("No response data received")
+                Log.error("No response data received")
                 return
             }
             guard let jwt = String(data: responseData, encoding: .utf8) else {
-                loginFailed("Failed to extract JWT")
+                Log.error("Failed to extract JWT")
                 return
             }
             guard let payload = decodeJWT(jwt: jwt) else {
-                loginFailed("Failed to decode token")
+                Log.error("Failed to decode token")
                 return
             }
             // MARK: Set auth params
@@ -120,7 +120,7 @@ struct BackgroundLogin {
         Log.info("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))")
         Log.info("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))")
     }
-    
+
     func startReauthTimer(at startTime: TimeInterval) {
         // Invalidate existing timer before creating a new one - since called from both regular login and faceID login
         reauthTimer?.invalidate()
@@ -136,13 +136,13 @@ struct BackgroundLogin {
         }
 
         let workItem = DispatchWorkItem {
-            self.reauthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
-                Task {
-                    await self.reauthenticateWithStoredSession(session)
+            DispatchQueue.main.async {
+                self.reauthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+                    Task {
+                        await self.reauthenticateWithStoredSession(session)
+                    }
                 }
             }
-            // Ensure timer is added to the main run loop
-            RunLoop.main.add(self.reauthTimer!, forMode: .common)
         }
         reauthDispatchWorkItem = workItem
 
@@ -175,9 +175,9 @@ struct BackgroundLogin {
         let now = Date().timeIntervalSince1970
         if now >= payload.exp - 30 {  // NOTE: Add a 30s buffer
             Log.info("🔄 Token expired. Refreshing in background.")
-            if let password = session.password {
+            if session.password != nil {
                 // MARK: After a successful login, the startReauthTimer will kick off with new expiration time
-                backgroundLogin()
+                attemptLogin()
             } else {
                 Log.warn("❌ Token expired but no password saved. Cannot reauthenticate.")
             }

@@ -46,8 +46,9 @@ struct ContentView: View {
 
     @State private var backgroundLogin: BackgroundLogin?
 
-    private func initialize() {
-        backgroundLogin = BackgroundLogin(
+    private func initialize() -> BackgroundLogin {
+        Log.info("Initializing background login struct")
+        return BackgroundLogin(
             auth: auth,
             serverURL: serverURL,
             username: username,
@@ -66,7 +67,8 @@ struct ContentView: View {
             logoutHandler: handleLogout,
             extensionTypes: extensionTypes,
             advancedSettings: advancedSettings,
-            cacheExtensions: cacheExtensions
+            cacheExtensions: cacheExtensions,
+            backgroundLogin: backgroundLogin ?? initialize()  // Re-initialize if nil
         )
         .environmentObject(fileListViewModel)
     }
@@ -237,9 +239,6 @@ struct ContentView: View {
                 .onAppear {
                     chunkSizeText = String(chunkSize)
                     applyLogSettings()
-                    if backgroundLogin == nil {
-                        initialize()
-                    }
                 }
                 .onChange(of: currentLoggingSettings) { logSettings in
                     applyLogSettings(logSettings)
@@ -293,6 +292,9 @@ struct ContentView: View {
             knownServers = KeychainHelper.loadKnownServers()
             if !knownServers.isEmpty {
                 serverURL = knownServers.last ?? ""
+            }
+            if backgroundLogin == nil {
+                backgroundLogin = initialize()
             }
         }
         .alert("Error", isPresented: .constant(errorMessage != nil), presenting: errorMessage) { _ in

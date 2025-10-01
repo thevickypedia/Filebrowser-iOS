@@ -126,6 +126,7 @@ struct FileListView: View {
     let extensionTypes: ExtensionTypes
     let advancedSettings: AdvancedSettings
     let cacheExtensions: [String]
+    let backgroundLogin: BackgroundLogin
 
     init(
         isLoggedIn: Binding<Bool>,
@@ -133,7 +134,8 @@ struct FileListView: View {
         logoutHandler: @escaping (Bool) -> Void,
         extensionTypes: ExtensionTypes,
         advancedSettings: AdvancedSettings,
-        cacheExtensions: [String]
+        cacheExtensions: [String],
+        backgroundLogin: BackgroundLogin
     ) {
         self._isLoggedIn = isLoggedIn
         self._pathStack = pathStack
@@ -141,6 +143,7 @@ struct FileListView: View {
         self.extensionTypes = extensionTypes
         self.advancedSettings = advancedSettings
         self.cacheExtensions = cacheExtensions
+        self.backgroundLogin = backgroundLogin
     }
 
     private var isAuthValid: Bool {
@@ -553,6 +556,7 @@ struct FileListView: View {
         }
     }
 
+    // TODO: Move this to it's own struct
     private var localFilesListView: some View {
         NavigationView {
             List {
@@ -691,6 +695,17 @@ struct FileListView: View {
                 showDeviceMetricsView
             }
 
+            Section {
+                Button(role: .cancel) {
+                    backgroundLogin.attemptLogin()
+                    backgroundLogin.logTokenInfo()
+                    // TODO: Check for status once interim issues are resolved
+                    settingsMessage = ToastMessagePayload(text: "✅ Authentication Renewed", color: .yellow)
+                } label: {
+                    Label("Renew Authentication", systemImage: "exclamationmark.triangle.fill")
+                }
+            }
+
             Section(header: Text("Client Storage")) {
                 SelectableTextView(text: "File Cache: \(formatBytes(fileCacheSize))")
             }
@@ -745,6 +760,7 @@ struct FileListView: View {
                     Text("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))").textSelection(.enabled)
                     Text("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))").textSelection(.enabled)
                     Text("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))").textSelection(.enabled)
+                    Text("ServerURL: \(auth.serverURL)")
                 }
                 .padding(.top, 8)
                 .frame(maxWidth: .infinity, alignment: .center)
