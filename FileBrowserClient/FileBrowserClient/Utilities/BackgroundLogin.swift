@@ -20,6 +20,7 @@ struct BackgroundLogin {
 
     func backgroundLogout() {
         // Reset auth timer and reauth work item
+        Log.info("✖️ Invalidating reauth timer and dispatch work item")
         reauthTimer?.invalidate()
         reauthTimer = nil
         reauthDispatchWorkItem?.cancel()
@@ -175,6 +176,7 @@ struct BackgroundLogin {
             return
         }
 
+        Log.trace("Checking if token is still valid...")
         let now = Date().timeIntervalSince1970
         if now >= payload.exp - Constants.backgroundLoginBuffer {
             Log.info("🔄 Token expired. Refreshing in background.")

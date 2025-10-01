@@ -47,7 +47,7 @@ struct ContentView: View {
     @State private var backgroundLogin: BackgroundLogin?
 
     private func initialize() -> BackgroundLogin {
-        Log.info("Initializing background login struct")
+        Log.info("⏳ Initializing background login struct")
         return BackgroundLogin(auth: auth)
     }
 
@@ -109,10 +109,10 @@ struct ContentView: View {
         let logSettings: LoggingSettings
         if let customSettings = settings {
             logSettings = customSettings
-            Log.debug("Configuring logger with overridden app storage: \(logSettings)")
+            Log.debug("🗒️ Configuring logger with custom setup: \(logSettings)")
         } else {
             logSettings = LoggingSettings(option: logOption, level: logLevel, verbose: verboseLogging)
-            Log.debug("Configuring logger with app storage")
+            Log.debug("🗒️ Configuring logger with app storage: \(logSettings)")
         }
         Log.initialize(
             logOption: logSettings.option,
@@ -333,6 +333,7 @@ struct ContentView: View {
             username = ""
         }
         password = ""
+        backgroundLogin?.backgroundLogout()
 
         statusMessage = "⚠️ Logout successful!"
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
