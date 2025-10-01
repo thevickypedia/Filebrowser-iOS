@@ -334,7 +334,6 @@ struct ContentView: View {
         }
         password = ""
 
-
         statusMessage = "⚠️ Logout successful!"
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
             statusMessage = nil

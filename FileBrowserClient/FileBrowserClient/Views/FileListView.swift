@@ -699,7 +699,7 @@ struct FileListView: View {
                 Button(role: .cancel) {
                     Task {
                         let response = await backgroundLogin.attemptLogin()
-                        settingsMessage = ToastMessagePayload(text: response.text, color: response.ok ? .white : .red)
+                        settingsMessage = ToastMessagePayload(text: response.text, color: response.ok ? .green : .red)
                     }
                 } label: {
                     Label("Renew Authentication", systemImage: "exclamationmark.triangle")

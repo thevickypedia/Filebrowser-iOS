@@ -8,6 +8,9 @@
 import Foundation
 
 struct Constants {
+    // BackgroundLogin
+    static let backgroundLoginBuffer: Double = 30.0
+
     // FileListView - Controls:
     // 1. How frequently, the download speed should be updated in the UX in list view
     // 2. Minimum time (in secs) to accumulate the bytes downloaded and estimate the speed

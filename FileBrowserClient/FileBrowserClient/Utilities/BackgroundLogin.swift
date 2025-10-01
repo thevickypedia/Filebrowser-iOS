@@ -112,7 +112,7 @@ struct BackgroundLogin {
                     password: auth.password
                 )
             )
-            return loginResponse("✅ Login Successful", ok: true)
+            return loginResponse("🔄 Authentication Renewed", ok: true)
         } catch {
             return loginResponse("❌ Network error: \(error.localizedDescription)")
         }
@@ -149,7 +149,7 @@ struct BackgroundLogin {
         }
         reauthDispatchWorkItem = workItem
 
-        let delay = startTime - Date().timeIntervalSince1970 - 30  // NOTE: Add a 30s buffer
+        let delay = startTime - Date().timeIntervalSince1970 - Constants.backgroundLoginBuffer
         if delay > 0 {
             let fireDate = Date(timeIntervalSince1970: startTime)
             let formatter = DateFormatter()
@@ -176,7 +176,7 @@ struct BackgroundLogin {
         }
 
         let now = Date().timeIntervalSince1970
-        if now >= payload.exp - 30 {  // NOTE: Add a 30s buffer
+        if now >= payload.exp - Constants.backgroundLoginBuffer {
             Log.info("🔄 Token expired. Refreshing in background.")
             if session.password != nil {
                 // MARK: After a successful login, the startReauthTimer will kick off with new expiration time
