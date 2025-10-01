@@ -754,17 +754,13 @@ struct FileListView: View {
             }
 
             Section(
-                footer: VStack(alignment: .center) {
-                    Group {
-                        Text("ServerURL: \(auth.serverURL)")
-                        Text("Username: \(auth.username)")
-                        Text("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")")
-                        Text("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))")
-                        Text("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))")
-                        Text("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))")
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .textSelection(.enabled)
+                footer: VStack(alignment: .leading) {
+                    Text("ServerURL: \(auth.serverURL)").textSelection(.enabled)
+                    Text("Username: \(auth.username)").textSelection(.enabled)
+                    Text("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")").textSelection(.enabled)
+                    Text("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))").textSelection(.enabled)
+                    Text("Expiration: \(timeStampToString(from: auth.tokenPayload?.exp))").textSelection(.enabled)
+                    Text("Time Left: \(timeLeftString(until: auth.tokenPayload?.exp))").textSelection(.enabled)
                 }
                 .padding(.top, 8)
                 .frame(maxWidth: .infinity, alignment: .center)
