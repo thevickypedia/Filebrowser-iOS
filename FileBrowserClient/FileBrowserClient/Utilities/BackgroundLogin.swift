@@ -136,7 +136,7 @@ struct BackgroundLogin {
 
         let workItem = DispatchWorkItem {
             DispatchQueue.main.async {
-                self.reauthTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
+                self.reauthTimer = Timer.scheduledTimer(withTimeInterval: Constants.backgroundLoginFrequency, repeats: true) { _ in
                     Task {
                         await self.reauthenticateWithStoredSession(session)
                     }

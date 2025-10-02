@@ -9,6 +9,7 @@ import Foundation
 
 struct Constants {
     // BackgroundLogin
+    static let backgroundLoginFrequency: Double = 5.0
     static let backgroundLoginBuffer: Double = 30.0
 
     // FileListView - Controls:
