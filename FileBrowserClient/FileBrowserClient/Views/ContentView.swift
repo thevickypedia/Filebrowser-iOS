@@ -350,7 +350,7 @@ struct ContentView: View {
     }
 
     private func processHealthCheck() {
-        toastMessage = ToastMessagePayload(text: "⏳ Checking server health")
+        toastMessage = ToastMessagePayload(text: "⏳ Checking server health", color: .primary)
         Task {
             let healthCheck = await checkServerHealth(for: serverURL)
             if healthCheck.success {
