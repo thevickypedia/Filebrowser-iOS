@@ -508,7 +508,7 @@ struct ContentView: View {
     }
 
     func biometricSignIn(session: StoredSession) {
-        processHealthCheck()
+        var doHealthCheck = true
         // Force remembering username whenever FaceID is toggled
         rememberMe = false
         KeychainHelper.authenticateWithBiometrics { success in
@@ -519,16 +519,19 @@ struct ContentView: View {
                     DispatchQueue.main.async {
                         useFaceID = false // fallback to manual login
                     }
+                    doHealthCheck = false
                     return
                 }
 
                 // Decode JWT to check expiration
                 guard let tokenPayload = decodeJWT(jwt: session.token) else {
                     errorMessage = "❌ Failed to decode server token"
+                    doHealthCheck = false
                     return
                 }
                 let now = Date().timeIntervalSince1970
                 if now >= tokenPayload.exp {
+                    doHealthCheck = false
                     Log.info("🔑 Token expired — refreshing via stored credentials.")
                     if let sessionPassword = session.password {
                         DispatchQueue.main.async {
@@ -560,6 +563,7 @@ struct ContentView: View {
                 auth.transitProtection = session.transitProtection
 
                 if let err = await auth.serverHandShake(for: String(tokenPayload.user.id)) {
+                    doHealthCheck = false
                     DispatchQueue.main.async {
                         // FIXME: Find a better way to handle this
                         if ["401"].contains(err) {
@@ -572,7 +576,9 @@ struct ContentView: View {
                     }
                     return
                 }
-                toastMessage = ToastMessagePayload(text: "✅ Face ID login successful!", color: .green)
+                if doHealthCheck {
+                    processHealthCheck()
+                }
                 fileListViewModel.configure(token: session.token, serverURL: session.serverURL)
                 DispatchQueue.main.async {
                     isLoggedIn = true
@@ -580,6 +586,7 @@ struct ContentView: View {
                 Log.info("✅ Face ID login successful")
                 updateLastUsedServer()
                 DispatchQueue.main.async {
+                    toastMessage = ToastMessagePayload(text: "✅ Face ID login successful!", color: .green)
                     backgroundLogin?.logTokenInfo()
                     backgroundLogin?.startReauthTimer(at: tokenPayload.exp)
                 }
