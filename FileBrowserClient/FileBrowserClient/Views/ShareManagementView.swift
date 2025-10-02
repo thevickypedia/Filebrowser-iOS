@@ -12,6 +12,8 @@ struct SharedItem: Codable, Identifiable, Hashable {
     let path: String
     let userID: Int
     let expire: Int
+    let password_hash: String?
+    let token: String?
     // Local-only ID for SwiftUI
     var id: String { hash }
 }
@@ -64,8 +66,50 @@ struct ShareManagementView: View {
         }.resume()
     }
 
-    private func deleteShared(_ link: SharedItem) {
-        Log.info("Deleting \(link)")
+    private func deleteShared(_ item: SharedItem) {
+        Log.info("Deleting share with hash: \(item.hash)")
+
+        guard let url = URL(string: "\(auth.serverURL)/api/share/\(item.hash)") else {
+            Log.error("Invalid delete URL")
+            toastMessage = ToastMessagePayload(text: "Invalid delete URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                Log.error("Delete request failed: \(error)")
+                DispatchQueue.main.async {
+                    toastMessage = ToastMessagePayload(text: "Delete failed")
+                }
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                Log.error("Invalid response during delete")
+                DispatchQueue.main.async {
+                    toastMessage = ToastMessagePayload(text: "Invalid server response")
+                }
+                return
+            }
+
+            if httpResponse.statusCode == 200 {
+                Log.info("Successfully deleted share: \(item.hash)")
+                DispatchQueue.main.async {
+                    // Remove the deleted item from the local list
+                    sharedContent.removeAll { $0.hash == item.hash }
+                    toastMessage = ToastMessagePayload(text: "Deleted share")
+                }
+            } else {
+                Log.error("Delete failed with status: \(httpResponse.statusCode)")
+                DispatchQueue.main.async {
+                    toastMessage = ToastMessagePayload(text: "Delete failed (\(httpResponse.statusCode))")
+                }
+            }
+        }.resume()
     }
 
     var body: some View {
