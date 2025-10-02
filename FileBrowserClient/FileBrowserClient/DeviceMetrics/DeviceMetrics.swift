@@ -63,8 +63,8 @@ func getCPUUsage() -> Double? {
     var threadList: thread_act_array_t?
     var threadCount = mach_msg_type_number_t()
 
-    let kr = task_threads(mach_task_self_, &threadList, &threadCount)
-    if kr != KERN_SUCCESS {
+    let taskThreads = task_threads(mach_task_self_, &threadList, &threadCount)
+    if taskThreads != KERN_SUCCESS {
         return nil
     }
 

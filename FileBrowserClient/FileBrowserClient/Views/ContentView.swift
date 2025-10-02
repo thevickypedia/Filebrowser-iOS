@@ -353,7 +353,7 @@ struct ContentView: View {
         toastMessage = ToastMessagePayload(text: "⏳ Checking server health")
         Task {
             let healthCheck = await checkServerHealth(for: serverURL)
-            if healthCheck.ok {
+            if healthCheck.success {
                 Log.info(healthCheck.text)
             } else {
                 Log.error(healthCheck.text)

@@ -22,13 +22,13 @@ struct BackgroundLogin {
         reauthDispatchWorkItem = nil
     }
 
-    func loginResponse(_ responseText: String, ok: Bool = false) -> ServerResponse {
-        if ok {
+    func loginResponse(_ responseText: String, success: Bool = false) -> ServerResponse {
+        if success {
             Log.info(responseText)
         } else {
             Log.error(responseText)
         }
-        return ServerResponse(ok: ok, text: responseText)
+        return ServerResponse(success: success, text: responseText)
     }
 
     @MainActor
@@ -108,7 +108,7 @@ struct BackgroundLogin {
                     password: auth.password
                 )
             )
-            return loginResponse("🔄 Authentication Renewed", ok: true)
+            return loginResponse("🔄 Authentication Renewed", success: true)
         } catch {
             return loginResponse("❌ Network error: \(error.localizedDescription)")
         }

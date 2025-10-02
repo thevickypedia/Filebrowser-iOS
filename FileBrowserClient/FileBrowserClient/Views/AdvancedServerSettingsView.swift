@@ -309,7 +309,7 @@ struct AdvancedServerSettingsView: View {
                 Button {
                     Task {
                         let response = await backgroundLogin.attemptLogin()
-                        settingsMessage = ToastMessagePayload(text: response.text, color: response.ok ? .green : .red)
+                        settingsMessage = ToastMessagePayload(text: response.text, color: response.success ? .green : .red)
                     }
                 } label: {
                     Label("Renew Authentication", systemImage: "exclamationmark.triangle")

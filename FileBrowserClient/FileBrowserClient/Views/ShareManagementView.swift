@@ -12,10 +12,19 @@ struct SharedItem: Codable, Identifiable, Hashable {
     let path: String
     let userID: Int
     let expire: Int
-    let password_hash: String?
+    let passwordHash: String?
     let token: String?
-    // Local-only ID for SwiftUI
+
     var id: String { hash }
+
+    private enum CodingKeys: String, CodingKey {
+        case hash
+        case path
+        case userID
+        case expire
+        case passwordHash = "password_hash"
+        case token
+    }
 }
 
 struct ShareManagementView: View {
@@ -38,7 +47,7 @@ struct ShareManagementView: View {
         request.httpMethod = "GET"
         request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { data, _, error in
             if let error = error {
                 Log.error("Network error: \(error.localizedDescription)")
                 errorTitle = "Network Error"
@@ -80,7 +89,7 @@ struct ShareManagementView: View {
         request.httpMethod = "DELETE"
         request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { _, response, error in
             if let error = error {
                 Log.error("Delete request failed: \(error.localizedDescription)")
                 errorTitle = "Network Error"
