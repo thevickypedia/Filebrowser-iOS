@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.53.0 (10/01/2025)
+--------------------
+- [f3590fb](https://github.com/thevickypedia/Filebrowser-iOS/commit/f3590fb26dbe2453c06f3d815bec5c2d99d4585c) chore: Release ``v1.53.0``
+- [d16e3c7](https://github.com/thevickypedia/Filebrowser-iOS/commit/d16e3c77df16b50cda218ec55419bb9ed2393a77) lint: Fix linting warnings for identifier name violations
+- [b47d68f](https://github.com/thevickypedia/Filebrowser-iOS/commit/b47d68fa0d27b54981597191ffd7e277b4e517a4) feat: Integrate error alerts for failed API calls in share management view
+- [f924ab3](https://github.com/thevickypedia/Filebrowser-iOS/commit/f924ab36cf0676def96bc267c78f62c9f92511ea) feat: Implement delete functionality for share management
+- [a288b3a](https://github.com/thevickypedia/Filebrowser-iOS/commit/a288b3af742d2ee89e3d3c2640e37574eab97258) feat: Extend share management to get actual shared content URLs
+- [8dab590](https://github.com/thevickypedia/Filebrowser-iOS/commit/8dab590ef9166d46a806a6a8695dd13934e7fe97) feat: Add swipe actions for share management to allow copy to clipboard
+- [6afa311](https://github.com/thevickypedia/Filebrowser-iOS/commit/6afa3112f828af72a192601510358ef128f7df20) feat: Add a ``hello-world`` share management option in settings view
+- [3d89bfd](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d89bfdaef7bb60c0d3bc0efe166b89f9fc61d59) chore: Update release notes for v1.52.4
+
 v1.52.4 (10/01/2025)
 --------------------
 - [cdbb988](https://github.com/thevickypedia/Filebrowser-iOS/commit/cdbb98829bf08e52fa44c897b5d4605b7eb2338c) chore: Release ``v1.52.4``
