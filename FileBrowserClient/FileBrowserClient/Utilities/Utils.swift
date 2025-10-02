@@ -310,12 +310,35 @@ func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> St
         return "Expired"
     }
 
-    let hours = remaining / 3600
-    let minutes = (remaining % 3600) / 60
-    let seconds = remaining % 60
+    let secondsInYear = 365 * 24 * 3600
+    let secondsInMonth = 30 * 24 * 3600
+    let secondsInWeek = 7 * 24 * 3600
+    let secondsInDay = 24 * 3600
+    let secondsInHour = 3600
+    let secondsInMinute = 60
+
+    let years = remaining / secondsInYear
+    let months = (remaining % secondsInYear) / secondsInMonth
+    let weeks = (remaining % secondsInMonth) / secondsInWeek
+    let days = (remaining % secondsInWeek) / secondsInDay
+    let hours = (remaining % secondsInDay) / secondsInHour
+    let minutes = (remaining % secondsInHour) / secondsInMinute
+    let seconds = remaining % secondsInMinute
 
     if asString {
         var components: [String] = []
+        if years > 0 {
+            components.append("\(years) year\(years == 1 ? "" : "s")")
+        }
+        if months > 0 {
+            components.append("\(months) month\(months == 1 ? "" : "s")")
+        }
+        if weeks > 0 {
+            components.append("\(weeks) week\(weeks == 1 ? "" : "s")")
+        }
+        if days > 0 {
+            components.append("\(days) day\(days == 1 ? "" : "s")")
+        }
         if hours > 0 {
             components.append("\(hours) hour\(hours == 1 ? "" : "s")")
         }
@@ -323,11 +346,12 @@ func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> St
             components.append("\(minutes) minute\(minutes == 1 ? "" : "s")")
         }
         if components.isEmpty {
-            // If both hours and minutes are 0, show seconds only
+            // If seconds is the only option
             components.append("\(seconds) second\(seconds == 1 ? "" : "s")")
         }
         return components.joined(separator: ", ")
     } else {
+        // Digital format: hh:mm:ss (as before)
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }
 }
