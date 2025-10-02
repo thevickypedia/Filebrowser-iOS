@@ -132,13 +132,17 @@ struct ShareManagementView: View {
                             .padding()
                     } else {
                         ForEach($sharedContent, id: \.self) { $sharedPath in
-                            HStack {
-                                Text(sharedPath.path)
-                                    .foregroundColor(.primary)
-                                Spacer()
-                                Text("Duration: \(timeLeftString(until: sharedPath.expire))")
-                                    .font(.footnote)
-                                    .foregroundColor(.gray)
+                            GeometryReader { geometry in
+                                HStack {
+                                    Text(sharedPath.path)
+                                        .foregroundColor(.primary)
+                                        .frame(width: geometry.size.width * 0.6, alignment: .leading) // 60%
+
+                                    Text("Duration: \(timeLeftString(until: sharedPath.expire))")
+                                        .font(.footnote)
+                                        .foregroundColor(.gray)
+                                        .frame(width: geometry.size.width * 0.4, alignment: .trailing) // 40%
+                                }
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                 Button {
