@@ -31,16 +31,26 @@ struct ShareManagementView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding()
                     } else {
-                        ForEach(sharedContent, id: \.self) { sharedFile in
+                        ForEach($sharedContent, id: \.self) { $sharedFile in
                             HStack {
                                 Text(sharedFile)
                                     .foregroundColor(.primary)
                                 Spacer()
                             }
+                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                Button {
+                                    UIPasteboard.general.string = sharedFile
+                                    toastMessage = ToastMessagePayload(text: "📋 Copied to clipboard", color: .primary)
+                                } label: {
+                                    Label("Copy", systemImage: "doc.on.doc")
+                                }
+                                .tint(.blue)
+                            }
                         }
                         .onDelete { indexSet in
                             let filesToDelete = indexSet.map { sharedContent[$0] }
                             filesToDelete.forEach { deleteShared($0) }
+                            sharedContent.remove(atOffsets: indexSet)
                         }
                     }
                 }
