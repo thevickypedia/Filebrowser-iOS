@@ -299,6 +299,10 @@ func timeStampToString(from timestamp: TimeInterval?) -> String {
     return formatter.string(from: date)
 }
 
+func pluralize(_ count: Int, _ identifier: String) -> String {
+    return "\(count) \(identifier)\(count == 1 ? "" : "s")"
+}
+
 func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> String {
     guard let timestamp = timestamp else {
         return "Unknown"
@@ -328,26 +332,26 @@ func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> St
     if asString {
         var components: [String] = []
         if years > 0 {
-            components.append("\(years) year\(years == 1 ? "" : "s")")
+            components.append(pluralize(years, "year"))
         }
         if months > 0 {
-            components.append("\(months) month\(months == 1 ? "" : "s")")
+            components.append(pluralize(months, "month"))
         }
         if weeks > 0 {
-            components.append("\(weeks) week\(weeks == 1 ? "" : "s")")
+            components.append(pluralize(weeks, "week"))
         }
         if days > 0 {
-            components.append("\(days) day\(days == 1 ? "" : "s")")
+            components.append(pluralize(days, "day"))
         }
         if hours > 0 {
-            components.append("\(hours) hour\(hours == 1 ? "" : "s")")
+            components.append(pluralize(hours, "hour"))
         }
         if minutes > 0 {
-            components.append("\(minutes) minute\(minutes == 1 ? "" : "s")")
+            components.append(pluralize(minutes, "minute"))
         }
         if components.isEmpty {
             // If seconds is the only option
-            components.append("\(seconds) second\(seconds == 1 ? "" : "s")")
+            components.append(pluralize(seconds, "second"))
         }
         return components.joined(separator: ", ")
     } else {
