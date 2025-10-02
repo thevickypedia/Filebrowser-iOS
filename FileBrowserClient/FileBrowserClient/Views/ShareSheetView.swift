@@ -25,7 +25,7 @@ struct ShareSheetView: View {
     @State private var durationDigit = ""
     @State private var shareDuration = "hours"
     @State private var sharePassword = ""
-    let shareDurationOptions = ["seconds", "minutes", "hours", "days"]
+    let shareDurationOptions = ["minutes", "hours", "days"]
     @State private var sharedObjects: [String: ShareLinks] = [:]
     @State private var shareMessage: ToastMessagePayload?
     // Display as alerts
