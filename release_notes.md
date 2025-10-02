@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.53.2 (10/01/2025)
+--------------------
+- [8583632](https://github.com/thevickypedia/Filebrowser-iOS/commit/858363295e692926d903a8f1676401350f77df04) chore: Release ``v1.53.2``
+- [e5c78bc](https://github.com/thevickypedia/Filebrowser-iOS/commit/e5c78bc8dc327be14621e01576be4e55d8bf7f00) style: Show full file path in share sheet view
+- [f1fe441](https://github.com/thevickypedia/Filebrowser-iOS/commit/f1fe4414b97201c36e97e65a22df87defbe2f6c4) fix: Intermittent issues with sharing an item from list view
+- [c2a3ed4](https://github.com/thevickypedia/Filebrowser-iOS/commit/c2a3ed4830d3a6bf34bd3e89a993923304b9d371) style: Change server health check toast message to primary color
+- [6b63385](https://github.com/thevickypedia/Filebrowser-iOS/commit/6b6338530e259e591d87303331a177950cdadfc4) perf: Add a prefix limit for number of components returned as part of detecting time left from epoch
+- [4367d09](https://github.com/thevickypedia/Filebrowser-iOS/commit/4367d09bb9fff98133fa17687135cead669e54f3) chore: Update release notes for v1.53.1
+
 v1.53.1 (10/01/2025)
 --------------------
 - [b30519a](https://github.com/thevickypedia/Filebrowser-iOS/commit/b30519a547fd059cdea2da34b60597f9870fcfc7) chore: Release ``v1.53.1``
