@@ -59,6 +59,12 @@ struct ShareSheetView: View {
 
                     } else {
                         Section(header: Text("Share Duration")) {
+                            Text(file.path)
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .textSelection(.enabled)
                             HStack {
                                 TextField("0", text: $durationDigit)
                                     .keyboardType(.numbersAndPunctuation)
