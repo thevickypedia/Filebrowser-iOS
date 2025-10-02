@@ -7,19 +7,68 @@
 
 import SwiftUI
 
+struct SharedItem: Codable, Identifiable, Hashable {
+    let hash: String
+    let path: String
+    let userID: Int
+    let expire: Int
+    // Local-only ID for SwiftUI
+    var id: String { hash }
+}
+
 struct ShareManagementView: View {
-    @State private var sharedContent: [String] = []
+    @EnvironmentObject var auth: AuthManager
+
+    @State private var sharedContent: [SharedItem] = []
     @State private var toastMessage: ToastMessagePayload?
 
-    private func fetchSharedContent() -> [String] {
-        return ["hello-world"]
+    private func fetchSharedContent() {
+        guard let url = URL(string: "\(auth.serverURL)/api/shares") else {
+            Log.error("Invalid server URL")
+            toastMessage = ToastMessagePayload(text: "Invalid server URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                Log.error("Network error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    toastMessage = ToastMessagePayload(text: "Network error")
+                }
+                return
+            }
+
+            guard let data = data else {
+                Log.error("No data received")
+                DispatchQueue.main.async {
+                    toastMessage = ToastMessagePayload(text: "No data received")
+                }
+                return
+            }
+
+            do {
+                let decoded = try JSONDecoder().decode([SharedItem].self, from: data)
+                DispatchQueue.main.async {
+                    sharedContent = decoded
+                }
+            } catch {
+                Log.error("Failed to decode response: \(error)")
+                DispatchQueue.main.async {
+                    toastMessage = ToastMessagePayload(text: "Failed to decode response")
+                }
+            }
+        }.resume()
     }
 
-    private func deleteShared(_ link: String) {
+    private func deleteShared(_ link: SharedItem) {
         Log.info("Deleting \(link)")
     }
 
-    private var sharedFilesListView: some View {
+    var body: some View {
         NavigationView {
             List {
                 // Section for file list or empty state
@@ -31,15 +80,15 @@ struct ShareManagementView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding()
                     } else {
-                        ForEach($sharedContent, id: \.self) { $sharedFile in
+                        ForEach($sharedContent, id: \.self) { $sharedPath in
                             HStack {
-                                Text(sharedFile)
+                                Text(sharedPath.path)
                                     .foregroundColor(.primary)
                                 Spacer()
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                 Button {
-                                    UIPasteboard.general.string = sharedFile
+                                    UIPasteboard.general.string = "\(auth.serverURL)/share/\(sharedPath.hash)"
                                     toastMessage = ToastMessagePayload(text: "📋 Copied to clipboard", color: .primary)
                                 } label: {
                                     Label("Copy", systemImage: "doc.on.doc")
@@ -60,7 +109,7 @@ struct ShareManagementView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {
-                        sharedContent = fetchSharedContent()
+                        fetchSharedContent()
                     }) {
                         Image(systemName: "arrow.clockwise")
                     }
@@ -72,14 +121,10 @@ struct ShareManagementView: View {
             }
             .onAppear {
                 if sharedContent.isEmpty {
-                    Log.debug("Updating localFiles queue")
-                    sharedContent = fetchSharedContent()
+                    Log.debug("Updating shared content queue")
+                    fetchSharedContent()
                 }
             }
         }
-    }
-
-    var body: some View {
-        sharedFilesListView
     }
 }
