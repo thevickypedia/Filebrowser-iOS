@@ -34,6 +34,7 @@ struct ShareManagementView: View {
     @State private var toastMessage: ToastMessagePayload?
     @State private var errorTitle: String?
     @State private var errorMessage: String?
+    @State private var expandedPaths: Set<String> = []
 
     private func fetchSharedContent() {
         guard let url = URL(string: "\(auth.serverURL)/api/shares") else {
@@ -131,17 +132,25 @@ struct ShareManagementView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding()
                     } else {
-                        ForEach($sharedContent, id: \.self) { $sharedPath in
-                            GeometryReader { geometry in
+                        ForEach(sharedContent, id: \.self) { sharedPath in
+                            VStack(alignment: .leading, spacing: 4) {
                                 HStack {
                                     Text(sharedPath.path)
+                                        .lineLimit(expandedPaths.contains(sharedPath.path) ? nil : 1)
                                         .foregroundColor(.primary)
-                                        .frame(width: geometry.size.width * 0.6, alignment: .leading) // 60%
-
+                                        .truncationMode(.middle)
+                                        .onTapGesture {
+                                            if expandedPaths.contains(sharedPath.path) {
+                                                expandedPaths.remove(sharedPath.path)
+                                            } else {
+                                                expandedPaths.insert(sharedPath.path)
+                                            }
+                                        }
+                                    Spacer()
                                     Text("Duration: \(timeLeftString(until: sharedPath.expire))")
                                         .font(.footnote)
                                         .foregroundColor(.gray)
-                                        .frame(width: geometry.size.width * 0.4, alignment: .trailing) // 40%
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
                                 }
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
@@ -183,6 +192,9 @@ struct ShareManagementView: View {
                     Log.debug("Updating shared content queue")
                     fetchSharedContent()
                 }
+            }
+            .onDisappear {
+                expandedPaths.removeAll()
             }
         }
     }
