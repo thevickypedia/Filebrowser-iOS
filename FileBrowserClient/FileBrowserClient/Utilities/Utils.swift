@@ -303,7 +303,7 @@ func pluralize(_ count: Int, _ identifier: String) -> String {
     return "\(count) \(identifier)\(count == 1 ? "" : "s")"
 }
 
-func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> String {
+func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true, limit: Int = 2) -> String {
     guard let timestamp = timestamp else {
         return "Unknown"
     }
@@ -353,7 +353,7 @@ func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> St
             // If seconds is the only option
             components.append(pluralize(seconds, "second"))
         }
-        return components.joined(separator: ", ")
+        return components.prefix(limit).joined(separator: ", ")
     } else {
         // Digital format: hh:mm:ss (as before)
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
