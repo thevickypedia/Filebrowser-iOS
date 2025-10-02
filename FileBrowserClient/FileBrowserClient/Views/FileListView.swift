@@ -352,13 +352,12 @@ struct FileListView: View {
             }
 
             // 📝 Rename and Share links only when exactly 1 item is selected
-            if selectedItems.count == 1 {
+            if selectedItems.count == 1,
+               let item = selectedItems.first {
                 if auth.userPermissions?.rename == true {
                     Button(action: {
-                        if let item = selectedItems.first {
-                            renameInput = item.name
-                            isRenaming = true
-                        }
+                        renameInput = item.name
+                        isRenaming = true
                     }) {
                         Label("Rename", systemImage: "pencil")
                     }
@@ -366,12 +365,8 @@ struct FileListView: View {
 
                 if auth.userPermissions?.share == true {
                     Button(action: {
-                        if let item = selectedItems.first {
-                            DispatchQueue.main.async {
-                                sharePath = item
-                                isSharing = true
-                            }
-                        }
+                        sharePath = item
+                        isSharing = true
                     }) {
                         Label {
                             Text("Share")
@@ -390,7 +385,6 @@ struct FileListView: View {
             if auth.userPermissions?.delete == true {
                 // 🗑️ Delete
                 Button(role: .destructive, action: {
-                    if selectedItems.isEmpty { return }
                     showingDeleteConfirm = true
                 }) {
                     Label("Delete", systemImage: "trash")
@@ -1061,7 +1055,7 @@ struct FileListView: View {
             }
         }
         .sheet(isPresented: $isSharing) {
-            if let filePath = sharePath {
+            if let filePath = sharePath ?? selectedItems.first {
                 ShareSheetView(
                     serverURL: auth.serverURL,
                     token: auth.token,
