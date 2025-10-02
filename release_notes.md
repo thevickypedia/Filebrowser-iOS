@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.53.4 (10/02/2025)
+--------------------
+- [2c56553](https://github.com/thevickypedia/Filebrowser-iOS/commit/2c565534ef40403594e10342c80c74a848215640) chore: Release ``v1.53.4``
+- [9af01ed](https://github.com/thevickypedia/Filebrowser-iOS/commit/9af01eddfacfc1d86f36056ee5ddb5215199f999) perf: Include status code in login response from the server and use a common util func to format ``httpResponse``
+- [0d15388](https://github.com/thevickypedia/Filebrowser-iOS/commit/0d153883c374d833a06ad0665c861e56a56b3dac) fix: Avoid performing multiple health checks when biometric login fails with fallback
+- [1f4b572](https://github.com/thevickypedia/Filebrowser-iOS/commit/1f4b572bf4128be1d0e757c7532a2e62606fea6a) chore: Update release notes for v1.53.3
+
 v1.53.3 (10/02/2025)
 --------------------
 - [34ed4e4](https://github.com/thevickypedia/Filebrowser-iOS/commit/34ed4e4466da513b0d2cdb670e9fc70812e5b7b3) chore: Release ``v1.53.3``
