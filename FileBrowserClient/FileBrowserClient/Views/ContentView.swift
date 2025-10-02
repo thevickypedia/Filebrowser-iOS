@@ -349,17 +349,10 @@ struct ContentView: View {
         errorMessage = msgF
     }
 
-    private func processHealthCheck() {
+    private func processHealthCheck() async -> Bool {
         toastMessage = ToastMessagePayload(text: "⏳ Checking server health", color: .primary)
-        Task {
-            let healthCheck = await checkServerHealth(for: serverURL)
-            if healthCheck.success {
-                Log.info(healthCheck.text)
-            } else {
-                Log.error(healthCheck.text)
-                errorMessage = healthCheck.text
-            }
-        }
+        let healthCheck = await checkServerHealth(for: serverURL)
+        return healthCheck.success
     }
 
     func login() async {
@@ -374,7 +367,9 @@ struct ContentView: View {
         if serverURL.hasSuffix("/") {
             serverURL.removeLast()
         }
-        processHealthCheck()
+        if await !processHealthCheck() {
+            return
+        }
         guard let url = URL(string: "\(serverURL)/api/login") else {
             loginFailed("Invalid URL")
             return
@@ -578,15 +573,17 @@ struct ContentView: View {
                     return
                 }
                 if doHealthCheck {
-                    processHealthCheck()
+                    if await !processHealthCheck() {
+                        return
+                    }
                 }
                 fileListViewModel.configure(token: session.token, serverURL: session.serverURL)
-                DispatchQueue.main.async {
-                    isLoggedIn = true
-                }
                 Log.info("✅ Face ID login successful")
                 updateLastUsedServer()
                 DispatchQueue.main.async {
+                    isLoggedIn = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                     toastMessage = ToastMessagePayload(text: "✅ Face ID login successful!", color: .green)
                     backgroundLogin?.logTokenInfo()
                     backgroundLogin?.startReauthTimer(at: tokenPayload.exp)
