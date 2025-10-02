@@ -367,8 +367,8 @@ struct FileListView: View {
                 if auth.userPermissions?.share == true {
                     Button(action: {
                         if let item = selectedItems.first {
-                            sharePath = item
                             DispatchQueue.main.async {
+                                sharePath = item
                                 isSharing = true
                             }
                         }
