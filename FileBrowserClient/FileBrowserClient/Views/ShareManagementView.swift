@@ -23,11 +23,14 @@ struct ShareManagementView: View {
 
     @State private var sharedContent: [SharedItem] = []
     @State private var toastMessage: ToastMessagePayload?
+    @State private var errorTitle: String?
+    @State private var errorMessage: String?
 
     private func fetchSharedContent() {
         guard let url = URL(string: "\(auth.serverURL)/api/shares") else {
             Log.error("Invalid server URL")
-            toastMessage = ToastMessagePayload(text: "Invalid server URL")
+            errorTitle = "Internal Error"
+            errorMessage = "Invalid Server URL: \(auth.serverURL)/api/shares"
             return
         }
 
@@ -38,17 +41,15 @@ struct ShareManagementView: View {
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 Log.error("Network error: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    toastMessage = ToastMessagePayload(text: "Network error")
-                }
+                errorTitle = "Network Error"
+                errorMessage = error.localizedDescription
                 return
             }
 
             guard let data = data else {
                 Log.error("No data received")
-                DispatchQueue.main.async {
-                    toastMessage = ToastMessagePayload(text: "No data received")
-                }
+                errorTitle = "Network Error"
+                errorMessage = "No data received"
                 return
             }
 
@@ -59,9 +60,8 @@ struct ShareManagementView: View {
                 }
             } catch {
                 Log.error("Failed to decode response: \(error)")
-                DispatchQueue.main.async {
-                    toastMessage = ToastMessagePayload(text: "Failed to decode response")
-                }
+                errorTitle = "Internal Error"
+                errorMessage = "Failed to decode response"
             }
         }.resume()
     }
@@ -71,7 +71,8 @@ struct ShareManagementView: View {
 
         guard let url = URL(string: "\(auth.serverURL)/api/share/\(item.hash)") else {
             Log.error("Invalid delete URL")
-            toastMessage = ToastMessagePayload(text: "Invalid delete URL")
+            errorTitle = "Internal Error"
+            errorMessage = "Invalid Server URL: \(auth.serverURL)/api/share/\(item.hash)"
             return
         }
 
@@ -81,18 +82,16 @@ struct ShareManagementView: View {
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                Log.error("Delete request failed: \(error)")
-                DispatchQueue.main.async {
-                    toastMessage = ToastMessagePayload(text: "Delete failed")
-                }
+                Log.error("Delete request failed: \(error.localizedDescription)")
+                errorTitle = "Network Error"
+                errorMessage = error.localizedDescription
                 return
             }
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 Log.error("Invalid response during delete")
-                DispatchQueue.main.async {
-                    toastMessage = ToastMessagePayload(text: "Invalid server response")
-                }
+                errorTitle = "Network Error"
+                errorMessage = "Invalid response during delete"
                 return
             }
 
@@ -101,13 +100,12 @@ struct ShareManagementView: View {
                 DispatchQueue.main.async {
                     // Remove the deleted item from the local list
                     sharedContent.removeAll { $0.hash == item.hash }
-                    toastMessage = ToastMessagePayload(text: "Deleted share")
+                    toastMessage = ToastMessagePayload(text: "Deleted Share", color: .yellow)
                 }
             } else {
                 Log.error("Delete failed with status: \(httpResponse.statusCode)")
-                DispatchQueue.main.async {
-                    toastMessage = ToastMessagePayload(text: "Delete failed (\(httpResponse.statusCode))")
-                }
+                errorTitle = "Network Error"
+                errorMessage = "Delete Failed: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
             }
         }.resume()
     }
@@ -132,8 +130,8 @@ struct ShareManagementView: View {
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                 Button {
-                                    UIPasteboard.general.string = "\(auth.serverURL)/share/\(sharedPath.hash)"
-                                    toastMessage = ToastMessagePayload(text: "📋 Copied to clipboard", color: .primary)
+                                    copyToClipboard("\(auth.serverURL)/share/\(sharedPath.hash)")
+                                    toastMessage = ToastMessagePayload(text: "📋 Copied to clipboard", color: .green)
                                 } label: {
                                     Label("Copy", systemImage: "doc.on.doc")
                                 }
@@ -150,6 +148,7 @@ struct ShareManagementView: View {
             }
             .navigationTitle("Shared Content")
             .modifier(ToastMessage(payload: $toastMessage))
+            .modifier(ErrorAlert(title: $errorTitle, message: $errorMessage))
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: {

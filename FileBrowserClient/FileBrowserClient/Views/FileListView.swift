@@ -423,7 +423,7 @@ struct FileListView: View {
                 }
             }
 
-            // Show files shared
+            // Show shared content
             Section {
                 Button(action: {
                     showShareSettings = true
