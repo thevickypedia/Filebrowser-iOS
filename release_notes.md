@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.53.3 (10/02/2025)
+--------------------
+- [34ed4e4](https://github.com/thevickypedia/Filebrowser-iOS/commit/34ed4e4466da513b0d2cdb670e9fc70812e5b7b3) chore: Release ``v1.53.3``
+- [f5a0a61](https://github.com/thevickypedia/Filebrowser-iOS/commit/f5a0a6174cba98629e33fb1ccf8a0aa43cf31516) style: Create a toggle to view full file path in share management view
+- [d6bf5d0](https://github.com/thevickypedia/Filebrowser-iOS/commit/d6bf5d0e981b9faa9585cab5585c62100c794226) style: Set geometry percent for shared content list
+- [9d88be8](https://github.com/thevickypedia/Filebrowser-iOS/commit/9d88be809db9110cb33afeea1dce37ec064becf5) perf: Remove code redundancies for selected path stack
+- [c47b17e](https://github.com/thevickypedia/Filebrowser-iOS/commit/c47b17eef4747b407d0520aee09e5b60a1e29cd2) chore: Update release notes for v1.53.2
+
 v1.53.2 (10/01/2025)
 --------------------
 - [8583632](https://github.com/thevickypedia/Filebrowser-iOS/commit/858363295e692926d903a8f1676401350f77df04) chore: Release ``v1.53.2``
