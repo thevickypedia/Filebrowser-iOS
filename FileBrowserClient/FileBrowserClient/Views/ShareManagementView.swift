@@ -115,7 +115,7 @@ struct ShareManagementView: View {
             } else {
                 Log.error("Delete failed with status: \(httpResponse.statusCode)")
                 errorTitle = "Network Error"
-                errorMessage = "Delete Failed: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                errorMessage = "Delete Failed: \(formatHttpResponse(httpResponse))"
             }
         }.resume()
     }

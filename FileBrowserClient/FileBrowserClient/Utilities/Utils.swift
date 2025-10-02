@@ -14,6 +14,7 @@ enum ValidationError: Error {
 struct ServerResponse {
     let success: Bool
     let text: String
+    var statusCode: Int = 0
 }
 
 func convertStringToHex(_ str: String) -> String {
@@ -490,14 +491,14 @@ func checkServerHealth(for url: String) async -> ServerResponse {
         guard let httpResponse = response as? HTTPURLResponse else {
             return ServerResponse(success: false, text: "Invalid response")
         }
-        let responseText = "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+        let responseText = formatHttpResponse(httpResponse)
         guard httpResponse.statusCode == 200 else {
-            return ServerResponse(success: false, text: responseText)
+            return ServerResponse(success: false, text: responseText, statusCode: httpResponse.statusCode)
         }
         guard let responseData = String(data: data, encoding: .utf8) else {
-            return ServerResponse(success: true, text: responseText)
+            return ServerResponse(success: true, text: responseText, statusCode: httpResponse.statusCode)
         }
-        return ServerResponse(success: true, text: responseData)
+        return ServerResponse(success: true, text: responseData, statusCode: httpResponse.statusCode)
     } catch {
         return ServerResponse(success: false, text: error.localizedDescription)
     }
@@ -520,4 +521,8 @@ func processFileExporterResponse(fileURL: URL, exportResult: FileExportResult) -
         Log.warn(msg + ": [\(fileURL.lastPathComponent)]")
         return ToastMessagePayload(text: msg, color: .yellow)
     }
+}
+
+func formatHttpResponse(_ httpResponse: HTTPURLResponse) -> String {
+    return "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
 }

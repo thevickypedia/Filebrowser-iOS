@@ -168,9 +168,10 @@ struct ShareSheetView: View {
                     return
                 }
 
+                let responseText = formatHttpResponse(httpResponse)
                 guard httpResponse.statusCode == 200 else {
-                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
-                    self.errorMessage = "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    Log.error("❌ Server error: \(responseText)")
+                    self.errorMessage = responseText
                     return
                 }
                 sharedObjects.removeValue(forKey: file.path)
@@ -249,9 +250,10 @@ struct ShareSheetView: View {
                     return
                 }
 
+                let responseText = formatHttpResponse(httpResponse)
                 guard httpResponse.statusCode == 200 else {
-                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
-                    self.errorMessage = "[\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    Log.error("❌ Server error: \(responseText)")
+                    self.errorMessage = responseText
                     return
                 }
 

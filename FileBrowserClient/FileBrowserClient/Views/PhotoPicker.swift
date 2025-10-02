@@ -18,7 +18,6 @@ struct ProcessedResult {
 class PhotoPickerStatus: ObservableObject {
     @Published var isPreparingUpload: Bool = false
     @Published var totalSelected: Int = 0
-    @Published var pendingUploads: Int = 0
     @Published var cancellableTasks: [Task<Void, Never>] = []
 }
 
@@ -106,7 +105,6 @@ struct PhotoPicker: UIViewControllerRepresentable {
             // This is a limitation of iOS's implementation of NSItemProvider
             let parentTask = Task(priority: .userInitiated) {
                 await withTaskGroup(of: Void.self) { group in
-                    // TODO: Use enumerated to track submitted/staged
                     var iterator = Array(rawResults).makeIterator()
                     var inFlight = 0
 

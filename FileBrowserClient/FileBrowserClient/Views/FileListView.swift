@@ -1442,7 +1442,7 @@ struct FileListView: View {
                     self.searchInProgress = false
                     self.errorMessage = "Server error: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
                 }
-                Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                Log.error("❌ Server error: \(formatHttpResponse(httpResponse))")
                 return
             }
 
@@ -2026,7 +2026,7 @@ struct FileListView: View {
                     guard httpResponse.statusCode == 204 else {
                         self.errorTitle = "Server Error"
                         self.errorMessage = "[PATCH Failed]: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
-                        Log.error("❌ Unexpected PATCH response: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                        Log.error("❌ Unexpected PATCH response: \(formatHttpResponse(httpResponse))")
                         return
                     }
 

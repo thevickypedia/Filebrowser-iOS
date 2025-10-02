@@ -562,16 +562,17 @@ struct ContentView: View {
                 auth.password = session.password ?? password
                 auth.transitProtection = session.transitProtection
 
-                if let err = await auth.serverHandShake(for: String(tokenPayload.user.id)) {
+                let handShake = await auth.serverHandShake(for: String(tokenPayload.user.id))
+                if !handShake.success {
                     doHealthCheck = false
                     DispatchQueue.main.async {
-                        // FIXME: Find a better way to handle this
-                        if ["401"].contains(err) {
+                        if handShake.statusCode == 401 {
                             // This indicates a server restart
                             Log.warn("FaceID passed, but session validation failed.")
                             reauth(session)
                         } else {
-                            errorMessage = err
+                            Log.error(handShake.text)
+                            errorMessage = handShake.text
                         }
                     }
                     return

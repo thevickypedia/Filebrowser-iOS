@@ -22,13 +22,13 @@ struct BackgroundLogin {
         reauthDispatchWorkItem = nil
     }
 
-    func loginResponse(_ responseText: String, success: Bool = false) -> ServerResponse {
+    func loginResponse(_ responseText: String, success: Bool = false, statusCode: Int = 0) -> ServerResponse {
         if success {
             Log.info(responseText)
         } else {
             Log.error(responseText)
         }
-        return ServerResponse(success: success, text: responseText)
+        return ServerResponse(success: success, text: responseText, statusCode: statusCode)
     }
 
     @MainActor
@@ -87,13 +87,13 @@ struct BackgroundLogin {
                 return loginResponse("❌ Invalid response")
             }
             guard httpResponse.statusCode == 200 else {
-                return loginResponse("❌ HTTP error \(httpResponse.statusCode)")
+                return loginResponse("❌ HTTP error \(httpResponse.statusCode)", statusCode: httpResponse.statusCode)
             }
             guard let jwt = String(data: data, encoding: .utf8) else {
-                return loginResponse("❌ Failed to extract JWT")
+                return loginResponse("❌ Failed to extract JWT", statusCode: httpResponse.statusCode)
             }
             guard let payload = decodeJWT(jwt: jwt) else {
-                return loginResponse("❌ Failed to decode token")
+                return loginResponse("❌ Failed to decode token", statusCode: httpResponse.statusCode)
             }
 
             await updateAuthState(token: jwt, payload: payload)
@@ -108,7 +108,7 @@ struct BackgroundLogin {
                     password: auth.password
                 )
             )
-            return loginResponse("🔄 Authentication Renewed", success: true)
+            return loginResponse("🔄 Authentication Renewed", success: true, statusCode: httpResponse.statusCode)
         } catch {
             return loginResponse("❌ Network error: \(error.localizedDescription)")
         }

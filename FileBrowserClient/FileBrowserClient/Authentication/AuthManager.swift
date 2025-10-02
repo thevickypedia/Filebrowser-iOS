@@ -62,9 +62,9 @@ struct UserPermission: Codable {
 
 extension AuthManager {
 
-    func serverHandShake(for userID: String) async -> String? {
+    func serverHandShake(for userID: String) async -> ServerResponse {
         guard let url = URL(string: "\(serverURL)/api/users/\(userID)") else {
-            return "❌ Failed to construct url for: \(serverURL)"
+            return ServerResponse(success: false, text: "❌ Failed to construct url for: \(serverURL)")
         }
 
         var request = URLRequest(url: url)
@@ -74,21 +74,19 @@ extension AuthManager {
             let (_, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                Log.error("❌ Response was not HTTPURLResponse")
-                return "Response was not HTTPURLResponse"
+                return ServerResponse(success: false, text: "❌ Response was not HTTPURLResponse")
             }
 
+            let responseText = formatHttpResponse(httpResponse)
             guard httpResponse.statusCode == 200 else {
-                // DO NOT CHANGE: Used to validate server hand-shake in biometrics login
-                let errorMessage = "HTTP error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
-                Log.error("❌ \(errorMessage)")
-                return "\(httpResponse.statusCode)"
+                return ServerResponse(success: false, text: "❌ HTTP Error: \(responseText)", statusCode: httpResponse.statusCode)
             }
-            Log.debug("✅ Server hand shake successful: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+            return ServerResponse(success: true, text: "✅ Server hand shake successful: \(responseText)", statusCode: httpResponse.statusCode)
         } catch {
-            Log.error("❌ Failed to fetch permissions for UserID \(userID): \(error.localizedDescription)")
-            return error.localizedDescription
+            return ServerResponse(
+                success: false,
+                text: "❌ Failed to fetch permissions for UserID \(userID): \(error.localizedDescription)"
+            )
         }
-        return nil
     }
 }

@@ -164,10 +164,11 @@ class FileListViewModel: ObservableObject {
                     return
                 }
 
+                let responseText = formatHttpResponse(httpResponse)
                 guard httpResponse.statusCode == 200 else {
                     setLoading(false)
-                    self.errorMessage = "Server error: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
-                    Log.error("❌ Server error: [\(httpResponse.statusCode)] - \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))")
+                    self.errorMessage = "Server error: \(responseText)"
+                    Log.error("❌ Server error: \(responseText)")
                     return
                 }
 
