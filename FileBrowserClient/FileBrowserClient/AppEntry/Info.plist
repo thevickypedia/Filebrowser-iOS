@@ -26,8 +26,8 @@
 	<key>AVInitialRouteSharingPolicy</key>
 	<string>LongFormAudio</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Photo library is used to save downloaded photos/videos.</string>
+	<string>Photos library is used to upload/download files from local storage.</string>
 	<key>NSDocumentsUsageDescription</key>
-	<string>We need access to import files.</string>
+	<string>Files library is used to upload/download files from local storage.</string>
 </dict>
 </plist>
