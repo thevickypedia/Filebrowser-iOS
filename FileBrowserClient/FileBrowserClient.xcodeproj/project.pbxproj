@@ -43,6 +43,7 @@
 		989940E82E8AAF3F006A376A /* StackedChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940E72E8AAF3F006A376A /* StackedChartView.swift */; };
 		989940EB2E8C8EEB006A376A /* BackgroundLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940EA2E8C8EE7006A376A /* BackgroundLogin.swift */; };
 		989940F12E8DE37E006A376A /* AdvancedServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940F02E8DE36C006A376A /* AdvancedServerSettingsView.swift */; };
+		989940F52E8E0718006A376A /* ShareManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 989940F42E8E0718006A376A /* ShareManagementView.swift */; };
 		98B1AC4D2E7AF663000210BC /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC4C2E7AF660000210BC /* Constants.swift */; };
 		98B1AC762E7C6AB9000210BC /* FileList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1AC752E7C6AB2000210BC /* FileList.swift */; };
 		98B1ACD92E80CC43000210BC /* FileDownloadHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */; };
@@ -125,6 +126,7 @@
 		989940E72E8AAF3F006A376A /* StackedChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StackedChartView.swift; sourceTree = "<group>"; };
 		989940EA2E8C8EE7006A376A /* BackgroundLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundLogin.swift; sourceTree = "<group>"; };
 		989940F02E8DE36C006A376A /* AdvancedServerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedServerSettingsView.swift; sourceTree = "<group>"; };
+		989940F42E8E0718006A376A /* ShareManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareManagementView.swift; sourceTree = "<group>"; };
 		98B1AC4C2E7AF660000210BC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		98B1AC752E7C6AB2000210BC /* FileList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileList.swift; sourceTree = "<group>"; };
 		98B1ACD82E80CC43000210BC /* FileDownloadHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileDownloadHelper.swift; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 		98B1AC502E7C5B9A000210BC /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				989940F42E8E0718006A376A /* ShareManagementView.swift */,
 				989940F02E8DE36C006A376A /* AdvancedServerSettingsView.swift */,
 				988166502E857068003C0CD8 /* LocalFileContentContainer.swift */,
 				98B1ACDE2E80E4B4000210BC /* UploadingStack.swift */,
@@ -538,6 +541,7 @@
 				98D563D12E44354700DE0079 /* FileExtensions.swift in Sources */,
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
 				98B600352E5149AC00F24FB8 /* ShareSheetView.swift in Sources */,
+				989940F52E8E0718006A376A /* ShareManagementView.swift in Sources */,
 				98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */,
 				988166552E862890003C0CD8 /* FileExporter.swift in Sources */,
 				986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */,

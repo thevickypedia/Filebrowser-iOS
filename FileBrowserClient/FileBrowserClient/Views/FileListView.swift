@@ -70,6 +70,7 @@ struct FileListView: View {
     @State private var currentDisplayPath: String = "/"
     @State private var isNavigating = false
 
+    @State private var showShareSettings: Bool = false
     @State private var showAdvancedServerSettings: Bool = false
 
     private var viewMode: ViewMode {
@@ -422,6 +423,25 @@ struct FileListView: View {
                 }
             }
 
+            // Show files shared
+            Section {
+                Button(action: {
+                    showShareSettings = true
+                }) {
+                    Label {
+                        Text("Share Management")
+                            .foregroundColor(.blue)
+                    } icon: {
+                        Image("material_share_icon")
+                            .renderingMode(.template)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 24, height: 24)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+
             // Show advanced settings
             Section {
                 Button {
@@ -444,6 +464,9 @@ struct FileListView: View {
                 extensionTypes: extensionTypes,
                 backgroundLogin: backgroundLogin
             )
+        }
+        .sheet(isPresented: $showShareSettings) {
+            ShareManagementView()
         }
     }
 
