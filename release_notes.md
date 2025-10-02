@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.53.1 (10/01/2025)
+--------------------
+- [b30519a](https://github.com/thevickypedia/Filebrowser-iOS/commit/b30519a547fd059cdea2da34b60597f9870fcfc7) chore: Release ``v1.53.1``
+- [ebb5fda](https://github.com/thevickypedia/Filebrowser-iOS/commit/ebb5fdae81d65e0fffbff24e8876849b259ea7d2) perf: Introduce a helper function to pluralize time left from epoch
+- [a5f7e9a](https://github.com/thevickypedia/Filebrowser-iOS/commit/a5f7e9adda1f34df2d8176c2145a02b328936dbc) perf: Update helper function to calculate time left to include years, months and weeks
+- [cb4239c](https://github.com/thevickypedia/Filebrowser-iOS/commit/cb4239c12e95d6dd307c8dd6ac6a4ab98fe47a36) perf: Remove ``seconds`` as an option for sharing
+- [27bb697](https://github.com/thevickypedia/Filebrowser-iOS/commit/27bb6979f02fbdb1b583ccc320eae3474bf938d6) feat: Add expire duration for each path in share management
+- [42c3f96](https://github.com/thevickypedia/Filebrowser-iOS/commit/42c3f96d2f70351576951cc0dbe2a0d417cd2f53) chore: Update release notes for v1.53.0
+
 v1.53.0 (10/01/2025)
 --------------------
 - [f3590fb](https://github.com/thevickypedia/Filebrowser-iOS/commit/f3590fb26dbe2453c06f3d815bec5c2d99d4585c) chore: Release ``v1.53.0``
