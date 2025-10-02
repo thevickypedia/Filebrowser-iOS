@@ -315,7 +315,18 @@ func timeLeftString(until timestamp: TimeInterval?, asString: Bool = true) -> St
     let seconds = remaining % 60
 
     if asString {
-        return "\(hours) hour\(hours == 1 ? "" : "s"), \(minutes) minute\(minutes == 1 ? "" : "s")"
+        var components: [String] = []
+        if hours > 0 {
+            components.append("\(hours) hour\(hours == 1 ? "" : "s")")
+        }
+        if minutes > 0 {
+            components.append("\(minutes) minute\(minutes == 1 ? "" : "s")")
+        }
+        if components.isEmpty {
+            // If both hours and minutes are 0, show seconds only
+            components.append("\(seconds) second\(seconds == 1 ? "" : "s")")
+        }
+        return components.joined(separator: ", ")
     } else {
         return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
     }

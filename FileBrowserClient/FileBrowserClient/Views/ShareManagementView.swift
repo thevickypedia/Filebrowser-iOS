@@ -11,7 +11,7 @@ struct SharedItem: Codable, Identifiable, Hashable {
     let hash: String
     let path: String
     let userID: Int
-    let expire: Int
+    let expire: TimeInterval
     let passwordHash: String?
     let token: String?
 
@@ -136,6 +136,9 @@ struct ShareManagementView: View {
                                 Text(sharedPath.path)
                                     .foregroundColor(.primary)
                                 Spacer()
+                                Text("Duration: \(timeLeftString(until: sharedPath.expire))")
+                                    .font(.footnote)
+                                    .foregroundColor(.gray)
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                 Button {
