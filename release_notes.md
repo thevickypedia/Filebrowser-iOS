@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.52.4 (10/01/2025)
+--------------------
+- [cdbb988](https://github.com/thevickypedia/Filebrowser-iOS/commit/cdbb98829bf08e52fa44c897b5d4605b7eb2338c) chore: Release ``v1.52.4``
+- [519b25f](https://github.com/thevickypedia/Filebrowser-iOS/commit/519b25fe1e06406406c53c895f9026a496adae8f) refactor: Move auth controls in auth manager
+- [366ee70](https://github.com/thevickypedia/Filebrowser-iOS/commit/366ee7007b5e1e841188964b6b670108f310cfa7) fix: Add toast message modifier for advanced server settings view
+- [a310d22](https://github.com/thevickypedia/Filebrowser-iOS/commit/a310d22b36074ad1a757ea1ea8e2f5e89722d1e1) style: Move advanced server settings into it's own sheet inside the base settings view
+- [78cd4b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/78cd4b950990628a91022d81f7bf330a3f9895f4) chore: Update release notes for v1.52.3
+
 v1.52.3 (10/01/2025)
 --------------------
 - [30ecdec](https://github.com/thevickypedia/Filebrowser-iOS/commit/30ecdec21b0790ed32cc6e323eef5b3839acc64b) chore: Release ``v1.52.3``
