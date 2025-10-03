@@ -44,7 +44,7 @@ class Request {
         self.auth = auth
         self.baseUrl = baseUrl
         self.fullUrl = fullUrl
-        if (self.auth == nil && self.baseUrl == nil && self.fullUrl == nil) {
+        if self.auth == nil && self.baseUrl == nil && self.fullUrl == nil {
             Log.error("Request was instanitiated without any URLs")
             // TODO: Throw an error
         }

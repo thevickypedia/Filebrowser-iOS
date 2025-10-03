@@ -219,7 +219,6 @@ struct ShareSheetView: View {
         }
         Log.debug("Share URL: \(shareURL)")
 
-        
         let baseRequest = Request(fullUrl: shareURL)
         guard var preparedRequest = baseRequest.prepare(method: RequestMethod.post) else {
             Log.error("Failed to prepare request for: \(urlPath(shareURL))")
