@@ -63,15 +63,13 @@ struct UserPermission: Codable {
 extension AuthManager {
 
     func serverHandShake(for userID: String) async -> ServerResponse {
-        guard let url = URL(string: "\(serverURL)/api/users/\(userID)") else {
-            return ServerResponse(success: false, text: "❌ Failed to construct url for: \(serverURL)")
+        let baseRequest = Request(auth: self)
+        guard let preparedRequest = baseRequest.prepare(path: "/api/users/\(userID)") else {
+            return ServerResponse(success: false, text: "Invalid URL: /api/users/\(userID)")
         }
 
-        var request = URLRequest(url: url)
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await preparedRequest.session.data(for: preparedRequest.request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 return ServerResponse(success: false, text: "❌ Response was not HTTPURLResponse")

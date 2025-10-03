@@ -607,27 +607,25 @@ struct FileListView: View {
             return false
         }
 
-        guard let components = URLComponents(string: auth.serverURL + "/api/resources\(fullPath)") else {
-            Log.error("❌ Failed to make URL components for path: \(fullPath)")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid URL"
-            return false
-        }
-
-        guard let url = components.url else {
+        guard let url = makeEncodedURL(base: auth.serverURL, path: "/api/resources\(fullPath)") else {
+            Log.error("❌ Failed to encode URL for: \(fullPath)")
             errorTitle = "Internal Error"
-            errorMessage = "Failed to build URL"
+            errorMessage = "Failed to encode URL for: \(fullPath)"
             return false
         }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard let preparedRequest = baseRequest.prepare() else {
+            let msg = "Failed to prepare request for: \(urlPath(url))"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return false
+        }
 
         var exists = false
         let semaphore = DispatchSemaphore(value: 0)
 
-        URLSession.shared.dataTask(with: request) { _, response, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             defer { semaphore.signal() }
 
             if let error = error {
@@ -697,6 +695,7 @@ struct FileListView: View {
 
             // Client side issue: Break loop without resetting flags, so sheet is still up
             if checkPathExists(encodedDestination) {
+                // TODO: Shows invalid exists
                 let msg = "⚠️ \(item.name) already exists at \(destinationPath)"
                 Log.error(msg)
                 modifyMessage = ToastMessagePayload(text: msg, color: .yellow, duration: 2)
@@ -719,11 +718,17 @@ struct FileListView: View {
                 return
             }
 
-            var request = URLRequest(url: url)
-            request.httpMethod = "PATCH"
-            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+            let baseRequest = Request(auth: auth, fullUrl: url)
+            guard let preparedRequest = baseRequest.prepare(method: RequestMethod.patch) else {
+                let msg = "Invalid URL for \(item.name)"
+                modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
+                Log.error(msg)
+                errorCount += 1
+                dispatchGroup.leave()
+                return
+            }
 
-            let task = URLSession.shared.dataTask(with: request) { _, response, error in
+            let task = preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
                 defer { dispatchGroup.leave() }
 
                 // Server side issue: Continue to next item and display errors at last in list view
@@ -1414,19 +1419,25 @@ struct FileListView: View {
             return
         }
 
-        Log.debug("🔍 Search URL: \(urlPath(url))")
+        let logURL = urlPath(url)
+        Log.debug("🔍 Search URL: \(logURL)")
+
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard let preparedRequest = baseRequest.prepare() else {
+            let msg = "Failed to prepare request for: \(urlPath(url))"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return
+        }
 
         await MainActor.run {
             viewModel.isLoading = true
             errorMessage = nil
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
-
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await preparedRequest.session.data(for: preparedRequest.request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 await MainActor.run {
@@ -1721,15 +1732,19 @@ struct FileListView: View {
             queryItems: []
         ) else {
             Log.error("❌ Invalid URL")
-            errorTitle = "Auth Error"
+            errorTitle = "Internal Error"
             errorMessage = "Invalid usage URL."
             return
         }
-
-        var request = URLRequest(url: url)
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard let preparedRequest = baseRequest.prepare() else {
+            let msg = "Failed to prepare request for: \(urlPath(url))"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return
+        }
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, error in
             DispatchQueue.main.async {
                 guard error == nil, let data = data else {
                     Log.error("❌ Failed to fetch usage: \(error?.localizedDescription ?? "Unknown error")")
@@ -1791,13 +1806,20 @@ struct FileListView: View {
             return
         }
 
-        var request = URLRequest(url: uploadURL)
-        request.httpMethod = "POST"
-        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-        request.setValue("0", forHTTPHeaderField: "Content-Length")
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+        let baseRequest = Request(auth: auth, fullUrl: uploadURL)
+        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.post) else {
+            // TODO: Make all error messages generic for failed prep
+            let msg = "Failed to prepare request for: \(urlPath(uploadURL))"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return
+        }
+        // TODO: Move to Request object to load addiditonal headers (may be even body)
+        preparedRequest.request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+        preparedRequest.request.setValue("0", forHTTPHeaderField: "Content-Length")
 
-        URLSession.shared.dataTask(with: request) { _, _, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, _, error in
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ POST failed: \(error.localizedDescription)")
@@ -1813,12 +1835,18 @@ struct FileListView: View {
     }
 
     func getUploadOffset(fileHandle: FileHandle, fileURL: URL, uploadURL: URL) {
-        var request = URLRequest(url: uploadURL)
-        request.httpMethod = "HEAD"
-        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+        let baseRequest = Request(auth: auth, fullUrl: uploadURL)
+        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.head) else {
+            let msg = "Failed to prepare request for: \(urlPath(uploadURL))"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return
+        }
+        // TODO: Move to Request object to load addiditonal headers (may be even body)
+        preparedRequest.request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
 
-        URLSession.shared.dataTask(with: request) { _, response, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ HEAD failed: \(error.localizedDescription)")
@@ -1981,14 +2009,18 @@ struct FileListView: View {
             uploadStartTime = Date()
             startOffset = currentOffset
 
-            var request = URLRequest(url: uploadURL)
-            request.httpMethod = "PATCH"
-            request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-            request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
-            request.setValue("application/offset+octet-stream", forHTTPHeaderField: "Content-Type")
-            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+            let baseRequest = Request(auth: auth, fullUrl: uploadURL)
+            guard var preparedRequest = baseRequest.prepare(method: RequestMethod.patch, contentType: ContentType.octet) else {
+                let msg = "Failed to prepare request for: \(urlPath(uploadURL))"
+                Log.error("❌ \(msg)")
+                errorTitle = "Internal Error"
+                errorMessage = msg
+                return
+            }
+            preparedRequest.request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+            preparedRequest.request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
 
-            uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
+            uploadTask = preparedRequest.session.uploadTask(with: preparedRequest.request, from: data) { _, response, error in
                 DispatchQueue.main.async {
                     // Re-check pause/cancel in async block
                     if transferState.isTransferCancelled {
@@ -2190,10 +2222,15 @@ struct FileListView: View {
             return
         }
         Log.debug("⚙️ Current settings: \(currentSettings)")
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.put) else {
+            let msg = "Failed to prepare request for: \(urlPath(url))"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return
+        }
 
         var updatedSettings = currentSettings
         updatedSettings.hideDotfiles = hideDotfiles
@@ -2212,9 +2249,9 @@ struct FileListView: View {
             "data": dataDict
         ]
 
-        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+        preparedRequest.request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
-        URLSession.shared.dataTask(with: request) { data, response, _ in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, response, _ in
             DispatchQueue.main.async {
                 let body = data.flatMap { String(data: $0, encoding: .utf8) } ?? "(no body)"
                 if let http = response as? HTTPURLResponse, http.statusCode == 200 {
@@ -2260,12 +2297,17 @@ struct FileListView: View {
                 continue
             }
 
-            var request = URLRequest(url: url)
-            request.httpMethod = "DELETE"
-            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
+            let baseRequest = Request(auth: auth, fullUrl: url)
+            guard let preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
+                let msg = "Failed to prepare request for: \(urlPath(url))"
+                Log.error("❌ \(msg)")
+                errorTitle = "Internal Error"
+                errorMessage = msg
+                return
+            }
 
             group.enter()
-            URLSession.shared.dataTask(with: request) { _, _, _ in
+            preparedRequest.session.dataTask(with: preparedRequest.request) { _, _, _ in
                 group.leave()
             }.resume()
         }

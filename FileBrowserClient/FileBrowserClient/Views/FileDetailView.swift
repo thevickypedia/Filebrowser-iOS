@@ -414,15 +414,6 @@ struct FileDetailView: View {
         }
     }
 
-    func makeEncodedURL(base: String, path: String, query: String? = nil) -> URL? {
-        guard !base.isEmpty, !path.isEmpty else { return nil }
-
-        let trimmedBase = base.hasSuffix("/") ? String(base.dropLast()) : base
-        let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
-        let urlString = "\(trimmedBase)/\(encodedPath)" + (query.map { "?\($0)" } ?? "")
-        return URL(string: urlString)
-    }
-
     func renameFile() {
         let fromPath = file.path
         let toPath = URL(fileURLWithPath: file.path)
@@ -440,15 +431,19 @@ struct FileDetailView: View {
                 URLQueryItem(name: "rename", value: "false")
             ]
         ) else {
+            self.errorTitle = "Internal Error"
             self.errorMessage = "Invalid rename URL"
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"  // ✅ Required by server
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard let preparedRequest = baseRequest.prepare(method: RequestMethod.patch) else {
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "Invalid URL: /api/resources/\(fromPath)"
+            return
+        }
 
-        URLSession.shared.dataTask(with: request) { _, response, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     self.errorMessage = "Rename failed: \(error.localizedDescription)"
@@ -472,13 +467,22 @@ struct FileDetailView: View {
     }
 
     func deleteFile() {
-        guard let url = makeEncodedURL(base: serverURL, path: "api/resources/\(file.path)") else { return }
+        guard let url = makeEncodedURL(base: serverURL, path: "/api/resources/\(file.path)") else {
+            Log.error("Failed to encode URL for: \(file.path)")
+            errorTitle = "Internal Error"
+            errorMessage = "Failed to encode URL for: \(file.path)"
+            return
+        }
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard let preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
+            let msg = "Invalid URL: /api/resources/\(file.path)"
+            Log.error(msg)
+            self.errorTitle = "Internal Error"
+            self.errorMessage = msg
+            return
+        }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { _, _, _ in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, _, _ in
             DispatchQueue.main.async {
                 dismiss()
             }
@@ -575,12 +579,17 @@ struct FileDetailView: View {
             return
         }
 
-        var request = URLRequest(url: url)
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard let preparedRequest = baseRequest.prepare() else {
+            let msg = "Invalid URL: /api/resources/\(file.path)"
+            Log.error(msg)
+            self.previewError = PreviewErrorPayload(text: msg)
+            return
+        }
 
         Log.debug("🔗 Fetching raw content from: \(urlPath(url))")
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, error in
             DispatchQueue.main.async {
                 self.isDownloading = false
                 if let error = error {
@@ -614,10 +623,15 @@ struct FileDetailView: View {
             return
         }
 
-        var request = URLRequest(url: url)
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        let baseRequest = Request(auth: auth, fullUrl: url)
+        guard let preparedRequest = baseRequest.prepare() else {
+            let msg = "Invalid URL: /api/resources/\(file.path)"
+            Log.error(msg)
+            self.errorMessage = msg
+            return
+        }
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
                     self.errorMessage = error.localizedDescription

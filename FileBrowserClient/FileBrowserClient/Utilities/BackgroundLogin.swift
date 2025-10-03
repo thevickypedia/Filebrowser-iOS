@@ -42,19 +42,10 @@ struct BackgroundLogin {
             return loginResponse("❌ serverURL or username or password is empty!")
         }
 
-        if auth.serverURL.hasSuffix("/") {
-            auth.serverURL.removeLast()
+        let baseRequest = Request(auth: auth)
+        guard var preparedRequest = baseRequest.prepare(path: "/api/login", method: RequestMethod.post) else {
+            return loginResponse("Invalid URL: /api/login")
         }
-
-        let loginURL = "\(auth.serverURL)/api/login"
-        guard let url = URL(string: loginURL) else {
-            return loginResponse("❌ Invalid URL: \(loginURL)")
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
         if auth.transitProtection {
             let hexUsername = convertStringToHex(auth.username)
             let hexPassword = convertStringToHex(auth.password)
@@ -66,8 +57,8 @@ struct BackgroundLogin {
                 return loginResponse("❌ Failed to encode credentials")
             }
 
-            request.setValue(payload, forHTTPHeaderField: "Authorization")
-            request.httpBody = nil
+            preparedRequest.request.setValue(payload, forHTTPHeaderField: "Authorization")
+            preparedRequest.request.httpBody = nil
         } else {
             let credentials = [
                 "username": auth.username,
@@ -75,14 +66,14 @@ struct BackgroundLogin {
             ]
 
             do {
-                request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
+                preparedRequest.request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
             } catch {
                 return loginResponse("❌ Failed to encode credentials")
             }
         }
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
+            let (data, response) = try await preparedRequest.session.data(for: preparedRequest.request)
             guard let httpResponse = response as? HTTPURLResponse else {
                 return loginResponse("❌ Invalid response")
             }

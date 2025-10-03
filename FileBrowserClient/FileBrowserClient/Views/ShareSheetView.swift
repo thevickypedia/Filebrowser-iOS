@@ -148,12 +148,18 @@ struct ShareSheetView: View {
             return
         }
         Log.debug("Delete share URL: \(deleteURL)")
-        var request = URLRequest(url: deleteURL)
-        request.httpMethod = "DELETE"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
 
-        URLSession.shared.dataTask(with: request) { _, response, error in
+        let baseRequest = Request(fullUrl: deleteURL)
+        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
+            Log.error("Failed to prepare request for: \(urlPath(deleteURL))")
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to prepare request for: \(urlPath(deleteURL))"
+            return
+        }
+
+        preparedRequest.request.setValue(token, forHTTPHeaderField: "X-Auth")
+
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             DispatchQueue.main.async {
                 self.errorTitle = "Server Error"
                 guard error == nil else {
@@ -213,10 +219,16 @@ struct ShareSheetView: View {
         }
         Log.debug("Share URL: \(shareURL)")
 
-        var request = URLRequest(url: shareURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        
+        let baseRequest = Request(fullUrl: shareURL)
+        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.post) else {
+            Log.error("Failed to prepare request for: \(urlPath(shareURL))")
+            self.errorTitle = "Internal Error"
+            self.errorMessage = "❌ Failed to prepare request for: \(urlPath(shareURL))"
+            return
+        }
+
+        preparedRequest.request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         let body: [String: String] = [
             "password": sharePassword,
@@ -224,7 +236,7 @@ struct ShareSheetView: View {
             "unit": shareDuration
         ]
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            preparedRequest.request.httpBody = try JSONSerialization.data(withJSONObject: body)
         } catch {
             Log.error("❌ Failed to encode JSON body: \(error.localizedDescription)")
             self.errorTitle = "Internal Error"
@@ -232,7 +244,7 @@ struct ShareSheetView: View {
             return
         }
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, response, error in
             DispatchQueue.main.async {
                 defer {
                     isShareInProgress = false  // ✅ re-enable buttons after response

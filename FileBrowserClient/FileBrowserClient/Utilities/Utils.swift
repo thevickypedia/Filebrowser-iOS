@@ -405,6 +405,7 @@ func urlPath(_ url: URL) -> String {
     return result
 }
 
+// TODO: Move this to Request object
 func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryItem]? = nil) -> URL? {
     guard var url = URL(string: base) else { return nil }
 
@@ -418,6 +419,16 @@ func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryIt
     }
 
     return components?.url
+}
+
+// TODO: Move to Request.swift module
+func makeEncodedURL(base: String, path: String, query: String? = nil) -> URL? {
+    guard !base.isEmpty, !path.isEmpty else { return nil }
+
+    let trimmedBase = base.hasSuffix("/") ? String(base.dropLast()) : base
+    let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
+    let urlString = "\(trimmedBase)/\(encodedPath)" + (query.map { "?\($0)" } ?? "")
+    return URL(string: urlString)
 }
 
 func logJsonData(data: Data, parseJSON: Bool = false) -> Bool {
@@ -468,26 +479,13 @@ func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HH
 }
 
 func checkServerHealth(for url: String) async -> ServerResponse {
-    var serverURL = url
-    if serverURL.hasSuffix("/") {
-        serverURL.removeLast()
+    let baseRequest = Request(baseUrl: url)
+    guard let preparedRequest = baseRequest.prepare(path: "/health") else {
+        return ServerResponse(success: false, text: "Invalid URL: /health")
     }
-    guard let url = URL(string: "\(serverURL)/health") else {
-        return ServerResponse(success: false, text: "Invalid URL - \(serverURL)/health")
-    }
-
-    // Create a custom session with timeout
-    let config = URLSessionConfiguration.default
-    config.timeoutIntervalForRequest = 3 // ⏱️ Timeout for request
-    config.timeoutIntervalForResource = 3 // ⏱️ Timeout for entire resource load
-    let session = URLSession(configuration: config)
-
-    var request = URLRequest(url: url)
-    request.httpMethod = "GET"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
     do {
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await preparedRequest.session.data(for: preparedRequest.request)
         guard let httpResponse = response as? HTTPURLResponse else {
             return ServerResponse(success: false, text: "Invalid response")
         }

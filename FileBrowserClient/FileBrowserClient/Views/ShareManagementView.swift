@@ -37,18 +37,14 @@ struct ShareManagementView: View {
     @State private var expandedPaths: Set<String> = []
 
     private func fetchSharedContent() {
-        guard let url = URL(string: "\(auth.serverURL)/api/shares") else {
-            Log.error("Invalid server URL")
+        let baseRequest = Request(auth: auth)
+        guard let preparedRequest = baseRequest.prepare(path: "/api/shares") else {
             errorTitle = "Internal Error"
             errorMessage = "Invalid Server URL: \(auth.serverURL)/api/shares"
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, error in
             if let error = error {
                 Log.error("Network error: \(error.localizedDescription)")
                 errorTitle = "Network Error"
@@ -78,19 +74,14 @@ struct ShareManagementView: View {
 
     private func deleteShared(_ item: SharedItem) {
         Log.info("Deleting share with hash: \(item.hash)")
-
-        guard let url = URL(string: "\(auth.serverURL)/api/share/\(item.hash)") else {
-            Log.error("Invalid delete URL")
+        let baseRequest = Request(auth: auth)
+        guard let preparedRequest = baseRequest.prepare(path: "/api/share/\(item.hash)", method: RequestMethod.delete) else {
             errorTitle = "Internal Error"
             errorMessage = "Invalid Server URL: \(auth.serverURL)/api/share/\(item.hash)"
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
-
-        URLSession.shared.dataTask(with: request) { _, response, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             if let error = error {
                 Log.error("Delete request failed: \(error.localizedDescription)")
                 errorTitle = "Network Error"

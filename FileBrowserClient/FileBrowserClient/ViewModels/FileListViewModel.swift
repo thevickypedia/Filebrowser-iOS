@@ -141,21 +141,28 @@ class FileListViewModel: ObservableObject {
             queryItems: []
         ) else {
             DispatchQueue.main.async {
-                self.errorMessage = "Invalid URL"
+                self.errorMessage = "Invalid URL: /api/resources/\(path)"
             }
             return
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue(token, forHTTPHeaderField: "X-Auth")
+        let baseRequest = Request(fullUrl: url)
+        guard var preparedRequest = baseRequest.prepare() else {
+            // TODO: Create a generic func in utils to process the response `urlPath` for URL type and last comp for String
+            let msg = "Failed to prepare request for: \(urlPath(url))"
+            Log.error("❌ \(msg)")
+            errorMessage = msg
+            return
+        }
+        // TODO: Move all header alloc to Request object
+        preparedRequest.request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         DispatchQueue.main.async {
             self.errorMessage = nil
             setLoading(true)
         }
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, response, error in
             DispatchQueue.main.async {
                 guard let httpResponse = response as? HTTPURLResponse else {
                     setLoading(false)

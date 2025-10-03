@@ -370,37 +370,30 @@ struct ContentView: View {
         if await !processHealthCheck() {
             return
         }
-        guard let url = URL(string: "\(serverURL)/api/login") else {
-            loginFailed("Invalid URL")
+
+        let baseRequest = Request(baseUrl: serverURL)
+        guard var preparedRequest = baseRequest.prepare(path: "/api/login", method: RequestMethod.post) else {
             return
         }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if transitProtection {
             let hexUsername = convertStringToHex(username)
             let hexPassword = convertStringToHex(password)
             let hexRecaptcha = convertStringToHex("")
-
             let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
-
             guard let payload = combined.data(using: .utf8)?.base64EncodedString() else {
                 loginFailed("Failed to encode credentials")
                 return
             }
-
-            request.setValue(payload, forHTTPHeaderField: "Authorization")
-            request.httpBody = nil
+            preparedRequest.request.setValue(payload, forHTTPHeaderField: "Authorization")
+            preparedRequest.request.httpBody = nil
         } else {
             let credentials = [
                 "username": username,
                 "password": password
             ]
-
             do {
-                request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
+                preparedRequest.request.httpBody = try JSONSerialization.data(withJSONObject: credentials, options: [])
             } catch {
                 loginFailed("Failed to encode credentials")
                 return
@@ -408,10 +401,8 @@ struct ContentView: View {
         }
 
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
+            let (data, response) = try await preparedRequest.session.data(for: preparedRequest.request)
             isLoading = false
-
             guard let httpResponse = response as? HTTPURLResponse else {
                 errorMessage = "Invalid response"
                 return
