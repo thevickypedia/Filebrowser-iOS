@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.54.0 (10/03/2025)
+--------------------
+- [426e1fd](https://github.com/thevickypedia/Filebrowser-iOS/commit/426e1fd6e8fe094b25b2a6f5a1273c7a2a5e1a1c) chore: Release ``v1.54.0``
+- [2a1a58b](https://github.com/thevickypedia/Filebrowser-iOS/commit/2a1a58b4126ca2fe03a623ff5d72dcd11819ab2a) lint: Make linter happy
+- [7ebbec9](https://github.com/thevickypedia/Filebrowser-iOS/commit/7ebbec900d024a338f79344183db846f898d3b35) perf: Make all egress requests time bound with a custom request session
+- [168427e](https://github.com/thevickypedia/Filebrowser-iOS/commit/168427ead2db7d78495d01f3f89a09d2d7d729dc) fix: Avoid being stuck in a login loop when health check fails
+- [20b6fb3](https://github.com/thevickypedia/Filebrowser-iOS/commit/20b6fb37e67cfa08f817c1d6db0033a21b519365) refactor: Move ``backgroundLoginFrequency`` to constants
+- [1cc10ca](https://github.com/thevickypedia/Filebrowser-iOS/commit/1cc10ca6e32e5f599b49423a917591a5540fc244) chore: Update app metadata for existing properties
+- [eaa6e3f](https://github.com/thevickypedia/Filebrowser-iOS/commit/eaa6e3fdb6458b84389bbe91317d2df0e99612d6) chore: Update release notes for v1.53.4
+
 v1.53.4 (10/02/2025)
 --------------------
 - [2c56553](https://github.com/thevickypedia/Filebrowser-iOS/commit/2c565534ef40403594e10342c80c74a848215640) chore: Release ``v1.53.4``
