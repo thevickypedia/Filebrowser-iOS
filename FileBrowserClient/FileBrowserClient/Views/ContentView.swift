@@ -373,6 +373,9 @@ struct ContentView: View {
 
         let baseRequest = Request(baseUrl: serverURL)
         guard var preparedRequest = baseRequest.prepare(path: "/api/login", method: RequestMethod.post) else {
+            let msg = baseRequest.error(path: "/api/login")
+            Log.error("❌ \(msg)")
+            errorMessage = msg
             return
         }
 

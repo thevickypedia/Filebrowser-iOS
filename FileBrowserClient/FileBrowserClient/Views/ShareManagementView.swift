@@ -39,8 +39,10 @@ struct ShareManagementView: View {
     private func fetchSharedContent() {
         let baseRequest = Request(auth: auth)
         guard let preparedRequest = baseRequest.prepare(path: "/api/shares") else {
+            let msg = baseRequest.error(path: "/api/shares")
+            Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
-            errorMessage = "Invalid Server URL: \(auth.serverURL)/api/shares"
+            errorMessage = msg
             return
         }
 
@@ -76,8 +78,10 @@ struct ShareManagementView: View {
         Log.info("Deleting share with hash: \(item.hash)")
         let baseRequest = Request(auth: auth)
         guard let preparedRequest = baseRequest.prepare(path: "/api/share/\(item.hash)", method: RequestMethod.delete) else {
+            let msg = baseRequest.error(path: "/api/share/\(item.hash)")
+            Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
-            errorMessage = "Invalid Server URL: \(auth.serverURL)/api/share/\(item.hash)"
+            errorMessage = msg
             return
         }
 

@@ -615,7 +615,7 @@ struct FileListView: View {
         }
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard let preparedRequest = baseRequest.prepare() else {
-            let msg = "Failed to prepare request for: \(urlPath(url))"
+            let msg = baseRequest.error(url: url)
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -720,9 +720,9 @@ struct FileListView: View {
 
             let baseRequest = Request(auth: auth, fullUrl: url)
             guard let preparedRequest = baseRequest.prepare(method: RequestMethod.patch) else {
-                let msg = "Invalid URL for \(item.name)"
+                let msg = baseRequest.error(url: url)
+                Log.error("❌ \(msg)")
                 modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
-                Log.error(msg)
                 errorCount += 1
                 dispatchGroup.leave()
                 return
@@ -1424,7 +1424,7 @@ struct FileListView: View {
 
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard let preparedRequest = baseRequest.prepare() else {
-            let msg = "Failed to prepare request for: \(urlPath(url))"
+            let msg = baseRequest.error(url: url)
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -1738,7 +1738,7 @@ struct FileListView: View {
         }
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard let preparedRequest = baseRequest.prepare() else {
-            let msg = "Failed to prepare request for: \(urlPath(url))"
+            let msg = baseRequest.error(url: url)
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -1808,8 +1808,7 @@ struct FileListView: View {
 
         let baseRequest = Request(auth: auth, fullUrl: uploadURL)
         guard var preparedRequest = baseRequest.prepare(method: RequestMethod.post) else {
-            // TODO: Make all error messages generic for failed prep
-            let msg = "Failed to prepare request for: \(urlPath(uploadURL))"
+            let msg = baseRequest.error(url: uploadURL)
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -1837,7 +1836,7 @@ struct FileListView: View {
     func getUploadOffset(fileHandle: FileHandle, fileURL: URL, uploadURL: URL) {
         let baseRequest = Request(auth: auth, fullUrl: uploadURL)
         guard var preparedRequest = baseRequest.prepare(method: RequestMethod.head) else {
-            let msg = "Failed to prepare request for: \(urlPath(uploadURL))"
+            let msg = baseRequest.error(url: uploadURL)
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -2011,7 +2010,7 @@ struct FileListView: View {
 
             let baseRequest = Request(auth: auth, fullUrl: uploadURL)
             guard var preparedRequest = baseRequest.prepare(method: RequestMethod.patch, contentType: ContentType.octet) else {
-                let msg = "Failed to prepare request for: \(urlPath(uploadURL))"
+                let msg = baseRequest.error(url: uploadURL)
                 Log.error("❌ \(msg)")
                 errorTitle = "Internal Error"
                 errorMessage = msg
@@ -2225,7 +2224,7 @@ struct FileListView: View {
 
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard var preparedRequest = baseRequest.prepare(method: RequestMethod.put) else {
-            let msg = "Failed to prepare request for: \(urlPath(url))"
+            let msg = baseRequest.error(url: url)
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -2299,7 +2298,7 @@ struct FileListView: View {
 
             let baseRequest = Request(auth: auth, fullUrl: url)
             guard let preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
-                let msg = "Failed to prepare request for: \(urlPath(url))"
+                let msg = baseRequest.error(url: url)
                 Log.error("❌ \(msg)")
                 errorTitle = "Internal Error"
                 errorMessage = msg

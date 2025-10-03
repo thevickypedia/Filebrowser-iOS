@@ -148,8 +148,7 @@ class FileListViewModel: ObservableObject {
 
         let baseRequest = Request(fullUrl: url)
         guard var preparedRequest = baseRequest.prepare() else {
-            // TODO: Create a generic func in utils to process the response `urlPath` for URL type and last comp for String
-            let msg = "Failed to prepare request for: \(urlPath(url))"
+            let msg = baseRequest.error(url: url)
             Log.error("❌ \(msg)")
             errorMessage = msg
             return

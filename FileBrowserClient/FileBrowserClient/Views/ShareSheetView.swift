@@ -151,9 +151,10 @@ struct ShareSheetView: View {
 
         let baseRequest = Request(fullUrl: deleteURL)
         guard var preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
-            Log.error("Failed to prepare request for: \(urlPath(deleteURL))")
-            self.errorTitle = "Internal Error"
-            self.errorMessage = "❌ Failed to prepare request for: \(urlPath(deleteURL))"
+            let msg = baseRequest.error(url: deleteURL)
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
             return
         }
 
@@ -221,9 +222,10 @@ struct ShareSheetView: View {
 
         let baseRequest = Request(fullUrl: shareURL)
         guard var preparedRequest = baseRequest.prepare(method: RequestMethod.post) else {
-            Log.error("Failed to prepare request for: \(urlPath(shareURL))")
-            self.errorTitle = "Internal Error"
-            self.errorMessage = "❌ Failed to prepare request for: \(urlPath(shareURL))"
+            let msg = baseRequest.error(url: shareURL)
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
             return
         }
 

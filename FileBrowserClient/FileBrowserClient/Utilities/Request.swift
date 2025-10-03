@@ -57,6 +57,15 @@ class Request {
         return url + "/" + path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
     }
 
+    func error(url: URL? = nil, path: String? = nil) -> String {
+        if let url = url {
+            return "Failed to prepare request for: \(urlPath(url))"
+        } else if let path = path {
+            return "Failed to prepare request for: \(path)"
+        }
+        return "Failed to prepare request."
+    }
+
     func prepare(
         path: String = "",
         method: RequestMethod = RequestMethod.get,

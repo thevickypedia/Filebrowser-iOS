@@ -438,8 +438,10 @@ struct FileDetailView: View {
 
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard let preparedRequest = baseRequest.prepare(method: RequestMethod.patch) else {
-            self.errorTitle = "Internal Error"
-            self.errorMessage = "Invalid URL: /api/resources/\(fromPath)"
+            let msg = baseRequest.error(url: url)
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
             return
         }
 
@@ -475,10 +477,10 @@ struct FileDetailView: View {
         }
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard let preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
-            let msg = "Invalid URL: /api/resources/\(file.path)"
-            Log.error(msg)
-            self.errorTitle = "Internal Error"
-            self.errorMessage = msg
+            let msg = baseRequest.error(url: url)
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
             return
         }
 
@@ -581,8 +583,8 @@ struct FileDetailView: View {
 
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard let preparedRequest = baseRequest.prepare() else {
-            let msg = "Invalid URL: /api/resources/\(file.path)"
-            Log.error(msg)
+            let msg = baseRequest.error(url: url)
+            Log.error("❌ \(msg)")
             self.previewError = PreviewErrorPayload(text: msg)
             return
         }
@@ -625,9 +627,10 @@ struct FileDetailView: View {
 
         let baseRequest = Request(auth: auth, fullUrl: url)
         guard let preparedRequest = baseRequest.prepare() else {
-            let msg = "Invalid URL: /api/resources/\(file.path)"
-            Log.error(msg)
-            self.errorMessage = msg
+            let msg = baseRequest.error(url: url)
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
             return
         }
 
