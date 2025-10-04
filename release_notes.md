@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.54.2 (10/04/2025)
+--------------------
+- [1431e56](https://github.com/thevickypedia/Filebrowser-iOS/commit/1431e5687a3bb5822e2be1cef4f47310cd5b892e) chore: Release ``v1.54.2``
+- [3e3d995](https://github.com/thevickypedia/Filebrowser-iOS/commit/3e3d99579518825f1163c21e6be5e64998ee4cfd) perf: Reuse ``baseRequest`` state through out the session
+- [7482c0f](https://github.com/thevickypedia/Filebrowser-iOS/commit/7482c0fa7604f3f3b6072d23c0aceda01df574f2) fix: Navigation issue within directories from search results
+- [5dfb283](https://github.com/thevickypedia/Filebrowser-iOS/commit/5dfb28393df9985628ba54bf8f303c8061bf300a) fix: Use custom timeout for search
+- [cb76cd0](https://github.com/thevickypedia/Filebrowser-iOS/commit/cb76cd0192887e0f70d98ef7f85114b42c336a5d) refactor: Remove discardable requester and reduce code redundancy
+- [de9dc0e](https://github.com/thevickypedia/Filebrowser-iOS/commit/de9dc0e9a8fd2fabdac88c04e5f6901c683c57b2) chore: Update release notes for v1.54.1
+
 v1.54.1 (10/03/2025)
 --------------------
 - [e053e33](https://github.com/thevickypedia/Filebrowser-iOS/commit/e053e33dfdc494d34b5c1a990b940bbc3aeb18f6) chore: Release ``v1.54.1``
