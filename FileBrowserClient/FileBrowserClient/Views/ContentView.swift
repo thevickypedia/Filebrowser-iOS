@@ -153,9 +153,14 @@ struct ContentView: View {
                 addNewServer: addNewServer
             ).padding(.top, 1)
 
+            /// 1. FaceID should be enabled
+            /// 2. A stored session could be loaded
+            /// 3. Stored session's "serverURL" matches the one chosen by the user
+            /// 4. Password was stored in existing session - indicates FaceID was chosen previously
             if useFaceID,
                let existingSession = KeychainHelper.loadSession(),
-               existingSession.serverURL == serverURL {
+               existingSession.serverURL == serverURL,
+               let _ = existingSession.password {
                 // Face ID mode with saved session
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
@@ -546,9 +551,11 @@ struct ContentView: View {
                             }
                         }
                     } else {
-                        Log.debug("Disabling faceID")
+                        Log.debug("Resetting credentials and disabling faceID")
                         // No password stored — fallback to showing login UI
                         DispatchQueue.main.async {
+                            username = ""
+                            password = ""
                             useFaceID = false
                         }
                     }
