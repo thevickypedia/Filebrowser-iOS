@@ -51,6 +51,7 @@ struct FileDetailView: View {
     let extensionTypes: ExtensionTypes
     let cacheExtensions: [String]
     let animateGIF: Bool
+    let baseRequest: Request
 
     @State private var content: Data?
     @State private var metadata: ResourceMetadata?
@@ -183,10 +184,6 @@ struct FileDetailView: View {
         return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
     }
 
-    private var baseRequest: Request {
-        Request(baseURL: auth.serverURL, token: auth.token)
-    }
-
     var body: some View {
         let fileName = file.name.lowercased()
 
@@ -281,7 +278,8 @@ struct FileDetailView: View {
                     serverURL: serverURL,
                     token: token,
                     file: file,
-                    onDismiss: { isSharing = false }
+                    onDismiss: { isSharing = false },
+                    baseRequest: baseRequest
                 )
             }
             .sheet(isPresented: $showInfo) {

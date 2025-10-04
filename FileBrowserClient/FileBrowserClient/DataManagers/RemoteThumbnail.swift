@@ -87,6 +87,7 @@ struct RemoteThumbnail: View {
     var height: CGFloat = 32
     @Binding var loadingFiles: [String: Bool]
     var iconSize: CGFloat
+    let baseRequest: Request
 
     @State private var image: UIImage?
     @State private var isLoading = false
@@ -99,10 +100,6 @@ struct RemoteThumbnail: View {
         queue.maxConcurrentOperationCount = Constants.maxConcurrentThumbnailRender
         return queue
     }()
-
-    private var baseRequest: Request {
-        Request(baseURL: serverURL, token: token)
-    }
 
     var body: some View {
         Group {

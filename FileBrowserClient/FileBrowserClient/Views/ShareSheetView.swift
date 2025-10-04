@@ -20,6 +20,7 @@ struct ShareSheetView: View {
 
     // Add this closure for dismissing the sheet
     let onDismiss: () -> Void
+    let baseRequest: Request
 
     @State private var isShareInProgress = false
     @State private var durationDigit = ""
@@ -31,10 +32,6 @@ struct ShareSheetView: View {
     // Display as alerts
     @State private var errorTitle: String?
     @State private var errorMessage: String?
-
-    private var baseRequest: Request {
-        Request(baseURL: serverURL, token: token)
-    }
 
     var body: some View {
         NavigationView {

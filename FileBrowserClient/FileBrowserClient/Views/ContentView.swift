@@ -46,9 +46,18 @@ struct ContentView: View {
 
     @State private var backgroundLogin: BackgroundLogin?
 
+    private var baseRequest: Request {
+        // auth might not be instantiated yet, consider user input as fallback
+        let requestURL = auth.serverURL.isEmpty ? serverURL : auth.serverURL
+        if auth.token.isEmpty {
+            Log.warn("Authentication token not found; the request may only be used for initial login.")
+        }
+        return Request(baseURL: requestURL, token: auth.token)
+    }
+
     private func initialize() -> BackgroundLogin {
         Log.info("⏳ Initializing background login struct")
-        return BackgroundLogin(auth: auth)
+        return BackgroundLogin(auth: auth, baseRequest: baseRequest)
     }
 
     private func fileListView(advancedSettings: AdvancedSettings,
@@ -61,7 +70,8 @@ struct ContentView: View {
             extensionTypes: extensionTypes,
             advancedSettings: advancedSettings,
             cacheExtensions: cacheExtensions,
-            backgroundLogin: backgroundLogin ?? initialize()  // Re-initialize if nil
+            backgroundLogin: backgroundLogin ?? initialize(),  // Re-initialize if nil
+            baseRequest: baseRequest
         )
         .environmentObject(fileListViewModel)
     }
@@ -351,7 +361,10 @@ struct ContentView: View {
 
     private func processHealthCheck() async -> Bool {
         toastMessage = ToastMessagePayload(text: "⏳ Checking server health", color: .primary)
-        let healthCheck = await checkServerHealth(for: serverURL)
+        let healthCheck = await checkServerHealth(baseRequest: baseRequest, for: serverURL)
+        if !healthCheck.success {
+            errorMessage = "Health check failed - \(healthCheck.text)"
+        }
         return healthCheck.success
     }
 
@@ -371,7 +384,6 @@ struct ContentView: View {
             return
         }
 
-        let baseRequest = Request(baseURL: serverURL)
         guard var preparedRequest = baseRequest.prepare(pathComponents: ["api", "login"], method: RequestMethod.post) else {
             let msg = "Failed to prepare request for: /api/login"
             Log.error("❌ \(msg)")
@@ -523,6 +535,7 @@ struct ContentView: View {
                     doHealthCheck = false
                     Log.info("🔑 Token expired — refreshing via stored credentials.")
                     if let sessionPassword = session.password {
+                        Log.debug("Using stored password to login")
                         DispatchQueue.main.async {
                             self.serverURL = session.serverURL
                             self.username = session.username
@@ -533,6 +546,7 @@ struct ContentView: View {
                             }
                         }
                     } else {
+                        Log.debug("Disabling faceID")
                         // No password stored — fallback to showing login UI
                         DispatchQueue.main.async {
                             useFaceID = false

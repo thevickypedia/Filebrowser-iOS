@@ -60,9 +60,9 @@ private func urlJoin(url: String, path: String) -> String {
 
 class Request {
     let baseURL: String
-    let token: String?
+    let token: String
 
-    init(baseURL: String, token: String? = nil) {
+    init(baseURL: String, token: String) {
         self.baseURL = baseURL
         self.token = token
     }
@@ -98,7 +98,7 @@ class Request {
         var request = URLRequest(url: requestURL)
         request.httpMethod = method.rawValue
         request.setValue(contentType.rawValue, forHTTPHeaderField: "Content-Type")
-        if let token = self.token {
+        if !token.isEmpty {
             request.setValue(token, forHTTPHeaderField: "X-Auth")
         }
         if let headers = headers {

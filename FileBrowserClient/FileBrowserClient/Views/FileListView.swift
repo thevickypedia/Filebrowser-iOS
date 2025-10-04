@@ -111,6 +111,7 @@ struct FileListView: View {
     let advancedSettings: AdvancedSettings
     let cacheExtensions: [String]
     let backgroundLogin: BackgroundLogin
+    let baseRequest: Request
 
     init(
         isLoggedIn: Binding<Bool>,
@@ -119,7 +120,8 @@ struct FileListView: View {
         extensionTypes: ExtensionTypes,
         advancedSettings: AdvancedSettings,
         cacheExtensions: [String],
-        backgroundLogin: BackgroundLogin
+        backgroundLogin: BackgroundLogin,
+        baseRequest: Request
     ) {
         self._isLoggedIn = isLoggedIn
         self._pathStack = pathStack
@@ -128,10 +130,7 @@ struct FileListView: View {
         self.advancedSettings = advancedSettings
         self.cacheExtensions = cacheExtensions
         self.backgroundLogin = backgroundLogin
-    }
-
-    private var baseRequest: Request {
-        Request(baseURL: auth.serverURL, token: auth.token)
+        self.baseRequest = baseRequest
     }
 
     private func fetchFiles(at path: String) {
@@ -142,7 +141,7 @@ struct FileListView: View {
         viewModel.cancelCurrentFetch()
 
         guard auth.isValid else { return }
-        viewModel.fetchFiles(at: path)
+        viewModel.fetchFiles(baseRequest: baseRequest, at: path)
     }
 
     private var homeStack: some View {
@@ -464,7 +463,7 @@ struct FileListView: View {
             )
         }
         .sheet(isPresented: $showShareSettings) {
-            ShareManagementView()
+            ShareManagementView(baseRequest: baseRequest)
         }
     }
 
@@ -493,7 +492,7 @@ struct FileListView: View {
                     Button(action: {
                         if !sheetPathStack.isEmpty {
                             sheetPathStack.removeLast()
-                            viewModel.getFiles(at: currentSheetPath, modifySheet: true)
+                            viewModel.getFiles(baseRequest: baseRequest, at: currentSheetPath, modifySheet: true)
                         }
                     }) {
                         HStack {
@@ -509,7 +508,7 @@ struct FileListView: View {
                     // Home button - goes to root directory
                     Button(action: {
                         sheetPathStack.removeAll()
-                        viewModel.getFiles(at: "/", modifySheet: true)
+                        viewModel.getFiles(baseRequest: baseRequest, at: "/", modifySheet: true)
                     }) {
                         VStack {
                             Image(systemName: "house")
@@ -549,7 +548,7 @@ struct FileListView: View {
                             ForEach(viewModel.sheetItems.filter { $0.isDir }, id: \.id) { file in
                                 Button(action: {
                                     sheetPathStack.append(file)
-                                    viewModel.getFiles(at: currentSheetPath, modifySheet: true)
+                                    viewModel.getFiles(baseRequest: baseRequest, at: currentSheetPath, modifySheet: true)
                                 }) {
                                     HStack {
                                         Image(systemName: Icons.folder)
@@ -573,7 +572,7 @@ struct FileListView: View {
             .onAppear {
                 // Initialize sheetPathStack based on currentPath when sheet appears
                 initializeSheetPath()
-                viewModel.getFiles(at: currentSheetPath, modifySheet: true)
+                viewModel.getFiles(baseRequest: baseRequest, at: currentSheetPath, modifySheet: true)
             }
         }
         .modifier(ToastMessage(payload: $modifyMessage))
@@ -1057,7 +1056,8 @@ struct FileListView: View {
                     serverURL: auth.serverURL,
                     token: auth.token,
                     file: filePath,
-                    onDismiss: { isSharing = false }
+                    onDismiss: { isSharing = false },
+                    baseRequest: baseRequest
                 )
             } else {
                 // sharePath is nil
@@ -1492,7 +1492,8 @@ struct FileListView: View {
                 advancedSettings: advancedSettings,
                 extensionTypes: extensionTypes
             ),
-            animateGIF: advancedSettings.animateGIF
+            animateGIF: advancedSettings.animateGIF,
+            baseRequest: baseRequest
         )
     }
 
@@ -1513,7 +1514,8 @@ struct FileListView: View {
                 width: style?.gridHeight ?? ViewStyle.listIconSize,
                 height: style?.gridHeight ?? ViewStyle.listIconSize,
                 loadingFiles: $loadingFiles,
-                iconSize: iconSize
+                iconSize: iconSize,
+                baseRequest: baseRequest
             )
             .scaledToFill()
             .frame(
@@ -2346,7 +2348,6 @@ struct FileListView: View {
         }
         preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             DispatchQueue.main.async {
-                // TODO: Replicate this for all requests
                 if let error = error {
                     Log.error("❌ \(resourceType) creation failed: \(error.localizedDescription)")
                     errorTitle = "Create Failed"

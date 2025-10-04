@@ -29,16 +29,13 @@ struct SharedItem: Codable, Identifiable, Hashable {
 
 struct ShareManagementView: View {
     @EnvironmentObject var auth: AuthManager
+    let baseRequest: Request
 
     @State private var sharedContent: [SharedItem] = []
     @State private var toastMessage: ToastMessagePayload?
     @State private var errorTitle: String?
     @State private var errorMessage: String?
     @State private var expandedPaths: Set<String> = []
-
-    private var baseRequest: Request {
-        Request(baseURL: auth.serverURL, token: auth.token)
-    }
 
     private func fetchSharedContent() {
         guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "shares"]) else {

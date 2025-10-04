@@ -112,14 +112,14 @@ class FileListViewModel: ObservableObject {
         }
     }
 
-    func fetchFiles(at path: String) {
+    func fetchFiles(baseRequest: Request, at path: String) {
         currentTask?.cancel()
         currentTask = Task {
-            getFiles(at: path, modifySheet: false)
+            getFiles(baseRequest: baseRequest, at: path, modifySheet: false)
         }
     }
 
-    func getFiles(at path: String, modifySheet: Bool) {
+    func getFiles(baseRequest: Request, at path: String, modifySheet: Bool) {
         let setLoading: (Bool) -> Void = { isLoading in
             if modifySheet {
                 self.sheetIsLoading = isLoading
@@ -128,14 +128,6 @@ class FileListViewModel: ObservableObject {
             }
         }
         Log.debug("📡 Fetching files at path: \(path)")
-        guard let token = token, let serverURL = serverURL else {
-            DispatchQueue.main.async {
-                self.errorMessage = "Missing auth"
-            }
-            return
-        }
-
-        let baseRequest = Request(baseURL: serverURL, token: token)
         guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "resources", path]) else {
             let msg = "Failed to prepare request for: /api/resources/\(path)"
             Log.error("❌ \(msg)")

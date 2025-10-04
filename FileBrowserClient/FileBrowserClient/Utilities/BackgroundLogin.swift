@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BackgroundLogin {
     var auth: AuthManager
+    let baseRequest: Request
 
     @State private var reauthTimer: Timer?
     @State private var reauthDispatchWorkItem: DispatchWorkItem?
@@ -42,7 +43,6 @@ struct BackgroundLogin {
             return loginResponse("❌ serverURL or username or password is empty!")
         }
 
-        let baseRequest = Request(baseURL: auth.serverURL)
         guard var preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "login"],
             method: RequestMethod.post,
