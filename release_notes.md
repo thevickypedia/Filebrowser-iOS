@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.54.1 (10/03/2025)
+--------------------
+- [e053e33](https://github.com/thevickypedia/Filebrowser-iOS/commit/e053e33dfdc494d34b5c1a990b940bbc3aeb18f6) chore: Release ``v1.54.1``
+- [a0b72b8](https://github.com/thevickypedia/Filebrowser-iOS/commit/a0b72b89e541da658016de0ef889727cbf369fe2) refactor: Re-create timed requests handler with new architecture
+- [f516651](https://github.com/thevickypedia/Filebrowser-iOS/commit/f5166510571edf801d57a483135886e97c4449f5) perf: Keep error message for failed request generic and common across all modules
+- [30ddc7e](https://github.com/thevickypedia/Filebrowser-iOS/commit/30ddc7ee4bd19761bfa70696ef89784e3cccc681) chore: Update release notes for v1.54.0
+
 v1.54.0 (10/03/2025)
 --------------------
 - [426e1fd](https://github.com/thevickypedia/Filebrowser-iOS/commit/426e1fd6e8fe094b25b2a6f5a1273c7a2a5e1a1c) chore: Release ``v1.54.0``
