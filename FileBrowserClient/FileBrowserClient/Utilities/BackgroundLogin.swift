@@ -93,15 +93,6 @@ struct BackgroundLogin {
             await updateAuthState(token: jwt, payload: payload)
 
             logTokenInfo()
-            KeychainHelper.saveSession(
-                session: StoredSession(
-                    token: jwt,
-                    username: auth.username,
-                    serverURL: auth.serverURL,
-                    transitProtection: auth.transitProtection,
-                    password: auth.password
-                )
-            )
             return loginResponse("🔄 Authentication Renewed", success: true, statusCode: httpResponse.statusCode)
         } catch {
             return loginResponse("❌ Network error: \(error.localizedDescription)")
