@@ -63,8 +63,8 @@ struct UserPermission: Codable {
 extension AuthManager {
 
     func serverHandShake(for userID: String) async -> ServerResponse {
-        let baseRequest = Request(auth: self)
-        guard let preparedRequest = baseRequest.prepare(path: "/api/users/\(userID)") else {
+        let baseRequest = Request(baseURL: self.serverURL, token: self.token)
+        guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "users", userID]) else {
             return ServerResponse(success: false, text: "Invalid URL: /api/users/\(userID)")
         }
 

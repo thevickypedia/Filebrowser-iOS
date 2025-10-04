@@ -386,51 +386,6 @@ func copyToClipboard(_ text: String) {
     Log.debug("Copied text [\(text)] to clipboard!")
 }
 
-func urlPath(_ url: URL) -> String {
-    var result = url.path
-
-    if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-       let queryItems = components.queryItems, !queryItems.isEmpty {
-        let maskedItems = queryItems.map { item -> String in
-            if item.name.lowercased() == "auth" {
-                return "\(item.name)=******"
-            } else if let value = item.value {
-                return "\(item.name)=\(value)"
-            } else {
-                return item.name
-            }
-        }
-        result += "?" + maskedItems.joined(separator: "&")
-    }
-    return result
-}
-
-// TODO: Move this to Request object
-func buildAPIURL(base: String, pathComponents: [String], queryItems: [URLQueryItem]? = nil) -> URL? {
-    guard var url = URL(string: base) else { return nil }
-
-    for component in pathComponents {
-        url = url.appendingPathComponent(component.trimmingCharacters(in: CharacterSet(charactersIn: "/")))
-    }
-
-    var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-    if let qItems = queryItems {
-        components?.queryItems = qItems
-    }
-
-    return components?.url
-}
-
-// TODO: Move to Request.swift module
-func makeEncodedURL(base: String, path: String, query: String? = nil) -> URL? {
-    guard !base.isEmpty, !path.isEmpty else { return nil }
-
-    let trimmedBase = base.hasSuffix("/") ? String(base.dropLast()) : base
-    let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
-    let urlString = "\(trimmedBase)/\(encodedPath)" + (query.map { "?\($0)" } ?? "")
-    return URL(string: urlString)
-}
-
 func logJsonData(data: Data, parseJSON: Bool = false) -> Bool {
     if let jsonString = String(data: data, encoding: .utf8) {
         Log.info("JSON string: \(jsonString)")
@@ -479,9 +434,9 @@ func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HH
 }
 
 func checkServerHealth(for url: String) async -> ServerResponse {
-    let baseRequest = Request(baseUrl: url)
-    guard let preparedRequest = baseRequest.prepare(path: "/health") else {
-        return ServerResponse(success: false, text: "Invalid URL: /health")
+    let baseRequest = Request(baseURL: url)
+    guard let preparedRequest = baseRequest.prepare(pathComponents: ["health"]) else {
+        return ServerResponse(success: false, text: "Failed to prepare request for: /health")
     }
 
     do {

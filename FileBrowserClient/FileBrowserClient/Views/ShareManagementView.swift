@@ -36,10 +36,13 @@ struct ShareManagementView: View {
     @State private var errorMessage: String?
     @State private var expandedPaths: Set<String> = []
 
+    private var baseRequest: Request {
+        Request(baseURL: auth.serverURL, token: auth.token)
+    }
+
     private func fetchSharedContent() {
-        let baseRequest = Request(auth: auth)
-        guard let preparedRequest = baseRequest.prepare(path: "/api/shares") else {
-            let msg = baseRequest.error(path: "/api/shares")
+        guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "shares"]) else {
+            let msg = "Failed to prepare request for: /api/shares"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -76,9 +79,11 @@ struct ShareManagementView: View {
 
     private func deleteShared(_ item: SharedItem) {
         Log.info("Deleting share with hash: \(item.hash)")
-        let baseRequest = Request(auth: auth)
-        guard let preparedRequest = baseRequest.prepare(path: "/api/share/\(item.hash)", method: RequestMethod.delete) else {
-            let msg = baseRequest.error(path: "/api/share/\(item.hash)")
+        guard let preparedRequest = baseRequest.prepare(
+            pathComponents: ["api", "share", item.hash],
+            method: RequestMethod.delete
+        ) else {
+            let msg = "Failed to prepare request for: /api/share/\(item.hash)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg

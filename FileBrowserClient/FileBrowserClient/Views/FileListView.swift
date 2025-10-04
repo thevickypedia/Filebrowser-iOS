@@ -130,6 +130,10 @@ struct FileListView: View {
         self.backgroundLogin = backgroundLogin
     }
 
+    private var baseRequest: Request {
+        Request(baseURL: auth.serverURL, token: auth.token)
+    }
+
     private func fetchFiles(at path: String) {
         // Update display immediately for smooth UI
         currentDisplayPath = path
@@ -607,15 +611,8 @@ struct FileListView: View {
             return false
         }
 
-        guard let url = makeEncodedURL(base: auth.serverURL, path: "/api/resources\(fullPath)") else {
-            Log.error("❌ Failed to encode URL for: \(fullPath)")
-            errorTitle = "Internal Error"
-            errorMessage = "Failed to encode URL for: \(fullPath)"
-            return false
-        }
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard let preparedRequest = baseRequest.prepare() else {
-            let msg = baseRequest.error(url: url)
+        guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "resources", fullPath]) else {
+            let msg = "Failed to prepare request for: /api/resources/\(fullPath)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -695,7 +692,6 @@ struct FileListView: View {
 
             // Client side issue: Break loop without resetting flags, so sheet is still up
             if checkPathExists(encodedDestination) {
-                // TODO: Shows invalid exists
                 let msg = "⚠️ \(item.name) already exists at \(destinationPath)"
                 Log.error(msg)
                 modifyMessage = ToastMessagePayload(text: msg, color: .yellow, duration: 2)
@@ -704,25 +700,21 @@ struct FileListView: View {
 
             let urlAction = action == ModifyItem.move ? "rename" : "copy"
             let sourceForURL = encodedSource.hasPrefix("/") ? String(encodedSource.dropFirst()) : encodedSource
-            let urlString = "\(auth.serverURL)/api/resources/\(sourceForURL)" + "?action=\(urlAction)&destination=\(encodedDestination)&override=false&rename=false"
-
-            Log.debug("\(action.rawValue): \(urlString)")
 
             // Client side issue: Break loop without resetting flags, so sheet is still up
-            guard let url = URL(string: urlString) else {
+            guard let preparedRequest = baseRequest.prepare(
+                pathComponents: ["api", "resources", sourceForURL],
+                queryItems: [
+                    URLQueryItem(name: "action", value: urlAction),
+                    URLQueryItem(name: "destination", value: encodedDestination),
+                    URLQueryItem(name: "override", value: "false"),
+                    URLQueryItem(name: "rename", value: "false")
+                ],
+                method: RequestMethod.patch
+            ) else {
                 let msg = "Invalid URL for \(item.name)"
                 modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
                 Log.error(msg)
-                errorCount += 1
-                dispatchGroup.leave()
-                return
-            }
-
-            let baseRequest = Request(auth: auth, fullUrl: url)
-            guard let preparedRequest = baseRequest.prepare(method: RequestMethod.patch) else {
-                let msg = baseRequest.error(url: url)
-                Log.error("❌ \(msg)")
-                modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
                 errorCount += 1
                 dispatchGroup.leave()
                 return
@@ -1275,7 +1267,7 @@ struct FileListView: View {
 
         // Build raw URL (same as FileDetailView)
         guard let url = buildAPIURL(
-            base: auth.serverURL,
+            baseURL: auth.serverURL,
             pathComponents: ["api", "raw", file.path],
             queryItems: [ URLQueryItem(name: "auth", value: auth.token) ]
         ) else {
@@ -1366,13 +1358,16 @@ struct FileListView: View {
         speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
     }
 
-    func getSearchURL(serverURL: String, query: String) -> URL? {
+    func parseSearchQuery(query: String) -> String {
         var finalQuery = query
         if let prefix = searchType.queryPrefix {
             Log.debug("🔎 Search type: \(searchType.displayName)")
             finalQuery = "\(prefix) \(finalQuery)"
         }
+        return finalQuery
+    }
 
+    func getSearchPath() -> [String] {
         let searchLocation: String
         if pathStack.isEmpty || currentPath == "/" {
             // No extra path component, search at /api/search
@@ -1391,13 +1386,7 @@ struct FileListView: View {
             pathComponents.append(searchLocation)
         }
 
-        return buildAPIURL(
-            base: serverURL,
-            pathComponents: pathComponents,
-            queryItems: [
-                URLQueryItem(name: "query", value: finalQuery)  // pass raw query string
-            ]
-        )
+        return pathComponents  // pass raw query string
     }
 
     func searchFiles(query: String) async {
@@ -1409,22 +1398,11 @@ struct FileListView: View {
             return
         }
 
-        guard let url = getSearchURL(serverURL: auth.serverURL, query: query) else {
-            await MainActor.run {
-                errorTitle = "User Error"
-                errorMessage = "Invalid search: \(query)"
-                searchInProgress = false
-            }
-            Log.error("❌ Failed to generate search URL")
-            return
-        }
-
-        let logURL = urlPath(url)
-        Log.debug("🔍 Search URL: \(logURL)")
-
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard let preparedRequest = baseRequest.prepare() else {
-            let msg = baseRequest.error(url: url)
+        guard let preparedRequest = baseRequest.prepare(
+            pathComponents: getSearchPath(),
+            queryItems: [URLQueryItem(name: "query", value: parseSearchQuery(query: query))]
+        ) else {
+            let msg = "Failed to prepare request for: \(query)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -1726,19 +1704,8 @@ struct FileListView: View {
             errorMessage = "Invalid authorization. Please log out and log back in."
             return
         }
-        guard let url = buildAPIURL(
-            base: auth.serverURL,
-            pathComponents: ["api", "usage"],
-            queryItems: []
-        ) else {
-            Log.error("❌ Invalid URL")
-            errorTitle = "Internal Error"
-            errorMessage = "Invalid usage URL."
-            return
-        }
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard let preparedRequest = baseRequest.prepare() else {
-            let msg = baseRequest.error(url: url)
+        guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "usage"]) else {
+            let msg = "Failed to prepare request for: /api/usage"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -1769,7 +1736,7 @@ struct FileListView: View {
 
     func getUploadURL(serverURL: String, encodedName: String) -> URL? {
         return buildAPIURL(
-            base: serverURL,
+            baseURL: serverURL,
             pathComponents: currentPath == "/" ? ["api", "tus", encodedName] : ["api", "tus", currentPath, encodedName],
             queryItems: [URLQueryItem(name: "override", value: "false")]
         )
@@ -1806,19 +1773,13 @@ struct FileListView: View {
             return
         }
 
-        let baseRequest = Request(auth: auth, fullUrl: uploadURL)
-        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.post) else {
-            let msg = baseRequest.error(url: uploadURL)
-            Log.error("❌ \(msg)")
-            errorTitle = "Internal Error"
-            errorMessage = msg
-            return
-        }
-        // TODO: Move to Request object to load addiditonal headers (may be even body)
-        preparedRequest.request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-        preparedRequest.request.setValue("0", forHTTPHeaderField: "Content-Length")
+        var request = URLRequest(url: uploadURL)
+        request.httpMethod = "POST"
+        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+        request.setValue("0", forHTTPHeaderField: "Content-Length")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
-        preparedRequest.session.dataTask(with: preparedRequest.request) { _, _, error in
+        URLSession.shared.dataTask(with: request) { _, _, error in
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ POST failed: \(error.localizedDescription)")
@@ -1827,25 +1788,19 @@ struct FileListView: View {
                     return
                 }
 
-                Log.debug("✅ Upload session initiated at: \(urlPath(uploadURL))")
+                Log.debug("✅ Upload session initiated for: \(fileName)")
                 getUploadOffset(fileHandle: fileHandle, fileURL: fileURL, uploadURL: uploadURL)
             }
         }.resume()
     }
 
     func getUploadOffset(fileHandle: FileHandle, fileURL: URL, uploadURL: URL) {
-        let baseRequest = Request(auth: auth, fullUrl: uploadURL)
-        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.head) else {
-            let msg = baseRequest.error(url: uploadURL)
-            Log.error("❌ \(msg)")
-            errorTitle = "Internal Error"
-            errorMessage = msg
-            return
-        }
-        // TODO: Move to Request object to load addiditonal headers (may be even body)
-        preparedRequest.request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+        var request = URLRequest(url: uploadURL)
+        request.httpMethod = "HEAD"
+        request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
-        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
+        URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ HEAD failed: \(error.localizedDescription)")
@@ -2008,18 +1963,14 @@ struct FileListView: View {
             uploadStartTime = Date()
             startOffset = currentOffset
 
-            let baseRequest = Request(auth: auth, fullUrl: uploadURL)
-            guard var preparedRequest = baseRequest.prepare(method: RequestMethod.patch, contentType: ContentType.octet) else {
-                let msg = baseRequest.error(url: uploadURL)
-                Log.error("❌ \(msg)")
-                errorTitle = "Internal Error"
-                errorMessage = msg
-                return
-            }
-            preparedRequest.request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
-            preparedRequest.request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
+            var request = URLRequest(url: uploadURL)
+            request.httpMethod = "PATCH"
+            request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
+            request.setValue("\(currentOffset)", forHTTPHeaderField: "Upload-Offset")
+            request.setValue("application/offset+octet-stream", forHTTPHeaderField: "Content-Type")
+            request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
-            uploadTask = preparedRequest.session.uploadTask(with: preparedRequest.request, from: data) { _, response, error in
+            uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
                     // Re-check pause/cancel in async block
                     if transferState.isTransferCancelled {
@@ -2123,6 +2074,7 @@ struct FileListView: View {
         initiateTusUpload(for: fileURL)
     }
 
+    // TODO: Remove this func, and replace with common Request module
     @discardableResult
     func makeRequest(
         endpoint: String,
@@ -2209,22 +2161,19 @@ struct FileListView: View {
             return
         }
 
-        guard let currentSettings = auth.tokenPayload?.user,
-              let url = buildAPIURL(
-                  base: auth.serverURL,
-                  pathComponents: ["api", "users", String(currentSettings.id)],
-                  queryItems: []
-              ) else {
-            Log.error("❌ Invalid user ID or URL")
+        guard let currentSettings = auth.tokenPayload?.user else {
+            Log.error("❌ Invalid user ID")
             errorTitle = "Internal Error"
-            errorMessage = "Invalid user ID or URL"
+            errorMessage = "Invalid user ID"
             return
         }
         Log.debug("⚙️ Current settings: \(currentSettings)")
 
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.put) else {
-            let msg = baseRequest.error(url: url)
+        guard var preparedRequest = baseRequest.prepare(
+            pathComponents: ["api", "users", String(currentSettings.id)],
+            method: RequestMethod.put
+        ) else {
+            let msg = "Failed to prepare request for: /api/users/\(currentSettings.id)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -2286,19 +2235,11 @@ struct FileListView: View {
 
         let group = DispatchGroup()
         for item in selectedItems {
-            guard let url = buildAPIURL(
-                base: auth.serverURL,
+            guard let preparedRequest = baseRequest.prepare(
                 pathComponents: ["api", "resources", item.path],
-                queryItems: []
+                method: RequestMethod.delete
             ) else {
-                Log.error("❌ Invalid path for \(item.name)")
-                viewModel.errorMessage = "Invalid path for \(item.name)"
-                continue
-            }
-
-            let baseRequest = Request(auth: auth, fullUrl: url)
-            guard let preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
-                let msg = baseRequest.error(url: url)
+                let msg = "Failed to prepare request for: /api/resources/\(item.path)"
                 Log.error("❌ \(msg)")
                 errorTitle = "Internal Error"
                 errorMessage = msg

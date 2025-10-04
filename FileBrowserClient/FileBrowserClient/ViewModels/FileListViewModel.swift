@@ -135,26 +135,13 @@ class FileListViewModel: ObservableObject {
             return
         }
 
-        guard let url = buildAPIURL(
-            base: serverURL,
-            pathComponents: ["api", "resources", path],
-            queryItems: []
-        ) else {
-            DispatchQueue.main.async {
-                self.errorMessage = "Invalid URL: /api/resources/\(path)"
-            }
-            return
-        }
-
-        let baseRequest = Request(fullUrl: url)
-        guard var preparedRequest = baseRequest.prepare() else {
-            let msg = baseRequest.error(url: url)
+        let baseRequest = Request(baseURL: serverURL, token: token)
+        guard var preparedRequest = baseRequest.prepare(pathComponents: ["api", "resources", path]) else {
+            let msg = "Failed to prepare request for: /api/resources/\(path)"
             Log.error("❌ \(msg)")
             errorMessage = msg
             return
         }
-        // TODO: Move all header alloc to Request object
-        preparedRequest.request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         DispatchQueue.main.async {
             self.errorMessage = nil

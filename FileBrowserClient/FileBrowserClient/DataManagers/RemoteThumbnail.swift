@@ -100,6 +100,10 @@ struct RemoteThumbnail: View {
         return queue
     }()
 
+    private var baseRequest: Request {
+        Request(baseURL: serverURL, token: token)
+    }
+
     var body: some View {
         Group {
             if let gifData = gifData, advancedSettings.animateGIF {
@@ -225,7 +229,7 @@ struct RemoteThumbnail: View {
         // Step 2: Video thumbnail generation
         if isVideo {
             guard let videoURL = buildAPIURL(
-                base: serverURL,
+                baseURL: serverURL,
                 pathComponents: ["api", "raw", file.path],
                 queryItems: [URLQueryItem(name: "auth", value: token)]
             ) else {
@@ -273,8 +277,7 @@ struct RemoteThumbnail: View {
         }
 
         // Step 3: Images & GIFs
-        guard let url = buildAPIURL(
-            base: serverURL,
+        guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "preview", "thumb", file.path],
             queryItems: [
                 URLQueryItem(name: "auth", value: token),
@@ -285,7 +288,7 @@ struct RemoteThumbnail: View {
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, _, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, error in
             guard let data = data, error == nil else {
                 let errMsg = "Image thumbnail request failed for file: \(file.name) — error: \(error?.localizedDescription ?? "Unknown error")"
                 retryHandler(retryCount: retryCount, errMsg: errMsg)

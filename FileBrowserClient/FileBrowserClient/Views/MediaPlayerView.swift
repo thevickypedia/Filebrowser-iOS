@@ -300,7 +300,7 @@ struct MediaPlayerView: View {
 
     func loadPlayer() {
         guard let url = buildAPIURL(
-            base: serverURL,
+            baseURL: serverURL,
             pathComponents: ["api", "raw", file.path],
             queryItems: [URLQueryItem(name: "auth", value: token)]
         ) else { return }

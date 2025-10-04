@@ -32,6 +32,10 @@ struct ShareSheetView: View {
     @State private var errorTitle: String?
     @State private var errorMessage: String?
 
+    private var baseRequest: Request {
+        Request(baseURL: serverURL, token: token)
+    }
+
     var body: some View {
         NavigationView {
             VStack {
@@ -139,26 +143,16 @@ struct ShareSheetView: View {
             self.errorMessage = "❌ Hash missing for shared link."
             return
         }
-        guard let deleteURL = buildAPIURL(
-            base: serverURL,
-            pathComponents: ["api", "share", hash]
+        guard var preparedRequest = baseRequest.prepare(
+            pathComponents: ["api", "share", hash],
+            method: RequestMethod.delete
         ) else {
-            self.errorTitle = "Internal Error"
-            self.errorMessage = "❌ Failed to construct shared link"
-            return
-        }
-        Log.debug("Delete share URL: \(deleteURL)")
-
-        let baseRequest = Request(fullUrl: deleteURL)
-        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
-            let msg = baseRequest.error(url: deleteURL)
+            let msg = "Failed to prepare request for: /api/share/\(hash)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
             return
         }
-
-        preparedRequest.request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             DispatchQueue.main.async {
@@ -206,30 +200,20 @@ struct ShareSheetView: View {
             return
         }
 
-        guard let shareURL = buildAPIURL(
-            base: serverURL,
+        guard var preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "share", file.path],
             queryItems: [
                 URLQueryItem(name: "expires", value: String(expiryTime)),
                 URLQueryItem(name: "unit", value: shareDuration)
-            ]
+            ],
+            method: RequestMethod.post
         ) else {
-            self.errorTitle = "Internal Error"
-            self.errorMessage = "❌ Failed to construct shared link"
-            return
-        }
-        Log.debug("Share URL: \(shareURL)")
-
-        let baseRequest = Request(fullUrl: shareURL)
-        guard var preparedRequest = baseRequest.prepare(method: RequestMethod.post) else {
-            let msg = baseRequest.error(url: shareURL)
+            let msg = "Failed to prepare request for: /api/share/\(file.path)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
             return
         }
-
-        preparedRequest.request.setValue(token, forHTTPHeaderField: "X-Auth")
 
         let body: [String: String] = [
             "password": sharePassword,
@@ -275,19 +259,19 @@ struct ShareSheetView: View {
                         Log.info("✅ JSON Data: \(json)")
                         let sharedLink = try JSONDecoder().decode(ShareResponse.self, from: data)
                         let unsigned = buildAPIURL(
-                            base: serverURL,
+                            baseURL: serverURL,
                             pathComponents: ["share", sharedLink.hash]
                         )
                         var preSigned: URL?
                         if let token = sharedLink.token {
                             preSigned = buildAPIURL(
-                                base: serverURL,
+                                baseURL: serverURL,
                                 pathComponents: ["api", "public", "dl", sharedLink.hash, file.path],
                                 queryItems: [URLQueryItem(name: "token", value: token)]
                             )
                         } else {
                             preSigned = buildAPIURL(
-                                base: serverURL,
+                                baseURL: serverURL,
                                 pathComponents: ["api", "public", "dl", sharedLink.hash, file.path]
                             )
                         }

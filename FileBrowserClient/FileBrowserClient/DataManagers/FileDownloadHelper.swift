@@ -11,15 +11,6 @@ import UniformTypeIdentifiers
 import Photos
 
 struct FileDownloadHelper {
-    /// Builds the raw download URL for a file
-    static func makeDownloadURL(serverURL: String, token: String, filePath: String) -> URL? {
-        return buildAPIURL(
-            base: serverURL,
-            pathComponents: ["api", "raw", filePath],
-            queryItems: [ URLQueryItem(name: "auth", value: token) ]
-        )
-    }
-
     /// Handles saving downloaded file to Photos or Files
     static func handleDownloadCompletion(
         file: FileItem,

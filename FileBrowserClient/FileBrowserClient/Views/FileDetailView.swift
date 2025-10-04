@@ -183,6 +183,10 @@ struct FileDetailView: View {
         return permissions?.rename == true || permissions?.delete == true || permissions?.download == true || permissions?.share == true
     }
 
+    private var baseRequest: Request {
+        Request(baseURL: auth.serverURL, token: auth.token)
+    }
+
     var body: some View {
         let fileName = file.name.lowercased()
 
@@ -421,24 +425,17 @@ struct FileDetailView: View {
             .appendingPathComponent(newName)
             .path
 
-        guard let url = buildAPIURL(
-            base: serverURL,
+        guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "resources", fromPath],
             queryItems: [
                 URLQueryItem(name: "action", value: "rename"),
                 URLQueryItem(name: "destination", value: "/" + toPath),
                 URLQueryItem(name: "override", value: "false"),
                 URLQueryItem(name: "rename", value: "false")
-            ]
+            ],
+            method: RequestMethod.patch
         ) else {
-            self.errorTitle = "Internal Error"
-            self.errorMessage = "Invalid rename URL"
-            return
-        }
-
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard let preparedRequest = baseRequest.prepare(method: RequestMethod.patch) else {
-            let msg = baseRequest.error(url: url)
+            let msg = "Failed to prepare request for: /api/resources/\(fromPath)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -469,15 +466,11 @@ struct FileDetailView: View {
     }
 
     func deleteFile() {
-        guard let url = makeEncodedURL(base: serverURL, path: "/api/resources/\(file.path)") else {
-            Log.error("Failed to encode URL for: \(file.path)")
-            errorTitle = "Internal Error"
-            errorMessage = "Failed to encode URL for: \(file.path)"
-            return
-        }
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard let preparedRequest = baseRequest.prepare(method: RequestMethod.delete) else {
-            let msg = baseRequest.error(url: url)
+        guard let preparedRequest = baseRequest.prepare(
+            pathComponents: ["api", "resources", file.path],
+            method: RequestMethod.delete
+        ) else {
+            let msg = "Failed to prepare request for: /api/resources/\(file.path)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -492,10 +485,10 @@ struct FileDetailView: View {
     }
 
     func downloadAndSave() {
-        guard let url = FileDownloadHelper.makeDownloadURL(
-            serverURL: serverURL,
-            token: token,
-            filePath: file.path
+        guard let url = buildAPIURL(
+            baseURL: serverURL,
+            pathComponents: ["api", "raw", file.path],
+            queryItems: [URLQueryItem(name: "auth", value: token)]
         ) else { return }
 
         isDownloading = true
@@ -533,20 +526,18 @@ struct FileDetailView: View {
         // Try to load preview from cache
         let fileName = file.name.lowercased()
 
-        guard let url = buildAPIURL(
-            base: serverURL,
+        guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "preview", "big", file.path],
-            queryItems: [
-                URLQueryItem(name: "auth", value: token)
-            ]
+            queryItems: [URLQueryItem(name: "auth", value: token)]
         ) else {
-            self.previewError = PreviewErrorPayload(text: "Invalid preview URL")
+            let msg = "Failed to prepare request for: /api/preview/big/\(file.path)"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
             return
         }
 
-        Log.debug("🔗 Fetching preview from: \(urlPath(url))")
-
-        URLSession.shared.dataTask(with: url) { data, _, error in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, error in
             DispatchQueue.main.async {
                 if let error = error {
                     self.previewError = PreviewErrorPayload(text: "Preview download failed: \(error.localizedDescription)")
@@ -569,27 +560,15 @@ struct FileDetailView: View {
         // Try to load raw file from cache
         let fileName = file.name.lowercased()
 
-        guard let url = buildAPIURL(
-            base: serverURL,
+        guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "raw", file.path],
-            queryItems: [
-                URLQueryItem(name: "auth", value: token)
-            ]
+            queryItems: [URLQueryItem(name: "auth", value: token)]
         ) else {
-            self.previewError = PreviewErrorPayload(text: "Invalid raw URL")
-            isDownloading = false
-            return
-        }
-
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard let preparedRequest = baseRequest.prepare() else {
-            let msg = baseRequest.error(url: url)
+            let msg = "Failed to prepare request for: /api/raw/\(file.path)"
             Log.error("❌ \(msg)")
             self.previewError = PreviewErrorPayload(text: msg)
             return
         }
-
-        Log.debug("🔗 Fetching raw content from: \(urlPath(url))")
 
         preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, error in
             DispatchQueue.main.async {
@@ -614,20 +593,11 @@ struct FileDetailView: View {
     }
 
     func fetchMetadata() {
-        guard let url = buildAPIURL(
-            base: serverURL,
+        guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "resources", file.path],
-            queryItems: [
-                URLQueryItem(name: "view", value: "info")
-            ]
+            queryItems: [URLQueryItem(name: "view", value: "info")]
         ) else {
-            self.errorMessage = "Invalid metadata URL"
-            return
-        }
-
-        let baseRequest = Request(auth: auth, fullUrl: url)
-        guard let preparedRequest = baseRequest.prepare() else {
-            let msg = baseRequest.error(url: url)
+            let msg = "Failed to prepare request for: /api/resources/\(file.path)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg

@@ -371,9 +371,9 @@ struct ContentView: View {
             return
         }
 
-        let baseRequest = Request(baseUrl: serverURL)
-        guard var preparedRequest = baseRequest.prepare(path: "/api/login", method: RequestMethod.post) else {
-            let msg = baseRequest.error(path: "/api/login")
+        let baseRequest = Request(baseURL: serverURL)
+        guard var preparedRequest = baseRequest.prepare(pathComponents: ["api", "login"], method: RequestMethod.post) else {
+            let msg = "Failed to prepare request for: /api/login"
             Log.error("❌ \(msg)")
             errorMessage = msg
             return
@@ -552,7 +552,9 @@ struct ContentView: View {
                 auth.transitProtection = session.transitProtection
 
                 let handShake = await auth.serverHandShake(for: String(tokenPayload.user.id))
-                if !handShake.success {
+                if handShake.success {
+                    Log.debug(handShake.text)
+                } else {
                     doHealthCheck = false
                     DispatchQueue.main.async {
                         if handShake.statusCode == 401 {

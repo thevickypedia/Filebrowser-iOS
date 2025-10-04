@@ -42,9 +42,12 @@ struct BackgroundLogin {
             return loginResponse("❌ serverURL or username or password is empty!")
         }
 
-        let baseRequest = Request(auth: auth)
-        guard var preparedRequest = baseRequest.prepare(path: "/api/login", method: RequestMethod.post) else {
-            return loginResponse("Invalid URL: /api/login")
+        let baseRequest = Request(baseURL: auth.serverURL)
+        guard var preparedRequest = baseRequest.prepare(
+            pathComponents: ["api", "login"],
+            method: RequestMethod.post,
+        ) else {
+            return loginResponse("Failed to prepare request for: /api/login")
         }
         if auth.transitProtection {
             let hexUsername = convertStringToHex(auth.username)
