@@ -136,7 +136,7 @@ class FileListViewModel: ObservableObject {
         }
 
         let baseRequest = Request(baseURL: serverURL, token: token)
-        guard var preparedRequest = baseRequest.prepare(pathComponents: ["api", "resources", path]) else {
+        guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "resources", path]) else {
             let msg = "Failed to prepare request for: /api/resources/\(path)"
             Log.error("❌ \(msg)")
             errorMessage = msg

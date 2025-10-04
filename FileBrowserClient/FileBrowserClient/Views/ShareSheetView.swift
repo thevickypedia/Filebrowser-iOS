@@ -143,7 +143,7 @@ struct ShareSheetView: View {
             self.errorMessage = "❌ Hash missing for shared link."
             return
         }
-        guard var preparedRequest = baseRequest.prepare(
+        guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "share", hash],
             method: RequestMethod.delete
         ) else {

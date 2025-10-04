@@ -2074,65 +2074,6 @@ struct FileListView: View {
         initiateTusUpload(for: fileURL)
     }
 
-    // TODO: Remove this func, and replace with common Request module
-    @discardableResult
-    func makeRequest(
-        endpoint: String,
-        method: String = "GET",
-        queryItems: [URLQueryItem]? = nil,
-        body: Data? = nil,
-        contentType: String = "application/json",
-        completion: @escaping (Data?, URLResponse?, Error?) -> Void
-    ) -> URLSessionDataTask? {
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return nil
-        }
-        guard var components = URLComponents(string: auth.serverURL + endpoint) else {
-            Log.error("❌ Failed to make URL components for endpoint: \(endpoint)")
-            errorTitle = "Internal Error"
-            errorMessage = "Failed to make URL components."
-            return nil
-        }
-
-        components.queryItems = queryItems
-        guard let url = components.url else {
-            errorTitle = "Internal Error"
-            errorMessage = "Failed to build URL"
-            return nil
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
-        if method != "GET" && method != "DELETE" {
-            request.setValue(contentType, forHTTPHeaderField: "Content-Type")
-        }
-        request.httpBody = body
-
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            let responseCode = (response as? HTTPURLResponse)?.statusCode ?? -1
-
-            DispatchQueue.main.async {
-                if let error = error {
-                    Log.error("❌ Request failed: \(error.localizedDescription)")
-                    errorMessage = error.localizedDescription
-                } else if responseCode != 200 {
-                    let bodyString = data.flatMap { String(data: $0, encoding: .utf8) } ?? "No details"
-                    Log.error("❌ Request failed with status \(responseCode): \(bodyString)")
-                    errorTitle = "Server Error"
-                    errorMessage = "[\(responseCode)]: \(bodyString)"
-                }
-                completion(data, response, error)
-            }
-        }
-
-        task.resume()
-        return task
-    }
-
     func makePayload<T: Encodable>(
         what: String,
         which: [String],
@@ -2270,35 +2211,55 @@ struct FileListView: View {
             .appendingPathComponent(renameInput)
             .path
 
-        guard let encodedFrom = fromPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let encodedTo = toPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            Log.error("❌ Failed to encode paths")
-            errorTitle = "Encode Error"
-            errorMessage = "Failed to rename \(item.name)"
+        guard let preparedRequest = baseRequest.prepare(
+            pathComponents: ["api", "resources", fromPath],
+            queryItems: [
+                URLQueryItem(name: "action", value: "rename"),
+                URLQueryItem(name: "destination", value: toPath),
+                URLQueryItem(name: "override", value: "false"),
+                URLQueryItem(name: "rename", value: "false")
+            ],
+            method: RequestMethod.patch
+        ) else {
+            let msg = "Failed to prepare request for: \(item.name)"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
             return
         }
-
-        let endpoint = "/api/resources/\(removePrefix(urlPath: encodedFrom))"
-        let query: [URLQueryItem] = [
-            URLQueryItem(name: "action", value: "rename"),
-            URLQueryItem(name: "destination", value: encodedTo),
-            URLQueryItem(name: "override", value: "false"),
-            URLQueryItem(name: "rename", value: "false")
-        ]
-
-        makeRequest(endpoint: endpoint, method: "PATCH", queryItems: query) { _, response, _ in
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             DispatchQueue.main.async {
-                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                    Log.info("✅ Rename successful")
+                if let error = error {
+                    Log.error("❌ Rename failed: \(error.localizedDescription)")
+                    errorTitle = "Rename Failed"
+                    errorMessage = error.localizedDescription
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    Log.error("❌ No HTTP response received")
+                    return
+                }
+
+                let responseText = formatHttpResponse(httpResponse)
+                if httpResponse.statusCode == 200 {
+                    let msg = "📝 Renamed \(item.name) → \(renameInput)"
+                    Log.info("\(responseText) - \(msg)")
                     selectedItems.removeAll()
                     isRenaming = false
                     selectionMode = false
                     fetchFiles(at: currentPath)
-                    toastMessage = ToastMessagePayload(text: "📝 Renamed \(item.name) → \(renameInput)", color: .yellow, duration: 3)
+                    toastMessage = ToastMessagePayload(text: msg, color: .yellow, duration: 3)
                     renameInput = ""
+                    selectionMode = false
+                } else {
+                    let msg = "❌ Rename \(item.name) → \(renameInput) failed"
+                    Log.error("\(responseText) - \(msg)")
+                    errorTitle = "Rename Failed"
+                    errorMessage = "\(responseText) - \(msg)"
                 }
             }
-        }
+        }.resume()
     }
 
     func toggleSelection(for item: FileItem) {
@@ -2340,15 +2301,21 @@ struct FileListView: View {
         let separator = isDirectory ? "/?" : "?"
         let resourceType = isDirectory ? "Folder" : "File"
         let emoji = isDirectory ? "📁" : "📄"
-        let endpoint = "/api/resources/\(removePrefix(urlPath: encodedPath))\(separator)"
-        let query: [URLQueryItem] = [
-            URLQueryItem(name: "override", value: "false")
-        ]
 
         Log.info("📄 Creating \(resourceType) at path: \(fullPath)")
-
-        makeRequest(endpoint: endpoint, method: "POST", queryItems: query) { _, response, error in
+        guard let preparedRequest = baseRequest.prepare(
+            pathComponents: ["/api/resources\(encodedPath)\(separator)override=false"],
+            method: RequestMethod.post
+        ) else {
+            let msg = "Failed to prepare request for: /api/resources/\(fullPath)"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return
+        }
+        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
             DispatchQueue.main.async {
+                // TODO: Replicate this for all requests
                 if let error = error {
                     Log.error("❌ \(resourceType) creation failed: \(error.localizedDescription)")
                     errorTitle = "Create Failed"
@@ -2372,7 +2339,7 @@ struct FileListView: View {
                     errorMessage = "\(resourceType) creation failed: \(http.statusCode)"
                 }
             }
-        }
+        }.resume()
     }
 
     func refreshFolder() {

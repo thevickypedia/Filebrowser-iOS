@@ -51,6 +51,13 @@ func buildAPIURL(baseURL: String, pathComponents: [String], queryItems: [URLQuer
     return components?.url
 }
 
+private func urlJoin(url: String, path: String) -> String {
+    if url.hasSuffix("/") {
+        return url + path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+    return url + "/" + path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+}
+
 class Request {
     let baseURL: String
     let token: String?
@@ -68,11 +75,19 @@ class Request {
         contentType: ContentType = ContentType.json,
         timeout: RequestTimeout = RequestTimeout(request: 3.0, resource: 5.0)
     ) -> PreparedRequest? {
-        guard let requestURL = buildAPIURL(
-            baseURL: self.baseURL,
-            pathComponents: pathComponents,
-            queryItems: queryItems
-        ) else { return nil }
+        var requestURL: URL
+        // Assumes as a pre-built URL path component
+        if pathComponents.count == 1, let firstComponent = pathComponents.first, firstComponent.starts(with: "/api/") {
+            guard let builtURL = URL(string: urlJoin(url: self.baseURL, path: pathComponents.first!)) else { return nil }
+            requestURL = builtURL
+        } else {
+            guard let builtURL = buildAPIURL(
+                baseURL: self.baseURL,
+                pathComponents: pathComponents,
+                queryItems: queryItems
+            ) else { return nil }
+            requestURL = builtURL
+        }
 
         // Create a custom session with timeout
         let config = URLSessionConfiguration.default
