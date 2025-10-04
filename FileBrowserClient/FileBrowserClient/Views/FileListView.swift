@@ -1400,7 +1400,8 @@ struct FileListView: View {
 
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: getSearchPath(),
-            queryItems: [URLQueryItem(name: "query", value: parseSearchQuery(query: query))]
+            queryItems: [URLQueryItem(name: "query", value: parseSearchQuery(query: query))],
+            timeout: RequestTimeout(request: 30.0, resource: 45.0)
         ) else {
             let msg = "Failed to prepare request for: \(query)"
             Log.error("❌ \(msg)")
