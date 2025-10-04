@@ -19,6 +19,9 @@ struct Constants {
 
     static let uploadCleanupDelay: Int = 2
 
+    static let searchRequestTimeout = 30.0
+    static let searchResourceTimeout = 45.0
+
     // RemoteThumbnail:
     // Maximum number of thumbnails to render
     static let maxConcurrentThumbnailRender: Int = 4

@@ -647,7 +647,6 @@ struct FileListView: View {
         return exists
     }
 
-    // Updated modifyItem function with better error handling and path management
     private func modifyItem(to destinationPath: String, action: ModifyItem) {
         let logAction = action.rawValue.lowercased()
         guard !selectedItems.isEmpty else {
@@ -742,7 +741,7 @@ struct FileListView: View {
                     return
                 }
 
-                if (200...299).contains(httpResponse.statusCode) {
+                if httpResponse.statusCode == 200 {
                     Log.info("\(item.name) \(logAction)d successfully to \(destinationPath)")
                     DispatchQueue.main.async {
                         successCount += 1
@@ -1401,7 +1400,7 @@ struct FileListView: View {
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: getSearchPath(),
             queryItems: [URLQueryItem(name: "query", value: parseSearchQuery(query: query))],
-            timeout: RequestTimeout(request: 30.0, resource: 45.0)
+            timeout: RequestTimeout(request: Constants.searchRequestTimeout, resource: Constants.searchResourceTimeout)
         ) else {
             let msg = "Failed to prepare request for: \(query)"
             Log.error("❌ \(msg)")
