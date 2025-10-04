@@ -1668,13 +1668,19 @@ struct FileListView: View {
         ForEach(results, id: \.path) { result in
             let name = URL(fileURLWithPath: result.path).lastPathComponent
             if result.dir {
-                NavigationLink(value: result.path) {
+                Button(action: {
+                    navigateToSearchResult(path: result.path)
+                }) {
                     HStack {
                         Image(systemName: "folder")
                             .frame(width: ViewStyle.listIconSize, height: ViewStyle.listIconSize)
                         Text(name)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.gray)
                     }
                 }
+                .buttonStyle(.plain)
             } else {
                 NavigationLink(destination: {
                     // Minimal FileItem for detail view
@@ -1696,6 +1702,30 @@ struct FileListView: View {
                 }
             }
         }
+    }
+
+    private func navigateToSearchResult(path: String) {
+        searchClicked = false
+        searchInProgress = false
+        searchText = ""
+        viewModel.searchResults.removeAll()
+        if path == "/" {
+            pathStack = []
+        } else {
+            var stack: [String] = []
+            var currentPath = ""
+
+            for component in path.split(separator: "/") {
+                if currentPath.isEmpty {
+                    currentPath = String(component)
+                } else {
+                    currentPath += "/\(component)"
+                }
+                stack.append(currentPath)
+            }
+            pathStack = stack
+        }
+        fetchFiles(at: path)
     }
 
     func fetchUsageInfo() {
