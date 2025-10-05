@@ -865,11 +865,7 @@ struct FileListView: View {
             totalCount: photoPickerStatus.totalSelected,
             chunkSize: advancedSettings.chunkSize,
             isPaused: transferState.isTransferPaused,
-            onPause: {
-                notifyTransferState(TransferType.upload, TransferStatus.paused)
-                transferState.isTransferPaused = true
-                uploadTask?.cancel()
-            },
+            onPause: { pauseUpload() },
             onResume: { resumeUpload() },
             onCancel: {
                 notifyTransferState(TransferType.upload, TransferStatus.cancelled)
@@ -1961,6 +1957,25 @@ struct FileListView: View {
         return uploadQueue.count - transferState.currentTransferIndex
     }
 
+    func pauseUpload(currentOffset: Int? = nil, message: String? = nil) {
+        self.transferState.isTransferPaused = true
+        self.uploadTask?.cancel()
+        self.uploadTask = nil
+        if let offset = currentOffset {
+            self.currentUploadedOffset = offset
+        }
+        // Notify user
+        if let text = message {
+            self.toastMessage = ToastMessagePayload(
+                text: text,
+                color: .orange,
+                duration: 3
+            )
+        } else {
+            notifyTransferState(TransferType.upload, TransferStatus.paused)
+        }
+    }
+
     func resumeUpload() {
         if let fileHandle = currentFileHandle,
            let uploadURL = currentUploadURL {
@@ -2063,6 +2078,15 @@ struct FileListView: View {
 
             uploadTask = URLSession.shared.uploadTask(with: request, from: data) { _, response, error in
                 DispatchQueue.main.async {
+                    // Handle network errors with auto-pause
+                    if let error = error, error.isNetworkError {
+                        Log.warn("⚠️ Network error detected: \(error.localizedDescription)")
+                        // Auto-pause the upload
+                        pauseUpload(
+                            currentOffset: currentOffset,
+                            message: "⏸️ Upload paused due to network error. Will resume when connection is restored."
+                        )
+                    }
                     // Re-check pause/cancel in async block
                     if transferState.isTransferCancelled {
                         Log.info("⏹️ Upload cancelled mid-chunk. \(fileName) may be incomplete.")
@@ -2077,8 +2101,7 @@ struct FileListView: View {
 
                     if transferState.isTransferPaused {
                         Log.info("⏸️ Upload paused mid-chunk at offset: \(currentOffset)")
-                        uploadTask = nil
-                        currentUploadedOffset = currentOffset
+                        pauseUpload(currentOffset: currentOffset, message: "⏸️ Upload paused mid-chunk at offset: \(currentOffset)")
                         return
                     }
 
