@@ -7,7 +7,32 @@
 
 import UIKit
 import SwiftUI
+import Network
 import UniformTypeIdentifiers
+
+extension Error {
+    var isNetworkError: Bool {
+        let nsError = self as NSError
+        // Network-related error domains
+        let networkErrorDomains = [
+            NSURLErrorDomain,
+            kCFErrorDomainCFNetwork as String
+        ]
+        if networkErrorDomains.contains(nsError.domain) {
+            // Specific network error codes that are resumable
+            let resumableErrorCodes = [
+                NSURLErrorNetworkConnectionLost,
+                NSURLErrorNotConnectedToInternet,
+                NSURLErrorTimedOut,
+                NSURLErrorCannotConnectToHost,
+                NSURLErrorDataNotAllowed,
+                NSURLErrorCallIsActive
+            ]
+            return resumableErrorCodes.contains(nsError.code)
+        }
+        return false
+    }
+}
 
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
@@ -1116,10 +1141,19 @@ struct FileListView: View {
         }
     }
 
-    private func pauseDownload() {
+    private func pauseDownload(networkFailure: Bool = false) {
         transferState.isTransferPaused = true
         if let id = currentDownloadTaskID {
-            notifyTransferState(TransferType.download, TransferStatus.paused)
+            if networkFailure {
+                self.toastMessage = ToastMessagePayload(
+                    text: "⏸️ Download [\(id)] paused due to network error. Will resume when connection is restored.",
+                    color: .orange,
+                    duration: 5
+                )
+            } else {
+                notifyTransferState(TransferType.download, TransferStatus.paused)
+            }
+            Log.info("Download ID [\(id)] stored as paused resume data")
             DownloadManager.shared.pause(id) { data in
                 pausedResumeData = data
             }
@@ -1144,9 +1178,8 @@ struct FileListView: View {
 
     private func resumeDownload() {
         guard let data = pausedResumeData else {
-            Log.error("Resume download condition not met")
-            errorTitle = "Resume Error"
-            errorMessage = "Paused resume data is missing - unable to continue download"
+            Log.error("Resume download condition not met, re-starting")
+            startNextDownload()
             return
         }
 
@@ -1319,6 +1352,16 @@ struct FileListView: View {
                     // Invalidate the timer once the download is complete
                     speedUpdateTimer?.invalidate()
                     switch result {
+                    case .failure(let error) where error.isNetworkError:
+                        // Network error
+                        Log.warn("⚠️ Network error during download: \(error.localizedDescription)")
+                        pauseDownload(networkFailure: true)
+                        return
+                    case .failure(let err):
+                        // Non-network error
+                        Log.error("❌ Download failed: \(err.localizedDescription)")
+                        errorTitle = "Download Failed"
+                        errorMessage = err.localizedDescription
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
                         FileDownloadHelper.handleDownloadCompletion(
@@ -1328,10 +1371,6 @@ struct FileListView: View {
                             errorTitle: $errorTitle,
                             errorMessage: $errorMessage
                         )
-                    case .failure(let err):
-                        Log.error("❌ Download failed: \(err.localizedDescription)")
-                        errorTitle = "Internal Error"
-                        errorMessage = "Download failed: \(err.localizedDescription)"
                     }
 
                     // Move to next item

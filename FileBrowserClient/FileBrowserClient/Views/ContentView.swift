@@ -160,7 +160,7 @@ struct ContentView: View {
             if useFaceID,
                let existingSession = KeychainHelper.loadSession(),
                existingSession.serverURL == serverURL,
-               let _ = existingSession.password {
+               existingSession.password != nil {
                 // Face ID mode with saved session
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
