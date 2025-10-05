@@ -1977,21 +1977,29 @@ struct FileListView: View {
     }
 
     func resumeUpload() {
-        if let fileHandle = currentFileHandle,
-           let uploadURL = currentUploadURL {
-            notifyTransferState(TransferType.upload, TransferStatus.resumed)
-            transferState.isTransferPaused = false
-            Log.info("▶️ Resuming upload for \(uploadURL.lastPathComponent)")
-            // This is the simplest & safest way to resume since TUS supports resumable uploads by design
-            getUploadOffset(
-                fileHandle: fileHandle,
-                fileURL: uploadQueue[transferState.currentTransferIndex],
-                uploadURL: uploadURL
-            )
-        } else {
-            Log.error("Resume upload conditions not met")
-            errorTitle = "Resume Error"
-            errorMessage = "File handle or upload URL missing - unable to continue upload"
+        Task {
+            let serverHealth = await checkServerHealth(baseRequest: baseRequest)
+            if serverHealth.success {
+                if let fileHandle = currentFileHandle,
+                   let uploadURL = currentUploadURL {
+                    notifyTransferState(TransferType.upload, TransferStatus.resumed)
+                    transferState.isTransferPaused = false
+                    Log.info("▶️ Resuming upload for \(uploadURL.lastPathComponent)")
+                    // This is the simplest & safest way to resume since TUS supports resumable uploads by design
+                    getUploadOffset(
+                        fileHandle: fileHandle,
+                        fileURL: uploadQueue[transferState.currentTransferIndex],
+                        uploadURL: uploadURL
+                    )
+                } else {
+                    Log.error("Resume upload conditions not met")
+                    errorTitle = "Resume Error"
+                    errorMessage = "File handle or upload URL missing - unable to continue upload"
+                }
+            } else {
+                Log.error("No network connection while trying to restart upload.")
+                pauseUpload(message: "⚠️ No network connection while trying to restart upload.")
+            }
         }
     }
 
