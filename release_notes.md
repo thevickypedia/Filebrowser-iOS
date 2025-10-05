@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.54.4 (10/05/2025)
+--------------------
+- [5f6e8fc](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f6e8fc6fca88e6d42ba137c27cf789a469d50aa) chore: Release ``v1.54.4``
+- [5c8d6ca](https://github.com/thevickypedia/Filebrowser-iOS/commit/5c8d6ca66c3af8849a4850d5bfbc54206f8e5c8f) perf: Include a server health check before resuming upload
+- [34bbcad](https://github.com/thevickypedia/Filebrowser-iOS/commit/34bbcad61487bdaa64d479bd3d2d7d98264cb440) feat: Pause upload when network error
+- [70eafa2](https://github.com/thevickypedia/Filebrowser-iOS/commit/70eafa2dbbb88accac9ddfe8d3f3a1b585d5ad77) chore: Update release notes for v1.54.3
+
 v1.54.3 (10/05/2025)
 --------------------
 - [5d38671](https://github.com/thevickypedia/Filebrowser-iOS/commit/5d38671679d62b38b01e3b625003f14d147d9a91) chore: Release ``v1.54.3``
