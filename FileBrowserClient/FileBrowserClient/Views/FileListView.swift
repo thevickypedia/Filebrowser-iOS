@@ -1146,7 +1146,7 @@ struct FileListView: View {
         if let id = currentDownloadTaskID {
             if networkFailure {
                 self.toastMessage = ToastMessagePayload(
-                    text: "⏸️ Download [\(id)] paused due to network error. Will resume when connection is restored.",
+                    text: "⏸️ Download paused due to network error. Please resume manually when network is available.",
                     color: .orange,
                     duration: 5
                 )
@@ -1178,90 +1178,110 @@ struct FileListView: View {
 
     private func resumeDownload() {
         guard let data = pausedResumeData else {
-            Log.error("Resume download condition not met, re-starting")
-            startNextDownload()
+            Log.warn("Resume download condition not met, re-starting")
+            Task {
+                let serverHealth = await checkServerHealth(baseRequest: baseRequest)
+                if serverHealth.success {
+                    self.toastMessage = ToastMessagePayload(
+                        text: "⏯️ Resume download condition not met, re-starting",
+                        color: .yellow
+                    )
+                    startNextDownload()
+                } else {
+                    Log.error("No network connection while trying to restart download.")
+                    pauseDownload(networkFailure: true)
+                }
+            }
             return
         }
 
-        notifyTransferState(TransferType.download, TransferStatus.resumed)
-        transferState.isTransferPaused = false
-        let file = downloadQueue[transferState.currentTransferIndex].file
-        transferState.currentTransferFile = file.name
-        transferState.currentTransferFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
-        transferState.transferProgress = 0
-        transferState.transferProgressPct = 0
-        transferState.transferType = TransferType.download
+        Task {
+            let serverHealth = await checkServerHealth(baseRequest: baseRequest)
+            if !serverHealth.success {
+                startNextDownload()
+                Log.error("No network connection while trying to restart download.")
+                pauseDownload(networkFailure: true)
+                return
+            }
+            notifyTransferState(TransferType.download, TransferStatus.resumed)
+            transferState.isTransferPaused = false
+            let file = downloadQueue[transferState.currentTransferIndex].file
+            transferState.currentTransferFile = file.name
+            transferState.currentTransferFileIcon = systemIcon(for: file.name.lowercased(), extensionTypes: extensionTypes)
+            transferState.transferProgress = 0
+            transferState.transferProgressPct = 0
+            transferState.transferType = TransferType.download
 
-        var downloadStartTime = Date()
-        var bytesDownloadedSinceLastUpdate: Int64 = 0
-        var speedUpdateTimer: Timer?
+            var downloadStartTime = Date()
+            var bytesDownloadedSinceLastUpdate: Int64 = 0
+            var speedUpdateTimer: Timer?
 
-        let newID = UUID()
-        currentDownloadTaskID = newID
+            let newID = UUID()
+            currentDownloadTaskID = newID
 
-        DownloadManager.shared.resume(
-            with: data,
-            id: newID,
-            progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
-                DispatchQueue.main.async {
-                    bytesDownloadedSinceLastUpdate += bytesWritten
-                    let elapsed = Date().timeIntervalSince(downloadStartTime)
-                    if elapsed >= Constants.downloadSpeedUpdateInterval {
-                        let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
-                        transferState.currentTransferSpeed = downloadSpeed
-                        downloadStartTime = Date()
-                        bytesDownloadedSinceLastUpdate = 0
+            DownloadManager.shared.resume(
+                with: data,
+                id: newID,
+                progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
+                    DispatchQueue.main.async {
+                        bytesDownloadedSinceLastUpdate += bytesWritten
+                        let elapsed = Date().timeIntervalSince(downloadStartTime)
+                        if elapsed >= Constants.downloadSpeedUpdateInterval {
+                            let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
+                            transferState.currentTransferSpeed = downloadSpeed
+                            downloadStartTime = Date()
+                            bytesDownloadedSinceLastUpdate = 0
+                        }
+
+                        guard totalBytesExpected > 0 else {
+                            self.transferState.transferProgress = 0
+                            self.transferState.transferProgressPct = 0
+                            return
+                        }
+                        let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
+                        self.transferState.transferProgress = prog
+                        self.transferState.transferProgressPct = Int(prog * 100)
+                        self.transferState.currentTransferedFileSize = formatBytes(totalBytesWritten)
+                        self.transferState.currentTransferFileSize = formatBytes(totalBytesExpected)
                     }
+                },
+                completion: { result in
+                    DispatchQueue.main.async {
+                        speedUpdateTimer?.invalidate()
+                        pausedResumeData = nil
 
-                    guard totalBytesExpected > 0 else {
-                        self.transferState.transferProgress = 0
-                        self.transferState.transferProgressPct = 0
-                        return
+                        switch result {
+                        case .success(let localURL):
+                            Log.info("✅ Resumed download finished: \(file.name)")
+                            FileDownloadHelper.handleDownloadCompletion(
+                                file: file,
+                                localURL: localURL,
+                                toastMessage: $toastMessage,
+                                errorTitle: $errorTitle,
+                                errorMessage: $errorMessage
+                            )
+                        case .failure(let err):
+                            Log.error("❌ Resumed download failed: \(err.localizedDescription)")
+                            errorTitle = "Resume Download Error"
+                            errorMessage = "Download failed: \(err.localizedDescription)"
+                        }
+
+                        self.transferState.currentTransferIndex += 1
+                        if self.transferState.currentTransferIndex >= self.downloadQueue.count {
+                            self.downloadQueue.removeAll()
+                            self.transferState.currentTransferIndex = 0
+                            self.transferState.transferType = nil
+                            self.currentDownloadTaskID = nil
+                            self.showDownload = false
+                            self.transferState.transferProgress = 0
+                        } else {
+                            self.startNextDownload()
+                        }
                     }
-                    let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
-                    self.transferState.transferProgress = prog
-                    self.transferState.transferProgressPct = Int(prog * 100)
-                    self.transferState.currentTransferedFileSize = formatBytes(totalBytesWritten)
-                    self.transferState.currentTransferFileSize = formatBytes(totalBytesExpected)
-                }
-            },
-            completion: { result in
-                DispatchQueue.main.async {
-                    speedUpdateTimer?.invalidate()
-                    pausedResumeData = nil
-
-                    switch result {
-                    case .success(let localURL):
-                        Log.info("✅ Resumed download finished: \(file.name)")
-                        FileDownloadHelper.handleDownloadCompletion(
-                            file: file,
-                            localURL: localURL,
-                            toastMessage: $toastMessage,
-                            errorTitle: $errorTitle,
-                            errorMessage: $errorMessage
-                        )
-                    case .failure(let err):
-                        Log.error("❌ Resumed download failed: \(err.localizedDescription)")
-                        errorTitle = "Resume Download Error"
-                        errorMessage = "Download failed: \(err.localizedDescription)"
-                    }
-
-                    self.transferState.currentTransferIndex += 1
-                    if self.transferState.currentTransferIndex >= self.downloadQueue.count {
-                        self.downloadQueue.removeAll()
-                        self.transferState.currentTransferIndex = 0
-                        self.transferState.transferType = nil
-                        self.currentDownloadTaskID = nil
-                        self.showDownload = false
-                        self.transferState.transferProgress = 0
-                    } else {
-                        self.startNextDownload()
-                    }
-                }
-            })
-
-        // Start speed update timer (optional; since closure is empty)
-        speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
+                })
+            // Start speed update timer (optional; since closure is empty)
+            speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
+        }
     }
 
     // Call this to queue a single file for download from FileListView

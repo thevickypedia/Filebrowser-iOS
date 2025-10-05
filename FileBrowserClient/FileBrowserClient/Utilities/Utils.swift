@@ -429,7 +429,7 @@ func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HH
     return formatter.string(from: Date())
 }
 
-func checkServerHealth(baseRequest: Request, for url: String) async -> ServerResponse {
+func checkServerHealth(baseRequest: Request) async -> ServerResponse {
     guard let preparedRequest = baseRequest.prepare(pathComponents: ["health"]) else {
         return ServerResponse(success: false, text: "Failed to prepare request for: /health")
     }
