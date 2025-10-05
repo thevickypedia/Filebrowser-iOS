@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.54.3 (10/05/2025)
+--------------------
+- [5d38671](https://github.com/thevickypedia/Filebrowser-iOS/commit/5d38671679d62b38b01e3b625003f14d147d9a91) chore: Release ``v1.54.3``
+- [24557dd](https://github.com/thevickypedia/Filebrowser-iOS/commit/24557dd664645eb3c42c4f21e524a3e9a8347dcf) perf: Add a server health check before resuming download
+- [7bc542b](https://github.com/thevickypedia/Filebrowser-iOS/commit/7bc542b4773ee2cba784183417c74373a002269c) feat: Automatically pause downloads during a network disconnection
+- [06eb076](https://github.com/thevickypedia/Filebrowser-iOS/commit/06eb07632c65930898395a8036437d1cf03af260) fix: Reset credentials when disabling faceID to avoid invalid faceID toggle
+- [cb9f7b8](https://github.com/thevickypedia/Filebrowser-iOS/commit/cb9f7b8d8c21de87a713ba2b7a8db6e29bd3ee4d) refactor: Move search request timeout options to constants
+- [3b088a2](https://github.com/thevickypedia/Filebrowser-iOS/commit/3b088a200af6599d76703ce352447266e43edf57) fix: Avoid storing password unconditionally in keychain during background login
+- [a1d8c2f](https://github.com/thevickypedia/Filebrowser-iOS/commit/a1d8c2f81e3033c56552933478502826aa953b06) chore: Update release notes for v1.54.2
+
 v1.54.2 (10/04/2025)
 --------------------
 - [1431e56](https://github.com/thevickypedia/Filebrowser-iOS/commit/1431e5687a3bb5822e2be1cef4f47310cd5b892e) chore: Release ``v1.54.2``
