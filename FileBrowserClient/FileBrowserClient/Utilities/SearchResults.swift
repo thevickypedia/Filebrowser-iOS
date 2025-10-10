@@ -27,13 +27,12 @@ func filterSearchResults(for results: [FileItemSearch], settings: UserAccount?) 
     var filteredResults: [FileItemSearch] = []
 
     for result in results {
+        let components = result.path.components(separatedBy: "/")
         var isDotfile = false
-        for component in result.path.components(separatedBy: "/") {
-            if component.starts(with: ".") {
-                Log.debug("👀 Skipping \(result.path) since \(component) is hidden")
-                isDotfile = true
-                break
-            }
+        for component in components where component.starts(with: ".") {
+            Log.debug("👀 Skipping \(result.path) since \(component) is hidden")
+            isDotfile = true
+            break
         }
         if !isDotfile {
             filteredResults.append(result)
