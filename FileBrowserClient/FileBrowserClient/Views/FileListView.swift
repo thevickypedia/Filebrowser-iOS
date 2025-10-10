@@ -62,7 +62,8 @@ struct FileListView: View {
     @State private var dateFormatExact = false
 
     // Track transfer state progress
-    @State private var downloadStatus: [FileItem: TransferResult] = [:]
+    @State private var downloadStatus: [String: TransferResult] = [:]
+    @State private var uploadStatus: [String: TransferResult] = [:]
 
     @State private var showMove = false
     @State private var showCopy = false
@@ -1252,7 +1253,7 @@ struct FileListView: View {
                         switch result {
                         case .success(let localURL):
                             Log.info("✅ Resumed download finished: \(file.name)")
-                            downloadStatus[file] = TransferResult.success
+                            downloadStatus[file.path] = .success
                             FileDownloadHelper.handleDownloadCompletion(
                                 file: file,
                                 localURL: localURL,
@@ -1261,7 +1262,7 @@ struct FileListView: View {
                                 errorMessage: $errorMessage
                             )
                         case .failure(let err):
-                            downloadStatus[file] = TransferResult.failed
+                            downloadStatus[file.path] = .failed
                             Log.error("❌ Resumed download failed: \(err.localizedDescription)")
                         }
 
@@ -1280,7 +1281,7 @@ struct FileListView: View {
                                 return
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                showDownloadStatus(status)
+                                showTransferStatus(status, .download)
                             }
                             downloadStatus = [:]
                         } else {
@@ -1389,10 +1390,10 @@ struct FileListView: View {
                     case .failure(let err):
                         // Non-network error
                         Log.error("❌ Download failed: \(err.localizedDescription)")
-                        downloadStatus[file] = TransferResult.failed
+                        downloadStatus[file.path] = .failed
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
-                        downloadStatus[file] = TransferResult.success
+                        downloadStatus[file.path] = .success
                         FileDownloadHelper.handleDownloadCompletion(
                             file: file,
                             localURL: localURL,
@@ -1418,7 +1419,7 @@ struct FileListView: View {
                             return
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            showDownloadStatus(status)
+                            showTransferStatus(status, .download)
                         }
                         downloadStatus = [:]
                     } else {
@@ -1434,24 +1435,24 @@ struct FileListView: View {
         speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
     }
 
-    func showDownloadStatus(_ progressStore: [FileItem: TransferResult]) {
+    func showTransferStatus(_ progressStore: [String: TransferResult], _ type: TransferType) {
         // Show summary
         let total = progressStore.count
         let (failed, success) = progressStore.reduce(into: (0, 0)) { counts, entry in
             switch entry.value {
             case .failed: counts.0 += 1
             case .success: counts.1 += 1
-            default: break
             }
         }
+        let direction = type == .upload ? "Up" : "Down"
         if failed == 0 {
             toastMessage = ToastMessagePayload(
-                text: "✅ Downloaded \(success) \(failed == 1 ? "file" : "files")",
+                text: "✅ \(direction)loaded \(success) \(failed == 1 ? "file" : "files")",
                 color: .green
             )
         } else {
             toastMessage = ToastMessagePayload(
-                text: "📥 Downloaded \(total) files: ✅ \(success) succeeded, ❌ \(failed) failed",
+                text: "📥 \(direction)loaded \(total) files: ✅ \(success) succeeded, ❌ \(failed) failed",
                 color: success > 0 ? .yellow : .red
             )
         }
@@ -1898,10 +1899,9 @@ struct FileListView: View {
             fileHandle = try FileHandle(forReadingFrom: fileURL)
         } catch {
             Log.error("❌ Cannot open file: \(fileURL.lastPathComponent), error: \(error.localizedDescription)")
-            errorTitle = "File Error"
-            errorMessage = error.localizedDescription
-            cancelUpload(fileHandle: nil, statusText: nil)
-            toastMessage = ToastMessagePayload(text: "❌ Upload failed", color: .red)
+            uploadStatus[fileURL.lastPathComponent] = .failed
+            transferState.currentTransferIndex += 1
+            uploadNextInQueue()
             return
         }
 
@@ -1915,8 +1915,11 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ POST failed: \(error.localizedDescription)")
-                    errorTitle = "Upload Failed"
-                    errorMessage = error.localizedDescription
+                    uploadStatus[fileURL.lastPathComponent] = .failed
+                    fileHandle.closeFile()
+                    // Continue to next file
+                    transferState.currentTransferIndex += 1
+                    uploadNextInQueue()
                     return
                 }
 
@@ -1936,8 +1939,14 @@ struct FileListView: View {
             DispatchQueue.main.async {
                 if let error = error {
                     Log.error("❌ HEAD failed: \(error.localizedDescription)")
-                    errorTitle = "Upload Failed"
-                    errorMessage = error.localizedDescription
+                    uploadStatus[fileURL.lastPathComponent] = .failed
+                    fileHandle.closeFile()
+                    if isFileUpload {
+                        fileURL.stopAccessingSecurityScopedResource()
+                    }
+                    // Continue to next file
+                    transferState.currentTransferIndex += 1
+                    uploadNextInQueue()
                     return
                 }
 
@@ -1945,8 +1954,14 @@ struct FileListView: View {
                       let offsetStr = http.value(forHTTPHeaderField: "Upload-Offset"),
                       let offset = Int(offsetStr) else {
                     Log.error("❌ HEAD missing Upload-Offset")
-                    errorTitle = "Upload Failed"
-                    errorMessage = "HEAD missing Upload-Offset"
+                    uploadStatus[fileURL.lastPathComponent] = .failed
+                    fileHandle.closeFile()
+                    if isFileUpload {
+                        fileURL.stopAccessingSecurityScopedResource()
+                    }
+                    // Continue to next file
+                    transferState.currentTransferIndex += 1
+                    uploadNextInQueue()
                     return
                 }
 
@@ -2103,6 +2118,7 @@ struct FileListView: View {
                     do { fileURL.stopAccessingSecurityScopedResource() }
                 }
                 Log.info("✅ Upload complete: \(fileURL.lastPathComponent)")
+                uploadStatus[fileURL.lastPathComponent] = .success
                 DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(Constants.uploadCleanupDelay)) {
                     FileCache.shared.removeTempFile(at: fileURL)
                 }
@@ -2160,22 +2176,49 @@ struct FileListView: View {
 
                     if let error = error {
                         Log.error("❌ PATCH failed: \(error.localizedDescription)")
-                        errorTitle = "Server Error"
-                        errorMessage = error.localizedDescription
+                        uploadStatus[fileURL.lastPathComponent] = .failed
+                        fileHandle.closeFile()
+                        if isFileUpload {
+                            fileURL.stopAccessingSecurityScopedResource()
+                        }
+                        // Continue to next file
+                        transferState.currentTransferIndex += 1
+                        uploadTask = nil
+                        transferState.transferProgress = 0.0
+                        currentUploadedOffset = 0
+                        uploadNextInQueue()
                         return
                     }
 
                     guard let httpResponse = response as? HTTPURLResponse else {
-                        self.errorTitle = "Server Error"
-                        self.errorMessage = "Invalid response"
                         Log.error("❌ Server error: Response was not HTTPURLResponse")
+                        uploadStatus[fileURL.lastPathComponent] = .failed
+                        fileHandle.closeFile()
+                        if isFileUpload {
+                            fileURL.stopAccessingSecurityScopedResource()
+                        }
+                        // Continue to next file
+                        transferState.currentTransferIndex += 1
+                        uploadTask = nil
+                        transferState.transferProgress = 0.0
+                        currentUploadedOffset = 0
+                        uploadNextInQueue()
                         return
                     }
 
                     guard httpResponse.statusCode == 204 else {
-                        self.errorTitle = "Server Error"
-                        self.errorMessage = "[PATCH Failed]: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
                         Log.error("❌ Unexpected PATCH response: \(formatHttpResponse(httpResponse))")
+                        uploadStatus[fileURL.lastPathComponent] = .failed
+                        fileHandle.closeFile()
+                        if isFileUpload {
+                            fileURL.stopAccessingSecurityScopedResource()
+                        }
+                        // Continue to next file
+                        transferState.currentTransferIndex += 1
+                        uploadTask = nil
+                        transferState.transferProgress = 0.0
+                        currentUploadedOffset = 0
+                        uploadNextInQueue()
                         return
                     }
 
@@ -2220,7 +2263,16 @@ struct FileListView: View {
         guard transferState.currentTransferIndex < uploadQueue.count else {
             transferState.transferType = nil
             if pendingUploads == 0 {
-                toastMessage = ToastMessagePayload(text: "📤 Uploaded \(transferState.currentTransferIndex) \(transferState.currentTransferIndex == 1 ? "file" : "files")", color: .green)
+                // Show summary
+                let status = uploadStatus
+                guard !status.isEmpty else {
+                    Log.error("Download status not registered")
+                    return
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    showTransferStatus(status, .upload)
+                }
+                uploadStatus = [:]
                 endUpload()
             } else {
                 Log.trace("Unprocessed files: \(pendingUploads)")
@@ -2235,6 +2287,10 @@ struct FileListView: View {
         if isFileUpload {
             guard fileURL.startAccessingSecurityScopedResource() else {
                 Log.error("❌ Failed to access file: \(fileURL)")
+                uploadStatus[fileURL.lastPathComponent] = .failed
+                // Continue to next file
+                transferState.currentTransferIndex += 1
+                uploadNextInQueue()
                 return
             }
         }
