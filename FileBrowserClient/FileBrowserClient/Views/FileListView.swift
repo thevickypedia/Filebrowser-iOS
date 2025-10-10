@@ -62,8 +62,7 @@ struct FileListView: View {
     @State private var dateFormatExact = false
 
     // Track transfer state progress
-    @State private var downloadSuccessCount = 0
-    @State private var downloadFailureCount = 0
+    @State private var downloadStatus: TransferProgressStore?
 
     @State private var showMove = false
     @State private var showCopy = false
@@ -355,6 +354,9 @@ struct FileListView: View {
             if auth.userPermissions?.download == true {
                 // 📥 Download
                 Button(action: {
+                    if downloadStatus == nil {
+                        downloadStatus = TransferProgressStore()
+                    }
                     for item in selectedItems {
                         enqueueDownload(file: item)
                     }
@@ -1253,7 +1255,7 @@ struct FileListView: View {
                         switch result {
                         case .success(let localURL):
                             Log.info("✅ Resumed download finished: \(file.name)")
-                            downloadSuccessCount += 1
+                            downloadStatus?.files[file] = TransferResult.success
                             FileDownloadHelper.handleDownloadCompletion(
                                 file: file,
                                 localURL: localURL,
@@ -1262,27 +1264,27 @@ struct FileListView: View {
                                 errorMessage: $errorMessage
                             )
                         case .failure(let err):
-                            downloadFailureCount += 1
+                            downloadStatus?.files[file] = TransferResult.failed
                             Log.error("❌ Resumed download failed: \(err.localizedDescription)")
                         }
 
                         self.transferState.currentTransferIndex += 1
                         if self.transferState.currentTransferIndex >= self.downloadQueue.count {
                             // Finished all
-                            let success = downloadSuccessCount
-                            let failed = downloadFailureCount
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                showDownloadStatus(success: success, failed: failed)
-                            }
-                            // Reset counters
-                            downloadSuccessCount = 0
-                            downloadFailureCount = 0
                             self.downloadQueue.removeAll()
                             self.transferState.currentTransferIndex = 0
                             self.transferState.transferType = nil
                             self.currentDownloadTaskID = nil
                             self.showDownload = false
                             self.transferState.transferProgress = 0
+                            guard let status = downloadStatus else {
+                                Log.error("Download status not registered")
+                                return
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                showDownloadStatus(status)
+                            }
+                            downloadStatus = nil
                         } else {
                             self.startNextDownload()
                         }
@@ -1389,10 +1391,10 @@ struct FileListView: View {
                     case .failure(let err):
                         // Non-network error
                         Log.error("❌ Download failed: \(err.localizedDescription)")
-                        downloadFailureCount += 1
+                        downloadStatus?.files[file] = TransferResult.failed
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
-                        downloadSuccessCount += 1
+                        downloadStatus?.files[file] = TransferResult.success
                         FileDownloadHelper.handleDownloadCompletion(
                             file: file,
                             localURL: localURL,
@@ -1406,20 +1408,20 @@ struct FileListView: View {
                     self.transferState.currentTransferIndex += 1
                     if self.transferState.currentTransferIndex >= self.downloadQueue.count {
                         // Finished all
-                        let success = downloadSuccessCount
-                        let failed = downloadFailureCount
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            showDownloadStatus(success: success, failed: failed)
-                        }
-                        // Reset counters
-                        downloadSuccessCount = 0
-                        downloadFailureCount = 0
                         self.downloadQueue.removeAll()
                         self.transferState.currentTransferIndex = 0
                         self.transferState.transferType = nil
                         self.currentDownloadTaskID = nil
                         self.showDownload = false
                         self.transferState.transferProgress = 0
+                        guard let status = downloadStatus else {
+                            Log.error("Download status not registered")
+                            return
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            showDownloadStatus(status)
+                        }
+                        downloadStatus = nil
                     } else {
                         // Start next
                         self.startNextDownload()
@@ -1433,9 +1435,19 @@ struct FileListView: View {
         speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
     }
 
-    func showDownloadStatus(success: Int, failed: Int) {
+    func showDownloadStatus(_ progressStore: TransferProgressStore) {
         // Show summary
-        let total = success + failed
+        let total = progressStore.files.count
+        var failed = 0
+        var success = 0
+        for (_, _result) in progressStore.files {
+            if _result == TransferResult.failed {
+                failed += 1
+            }
+            if _result == TransferResult.success {
+                success += 1
+            }
+        }
         if failed == 0 {
             toastMessage = ToastMessagePayload(
                 text: "✅ Downloaded \(success) \(failed == 1 ? "file" : "files")",
