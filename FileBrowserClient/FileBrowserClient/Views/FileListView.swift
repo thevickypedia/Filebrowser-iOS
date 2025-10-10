@@ -1253,6 +1253,7 @@ struct FileListView: View {
                         switch result {
                         case .success(let localURL):
                             Log.info("✅ Resumed download finished: \(file.name)")
+                            downloadSuccessCount += 1
                             FileDownloadHelper.handleDownloadCompletion(
                                 file: file,
                                 localURL: localURL,
@@ -1261,13 +1262,21 @@ struct FileListView: View {
                                 errorMessage: $errorMessage
                             )
                         case .failure(let err):
+                            downloadFailureCount += 1
                             Log.error("❌ Resumed download failed: \(err.localizedDescription)")
-                            errorTitle = "Resume Download Error"
-                            errorMessage = "Download failed: \(err.localizedDescription)"
                         }
 
                         self.transferState.currentTransferIndex += 1
                         if self.transferState.currentTransferIndex >= self.downloadQueue.count {
+                            // Finished all
+                            let success = downloadSuccessCount
+                            let failed = downloadFailureCount
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                showDownloadStatus(success: success, failed: failed)
+                            }
+                            // Reset counters
+                            downloadSuccessCount = 0
+                            downloadFailureCount = 0
                             self.downloadQueue.removeAll()
                             self.transferState.currentTransferIndex = 0
                             self.transferState.transferType = nil
@@ -1402,7 +1411,7 @@ struct FileListView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                             showDownloadStatus(success: success, failed: failed)
                         }
-                        // Reset counter
+                        // Reset counters
                         downloadSuccessCount = 0
                         downloadFailureCount = 0
                         self.downloadQueue.removeAll()
