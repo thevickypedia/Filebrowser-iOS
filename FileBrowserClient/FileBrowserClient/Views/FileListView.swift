@@ -10,30 +10,6 @@ import SwiftUI
 import Network
 import UniformTypeIdentifiers
 
-extension Error {
-    var isNetworkError: Bool {
-        let nsError = self as NSError
-        // Network-related error domains
-        let networkErrorDomains = [
-            NSURLErrorDomain,
-            kCFErrorDomainCFNetwork as String
-        ]
-        if networkErrorDomains.contains(nsError.domain) {
-            // Specific network error codes that are resumable
-            let resumableErrorCodes = [
-                NSURLErrorNetworkConnectionLost,
-                NSURLErrorNotConnectedToInternet,
-                NSURLErrorTimedOut,
-                NSURLErrorCannotConnectToHost,
-                NSURLErrorDataNotAllowed,
-                NSURLErrorCallIsActive
-            ]
-            return resumableErrorCodes.contains(nsError.code)
-        }
-        return false
-    }
-}
-
 struct FileListView: View {
     @EnvironmentObject var auth: AuthManager
     @EnvironmentObject var viewModel: FileListViewModel

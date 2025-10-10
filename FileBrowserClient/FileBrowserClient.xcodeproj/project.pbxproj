@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		98067D4A2E38E6CF00808541 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98067D492E38E6CD00808541 /* Utils.swift */; };
+		9838C5BB2E99A6A900FBCF7F /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9838C5BA2E99A6A700FBCF7F /* Error.swift */; };
 		984F17022E468CA9003502DF /* ViewStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F17012E468CA9003502DF /* ViewStyle.swift */; };
 		984F17062E46A8AA003502DF /* ZoomableImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F17052E46A8AA003502DF /* ZoomableImageView.swift */; };
 		984F170C2E46D5D5003502DF /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984F170B2E46D5D5003502DF /* KeychainHelper.swift */; };
@@ -89,6 +90,7 @@
 
 /* Begin PBXFileReference section */
 		98067D492E38E6CD00808541 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		9838C5BA2E99A6A700FBCF7F /* Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Error.swift; sourceTree = "<group>"; };
 		984F17012E468CA9003502DF /* ViewStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewStyle.swift; sourceTree = "<group>"; };
 		984F17052E46A8AA003502DF /* ZoomableImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableImageView.swift; sourceTree = "<group>"; };
 		984F170B2E46D5D5003502DF /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
@@ -361,6 +363,7 @@
 		98B1AC592E7C5D05000210BC /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				9838C5BA2E99A6A700FBCF7F /* Error.swift */,
 				989940F72E8F3E75006A376A /* Request.swift */,
 				989940EA2E8C8EE7006A376A /* BackgroundLogin.swift */,
 				989940B52E8839CE006A376A /* UIAlerts.swift */,
@@ -546,6 +549,7 @@
 				F85486182E1B19B000115F18 /* AuthManager.swift in Sources */,
 				98B600352E5149AC00F24FB8 /* ShareSheetView.swift in Sources */,
 				989940F52E8E0718006A376A /* ShareManagementView.swift in Sources */,
+				9838C5BB2E99A6A900FBCF7F /* Error.swift in Sources */,
 				98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */,
 				988166552E862890003C0CD8 /* FileExporter.swift in Sources */,
 				986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */,
