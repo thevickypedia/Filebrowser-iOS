@@ -1743,7 +1743,8 @@ struct FileListView: View {
 
     @ViewBuilder
     func searchListView(for results: [FileItemSearch]) -> some View {
-        ForEach(results, id: \.path) { result in
+        let filteredResults = filterSearchResults(for: results, settings: auth.tokenPayload?.user)
+        ForEach(filteredResults, id: \.path) { result in
             let name = URL(fileURLWithPath: result.path).lastPathComponent
             if result.dir {
                 Button(action: {
