@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.55.1 (10/10/2025)
+--------------------
+- [aa6cb62](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa6cb627f03f39b02235c379b92881105935ae1c) chore: Release ``v1.55.1``
+- [83f53c8](https://github.com/thevickypedia/Filebrowser-iOS/commit/83f53c86769d0ef8b28334f91de0a82a2e5530aa) perf: Switch ``if`` inside a ``for`` with ``where`` clause in search results filter func
+- [a094acd](https://github.com/thevickypedia/Filebrowser-iOS/commit/a094acd3fb4baf87259dc5956a7039f3081baabd) feat: Filter hidden files/folders in search results based on ``hideDotfiles`` setting
+- [b7314f7](https://github.com/thevickypedia/Filebrowser-iOS/commit/b7314f709599d261336350ecc2d843b73c0dce50) refactor: Move error extension to a dedicated module
+- [c778ae3](https://github.com/thevickypedia/Filebrowser-iOS/commit/c778ae38ac5e6e2b056b3a2669cadd11608eb526) chore: Update release notes for v1.55.0
+
 v1.55.0 (10/10/2025)
 --------------------
 - [2e9d057](https://github.com/thevickypedia/Filebrowser-iOS/commit/2e9d0576fb3d7cf3c82129f1627c537ee7bd4487) chore: Release ``v1.55.0``
