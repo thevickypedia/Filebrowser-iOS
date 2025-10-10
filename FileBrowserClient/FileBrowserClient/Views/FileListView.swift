@@ -1438,14 +1438,11 @@ struct FileListView: View {
     func showDownloadStatus(_ progressStore: TransferProgressStore) {
         // Show summary
         let total = progressStore.files.count
-        var failed = 0
-        var success = 0
-        for (_, _result) in progressStore.files {
-            if _result == TransferResult.failed {
-                failed += 1
-            }
-            if _result == TransferResult.success {
-                success += 1
+        let (failed, success) = progressStore.files.reduce(into: (0, 0)) { counts, entry in
+            switch entry.value {
+            case .failed: counts.0 += 1
+            case .success: counts.1 += 1
+            default: break
             }
         }
         if failed == 0 {
