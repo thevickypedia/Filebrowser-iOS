@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.54.5 (10/10/2025)
+--------------------
+- [b5f1cad](https://github.com/thevickypedia/Filebrowser-iOS/commit/b5f1cada86ec6913e867c0be36b8b3edc8b9315f) chore: Release ``v1.54.5``
+- [4895b3d](https://github.com/thevickypedia/Filebrowser-iOS/commit/4895b3d7e3ddc2facc103f2bf8cdc1a1325fa8bb) perf: Improve download progress store without an explicit struct
+- [eca0494](https://github.com/thevickypedia/Filebrowser-iOS/commit/eca0494b72de05ea6355ffc7cae2c978b7cfef0b) perf: Replace loop for download status with ``switch`` and ``reduce``
+- [b677e8d](https://github.com/thevickypedia/Filebrowser-iOS/commit/b677e8d017be28534ff34f4e34f9ae801738f545) fix: Download state not being rendered properly when paused/resumed
+- [977ce9e](https://github.com/thevickypedia/Filebrowser-iOS/commit/977ce9e64c5a67a3a91de5cb1418c1cdbf1543b8) feat: Extend avoid exit during failed downloads even when paused/resumed
+- [7a85d9a](https://github.com/thevickypedia/Filebrowser-iOS/commit/7a85d9a41bbbd3e2b921f12b6583fa47a94e398e) feat: Avoid exit when a single download fails with a status message at the end
+- [32b9c77](https://github.com/thevickypedia/Filebrowser-iOS/commit/32b9c77e75f8e3194f2562f7cf5fa82ef15b7fcb) chore: Update release notes for v1.54.4
+
 v1.54.4 (10/05/2025)
 --------------------
 - [5f6e8fc](https://github.com/thevickypedia/Filebrowser-iOS/commit/5f6e8fc6fca88e6d42ba137c27cf789a469d50aa) chore: Release ``v1.54.4``
