@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.55.0 (10/10/2025)
+--------------------
+- [2e9d057](https://github.com/thevickypedia/Filebrowser-iOS/commit/2e9d0576fb3d7cf3c82129f1627c537ee7bd4487) chore: Release ``v1.55.0``
+- [1b89f73](https://github.com/thevickypedia/Filebrowser-iOS/commit/1b89f737e296b893bdfc80877720dd9b22d006ce) feat: Avoid exit when a single upload fails with a status message at the end
+- [8fb73bb](https://github.com/thevickypedia/Filebrowser-iOS/commit/8fb73bbc2e724a5f0662e12bea25b357bb7442ab) chore: Update release notes for v1.54.5
+
 v1.54.5 (10/10/2025)
 --------------------
 - [b5f1cad](https://github.com/thevickypedia/Filebrowser-iOS/commit/b5f1cada86ec6913e867c0be36b8b3edc8b9315f) chore: Release ``v1.54.5``
