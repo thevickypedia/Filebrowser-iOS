@@ -27,8 +27,7 @@ struct FileDownloadHelper {
                 if success {
                     toastMessage.wrappedValue = ToastMessagePayload(
                         text: "📸 Saved to Photos: \(file.name)",
-                        color: .green,
-                        duration: 2
+                        color: .green
                     )
                 } else {
                     errorTitle.wrappedValue = "Save Error"
@@ -41,8 +40,7 @@ struct FileDownloadHelper {
             if let savedURL = saveToFiles(fileURL: localURL, fileName: file.name) {
                 toastMessage.wrappedValue = ToastMessagePayload(
                     text: "📂 Saved to Files: \(file.name)",
-                    color: .green,
-                    duration: 2
+                    color: .green
                 )
                 Log.debug("Saved file at: \(savedURL)")
             } else {

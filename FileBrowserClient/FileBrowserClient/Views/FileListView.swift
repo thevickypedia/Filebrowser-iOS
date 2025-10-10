@@ -61,6 +61,10 @@ struct FileListView: View {
     @State private var showingSettings = false
     @State private var dateFormatExact = false
 
+    // Track transfer state progress
+    @State private var downloadSuccessCount = 0
+    @State private var downloadFailureCount = 0
+
     @State private var showMove = false
     @State private var showCopy = false
     @State private var showDownload = false
@@ -1376,10 +1380,10 @@ struct FileListView: View {
                     case .failure(let err):
                         // Non-network error
                         Log.error("❌ Download failed: \(err.localizedDescription)")
-                        errorTitle = "Download Failed"
-                        errorMessage = err.localizedDescription
+                        downloadFailureCount += 1
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
+                        downloadSuccessCount += 1
                         FileDownloadHelper.handleDownloadCompletion(
                             file: file,
                             localURL: localURL,
@@ -1393,6 +1397,14 @@ struct FileListView: View {
                     self.transferState.currentTransferIndex += 1
                     if self.transferState.currentTransferIndex >= self.downloadQueue.count {
                         // Finished all
+                        let success = downloadSuccessCount
+                        let failed = downloadFailureCount
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            showDownloadStatus(success: success, failed: failed)
+                        }
+                        // Reset counter
+                        downloadSuccessCount = 0
+                        downloadFailureCount = 0
                         self.downloadQueue.removeAll()
                         self.transferState.currentTransferIndex = 0
                         self.transferState.transferType = nil
@@ -1410,6 +1422,22 @@ struct FileListView: View {
         currentDownloadTaskID = taskID
         // Update download speed in the UX with 'downloadSpeedUpdateInterval'
         speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
+    }
+
+    func showDownloadStatus(success: Int, failed: Int) {
+        // Show summary
+        let total = success + failed
+        if failed == 0 {
+            toastMessage = ToastMessagePayload(
+                text: "✅ Downloaded \(success) \(failed == 1 ? "file" : "files")",
+                color: .green
+            )
+        } else {
+            toastMessage = ToastMessagePayload(
+                text: "📥 Downloaded \(total) files: ✅ \(success) succeeded, ❌ \(failed) failed",
+                color: success > 0 ? .yellow : .red
+            )
+        }
     }
 
     func parseSearchQuery(query: String) -> String {
