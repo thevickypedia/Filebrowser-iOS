@@ -46,11 +46,6 @@ enum TransferResult: String {
     case success, failed
 }
 
-struct TransferProgressStore {
-    var files: [FileItem: TransferResult] = [:]
-    var type: TransferType?
-}
-
 struct TransferState {
     var transferType: TransferType?
     var currentTransferIndex = 0

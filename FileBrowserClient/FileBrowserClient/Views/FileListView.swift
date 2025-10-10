@@ -62,7 +62,7 @@ struct FileListView: View {
     @State private var dateFormatExact = false
 
     // Track transfer state progress
-    @State private var downloadStatus: TransferProgressStore?
+    @State private var downloadStatus: [FileItem: TransferResult] = [:]
 
     @State private var showMove = false
     @State private var showCopy = false
@@ -354,9 +354,6 @@ struct FileListView: View {
             if auth.userPermissions?.download == true {
                 // 📥 Download
                 Button(action: {
-                    if downloadStatus == nil {
-                        downloadStatus = TransferProgressStore()
-                    }
                     for item in selectedItems {
                         enqueueDownload(file: item)
                     }
@@ -1255,7 +1252,7 @@ struct FileListView: View {
                         switch result {
                         case .success(let localURL):
                             Log.info("✅ Resumed download finished: \(file.name)")
-                            downloadStatus?.files[file] = TransferResult.success
+                            downloadStatus[file] = TransferResult.success
                             FileDownloadHelper.handleDownloadCompletion(
                                 file: file,
                                 localURL: localURL,
@@ -1264,7 +1261,7 @@ struct FileListView: View {
                                 errorMessage: $errorMessage
                             )
                         case .failure(let err):
-                            downloadStatus?.files[file] = TransferResult.failed
+                            downloadStatus[file] = TransferResult.failed
                             Log.error("❌ Resumed download failed: \(err.localizedDescription)")
                         }
 
@@ -1277,14 +1274,15 @@ struct FileListView: View {
                             self.currentDownloadTaskID = nil
                             self.showDownload = false
                             self.transferState.transferProgress = 0
-                            guard let status = downloadStatus else {
+                            let status = downloadStatus
+                            guard !status.isEmpty else {
                                 Log.error("Download status not registered")
                                 return
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                 showDownloadStatus(status)
                             }
-                            downloadStatus = nil
+                            downloadStatus = [:]
                         } else {
                             self.startNextDownload()
                         }
@@ -1391,10 +1389,10 @@ struct FileListView: View {
                     case .failure(let err):
                         // Non-network error
                         Log.error("❌ Download failed: \(err.localizedDescription)")
-                        downloadStatus?.files[file] = TransferResult.failed
+                        downloadStatus[file] = TransferResult.failed
                     case .success(let localURL):
                         Log.info("✅ Download finished: \(file.name)")
-                        downloadStatus?.files[file] = TransferResult.success
+                        downloadStatus[file] = TransferResult.success
                         FileDownloadHelper.handleDownloadCompletion(
                             file: file,
                             localURL: localURL,
@@ -1414,14 +1412,15 @@ struct FileListView: View {
                         self.currentDownloadTaskID = nil
                         self.showDownload = false
                         self.transferState.transferProgress = 0
-                        guard let status = downloadStatus else {
+                        let status = downloadStatus
+                        guard !status.isEmpty else {
                             Log.error("Download status not registered")
                             return
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                             showDownloadStatus(status)
                         }
-                        downloadStatus = nil
+                        downloadStatus = [:]
                     } else {
                         // Start next
                         self.startNextDownload()
@@ -1435,10 +1434,10 @@ struct FileListView: View {
         speedUpdateTimer = Timer.scheduledTimer(withTimeInterval: Constants.downloadSpeedUpdateInterval, repeats: true) { _ in }
     }
 
-    func showDownloadStatus(_ progressStore: TransferProgressStore) {
+    func showDownloadStatus(_ progressStore: [FileItem: TransferResult]) {
         // Show summary
-        let total = progressStore.files.count
-        let (failed, success) = progressStore.files.reduce(into: (0, 0)) { counts, entry in
+        let total = progressStore.count
+        let (failed, success) = progressStore.reduce(into: (0, 0)) { counts, entry in
             switch entry.value {
             case .failed: counts.0 += 1
             case .success: counts.1 += 1
