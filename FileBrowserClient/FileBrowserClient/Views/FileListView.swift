@@ -138,6 +138,12 @@ struct FileListView: View {
         self.baseRequest = baseRequest
     }
 
+    private func invalidAuth() {
+        Log.error("❌ Auth not validated")
+        errorTitle = "Auth Error"
+        errorMessage = "Invalid authorization. Please log out and log back in."
+    }
+
     private func fetchFiles(at path: String) {
         // Update display immediately for smooth UI
         currentDisplayPath = path
@@ -145,7 +151,7 @@ struct FileListView: View {
         // Cancel any existing fetch
         viewModel.cancelCurrentFetch()
 
-        guard auth.isValid else { return }
+        guard auth.isValid else { invalidAuth(); return }
         viewModel.fetchFiles(baseRequest: baseRequest, at: path)
     }
 
@@ -161,18 +167,6 @@ struct FileListView: View {
                 Image(systemName: "house")
             }
         }
-    }
-
-    private var preparingUploadStack: some View {
-        ZStack {
-            ProgressView("Preparing \(photoPickerStatus.totalSelected) files for upload...")
-                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                .padding(24)
-                .background(.ultraThinMaterial)
-                .cornerRadius(16)
-                .shadow(radius: 10)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var searchingStack: some View {
@@ -608,12 +602,7 @@ struct FileListView: View {
     }
 
     private func checkPathExists(_ fullPath: String) -> Bool {
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return false
-        }
+        guard auth.isValid else { invalidAuth(); return false }
 
         guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "resources", fullPath]) else {
             let msg = "Failed to prepare request for: /api/resources/\(fullPath)"
@@ -897,7 +886,7 @@ struct FileListView: View {
                 } else {
                     // MARK: Preparing upload will be displayed only for uploads from Photos app
                     if photoPickerStatus.isPreparingUpload {
-                        preparingUploadStack
+                        preparingUploadStack(totalSelected: photoPickerStatus.totalSelected)
                     }
 
                     if let transferType = transferState.transferType {
@@ -1028,7 +1017,7 @@ struct FileListView: View {
             renameAction: renameSelectedItem
         ))
         .onAppear {
-            guard auth.isValid else { return }
+            guard auth.isValid else { invalidAuth(); return }
 
             if !searchClicked && !searchInProgress {
                 let targetPath = currentPath
@@ -1434,15 +1423,6 @@ struct FileListView: View {
         }
     }
 
-    func parseSearchQuery(query: String) -> String {
-        var finalQuery = query
-        if let prefix = searchType.queryPrefix {
-            Log.debug("🔎 Search type: \(searchType.displayName)")
-            finalQuery = "\(prefix) \(finalQuery)"
-        }
-        return finalQuery
-    }
-
     func getSearchPath() -> [String] {
         let searchLocation: String
         if pathStack.isEmpty || currentPath == "/" {
@@ -1467,16 +1447,14 @@ struct FileListView: View {
 
     func searchFiles(query: String) async {
         Log.debug("🔍 Searching for: \(query)")
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
+        guard auth.isValid else { invalidAuth(); return }
 
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: getSearchPath(),
-            queryItems: [URLQueryItem(name: "query", value: parseSearchQuery(query: query))],
+            queryItems: [URLQueryItem(
+                name: "query",
+                value: parseSearchQuery(query: query, queryPrefix: searchType.queryPrefix, displayName: searchType.displayName)
+            )],
             timeout: RequestTimeout(request: Constants.searchRequestTimeout, resource: Constants.searchResourceTimeout)
         ) else {
             let msg = "Failed to prepare request for: \(query)"
@@ -1808,12 +1786,8 @@ struct FileListView: View {
     }
 
     func fetchUsageInfo() {
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
+        guard auth.isValid else { invalidAuth(); return }
+
         guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "usage"]) else {
             let msg = "Failed to prepare request for: /api/usage"
             Log.error("❌ \(msg)")
@@ -1844,24 +1818,11 @@ struct FileListView: View {
         }.resume()
     }
 
-    func getUploadURL(serverURL: String, encodedName: String) -> URL? {
-        return buildAPIURL(
-            baseURL: serverURL,
-            pathComponents: currentPath == "/" ? ["api", "tus", encodedName] : ["api", "tus", currentPath, encodedName],
-            queryItems: [URLQueryItem(name: "override", value: "false")]
-        )
-    }
-
     func initiateTusUpload(for fileURL: URL) {
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
+        guard auth.isValid else { invalidAuth(); return }
 
         let fileName = fileURL.lastPathComponent
-        guard let uploadURL = getUploadURL(serverURL: auth.serverURL, encodedName: fileName) else {
+        guard let uploadURL = getUploadURL(serverURL: auth.serverURL, encodedName: fileName, currentPath: currentPath) else {
             Log.error("❌ Invalid upload URL")
             errorTitle = "Invalid upload URL"
             errorMessage = "Failed to construct upload URL for: \(fileName)"
@@ -2274,33 +2235,8 @@ struct FileListView: View {
         initiateTusUpload(for: fileURL)
     }
 
-    func makePayload<T: Encodable>(
-        what: String,
-        which: [String],
-        data: T
-    ) -> Data? {
-        do {
-            let encodedData = try JSONEncoder().encode(data)
-            let jsonData = try JSONSerialization.jsonObject(with: encodedData, options: [])
-            let payload: [String: Any] = [
-                "what": what,
-                "which": which,
-                "data": jsonData
-            ]
-            return try JSONSerialization.data(withJSONObject: payload)
-        } catch {
-            Log.error("❌ Failed to encode payload: \(error.localizedDescription)")
-            return nil
-        }
-    }
-
     func saveSettings() {
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
+        guard auth.isValid else { invalidAuth(); return }
 
         guard let currentSettings = auth.tokenPayload?.user else {
             Log.error("❌ Invalid user ID")
@@ -2367,12 +2303,7 @@ struct FileListView: View {
     }
 
     func deleteSelectedItems() {
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorTitle = "Auth Error"
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
+        guard auth.isValid else { invalidAuth(); return }
 
         let group = DispatchGroup()
         for item in selectedItems {
@@ -2471,11 +2402,7 @@ struct FileListView: View {
     }
 
     func createResource(isDirectory: Bool) {
-        guard auth.isValid else {
-            Log.error("❌ Auth not validated")
-            errorMessage = "Invalid authorization. Please log out and log back in."
-            return
-        }
+        guard auth.isValid else { invalidAuth(); return }
 
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withColonSeparatorInTimeZone]

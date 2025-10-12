@@ -60,6 +60,7 @@
 		98D563D52E44DDA800DE0079 /* SelectableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D42E44DDA800DE0079 /* SelectableTextView.swift */; };
 		98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */; };
 		98D563D92E44F27A00DE0079 /* CopyableTextContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98D563D82E44F27A00DE0079 /* CopyableTextContainer.swift */; };
+		98DCFC9C2E9B2CEE001DF2C1 /* ListViewHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98DCFC9B2E9B2CEB001DF2C1 /* ListViewHelper.swift */; };
 		F84264642E234B9A001A1BBC /* MediaPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F84264632E234B9A001A1BBC /* MediaPlayerView.swift */; };
 		F85295442E303AF900498675 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85295432E303AF800498675 /* Log.swift */; };
 		F85486182E1B19B000115F18 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85486172E1B19B000115F18 /* AuthManager.swift */; };
@@ -146,6 +147,7 @@
 		98D563D42E44DDA800DE0079 /* SelectableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextView.swift; sourceTree = "<group>"; };
 		98D563D62E44EFEB00DE0079 /* CopyableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableTextView.swift; sourceTree = "<group>"; };
 		98D563D82E44F27A00DE0079 /* CopyableTextContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableTextContainer.swift; sourceTree = "<group>"; };
+		98DCFC9B2E9B2CEB001DF2C1 /* ListViewHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewHelper.swift; sourceTree = "<group>"; };
 		F84264632E234B9A001A1BBC /* MediaPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaPlayerView.swift; sourceTree = "<group>"; };
 		F85295432E303AF800498675 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		F85486172E1B19B000115F18 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
@@ -267,6 +269,7 @@
 		98B1AC502E7C5B9A000210BC /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				98DCFC9B2E9B2CEB001DF2C1 /* ListViewHelper.swift */,
 				989940F42E8E0718006A376A /* ShareManagementView.swift */,
 				989940F02E8DE36C006A376A /* AdvancedServerSettingsView.swift */,
 				988166502E857068003C0CD8 /* LocalFileContentContainer.swift */,
@@ -555,6 +558,7 @@
 				989940F52E8E0718006A376A /* ShareManagementView.swift in Sources */,
 				9838C5BB2E99A6A900FBCF7F /* Error.swift in Sources */,
 				98D563D72E44EFEB00DE0079 /* CopyableTextView.swift in Sources */,
+				98DCFC9C2E9B2CEE001DF2C1 /* ListViewHelper.swift in Sources */,
 				988166552E862890003C0CD8 /* FileExporter.swift in Sources */,
 				986F5A772E42BB130058E2C4 /* PhotoPicker.swift in Sources */,
 				989940DD2E8AAED1006A376A /* MetricsSnapshot.swift in Sources */,
