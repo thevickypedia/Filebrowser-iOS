@@ -333,11 +333,9 @@ struct ContentView: View {
         rememberMe = false
     }
 
-    func clearServerJWT() async {
-        // Set default to false, and invert the flag only when statusCode for /api/logout is 200
-        var serverLogout = false
+    func terminator(endpoint: String, success: String, failure: String) async -> Bool {
         if let preparedRequest = baseRequest.prepare(
-            pathComponents: ["api", "logout"],
+            pathComponents: ["api", endpoint],
             method: RequestMethod.post
         ) {
             do {
@@ -345,19 +343,28 @@ struct ContentView: View {
                 if let httpResponse = response as? HTTPURLResponse {
                     let responseText = formatHttpResponse(httpResponse)
                     if httpResponse.statusCode == 200 {
-                        Log.info("Server side JWT invalidation successful: \(responseText)")
-                        serverLogout = true
+                        Log.info("\(success): \(responseText)")
+                        return true
                     } else {
-                        Log.error("Server side JWT invalidation failed: \(responseText)")
+                        Log.error("\(failure): \(responseText)")
                     }
                 } else {
-                    Log.error("Server side JWT invalidation failed: No HTTPURLResponse received")
+                    Log.error("\(failure): No HTTPURLResponse received")
                 }
             } catch {
-                Log.error("Server side JWT invalidation failed: \(error.localizedDescription)")
+                Log.error("\(failure): \(error.localizedDescription)")
             }
         }
-        if serverLogout {
+        return false
+    }
+
+    func clearServerJWT() async {
+        let terminated = await terminator(
+            endpoint: "logout",
+            success: "Server side JWT invalidation successful",
+            failure: "Server side JWT invalidation failed"
+        )
+        if terminated {
             DispatchQueue.main.async {
                 toastMessage = ToastMessagePayload(text: "⚠️ Logout successful!", color: .yellow, duration: 3.5)
             }
@@ -367,30 +374,6 @@ struct ContentView: View {
                     text: "⚠️ Logout successful, but server side token invalidation failed",
                     color: .yellow, duration: 3.5
                 )
-            }
-        }
-    }
-
-    func terminateAllJWT() async {
-        // Set default to false, and invert the flag only when statusCode for /api/logout is 200
-        if let preparedRequest = baseRequest.prepare(
-            pathComponents: ["api", "terminate"],
-            method: RequestMethod.post
-        ) {
-            do {
-                let (_, response) = try await preparedRequest.session.data(for: preparedRequest.request)
-                if let httpResponse = response as? HTTPURLResponse {
-                    let responseText = formatHttpResponse(httpResponse)
-                    if httpResponse.statusCode == 200 {
-                        Log.info("Terminated all JWTs on server: \(responseText)")
-                    } else {
-                        Log.error("Failed to terminate all JWTs on server: \(responseText)")
-                    }
-                } else {
-                    Log.error("Failed to terminate all JWTs on server: No HTTPURLResponse received")
-                }
-            } catch {
-                Log.error("Failed to terminate all JWTs on server: \(error.localizedDescription)")
             }
         }
     }
@@ -405,7 +388,6 @@ struct ContentView: View {
         password = ""
         backgroundLogin?.backgroundLogout()
 
-        Task { await clearServerJWT() }
         // If neither remember nor useFaceID is enabled, remove any saved session
         if !(rememberMe || useFaceID) {
             KeychainHelper.deleteSession()
@@ -416,7 +398,15 @@ struct ContentView: View {
         if clearActiveServers {
             knownServers.removeAll()
             serverURL = ""
-            Task { await terminateAllJWT() }
+            Task {
+                _ = await terminator(
+                    endpoint: "terminate",
+                    success: "Terminated all JWTs on server",
+                    failure: "Failed to terminate all JWTs on server"
+                )
+            }
+        } else {
+            Task { await clearServerJWT() }
         }
     }
 
