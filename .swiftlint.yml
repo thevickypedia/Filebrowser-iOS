@@ -2,7 +2,6 @@ disabled_rules:
   - type_body_length
   - file_length
   - function_body_length
-  - line_length
   - multiple_closures_with_trailing_closure
   - cyclomatic_complexity
 
@@ -17,9 +16,9 @@ disabled_rules:
 #     - p
 #     - extension_
 
-# line_length:
-#   warning: 200
-#   error: 250
+line_length:
+  warning: 150
+  error: 160
 
 # file_length:
 #   warning: 1000

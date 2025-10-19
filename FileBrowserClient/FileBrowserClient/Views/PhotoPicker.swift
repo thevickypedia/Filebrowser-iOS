@@ -188,7 +188,9 @@ struct PhotoPicker: UIViewControllerRepresentable {
                     let tempCopiedURL: URL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
                         provider.loadFileRepresentation(forTypeIdentifier: UTType.movie.identifier) { url, error in
                             guard let tempURL = url else {
-                                continuation.resume(throwing: error ?? NSError(domain: "PhotoPicker", code: 2, userInfo: nil))
+                                continuation.resume(
+                                    throwing: error ?? NSError(domain: "PhotoPicker", code: 2, userInfo: nil)
+                                )
                                 return
                             }
 

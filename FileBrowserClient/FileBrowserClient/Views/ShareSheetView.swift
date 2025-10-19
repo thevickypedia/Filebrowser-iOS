@@ -86,7 +86,10 @@ struct ShareSheetView: View {
                                 HStack(alignment: .top, spacing: 8) {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                         .foregroundColor(.yellow)
-                                    Text("You are about to generate a **public** share link. It is recommended to add a password for additional security.")
+                                    Text("You are about to generate a ")
+                                        + Text("public").bold()
+                                        + Text("share link.")
+                                        + Text("It is recommended to add a password for additional security.")
                                         .font(.footnote)
                                         .foregroundColor(.secondary)
                                 }.padding(.top, 4)

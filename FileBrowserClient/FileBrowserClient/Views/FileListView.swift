@@ -1484,7 +1484,7 @@ struct FileListView: View {
             guard httpResponse.statusCode == 200 else {
                 await MainActor.run {
                     self.searchInProgress = false
-                    self.errorMessage = "Server error: [\(httpResponse.statusCode)]: \(HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode))"
+                    self.errorMessage = "Server error: \(formatHttpResponse(httpResponse))"
                 }
                 Log.error("❌ Server error: \(formatHttpResponse(httpResponse))")
                 return
