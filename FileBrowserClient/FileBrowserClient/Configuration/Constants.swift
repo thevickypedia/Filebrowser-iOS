@@ -8,6 +8,9 @@
 import Foundation
 
 struct Constants {
+    // ContentView
+    static let maxKnownServers: Int = 5
+
     // BackgroundLogin
     static let backgroundLoginFrequency: Double = 5.0
     static let backgroundLoginBuffer: Double = 30.0
