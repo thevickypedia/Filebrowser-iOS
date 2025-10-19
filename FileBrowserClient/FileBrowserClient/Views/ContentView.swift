@@ -392,8 +392,10 @@ struct ContentView: View {
         if !(rememberMe || useFaceID) {
             KeychainHelper.deleteSession()
             KeychainHelper.deleteKnownServers()
+        } else {
+            KeychainHelper.logout()
         }
-        // This is a temporary solution
+
         // Clears current serverURL and knownServers immediately
         if clearActiveServers {
             knownServers.removeAll()
@@ -583,41 +585,28 @@ struct ContentView: View {
                 }
 
                 // Decode JWT to check expiration
-                guard let tokenPayload = decodeJWT(jwt: session.token) else {
-                    errorMessage = "❌ Failed to decode server token"
+                guard let token = session.token,
+                      let tokenPayload = decodeJWT(jwt: token) else {
                     doHealthCheck = false
+                    Log.warn("⚠️ JWT not found in session, or unable to decode")
+                    DispatchQueue.main.async {
+                        reauth(session)
+                    }
                     return
                 }
                 let now = Date().timeIntervalSince1970
                 if now >= tokenPayload.exp {
                     doHealthCheck = false
                     Log.info("🔑 Token expired — refreshing via stored credentials.")
-                    if let sessionPassword = session.password {
-                        Log.debug("Using stored password to login")
-                        DispatchQueue.main.async {
-                            self.serverURL = session.serverURL
-                            self.username = session.username
-                            self.password = sessionPassword
-                            // Reuse the normal login flow
-                            Task {
-                                await login()
-                            }
-                        }
-                    } else {
-                        Log.debug("Resetting credentials and disabling faceID")
-                        // No password stored — fallback to showing login UI
-                        DispatchQueue.main.async {
-                            username = ""
-                            password = ""
-                            useFaceID = false
-                        }
+                    DispatchQueue.main.async {
+                        reauth(session)
                     }
                     return
                 }
 
                 // Token still valid — just use it
                 // MARK: Set auth params
-                auth.token = session.token
+                auth.token = token
                 auth.username = session.username
                 auth.serverURL = session.serverURL
                 auth.tokenPayload = tokenPayload
@@ -647,7 +636,7 @@ struct ContentView: View {
                         return
                     }
                 }
-                fileListViewModel.configure(token: session.token, serverURL: session.serverURL)
+                fileListViewModel.configure(token: token, serverURL: session.serverURL)
                 Log.info("✅ Face ID login successful")
                 updateLastUsedServer()
                 DispatchQueue.main.async {

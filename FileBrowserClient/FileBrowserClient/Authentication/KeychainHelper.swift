@@ -10,7 +10,7 @@ import LocalAuthentication
 import Security
 
 struct StoredSession: Encodable, Decodable {
-    let token: String
+    var token: String?
     let username: String
     let serverURL: String
     let transitProtection: Bool
@@ -31,6 +31,8 @@ enum KeychainHelper {
             ]
             SecItemDelete(query as CFDictionary) // overwrite
             SecItemAdd(query as CFDictionary, nil)
+        } else {
+            Log.error("Failed to save session: \(session.username) - \(session.serverURL)")
         }
     }
 
@@ -46,9 +48,20 @@ enum KeychainHelper {
         guard status == errSecSuccess,
               let data = dataTypeRef as? Data,
               let session = try? JSONDecoder().decode(StoredSession.self, from: data) else {
+            Log.error("Failed to load existing session")
             return nil
         }
         return session
+    }
+
+    static func logout() {
+        guard var session = loadSession() else {
+            Log.warn("No stored session found")
+            return
+        }
+        session.token = nil
+        saveSession(session: session)
+        Log.info("Removed JWT on existing session")
     }
 
     static func deleteSession() {

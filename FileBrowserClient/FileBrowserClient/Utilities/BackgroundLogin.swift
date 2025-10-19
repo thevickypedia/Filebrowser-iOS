@@ -151,7 +151,8 @@ struct BackgroundLogin {
             return
         }
 
-        guard let payload = decodeJWT(jwt: session.token) else {
+        guard let token = session.token,
+              let payload = decodeJWT(jwt: token) else {
             Log.warn("⚠️ Background reauth failed: could not decode token")
             return
         }
