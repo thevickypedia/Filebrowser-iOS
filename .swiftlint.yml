@@ -5,16 +5,11 @@ disabled_rules:
   - multiple_closures_with_trailing_closure
   - cyclomatic_complexity
 
-# Optional: Customize length limits instead of disabling
-# identifier_name:
-#   min_length: 1 # allow short names like i, x, p
-#   allowed_symbols: ['_']
-#   excluded:
-#     - i
-#     - a
-#     - b
-#     - p
-#     - extension_
+identifier_name:
+  min_length: 2 # restrict short names like i, x, p, but allow names like id
+  allowed_symbols: ['_']
+  excluded:
+    - extension_
 
 line_length:
   warning: 150
