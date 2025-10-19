@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.56.1 (10/18/2025)
+--------------------
+- [f95af0f](https://github.com/thevickypedia/Filebrowser-iOS/commit/f95af0fc361379f0f3864f891a10122dc13418b2) chore: Release ``v1.56.1``
+- [fb98362](https://github.com/thevickypedia/Filebrowser-iOS/commit/fb9836252d778e3b28c61db9ac460ef346838aac) lint: Update linter configuration for file length, type and function body length
+- [e161c6c](https://github.com/thevickypedia/Filebrowser-iOS/commit/e161c6cd873cba7848029fa531df83e32631766e) lint: Add a check for identifier names
+- [0bc194d](https://github.com/thevickypedia/Filebrowser-iOS/commit/0bc194dc2ac8d0ff3d4e02039c505b1272682394) lint: Add line length restriction
+- [503e6cf](https://github.com/thevickypedia/Filebrowser-iOS/commit/503e6cf1dccb4e4ae1fdd6f39878b588adb3a28e) refactor: Store ``maxKnownServers`` as a constant
+- [6f7d0fd](https://github.com/thevickypedia/Filebrowser-iOS/commit/6f7d0fd903f9fdd359b26a19b090820d212e78e7) perf: Remove token from keychain when logged out
+- [8e826ea](https://github.com/thevickypedia/Filebrowser-iOS/commit/8e826eaf4338cc369150260ac5063d8d40976569) chore: Update release notes for v1.56.0
+
 v1.56.0 (10/18/2025)
 --------------------
 - [3d80529](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d8052993344e766720eaf4096d0dde2b1119810) chore: Release ``v1.56.0``
