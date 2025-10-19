@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.56.0 (10/18/2025)
+--------------------
+- [3d80529](https://github.com/thevickypedia/Filebrowser-iOS/commit/3d8052993344e766720eaf4096d0dde2b1119810) chore: Release ``v1.56.0``
+- [985623b](https://github.com/thevickypedia/Filebrowser-iOS/commit/985623bd751e2356816752a1b0d3732f62340caa) refactor: Reduce code redundancy between ``/logout`` and ``/terminate`` API calls
+- [a6a8fc0](https://github.com/thevickypedia/Filebrowser-iOS/commit/a6a8fc07044fb0f46e93ec1bb0b0eed23c71cb22) feat: Add new API calls to logout and clear all JWTs on server side
+- [423eb41](https://github.com/thevickypedia/Filebrowser-iOS/commit/423eb412f3c8d2aee001d93c71992204fc412e97) refactor: Reduce LOC for ``FileListView``
+- [78842ac](https://github.com/thevickypedia/Filebrowser-iOS/commit/78842ac0342ec6f64475157be67f003194b0204f) chore: Update release notes for v1.55.1
+
 v1.55.1 (10/10/2025)
 --------------------
 - [aa6cb62](https://github.com/thevickypedia/Filebrowser-iOS/commit/aa6cb627f03f39b02235c379b92881105935ae1c) chore: Release ``v1.55.1``
