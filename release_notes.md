@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.57.1 (11/02/2025)
+--------------------
+- [daa6d02](https://github.com/thevickypedia/Filebrowser-iOS/commit/daa6d02925b5929aa197b0feb4d12296df846b17) chore: Release ``v1.57.1``
+- [7e1eaea](https://github.com/thevickypedia/Filebrowser-iOS/commit/7e1eaea0b1055684742b0b4cbcfc42cd45218b96) lint: Fix identifier name violation
+- [8f6264f](https://github.com/thevickypedia/Filebrowser-iOS/commit/8f6264f64efe9691763f8906c996b7f28eb06bf0) fix: Include ``oneTimePasscode`` in auth payload for background login
+- [343f77c](https://github.com/thevickypedia/Filebrowser-iOS/commit/343f77c1f18ae7c373a2b43601331ead24bfef6d) style: Display ``storeOtpSecret`` toggle only when not available in stored sessions
+- [748bfb3](https://github.com/thevickypedia/Filebrowser-iOS/commit/748bfb3d2187579c5aa46da1a03ed3b0a0a9f264) lint: Run linter to fix line breaks
+- [5251df8](https://github.com/thevickypedia/Filebrowser-iOS/commit/5251df853d0f520ab02a6589524e40a0ce48e5ed) feat: Use ``oneTimePasscodeSecret`` to auto generate OTP when FaceID is enabled
+- [8ed42af](https://github.com/thevickypedia/Filebrowser-iOS/commit/8ed42af81347045e9db2e49f70b71214a248e985) chore: Update release notes for v1.57.0
+
 v1.57.0 (11/02/2025)
 --------------------
 - [d22dac5](https://github.com/thevickypedia/Filebrowser-iOS/commit/d22dac572555ac683e4f0cb32cd32084b26f9550) chore: Release ``v1.57.0``
