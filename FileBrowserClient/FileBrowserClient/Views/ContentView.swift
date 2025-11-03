@@ -19,6 +19,7 @@ struct ContentView: View {
     @AppStorage("rememberMe") private var rememberMe = false
     @AppStorage("transitProtection") private var transitProtection = false
     @AppStorage("useFaceID") private var useFaceID: Bool = false
+    @State private var storeOtpSecret: Bool = false
 
     @State private var pathStack: [String] = []
     @State private var isLoading = false
@@ -155,12 +156,13 @@ struct ContentView: View {
                 addNewServer: addNewServer
             ).padding(.top, 1)
 
+            let loadedSession = KeychainHelper.loadSession()
             /// 1. FaceID should be enabled
             /// 2. A stored session could be loaded
             /// 3. Stored session's "serverURL" matches the one chosen by the user
             /// 4. Password was stored in existing session - indicates FaceID was chosen previously
             if useFaceID,
-               let existingSession = KeychainHelper.loadSession(),
+               let existingSession = loadedSession,
                existingSession.serverURL == serverURL,
                existingSession.password != nil {
                 // Face ID mode with saved session
@@ -203,22 +205,30 @@ struct ContentView: View {
                 SecureField("Password", text: $password)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                TextField("One-time Passcode", text: $oneTimePasscode)
-                    .keyboardType(.numberPad) // shows numeric keypad
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .onChange(of: oneTimePasscode) { newValue in
-                        // Allow only digits, limit to 6
-                        let filtered = newValue.filter { $0.isNumber }
-                        if filtered.count > 6 {
-                            oneTimePasscode = String(filtered.prefix(6))
-                        } else {
-                            oneTimePasscode = filtered
+                if storeOtpSecret {
+                    SecureField("OTP Secret", text: $oneTimePasscodeSecret)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                } else {
+                    TextField("One-time Passcode", text: $oneTimePasscode)
+                        .keyboardType(.numberPad) // shows numeric keypad
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .onChange(of: oneTimePasscode) { newValue in
+                            // Allow only digits, limit to 6
+                            let filtered = newValue.filter { $0.isNumber }
+                            if filtered.count > 6 {
+                                oneTimePasscode = String(filtered.prefix(6))
+                            } else {
+                                oneTimePasscode = filtered
+                            }
                         }
-                    }
+                }
 
-                SecureField("OTP Secret", text: $oneTimePasscodeSecret)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
+                // Show toggle button only when there is no stored session or the stored otpSecret is empty
+                if loadedSession == nil || loadedSession?.otpSecret == "" {
+                    Toggle("Store OTP Secret", isOn: $storeOtpSecret)
+                        .padding(.top, 8)
+                }
+
                 // Conditionally display "Remember Me" Toggle only when Face ID is not being used
                 if !useFaceID {
                     Toggle("Remember Me", isOn: $rememberMe)
@@ -523,6 +533,7 @@ struct ContentView: View {
                         auth.tokenPayload = payload
                         // Extras
                         auth.password = password
+                        auth.oneTimePasscodeSecret = oneTimePasscodeSecret
                         auth.transitProtection = transitProtection
 
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
