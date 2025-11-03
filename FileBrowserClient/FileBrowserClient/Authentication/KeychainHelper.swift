@@ -15,6 +15,7 @@ struct StoredSession: Encodable, Decodable {
     let serverURL: String
     let transitProtection: Bool
     let password: String?
+    let otpSecret: String
 }
 
 enum KeychainHelper {

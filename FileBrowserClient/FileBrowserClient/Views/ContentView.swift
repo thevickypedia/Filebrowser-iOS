@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var username = ""
     @State private var password = ""
     @State private var oneTimePasscode = ""
+    @State private var oneTimePasscodeSecret = ""
     @AppStorage("rememberMe") private var rememberMe = false
     @AppStorage("transitProtection") private var transitProtection = false
     @AppStorage("useFaceID") private var useFaceID: Bool = false
@@ -215,6 +216,9 @@ struct ContentView: View {
                         }
                     }
 
+                SecureField("OTP Secret", text: $oneTimePasscodeSecret)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
                 // Conditionally display "Remember Me" Toggle only when Face ID is not being used
                 if !useFaceID {
                     Toggle("Remember Me", isOn: $rememberMe)
@@ -466,6 +470,16 @@ struct ContentView: View {
         }
 
         if transitProtection {
+            if oneTimePasscodeSecret != "" {
+                if let code = generateTOTP(secret: oneTimePasscodeSecret, time: Date()) {
+                    Log.info("Generated TOTP")
+                    self.oneTimePasscode = code
+                } else {
+                    Log.error("Failed to generated TOTP")
+                }
+            } else if oneTimePasscode == "" {
+                Log.warn("Neither oneTimePasscode nor oneTimePasscodeSecret are available!")
+            }
             let hexUsername = convertStringToHex(username)
             let hexPassword = convertStringToHex(password)
             let hexRecaptcha = convertStringToHex("")
@@ -528,7 +542,8 @@ struct ContentView: View {
                                     serverURL: serverURL,
                                     transitProtection: transitProtection,
                                     // MARK: Store password only when FaceID is enabled
-                                    password: useFaceID ? password : nil
+                                    password: useFaceID ? password : nil,
+                                    otpSecret: oneTimePasscodeSecret
                                 )
                             )
                         } else {
@@ -570,6 +585,7 @@ struct ContentView: View {
             DispatchQueue.main.async {
                 self.username = session.username
                 self.password = sessionPassword
+                self.oneTimePasscodeSecret = session.otpSecret
                 self.transitProtection = session.transitProtection
                 // Reuse the normal login flow
                 Task {
@@ -627,6 +643,7 @@ struct ContentView: View {
                 auth.tokenPayload = tokenPayload
                 // Extras
                 auth.password = session.password ?? password
+                auth.oneTimePasscodeSecret = session.otpSecret
                 auth.transitProtection = session.transitProtection
 
                 let handShake = await auth.serverHandShake(for: String(tokenPayload.user.id))

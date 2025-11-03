@@ -12,6 +12,7 @@ class AuthManager: ObservableObject {
     @Published var serverURL: String = ""
     @Published var username: String = ""
     @Published var password: String = ""
+    @Published var oneTimePasscodeSecret: String = ""
     @Published var transitProtection: Bool = false
     @Published var tokenPayload: JWTPayload?
 
