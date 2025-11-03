@@ -50,11 +50,22 @@ struct BackgroundLogin {
             return loginResponse("Failed to prepare request for: /api/login")
         }
         if auth.transitProtection {
+            var oneTimePasscode = ""
+            if auth.oneTimePasscodeSecret != "" {
+                if let code = generateTOTP(secret: auth.oneTimePasscodeSecret, time: Date()) {
+                    oneTimePasscode = code
+                } else {
+                    Log.error("Failed to generated TOTP")
+                }
+            } else {
+                Log.warn("oneTimePasscodeSecret is missing")
+            }
             let hexUsername = convertStringToHex(auth.username)
             let hexPassword = convertStringToHex(auth.password)
             let hexRecaptcha = convertStringToHex("")
+            let hexOneTimePasscode = convertStringToHex(oneTimePasscode)
 
-            let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
+            let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha + "," + "\\u" + hexOneTimePasscode
 
             guard let payload = combined.data(using: .utf8)?.base64EncodedString() else {
                 return loginResponse("❌ Failed to encode credentials")
