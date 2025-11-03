@@ -22,14 +22,14 @@ func base32Decode(_ base32: String) -> Data? {
     }
 
     // Walk the bit string in 8-bit chunks
-    var i = bits.startIndex
-    while i < bits.endIndex {
-        let end = bits.index(i, offsetBy: 8, limitedBy: bits.endIndex) ?? bits.endIndex
-        let byteBits = String(bits[i..<end])
+    var idx = bits.startIndex
+    while idx < bits.endIndex {
+        let end = bits.index(idx, offsetBy: 8, limitedBy: bits.endIndex) ?? bits.endIndex
+        let byteBits = String(bits[idx..<end])
         if byteBits.count == 8, let byte = UInt8(byteBits, radix: 2) {
             output.append(byte)
         }
-        i = end
+        idx = end
     }
 
     return output
