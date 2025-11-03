@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var serverURL = ""
     @State private var username = ""
     @State private var password = ""
+    @State private var oneTimePasscode = ""
     @AppStorage("rememberMe") private var rememberMe = false
     @AppStorage("transitProtection") private var transitProtection = false
     @AppStorage("useFaceID") private var useFaceID: Bool = false
@@ -200,6 +201,19 @@ struct ContentView: View {
 
                 SecureField("Password", text: $password)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                TextField("One-time Passcode", text: $oneTimePasscode)
+                    .keyboardType(.numberPad) // shows numeric keypad
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .onChange(of: oneTimePasscode) { newValue in
+                        // Allow only digits, limit to 6
+                        let filtered = newValue.filter { $0.isNumber }
+                        if filtered.count > 6 {
+                            oneTimePasscode = String(filtered.prefix(6))
+                        } else {
+                            oneTimePasscode = filtered
+                        }
+                    }
 
                 // Conditionally display "Remember Me" Toggle only when Face ID is not being used
                 if !useFaceID {
@@ -455,7 +469,8 @@ struct ContentView: View {
             let hexUsername = convertStringToHex(username)
             let hexPassword = convertStringToHex(password)
             let hexRecaptcha = convertStringToHex("")
-            let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha
+            let hexOneTimePasscode = convertStringToHex(oneTimePasscode)
+            let combined = "\\u" + hexUsername + "," + "\\u" + hexPassword + "," + "\\u" + hexRecaptcha + "," + "\\u" + hexOneTimePasscode
             guard let payload = combined.data(using: .utf8)?.base64EncodedString() else {
                 loginFailed("Failed to encode credentials")
                 return
