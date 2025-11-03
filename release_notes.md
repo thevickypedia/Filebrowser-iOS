@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.57.0 (11/02/2025)
+--------------------
+- [d22dac5](https://github.com/thevickypedia/Filebrowser-iOS/commit/d22dac572555ac683e4f0cb32cd32084b26f9550) chore: Release ``v1.57.0``
+- [69c55c7](https://github.com/thevickypedia/Filebrowser-iOS/commit/69c55c7288263b743d196a062509308a4aafa2c6) feat: Support TOTP login for ``filebrowser`` server
+- [8e72b7d](https://github.com/thevickypedia/Filebrowser-iOS/commit/8e72b7dd17fe577e732b24761668881ca9f8384f) chore: Update release notes for v1.56.1
+
 v1.56.1 (10/18/2025)
 --------------------
 - [f95af0f](https://github.com/thevickypedia/Filebrowser-iOS/commit/f95af0fc361379f0f3864f891a10122dc13418b2) chore: Release ``v1.56.1``
