@@ -371,6 +371,9 @@ struct AdvancedServerSettingsView: View {
                     if let serverVersion = auth.serverVersion {
                         Text("Server Version: \(serverVersion)").textSelection(.enabled)
                     }
+                    if let clientVersion = auth.clientVersion {
+                        Text("Client Version: \(clientVersion)").textSelection(.enabled)
+                    }
                     Text("Username: \(auth.username)").textSelection(.enabled)
                     Text("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")").textSelection(.enabled)
                     Text("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))").textSelection(.enabled)

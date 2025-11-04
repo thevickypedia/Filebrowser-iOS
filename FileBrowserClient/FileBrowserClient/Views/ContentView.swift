@@ -305,6 +305,7 @@ struct ContentView: View {
                     Link("Version: \(version)", destination: url)
                         .font(.footnote)
                         .foregroundColor(.blue)
+                        .onAppear { auth.clientVersion = "v\(version)" }
                 } else {
                     Link("Version: unknown", destination: URL(string: "https://github.com/thevickypedia/Filebrowser-iOS/releases")!)
                         .font(.footnote)
