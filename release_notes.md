@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.57.2 (11/04/2025)
+--------------------
+- [e742d57](https://github.com/thevickypedia/Filebrowser-iOS/commit/e742d57d9584b194ed2b960a8711e81c67dbef77) chore: Release ``v1.57.2``
+- [ebb636a](https://github.com/thevickypedia/Filebrowser-iOS/commit/ebb636adfb2588c3fc227fb7e07dced5ed31cccd) feat: Include client version in the advanced server settings view
+- [383f241](https://github.com/thevickypedia/Filebrowser-iOS/commit/383f24190b5828def316516a587bba598e9bd0d4) feat: Display server version in advanced settings view
+- [418f2e6](https://github.com/thevickypedia/Filebrowser-iOS/commit/418f2e6a5c369d3608826a6f22f1244bc0cfe6f0) chore: Update release notes for v1.57.1
+
 v1.57.1 (11/02/2025)
 --------------------
 - [daa6d02](https://github.com/thevickypedia/Filebrowser-iOS/commit/daa6d02925b5929aa197b0feb4d12296df846b17) chore: Release ``v1.57.1``
