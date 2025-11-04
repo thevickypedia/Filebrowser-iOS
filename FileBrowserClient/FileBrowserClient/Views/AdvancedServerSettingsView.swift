@@ -368,6 +368,9 @@ struct AdvancedServerSettingsView: View {
             Section(
                 footer: VStack(alignment: .leading) {
                     Text("ServerURL: \(auth.serverURL)").textSelection(.enabled)
+                    if let serverVersion = auth.serverVersion {
+                        Text("Server Version: \(serverVersion)").textSelection(.enabled)
+                    }
                     Text("Username: \(auth.username)").textSelection(.enabled)
                     Text("Issuer: \(auth.tokenPayload?.iss ?? "Unknown")").textSelection(.enabled)
                     Text("Issued: \(timeStampToString(from: auth.tokenPayload?.iat))").textSelection(.enabled)

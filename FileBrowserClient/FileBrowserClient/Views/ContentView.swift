@@ -535,6 +535,13 @@ struct ContentView: View {
                         auth.password = password
                         auth.oneTimePasscodeSecret = oneTimePasscodeSecret
                         auth.transitProtection = transitProtection
+                        let response = await getServerVersion(baseRequest: baseRequest)
+                        if response.success {
+                            auth.serverVersion = response.text
+                            Log.info("Server version: \(response.text)")
+                        } else {
+                            Log.error("Failed to get server version: \(response.statusCode) - \(response.text)")
+                        }
 
                         fileListViewModel.configure(token: jwt, serverURL: serverURL)
                         isLoggedIn = true
@@ -656,6 +663,13 @@ struct ContentView: View {
                 auth.password = session.password ?? password
                 auth.oneTimePasscodeSecret = session.otpSecret
                 auth.transitProtection = session.transitProtection
+                let response = await getServerVersion(baseRequest: baseRequest)
+                if response.success {
+                    auth.serverVersion = response.text
+                    Log.info("Server version: \(response.text)")
+                } else {
+                    Log.error("Failed to get server version: \(response.statusCode) - \(response.text)")
+                }
 
                 let handShake = await auth.serverHandShake(for: String(tokenPayload.user.id))
                 if handShake.success {

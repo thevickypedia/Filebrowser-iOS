@@ -36,6 +36,17 @@ struct BackgroundLogin {
     func updateAuthState(token: String, payload: JWTPayload) {
         auth.token = token
         auth.tokenPayload = payload
+        Task {
+            let response = await getServerVersion(baseRequest: baseRequest)
+            if response.success {
+                await MainActor.run {
+                    Log.info("Server version: \(response.text)")
+                    auth.serverVersion = response.text
+                }
+            } else {
+                Log.error("Failed to get server version: \(response.statusCode) - \(response.text)")
+            }
+        }
     }
 
     func attemptLogin() async -> ServerResponse {

@@ -15,6 +15,7 @@ class AuthManager: ObservableObject {
     @Published var oneTimePasscodeSecret: String = ""
     @Published var transitProtection: Bool = false
     @Published var tokenPayload: JWTPayload?
+    @Published var serverVersion: String?
 
     var isValid: Bool {
         !self.serverURL.isEmpty && !self.token.isEmpty && self.tokenPayload != nil

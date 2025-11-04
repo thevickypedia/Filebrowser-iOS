@@ -429,6 +429,32 @@ func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HH
     return formatter.string(from: Date())
 }
 
+func getServerVersion(baseRequest: Request) async -> ServerResponse {
+    guard let preparedRequest = baseRequest.prepare(
+        pathComponents: ["api", "version"],
+        method: RequestMethod.post
+    ) else {
+        return ServerResponse(success: false, text: "Failed to prepare request for: /version")
+    }
+
+    do {
+        let (data, response) = try await preparedRequest.session.data(for: preparedRequest.request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            return ServerResponse(success: false, text: "Invalid response")
+        }
+        let responseText = formatHttpResponse(httpResponse)
+        guard httpResponse.statusCode == 200 else {
+            return ServerResponse(success: false, text: responseText)
+        }
+        guard let responseData = String(data: data, encoding: .utf8) else {
+            return ServerResponse(success: false, text: responseText)
+        }
+        return ServerResponse(success: true, text: responseData)
+    } catch {
+        return ServerResponse(success: false, text: error.localizedDescription)
+    }
+}
+
 func checkServerHealth(baseRequest: Request) async -> ServerResponse {
     guard let preparedRequest = baseRequest.prepare(pathComponents: ["health"]) else {
         return ServerResponse(success: false, text: "Failed to prepare request for: /health")
