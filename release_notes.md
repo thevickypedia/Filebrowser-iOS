@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.58.0 (01/03/2026)
+--------------------
+- [7ca8166](https://github.com/thevickypedia/Filebrowser-iOS/commit/7ca816641fb9857d4532c229d8ccc6295c4f5241) chore: Release ``v1.58.0``
+- [a1511df](https://github.com/thevickypedia/Filebrowser-iOS/commit/a1511df1407315c09da5fed5d182e56416b9f328) fix: Avoid metadata error for video files due to auth error
+- [a2a012d](https://github.com/thevickypedia/Filebrowser-iOS/commit/a2a012dca3ff611e0f1b48637b924d23d8150cef) fix: Fix failing thumbnail loader for video files
+- [895f192](https://github.com/thevickypedia/Filebrowser-iOS/commit/895f192f69ea1f2e934b0b48a81725011894acaa) chore: Update release notes for v1.57.2
+
 v1.57.2 (11/04/2025)
 --------------------
 - [e742d57](https://github.com/thevickypedia/Filebrowser-iOS/commit/e742d57d9584b194ed2b960a8711e81c67dbef77) chore: Release ``v1.57.2``
