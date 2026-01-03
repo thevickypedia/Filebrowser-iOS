@@ -228,7 +228,7 @@ struct RemoteThumbnail: View {
             guard let videoURL = buildAPIURL(
                 baseURL: serverURL,
                 pathComponents: ["api", "raw", file.path],
-                queryItems: [URLQueryItem(name: "auth", value: token)]
+                queryItems: [URLQueryItem(name: "inline", value: "true")]
             ) else {
                 GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
                 return
@@ -236,7 +236,12 @@ struct RemoteThumbnail: View {
 
             // ⚠️ No extra DispatchQueue here since it's already on the thumbnailQueue
             autoreleasepool {
-                let asset = AVURLAsset(url: videoURL)
+                let asset = AVURLAsset(
+                    url: videoURL,
+                    options: [
+                        "AVURLAssetHTTPHeaderFieldsKey": ["X-Auth": token]
+                    ]
+                )
                 let imageGenerator = AVAssetImageGenerator(asset: asset)
                 imageGenerator.appliesPreferredTrackTransform = true
                 // Downscale thumbnails to reduce memory
@@ -277,9 +282,9 @@ struct RemoteThumbnail: View {
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "preview", "thumb", file.path],
             queryItems: [
-                URLQueryItem(name: "auth", value: token),
                 URLQueryItem(name: "inline", value: "true")
-            ]
+            ],
+            headers: [RequestHeader(key: "X-Auth", value: token)]
         ) else {
             GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
             return
