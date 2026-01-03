@@ -302,12 +302,15 @@ struct MediaPlayerView: View {
         guard let url = buildAPIURL(
             baseURL: serverURL,
             pathComponents: ["api", "raw", file.path],
-            queryItems: [URLQueryItem(name: "auth", value: token)]
+            queryItems: [URLQueryItem(name: "inline", value: "true")]
         ) else { return }
-
         DispatchQueue.global(qos: .userInitiated).async {
-            let asset = AVURLAsset(url: url)
-
+            let asset = AVURLAsset(
+                url: url,
+                options: [
+                    "AVURLAssetHTTPHeaderFieldsKey": ["X-Auth": token]
+                ]
+            )
             // Load the metadata asynchronously
             Task {
                 do {
