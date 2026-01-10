@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.58.1 (01/10/2026)
+--------------------
+- [66bccdf](https://github.com/thevickypedia/Filebrowser-iOS/commit/66bccdfc9c1d7d1c273d7b564717146385ef279d) chore: Release ``v1.58.1``
+- [790699a](https://github.com/thevickypedia/Filebrowser-iOS/commit/790699a7060a7dcf9d354de9e2bb8f31c75622a4) perf: Set max size for thumbnail GIF and render original when within limit
+- [34bf19e](https://github.com/thevickypedia/Filebrowser-iOS/commit/34bf19e6145338271a34598eea764f2939e597be) perf: Compress thumbnail size to avoid OOM crashes
+- [bb11664](https://github.com/thevickypedia/Filebrowser-iOS/commit/bb11664426361ca75193d676c6d9f82712ea6e51) chore: Update release notes for v1.58.0
+
 v1.58.0 (01/03/2026)
 --------------------
 - [7ca8166](https://github.com/thevickypedia/Filebrowser-iOS/commit/7ca816641fb9857d4532c229d8ccc6295c4f5241) chore: Release ``v1.58.0``
