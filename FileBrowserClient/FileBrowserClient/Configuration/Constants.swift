@@ -30,6 +30,7 @@ struct Constants {
     static let maxConcurrentThumbnailRender: Int = 4
     static let thumbnailQuality: CGFloat = 0.1
     static let thumbnailRetryLimit: Int = 5
+    static let maxThumbnailSize: CGFloat = 320
 
     // MediaPlayerView:
     // Minimum duration (in secs) of a video to be considered resume worthy

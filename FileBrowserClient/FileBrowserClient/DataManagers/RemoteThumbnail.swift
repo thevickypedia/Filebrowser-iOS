@@ -136,6 +136,10 @@ struct RemoteThumbnail: View {
             }
         }, threshold: 0))
         .id(file.path) // Ensure view resets when file changes
+        .onDisappear {
+            image = nil
+            gifData = nil
+        }
     }
 
     func overlayPlayIcon(on image: UIImage) -> UIImage {
@@ -198,6 +202,36 @@ struct RemoteThumbnail: View {
         }
     }
 
+    func downsampleImage(
+        data: Data,
+        maxDimension: CGFloat
+    ) -> UIImage? {
+        let sourceOptions: [CFString: Any] = [
+            kCGImageSourceShouldCache: false
+        ]
+
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions as CFDictionary) else {
+            return nil
+        }
+
+        let downsampleOptions: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true
+        ]
+
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(
+            source,
+            0,
+            downsampleOptions as CFDictionary
+        ) else {
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage)
+    }
+
     private func actuallyLoadThumbnail(retryCount: Int = 0) {
         let fileName = file.name.lowercased()
         let isGIF = fileName.hasSuffix(".gif")
@@ -214,7 +248,7 @@ struct RemoteThumbnail: View {
             if let cached = existingCache {
                 if isGIF {
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: cached, failed: false)
-                } else if let img = UIImage(data: cached) {
+                } else if let img = downsampleImage(data: cached, maxDimension: 320) {
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: img, gifData: nil, failed: false)
                 } else {
                     // Cached data is corrupted, continue with network load
@@ -261,13 +295,18 @@ struct RemoteThumbnail: View {
                         imageData = thumbImage.pngData()
                     }
                     if let data = imageData, advancedSettings.cacheThumbnail {
-                        FileCache.shared.store(
-                            for: serverURL,
-                            data: data,
-                            path: file.path,
-                            modified: file.modified,
-                            fileID: "thumb"
-                        )
+                        if let img = downsampleImage(data: data, maxDimension: Constants.maxThumbnailSize),
+                           let compressed = img.jpegData(compressionQuality: Constants.thumbnailQuality),
+                           advancedSettings.cacheThumbnail {
+
+                            FileCache.shared.store(
+                                for: serverURL,
+                                data: compressed,
+                                path: file.path,
+                                modified: file.modified,
+                                fileID: "thumb"
+                            )
+                        }
                     }
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: thumbImage, gifData: nil, failed: false)
                 } catch {
@@ -298,20 +337,24 @@ struct RemoteThumbnail: View {
             }
             autoreleasepool {
                 if advancedSettings.cacheThumbnail {
-                    FileCache.shared.store(
-                        for: serverURL,
-                        data: data,
-                        path: file.path,
-                        modified: file.modified,
-                        fileID: "thumb"
-                    )
+                    if let img = downsampleImage(data: data, maxDimension: Constants.maxThumbnailSize),
+                       let compressed = img.jpegData(compressionQuality: Constants.thumbnailQuality),
+                       advancedSettings.cacheThumbnail {
+                        FileCache.shared.store(
+                            for: serverURL,
+                            data: compressed,
+                            path: file.path,
+                            modified: file.modified,
+                            fileID: "thumb"
+                        )
+                    }
                 }
                 if isGIF {
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: data, failed: false)
-                } else if let img = UIImage(data: data) {
+                } else if let img = downsampleImage(data: data, maxDimension: Constants.maxThumbnailSize) {
                     GlobalThumbnailLoader.shared.finish(filePath: file.path, image: img, gifData: nil, failed: false)
                 } else {
-                    let errMsg = "Failed to decode image thumbnail for file: \(file.name) — data size: \(data.count) bytes"
+                    let errMsg = "Failed to downsample image thumbnail for file: \(file.name)"
                     retryHandler(retryCount: retryCount, errMsg: errMsg)
                 }
             }
