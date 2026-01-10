@@ -336,27 +336,73 @@ struct RemoteThumbnail: View {
                 return
             }
             autoreleasepool {
-                if advancedSettings.cacheThumbnail {
-                    if let img = downsampleImage(data: data, maxDimension: Constants.maxThumbnailSize),
-                       let compressed = img.jpegData(compressionQuality: Constants.thumbnailQuality),
-                       advancedSettings.cacheThumbnail {
-                        FileCache.shared.store(
-                            for: serverURL,
-                            data: compressed,
-                            path: file.path,
-                            modified: file.modified,
-                            fileID: "thumb"
-                        )
-                    }
-                }
                 if isGIF {
-                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: data, failed: false)
-                } else if let img = downsampleImage(data: data, maxDimension: Constants.maxThumbnailSize) {
-                    GlobalThumbnailLoader.shared.finish(filePath: file.path, image: img, gifData: nil, failed: false)
-                } else {
+                    // Cap GIF size to avoid memory bombs
+                    if data.count < Constants.maxGIFThumbnailBytes {
+                        if advancedSettings.cacheThumbnail {
+                            FileCache.shared.store(
+                                for: serverURL,
+                                data: data,
+                                path: file.path,
+                                modified: file.modified,
+                                fileID: "thumb"
+                            )
+                        }
+                        GlobalThumbnailLoader.shared.finish(
+                            filePath: file.path,
+                            image: nil,
+                            gifData: data,
+                            failed: false
+                        )
+                    } else {
+                        // Treat large GIF as static image
+                        if let img = downsampleImage(
+                            data: data,
+                            maxDimension: Constants.maxThumbnailSize
+                        ) {
+                            GlobalThumbnailLoader.shared.finish(
+                                filePath: file.path,
+                                image: img,
+                                gifData: nil,
+                                failed: false
+                            )
+                        }
+                    }
+                    return
+                }
+
+                // Static image handling
+                guard let img = downsampleImage(
+                    data: data,
+                    maxDimension: Constants.maxThumbnailSize
+                ) else {
                     let errMsg = "Failed to downsample image thumbnail for file: \(file.name)"
                     retryHandler(retryCount: retryCount, errMsg: errMsg)
+                    return
                 }
+
+                // Cache downsampled thumbnail
+                if advancedSettings.cacheThumbnail,
+                   let compressed = img.jpegData(
+                       compressionQuality: Constants.thumbnailQuality
+                   ) {
+
+                    FileCache.shared.store(
+                        for: serverURL,
+                        data: compressed,
+                        path: file.path,
+                        modified: file.modified,
+                        fileID: "thumb"
+                    )
+                }
+
+                // Render UI
+                GlobalThumbnailLoader.shared.finish(
+                    filePath: file.path,
+                    image: img,
+                    gifData: nil,
+                    failed: false
+                )
             }
         }.resume()
     }

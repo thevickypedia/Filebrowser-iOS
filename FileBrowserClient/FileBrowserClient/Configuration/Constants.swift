@@ -31,6 +31,8 @@ struct Constants {
     static let thumbnailQuality: CGFloat = 0.1
     static let thumbnailRetryLimit: Int = 5
     static let maxThumbnailSize: CGFloat = 320
+    // 10 MB is the max GIF filesize that can be rendered as a thumbnail
+    static let maxGIFThumbnailBytes: Int = 10_000_000
 
     // MediaPlayerView:
     // Minimum duration (in secs) of a video to be considered resume worthy
