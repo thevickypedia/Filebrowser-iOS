@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.58.2 (01/11/2026)
+--------------------
+- [b793485](https://github.com/thevickypedia/Filebrowser-iOS/commit/b79348525904239368b9d7a2a79a818a4593d1c5) chore: Release ``v1.58.2``
+- [1dbe59e](https://github.com/thevickypedia/Filebrowser-iOS/commit/1dbe59ee3310f743139f771fcfdba28e42ff46b4) style: Make delete all sandbox files button look destructive
+- [b541e05](https://github.com/thevickypedia/Filebrowser-iOS/commit/b541e05d0631ba4cdc7b5bfd34fc1ae943f6fa78) perf: Include a new option to delete all sandbox files
+- [91f8900](https://github.com/thevickypedia/Filebrowser-iOS/commit/91f89006fb70b1fde21c44ebd8b8f21bbda0acfd) chore: Update release notes for v1.58.1
+
 v1.58.1 (01/10/2026)
 --------------------
 - [66bccdf](https://github.com/thevickypedia/Filebrowser-iOS/commit/66bccdfc9c1d7d1c273d7b564717146385ef279d) chore: Release ``v1.58.1``
