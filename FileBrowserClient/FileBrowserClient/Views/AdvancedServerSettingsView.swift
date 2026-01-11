@@ -27,6 +27,7 @@ struct AdvancedServerSettingsView: View {
     @State private var localFiles: [URL] = []
     @State private var showOnlyLogFiles: Bool = true
     @State private var rotatingLogs: Bool = false
+    @State private var showDeleteAllSB: Bool = false
     @State private var showLocalFilePicker: Bool = false
     @State private var showLocalFileContent: Bool = false
     @State private var selectedLocalFile: URL?
@@ -168,6 +169,17 @@ struct AdvancedServerSettingsView: View {
         }
     }
 
+    func deleteAllSBFiles() -> (Int, Int) {
+        let totalFiles = filteredLocalFiles.count
+        var totalSize = 0
+        for localFile in filteredLocalFiles {
+            let fileSize = (try? FileManager.default.attributesOfItem(atPath: localFile.path))?[.size] as? Int ?? 0
+            totalSize += fileSize
+            deleteLocalFile(localFile)
+        }
+        return (totalFiles, totalSize)
+    }
+
     private var showDeviceMetricsView: some View {
         NavigationView {
             MetricsView()
@@ -250,6 +262,25 @@ struct AdvancedServerSettingsView: View {
                         }
                     }
                 }
+                if !filteredLocalFiles.isEmpty {
+                    let deleteLabel = showOnlyLogFiles ? "Delete all log files" : "Delete all files"
+                    Button(action: {
+                        showDeleteAllSB = true
+                    }) {
+                        Label(deleteLabel, systemImage: "trash")
+                    }
+                }
+            }
+            .alert("Are you sure?", isPresented: $showDeleteAllSB) {
+                Button("Delete", role: .destructive) {
+                    let (totalFiles, totalSize) = deleteAllSBFiles()
+                    let sizeDeleted = formatBytes(Int64(totalSize))
+                    let msg = "Deleted \(totalFiles) files of size \(sizeDeleted)"
+                    localFilesMessage = ToastMessagePayload(
+                        text: msg, color: .red, duration: 3
+                    )
+                }
+                Button("Cancel", role: .cancel) { }
             }
             .navigationTitle("Sandbox Files")
             .modifier(ToastMessage(payload: $localFilesMessage))
