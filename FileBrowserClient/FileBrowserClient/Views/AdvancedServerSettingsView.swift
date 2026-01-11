@@ -264,7 +264,7 @@ struct AdvancedServerSettingsView: View {
                 }
                 if !filteredLocalFiles.isEmpty {
                     let deleteLabel = showOnlyLogFiles ? "Delete all log files" : "Delete all files"
-                    Button(action: {
+                    Button(role: .destructive, action: {
                         showDeleteAllSB = true
                     }) {
                         Label(deleteLabel, systemImage: "trash")
