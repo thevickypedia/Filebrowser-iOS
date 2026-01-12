@@ -34,6 +34,7 @@ struct FileListView: View {
     @State private var sharePath: FileItem?
 
     @State private var hideDotfiles = false
+    @State private var redirectAfterCopyMove = false
     @State private var showingSettings = false
     @State private var dateFormatExact = false
 
@@ -404,6 +405,7 @@ struct FileListView: View {
         Form {
             Toggle("Hide dotfiles", isOn: $hideDotfiles)
             Toggle("Set exact date format", isOn: $dateFormatExact)
+            Toggle("Redirect to destination after copy/move", isOn: $redirectAfterCopyMove)
             Button("Save", action: saveSettings)
             if let usage = usageInfo {
                 Section(header: Text("Server Capacity")) {
@@ -452,6 +454,7 @@ struct FileListView: View {
         .onAppear {
             hideDotfiles = auth.tokenPayload?.user.hideDotfiles ?? false
             dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
+            redirectAfterCopyMove = auth.tokenPayload?.user.redirectAfterCopyMove ?? false
             fetchUsageInfo()
         }
         .sheet(isPresented: $showAdvancedServerSettings) {
@@ -2260,9 +2263,9 @@ struct FileListView: View {
         var updatedSettings = currentSettings
         updatedSettings.hideDotfiles = hideDotfiles
         updatedSettings.dateFormat = dateFormatExact
+        updatedSettings.redirectAfterCopyMove = redirectAfterCopyMove
 
         // MARK: Set both current state, and auth state (since self is overriden with auth in init)
-        auth.tokenPayload?.user = updatedSettings
         auth.tokenPayload?.user = updatedSettings
         Log.debug("🔄 Updated settings: \(updatedSettings)")
 
@@ -2270,7 +2273,7 @@ struct FileListView: View {
 
         let payload: [String: Any] = [
             "what": "user",
-            "which": ["locale", "hideDotfiles", "dateFormat"],
+            "which": ["locale", "hideDotfiles", "singleClick", "redirectAfterCopyMove", "dateFormat", "aceEditorTheme"],
             "data": dataDict
         ]
 
@@ -2283,6 +2286,7 @@ struct FileListView: View {
                     Log.info("✅ Settings saved")
                     auth.tokenPayload?.user.hideDotfiles = hideDotfiles
                     auth.tokenPayload?.user.dateFormat = dateFormatExact
+                    auth.tokenPayload?.user.redirectAfterCopyMove = redirectAfterCopyMove
                     settingsMessage = ToastMessagePayload(text: "✅ Settings saved", color: .green)
                 } else {
                     Log.error("❌ Settings save failed: \(body)")

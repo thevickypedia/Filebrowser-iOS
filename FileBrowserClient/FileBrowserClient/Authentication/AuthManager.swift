@@ -50,6 +50,7 @@ struct UserAccount: Codable {
     // MARK: Updated by settings page
     var hideDotfiles: Bool
     var dateFormat: Bool
+    var redirectAfterCopyMove: Bool
 }
 
 struct UserPermission: Codable {
