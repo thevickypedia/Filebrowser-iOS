@@ -452,9 +452,7 @@ struct FileListView: View {
         // MARK: Messages within the settings sheet
         .modifier(ToastMessage(payload: $settingsMessage))
         .onAppear {
-            hideDotfiles = auth.tokenPayload?.user.hideDotfiles ?? false
-            dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
-            redirectAfterCopyMove = auth.tokenPayload?.user.redirectAfterCopyMove ?? false
+            getCurrentSettings()
             fetchUsageInfo()
         }
         .sheet(isPresented: $showAdvancedServerSettings) {
@@ -2236,6 +2234,93 @@ struct FileListView: View {
             }
         }
         initiateTusUpload(for: fileURL)
+    }
+
+    private func loadDefaultSettings() {
+        hideDotfiles = auth.tokenPayload?.user.hideDotfiles ?? false
+        dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
+        redirectAfterCopyMove = auth.tokenPayload?.user.redirectAfterCopyMove ?? false
+    }
+
+    private func getCurrentSettings() {
+        // Set defaults
+        loadDefaultSettings()
+
+        guard let currentSettings = auth.tokenPayload?.user else {
+            Log.error("❌ Invalid user ID")
+            errorTitle = "Internal Error"
+            errorMessage = "Invalid user ID"
+            return
+        }
+
+        guard let preparedRequest = baseRequest.prepare(
+            pathComponents: ["api", "users", String(currentSettings.id)],
+            method: RequestMethod.get
+        ) else {
+            let msg = "Failed to prepare request for: /api/settings"
+            Log.error("❌ \(msg)")
+            errorTitle = "Internal Error"
+            errorMessage = msg
+            return
+        }
+
+        let task = preparedRequest.session.dataTask(
+            with: preparedRequest.request
+        ) { data, _, error in
+
+            if let error = error {
+                Log.error("Failed to fetch settings: \(error)")
+                self.errorTitle = "Network Error"
+                self.errorMessage = error.localizedDescription
+                return
+            }
+
+            guard let data = data else {
+                Log.error("No data returned for settings")
+                return
+            }
+
+            do {
+                let json = try JSONSerialization.jsonObject(with: data, options: [])
+                // TODO: Load UserAccount struct after updating output from "/api/users/1"
+                guard let settings = json as? [String: Any] else {
+                    Log.error("Failed to parse settings JSON")
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    Log.info("Loading latest settings from the server: ")
+                    if let value = settings["hideDotfiles"] as? Bool {
+                        self.hideDotfiles = value
+                        auth.tokenPayload?.user.hideDotfiles = value
+                        Log.info("1. hideDotfiles: \(value)")
+                    } else {
+                        self.hideDotfiles = auth.tokenPayload?.user.hideDotfiles ?? false
+                    }
+
+                    if let value = settings["dateFormat"] as? Bool {
+                        self.dateFormatExact = value
+                        auth.tokenPayload?.user.dateFormat = value
+                        Log.info("2. dateFormat: \(value)")
+                    } else {
+                        self.dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
+                    }
+
+                    if let value = settings["redirectAfterCopyMove"] as? Bool {
+                        self.redirectAfterCopyMove = value
+                        auth.tokenPayload?.user.redirectAfterCopyMove = value
+                        Log.info("3. redirectAfterCopyMove: \(value)")
+                    } else {
+                        self.redirectAfterCopyMove = auth.tokenPayload?.user.redirectAfterCopyMove ?? false
+                    }
+                }
+
+            } catch {
+                Log.error("JSON parsing error: \(error)")
+            }
+        }
+
+        task.resume()
     }
 
     func saveSettings() {

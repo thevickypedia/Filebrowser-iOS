@@ -39,6 +39,7 @@ struct JWTPayload: Codable {
     var user: UserAccount
 }
 
+// TODO: Check for references and update this struct
 struct UserAccount: Codable {
     let lockPassword: Bool
     let locale: String
