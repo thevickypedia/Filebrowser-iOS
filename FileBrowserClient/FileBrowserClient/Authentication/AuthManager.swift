@@ -57,12 +57,12 @@ struct UserAccount: Codable {
     let scope: String?
     let locale: String
     let lockPassword: Bool
-    let viewMode: String  // TODO: Use this
+    let viewMode: String  // MARK: Mobile app uses it's own view mode
     let singleClick: Bool
     var redirectAfterCopyMove: Bool  // MARK: Updated by settings page
     let perm: UserPermission
     let commands: [String]?
-    let sorting: Sorting?  // TODO: Use this
+    let sorting: Sorting?  // MARK: In sync with the server/session
     let rules: [String]?
     var hideDotfiles: Bool  // MARK: Updated by settings page
     var dateFormat: Bool  // MARK: Updated by settings page
