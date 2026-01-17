@@ -2257,7 +2257,7 @@ struct FileListView: View {
             pathComponents: ["api", "users", String(currentSettings.id)],
             method: RequestMethod.get
         ) else {
-            let msg = "Failed to prepare request for: /api/settings"
+            let msg = "Failed to prepare request for: /api/users/\(currentSettings.id)"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
             errorMessage = msg
@@ -2281,38 +2281,13 @@ struct FileListView: View {
             }
 
             do {
-                let json = try JSONSerialization.jsonObject(with: data, options: [])
-                // TODO: Load UserAccount struct after updating output from "/api/users/1"
-                guard let settings = json as? [String: Any] else {
-                    Log.error("Failed to parse settings JSON")
-                    return
-                }
-
+                let settings = try JSONDecoder().decode(UserAccount.self, from: data)
+                Log.debug("Settings: \(settings)")
                 DispatchQueue.main.async {
-                    Log.info("Loading latest settings from the server: ")
-                    if let value = settings["hideDotfiles"] as? Bool {
-                        self.hideDotfiles = value
-                        auth.tokenPayload?.user.hideDotfiles = value
-                        Log.info("1. hideDotfiles: \(value)")
-                    } else {
-                        self.hideDotfiles = auth.tokenPayload?.user.hideDotfiles ?? false
-                    }
-
-                    if let value = settings["dateFormat"] as? Bool {
-                        self.dateFormatExact = value
-                        auth.tokenPayload?.user.dateFormat = value
-                        Log.info("2. dateFormat: \(value)")
-                    } else {
-                        self.dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
-                    }
-
-                    if let value = settings["redirectAfterCopyMove"] as? Bool {
-                        self.redirectAfterCopyMove = value
-                        auth.tokenPayload?.user.redirectAfterCopyMove = value
-                        Log.info("3. redirectAfterCopyMove: \(value)")
-                    } else {
-                        self.redirectAfterCopyMove = auth.tokenPayload?.user.redirectAfterCopyMove ?? false
-                    }
+                    auth.tokenPayload?.user = settings
+                    self.hideDotfiles = settings.hideDotfiles
+                    self.dateFormatExact = settings.dateFormat
+                    self.redirectAfterCopyMove = settings.redirectAfterCopyMove
                 }
 
             } catch {

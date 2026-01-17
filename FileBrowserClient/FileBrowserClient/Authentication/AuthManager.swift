@@ -39,19 +39,34 @@ struct JWTPayload: Codable {
     var user: UserAccount
 }
 
-// TODO: Check for references and update this struct
+enum SortBy: String, Codable {
+    case name
+    case modified
+    case size
+}
+
+struct Sorting: Codable {
+    let by: SortBy
+    let asc: Bool
+}
+
 struct UserAccount: Codable {
-    let lockPassword: Bool
-    let locale: String
-    let perm: UserPermission
-    let singleClick: Bool
     let id: Int
+    let username: String?
+    let password: String?
+    let scope: String?
+    let locale: String
+    let lockPassword: Bool
+    let viewMode: String  // TODO: Use this
+    let singleClick: Bool
+    var redirectAfterCopyMove: Bool  // MARK: Updated by settings page
+    let perm: UserPermission
     let commands: [String]?
-    let viewMode: String
-    // MARK: Updated by settings page
-    var hideDotfiles: Bool
-    var dateFormat: Bool
-    var redirectAfterCopyMove: Bool
+    let sorting: Sorting?  // TODO: Use this
+    let rules: [String]?
+    var hideDotfiles: Bool  // MARK: Updated by settings page
+    var dateFormat: Bool  // MARK: Updated by settings page
+    var aceEditorTheme: String?
 }
 
 struct UserPermission: Codable {
