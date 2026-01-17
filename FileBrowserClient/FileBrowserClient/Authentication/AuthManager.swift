@@ -62,7 +62,7 @@ struct UserAccount: Codable {
     var redirectAfterCopyMove: Bool  // MARK: Updated by settings page
     let perm: UserPermission
     let commands: [String]?
-    let sorting: Sorting?  // MARK: In sync with the server/session
+    let sorting: Sorting?  // MARK: Mobile app uses it's own sort option
     let rules: [String]?
     var hideDotfiles: Bool  // MARK: Updated by settings page
     var dateFormat: Bool  // MARK: Updated by settings page

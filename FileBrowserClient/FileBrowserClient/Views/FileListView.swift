@@ -68,6 +68,7 @@ struct FileListView: View {
 
     @State private var usageInfo: (used: Int64, total: Int64)?
 
+    @State private var sortOption: SortOption = .nameAsc
     @AppStorage("viewMode") private var viewModeRawValue: String = ViewMode.list.rawValue
 
     @State private var loadingFiles: [String: Bool] = [:] // Track loading state by file path
@@ -117,7 +118,6 @@ struct FileListView: View {
     let cacheExtensions: [String]
     let backgroundLogin: BackgroundLogin
     let baseRequest: Request
-    let sortOption: SortOption
 
     init(
         isLoggedIn: Binding<Bool>,
@@ -127,8 +127,7 @@ struct FileListView: View {
         advancedSettings: AdvancedSettings,
         cacheExtensions: [String],
         backgroundLogin: BackgroundLogin,
-        baseRequest: Request,
-        sortOption: SortOption
+        baseRequest: Request
     ) {
         self._isLoggedIn = isLoggedIn
         self._pathStack = pathStack
@@ -138,7 +137,6 @@ struct FileListView: View {
         self.cacheExtensions = cacheExtensions
         self.backgroundLogin = backgroundLogin
         self.baseRequest = baseRequest
-        self.sortOption = sortOption
     }
 
     private func invalidAuth() {
@@ -306,7 +304,7 @@ struct FileListView: View {
 
             if viewModel.files.count > 1 {
                 Menu {
-                    Picker("Sort by", selection: .constant(sortOption)) {
+                    Picker("Sort by", selection: $sortOption) {
                         Label("Name ↑", systemImage: "arrow.up").tag(SortOption.nameAsc)
                         Label("Name ↓", systemImage: "arrow.down").tag(SortOption.nameDesc)
                         Label("Size ↑", systemImage: "arrow.up").tag(SortOption.sizeAsc)

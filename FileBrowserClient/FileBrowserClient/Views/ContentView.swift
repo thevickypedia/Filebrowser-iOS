@@ -63,22 +63,6 @@ struct ContentView: View {
         return BackgroundLogin(auth: auth, baseRequest: baseRequest)
     }
 
-    private var serverSortOption: SortOption {
-        guard let sorting = auth.tokenPayload?.user.sorting else {
-            Log.warn("No sorting option was found in token payload.")
-            return .nameAsc
-        }
-
-        switch (sorting.by, sorting.asc) {
-        case (.name, true):      return .nameAsc
-        case (.name, false):     return .nameDesc
-        case (.size, true):      return .sizeAsc
-        case (.size, false):     return .sizeDesc
-        case (.modified, true):  return .modifiedAsc
-        case (.modified, false): return .modifiedDesc
-        }
-    }
-
     private func fileListView(advancedSettings: AdvancedSettings,
                               extensionTypes: ExtensionTypes,
                               cacheExtensions: [String]) -> some View {
@@ -90,8 +74,7 @@ struct ContentView: View {
             advancedSettings: advancedSettings,
             cacheExtensions: cacheExtensions,
             backgroundLogin: backgroundLogin ?? initialize(),  // Re-initialize if nil
-            baseRequest: baseRequest,
-            sortOption: serverSortOption
+            baseRequest: baseRequest
         )
         .environmentObject(fileListViewModel)
     }
