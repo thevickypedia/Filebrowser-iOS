@@ -457,6 +457,7 @@ struct ContentView: View {
         let msgF = "Login failed: \(msg)"
         Log.error(msgF)
         errorMessage = msgF
+        self.oneTimePasscode = ""
     }
 
     private func processHealthCheck() async -> Bool {
