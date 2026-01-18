@@ -135,6 +135,27 @@ struct ContentView: View {
         )
     }
 
+    @ViewBuilder
+    private func otpView(with loadedSession: StoredSession?) -> some View {
+        if storeOtpSecret {
+            SecureField("OTP Secret", text: $oneTimePasscodeSecret)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+        } else {
+            TextField("One-time Passcode", text: $oneTimePasscode)
+                .keyboardType(.numberPad)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .onChange(of: oneTimePasscode) { newValue in
+                    let filtered = newValue.filter { $0.isNumber }
+                    oneTimePasscode = String(filtered.prefix(6))
+                }
+        }
+
+        if loadedSession == nil || loadedSession?.otpSecret.isEmpty == true {
+            Toggle("Store OTP Secret", isOn: $storeOtpSecret)
+                .padding(.top, 8)
+        }
+    }
+
     var loginView: some View {
         VStack(spacing: 20) {
             Image("logo")
@@ -168,6 +189,11 @@ struct ContentView: View {
                 // Face ID mode with saved session
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
+                if transitProtection {
+                    if oneTimePasscode == "" && oneTimePasscodeSecret == "" {
+                        otpView(with: loadedSession)
+                    }
+                }
                 Button(action: {
                     biometricSignIn(session: existingSession)
                 }) {
@@ -205,23 +231,7 @@ struct ContentView: View {
                 SecureField("Password", text: $password)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                if storeOtpSecret {
-                    SecureField("OTP Secret", text: $oneTimePasscodeSecret)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                } else {
-                    TextField("One-time Passcode", text: $oneTimePasscode)
-                        .keyboardType(.numberPad) // shows numeric keypad
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .onChange(of: oneTimePasscode) { newValue in
-                            // Allow only digits, limit to 6
-                            let filtered = newValue.filter { $0.isNumber }
-                            if filtered.count > 6 {
-                                oneTimePasscode = String(filtered.prefix(6))
-                            } else {
-                                oneTimePasscode = filtered
-                            }
-                        }
-                }
+                otpView(with: loadedSession)
 
                 // Show toggle button only when there is no stored session or the stored otpSecret is empty
                 if loadedSession == nil || loadedSession?.otpSecret == "" {
