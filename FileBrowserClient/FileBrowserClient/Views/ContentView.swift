@@ -449,7 +449,7 @@ struct ContentView: View {
     }
 
     private func processHealthCheck() async -> Bool {
-        toastMessage = ToastMessagePayload(text: "⏳ Checking server health", color: .primary)
+        toastMessage = ToastMessagePayload(text: "⏳ Checking server health", color: .primary, duration: 0.5)
         let healthCheck = await checkServerHealth(baseRequest: baseRequest)
         if !healthCheck.success {
             errorMessage = "Health check failed - \(healthCheck.text)"
