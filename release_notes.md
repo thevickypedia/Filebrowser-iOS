@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.59.0 (01/17/2026)
+--------------------
+- [9b1d344](https://github.com/thevickypedia/Filebrowser-iOS/commit/9b1d3449c7ce76c37b5f6d924d0bfef5b0297c23) chore: Release ``v1.59.0``
+- [e8b13a2](https://github.com/thevickypedia/Filebrowser-iOS/commit/e8b13a208a397a1428676362170b643fd2673344) revert: Rollback sorting option in sync with the server/session
+- [ae09940](https://github.com/thevickypedia/Filebrowser-iOS/commit/ae09940b39931e8f4660dba1eabba8a978be3c15) feat: Keep sorting option in sync with the server/session
+- [082a565](https://github.com/thevickypedia/Filebrowser-iOS/commit/082a565111687833c66b922b3762ae85cba8a3d2) refactor: Update ``UserAccount`` struct and use ``JSONDecoder`` to load profile settings
+- [ec51c9c](https://github.com/thevickypedia/Filebrowser-iOS/commit/ec51c9c4cceb6bfa05f3aad78b55d914c1948330) perf: GET server's profile settings everytime the settings sheet is rendered
+- [9b50c8a](https://github.com/thevickypedia/Filebrowser-iOS/commit/9b50c8a211c97e4da6a01c775a74f907df6d7817) feat: Add a new setting to redirect to destination after copy/move
+- [38557b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/38557b9279e3aa4e6c457e0a5e43d9dd8b67d9ff) chore: Update release notes for v1.58.2
+
 v1.58.2 (01/11/2026)
 --------------------
 - [b793485](https://github.com/thevickypedia/Filebrowser-iOS/commit/b79348525904239368b9d7a2a79a818a4593d1c5) chore: Release ``v1.58.2``
