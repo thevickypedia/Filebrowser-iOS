@@ -150,7 +150,8 @@ struct ContentView: View {
                 }
         }
 
-        if loadedSession == nil || loadedSession?.otpSecret.isEmpty == true {
+        // Show toggle button only when there is no stored session or the stored otpSecret is empty
+        if loadedSession == nil || loadedSession?.otpSecret == "" {
             Toggle("Store OTP Secret", isOn: $storeOtpSecret)
                 .padding(.top, 8)
         }
@@ -233,12 +234,6 @@ struct ContentView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
 
                 otpView(with: loadedSession)
-
-                // Show toggle button only when there is no stored session or the stored otpSecret is empty
-                if loadedSession == nil || loadedSession?.otpSecret == "" {
-                    Toggle("Store OTP Secret", isOn: $storeOtpSecret)
-                        .padding(.top, 8)
-                }
 
                 // Conditionally display "Remember Me" Toggle only when Face ID is not being used
                 if !useFaceID {
