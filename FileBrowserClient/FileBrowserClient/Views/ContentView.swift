@@ -192,8 +192,11 @@ struct ContentView: View {
                     .padding(.top, 8)
                 if transitProtection {
                     if oneTimePasscodeSecret.isEmpty || oneTimePasscodeSecret.count < 32 {
-                        // TODO: Check for token expiry
-                        otpView(with: loadedSession)
+                        let now = Date().timeIntervalSince1970
+                        if let expiry = auth.tokenPayload?.exp,
+                           now >= expiry {
+                            otpView(with: loadedSession)
+                        }
                     }
                 }
                 Button(action: {
