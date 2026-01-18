@@ -157,6 +157,21 @@ struct ContentView: View {
         }
     }
 
+    private func showOtpFaceID(session: StoredSession?) -> Bool {
+        guard transitProtection else { return false }
+        guard session?.otpSecret == nil else { return false }
+        guard let tokenPayload = auth.tokenPayload else {
+            Log.debug("No auth payload stored, displaying otp options")
+            return true
+        }
+        if Date().timeIntervalSince1970 >= tokenPayload.exp {
+            // TOKEN EXPIRED
+            Log.debug("Session token expired and no otpSecret stored, displaying otp options")
+            return true
+        }
+        return false
+    }
+
     var loginView: some View {
         VStack(spacing: 20) {
             Image("logo")
@@ -190,14 +205,8 @@ struct ContentView: View {
                 // Face ID mode with saved session
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
-                if transitProtection {
-                    if oneTimePasscodeSecret.isEmpty || oneTimePasscodeSecret.count < 32 {
-                        let now = Date().timeIntervalSince1970
-                        if let expiry = auth.tokenPayload?.exp,
-                           now >= expiry {
-                            otpView(with: loadedSession)
-                        }
-                    }
+                if showOtpFaceID(session: loadedSession) {
+                    otpView(with: loadedSession)
                 }
                 Button(action: {
                     biometricSignIn(session: existingSession)
