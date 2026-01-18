@@ -190,7 +190,8 @@ struct ContentView: View {
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
                 if transitProtection {
-                    if oneTimePasscode == "" && oneTimePasscodeSecret == "" {
+                    if oneTimePasscodeSecret.isEmpty || oneTimePasscodeSecret.count < 32 {
+                        // TODO: Check for token expiry
                         otpView(with: loadedSession)
                     }
                 }
