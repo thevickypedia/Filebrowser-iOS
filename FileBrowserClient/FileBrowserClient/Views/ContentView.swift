@@ -157,6 +157,32 @@ struct ContentView: View {
         }
     }
 
+    private func showOtpFaceIDJWT(payload: JWTPayload?) -> Bool {
+        guard let tokenPayload = payload else { return true }
+        if Date().timeIntervalSince1970 >= tokenPayload.exp {
+            // TOKEN EXPIRED
+            Log.info("Session token expired and no otpSecret stored, displaying otp options")
+            return true
+        } else {
+            Log.info("Token is still valid")
+            return false
+        }
+    }
+
+    private func showOtpFaceID(session: StoredSession?) -> Bool {
+        guard transitProtection else {
+            Log.info("Transit protection is disabled")
+            return false
+        }
+        guard session?.otpSecret == nil || session?.otpSecret == "" else {
+            Log.info("otpSecret not stored")
+            return false
+        }
+        return showOtpFaceIDJWT(
+            payload: decodeJWT(jwt: session?.token ?? "") ?? auth.tokenPayload ?? decodeJWT(jwt: auth.token) ?? nil
+        )
+    }
+
     var loginView: some View {
         VStack(spacing: 20) {
             Image("logo")
@@ -190,14 +216,8 @@ struct ContentView: View {
                 // Face ID mode with saved session
                 Toggle("Login with Face ID", isOn: $useFaceID)
                     .padding(.top, 8)
-                if transitProtection {
-                    if oneTimePasscodeSecret.isEmpty || oneTimePasscodeSecret.count < 32 {
-                        let now = Date().timeIntervalSince1970
-                        if let expiry = auth.tokenPayload?.exp,
-                           now >= expiry {
-                            otpView(with: loadedSession)
-                        }
-                    }
+                if showOtpFaceID(session: loadedSession) {
+                    otpView(with: loadedSession)
                 }
                 Button(action: {
                     biometricSignIn(session: existingSession)
@@ -419,6 +439,8 @@ struct ContentView: View {
     func handleLogout(_ clearActiveServers: Bool = false) {
         pathStack.removeAll()
 
+        auth.tokenPayload = nil
+        auth.token = ""
         isLoggedIn = false
         if !rememberMe {
             username = ""
@@ -456,6 +478,8 @@ struct ContentView: View {
         Log.error(msgF)
         errorMessage = msgF
         self.oneTimePasscode = ""
+        auth.tokenPayload = nil
+        auth.token = ""
     }
 
     private func processHealthCheck() async -> Bool {
