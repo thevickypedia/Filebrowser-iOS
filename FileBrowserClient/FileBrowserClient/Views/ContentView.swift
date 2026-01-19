@@ -157,18 +157,30 @@ struct ContentView: View {
         }
     }
 
+    // TODO: Need to test more
     private func showOtpFaceID(session: StoredSession?) -> Bool {
-        guard transitProtection else { return false }
-        guard session?.otpSecret == nil else { return false }
-        guard let tokenPayload = auth.tokenPayload else {
-            Log.debug("No auth payload stored, displaying otp options")
+        guard transitProtection else {
+            Log.info("Transit protection is disabled")
+            return false
+        }
+        guard session?.otpSecret == nil || session?.otpSecret == "" else {
+            Log.info("otpSecret not stored")
+            return false
+        }
+        if let tokenPayload = auth.tokenPayload {
+            if Date().timeIntervalSince1970 >= tokenPayload.exp {
+                // TOKEN EXPIRED
+                Log.info("Session token expired and no otpSecret stored, displaying otp options")
+                return true
+            } else {
+                Log.info("Token is still valid")
+                return false
+            }
+        } else if auth.token != "" {
+            Log.info("Some token still exists, trying to proceed")
             return true
         }
-        if Date().timeIntervalSince1970 >= tokenPayload.exp {
-            // TOKEN EXPIRED
-            Log.debug("Session token expired and no otpSecret stored, displaying otp options")
-            return true
-        }
+        Log.info("All conditions were exhausted")
         return false
     }
 
