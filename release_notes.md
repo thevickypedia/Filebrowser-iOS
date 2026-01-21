@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v1.59.1 (01/20/2026)
+--------------------
+- [5579d8a](https://github.com/thevickypedia/Filebrowser-iOS/commit/5579d8a8a20868312c47073fb276f39e6ce43338) chore: Release ``v1.59.1``
+- [d5d66b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/d5d66b92716a180ce37d3bd85996f90e319514a6) perf: Improve stability for otp options when faceID is turned on
+- [0ee1251](https://github.com/thevickypedia/Filebrowser-iOS/commit/0ee1251719f3320b558d96eae7ab28efa3e21764) feat: Show OTP option only when the existing token has expired
+- [39a0d18](https://github.com/thevickypedia/Filebrowser-iOS/commit/39a0d18dc62dd571599f71e9cdf672a2f09041ee) fix: Remove duplicate ``Store OTP Secret`` toggle
+- [ece0111](https://github.com/thevickypedia/Filebrowser-iOS/commit/ece0111ee806d1e5bac85806b028e756373ff632) perf: Reset ``oneTimePasscode`` after a login error
+- [e5e9b77](https://github.com/thevickypedia/Filebrowser-iOS/commit/e5e9b77e61846a1c5b106a55f3c6dabf080da1b8) perf: Show ``otpView`` only when passcode secret is ``null`` or <32 characters
+- [b6916a5](https://github.com/thevickypedia/Filebrowser-iOS/commit/b6916a5b16cbebc4e7049831ddf05d8f56b74c34) feat: Display OTP option with FaceID when ``loadedSession`` has expired
+- [db6f814](https://github.com/thevickypedia/Filebrowser-iOS/commit/db6f814bbd74f0574622aa4238b624bd439ec62d) fix: Set a minimal upper bound for server health toast message
+- [93597ca](https://github.com/thevickypedia/Filebrowser-iOS/commit/93597ca7b8269eb9658a98b23d9a0d71fd382c61) chore: Update release notes for v1.59.0
+
 v1.59.0 (01/17/2026)
 --------------------
 - [9b1d344](https://github.com/thevickypedia/Filebrowser-iOS/commit/9b1d3449c7ce76c37b5f6d924d0bfef5b0297c23) chore: Release ``v1.59.0``
