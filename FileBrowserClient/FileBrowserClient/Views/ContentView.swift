@@ -52,10 +52,11 @@ struct ContentView: View {
     private var baseRequest: Request {
         // auth might not be instantiated yet, consider user input as fallback
         let requestURL = auth.serverURL.isEmpty ? serverURL : auth.serverURL
-        if auth.token.isEmpty {
+        let tokenTmp = (self.token?.isEmpty == false) ? self.token! : auth.token
+        if tokenTmp.isEmpty {
             Log.warn("Authentication token not found; the request may only be used for initial login.")
         }
-        return Request(baseURL: requestURL, token: auth.token)
+        return Request(baseURL: requestURL, token: tokenTmp)
     }
 
     private func initialize() -> BackgroundLogin {
