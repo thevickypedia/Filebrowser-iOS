@@ -138,7 +138,8 @@ struct ContentView: View {
     @ViewBuilder
     private func otpView(with loadedSession: StoredSession?) -> some View {
         if storeOtpSecret {
-            SecureField("OTP Secret", text: $oneTimePasscodeSecret)
+            TextField("OTP Secret", text: $oneTimePasscodeSecret)
+                .textContentType(.oneTimeCode)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
         } else {
             TextField("One-time Passcode", text: $oneTimePasscode)
@@ -638,7 +639,9 @@ struct ContentView: View {
             DispatchQueue.main.async {
                 self.username = session.username
                 self.password = sessionPassword
-                self.oneTimePasscodeSecret = session.otpSecret
+                if session.otpSecret != "" {
+                    self.oneTimePasscodeSecret = session.otpSecret
+                }
                 self.transitProtection = session.transitProtection
                 // Reuse the normal login flow
                 Task {
@@ -696,7 +699,9 @@ struct ContentView: View {
                 auth.tokenPayload = tokenPayload
                 // Extras
                 auth.password = session.password ?? password
-                auth.oneTimePasscodeSecret = session.otpSecret
+                if session.otpSecret != "" {
+                    auth.oneTimePasscodeSecret = session.otpSecret
+                }
                 auth.transitProtection = session.transitProtection
                 let response = await getServerVersion(baseRequest: baseRequest)
                 if response.success {
