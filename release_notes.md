@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.59.2 (01/24/2026)
+--------------------
+- [92b664d](https://github.com/thevickypedia/Filebrowser-iOS/commit/92b664df58af2d72ba76d3e4b3e749630d711833) chore: Release ``v1.59.2``
+- [476ded9](https://github.com/thevickypedia/Filebrowser-iOS/commit/476ded983dab3120f67394f2240962bbf23ab392) fix: Address ``JSONDecodeError`` when parsing search results
+- [281abae](https://github.com/thevickypedia/Filebrowser-iOS/commit/281abaebd5b4abaf68f8737f41d0dd511dbd31f8) fix: Use current session token as a backup if auth token is missing when constructing baseRequest
+- [5cdd61c](https://github.com/thevickypedia/Filebrowser-iOS/commit/5cdd61c5f3912243fbc20c024197d0c4f9dbf0d9) fix: Improve stability to store/retrieve OTP secret
+- [0e8f720](https://github.com/thevickypedia/Filebrowser-iOS/commit/0e8f7204482fb26cdef0c4fcb72c79fc05893121) chore: Update release notes for v1.59.1
+
 v1.59.1 (01/20/2026)
 --------------------
 - [5579d8a](https://github.com/thevickypedia/Filebrowser-iOS/commit/5579d8a8a20868312c47073fb276f39e6ce43338) chore: Release ``v1.59.1``
