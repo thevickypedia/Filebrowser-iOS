@@ -1497,7 +1497,12 @@ struct FileListView: View {
             }
 
             do {
-                let results = try JSONDecoder().decode([FileItemSearch].self, from: data)
+                let decoder = JSONDecoder()
+                let lines = data.split(separator: UInt8(ascii: "\n"))
+
+                let results = try lines.map { line in
+                    try decoder.decode(FileItemSearch.self, from: Data(line))
+                }
 
                 await MainActor.run {
                     viewModel.isLoading = false
