@@ -19,6 +19,8 @@ struct Constants {
     // 1. How frequently, the download speed should be updated in the UX in list view
     // 2. Minimum time (in secs) to accumulate the bytes downloaded and estimate the speed
     static let downloadSpeedUpdateInterval: Double = 0.1
+    // Only render first 100 items initially
+    static let filesDisplayLimit: Int = 100
 
     static let uploadCleanupDelay: Int = 2
 

@@ -73,6 +73,9 @@ struct FileListView: View {
 
     @State private var loadingFiles: [String: Bool] = [:] // Track loading state by file path
 
+    @State private var displayLimit: Int = Constants.filesDisplayLimit
+    @State private var hasLoadedMore = false
+
     @State private var currentDisplayPath: String = "/"
     @State private var isNavigating = false
 
@@ -151,6 +154,9 @@ struct FileListView: View {
 
         // Cancel any existing fetch
         viewModel.cancelCurrentFetch()
+
+        // Reset to initial limit on new directory
+        displayLimit = Constants.filesDisplayLimit
 
         guard auth.isValid else { invalidAuth(); return }
         viewModel.fetchFiles(baseRequest: baseRequest, at: path)
@@ -908,11 +914,25 @@ struct FileListView: View {
                         Text("Error: \(error)").foregroundColor(.red)
                     } else {
                         let sortedFiles = viewModel.sortedFiles(by: sortOption)
+                        let filesToDisplay = Array(sortedFiles.prefix(displayLimit))
                         Group {
                             if viewMode == .list {
-                                listView(for: sortedFiles)
+                                listView(for: filesToDisplay)
                             } else {
-                                gridView(for: sortedFiles, module: viewMode == .module)
+                                gridView(for: filesToDisplay, module: viewMode == .module)
+                            }
+                        }
+                        // "Load More" button if there are more files
+                        if sortedFiles.count > displayLimit {
+                            Button(action: {
+                                displayLimit += Constants.filesDisplayLimit
+                            }) {
+                                HStack {
+                                    Text("Load More (\(sortedFiles.count - displayLimit) remaining)")
+                                    Image(systemName: "arrow.down.circle.fill")
+                                }
+                                .foregroundColor(.blue)
+                                .padding()
                             }
                         }
                         if viewModel.files.isEmpty && !viewModel.isLoading {
