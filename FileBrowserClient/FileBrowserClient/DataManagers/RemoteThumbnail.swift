@@ -102,7 +102,6 @@ struct RemoteThumbnail: View {
     @State private var gifData: Data?
     // Prevent multiple load attempts
     @State private var loadAttempted = false
-    @State private var viewID = UUID()
 
     var body: some View {
         Group {
@@ -139,14 +138,8 @@ struct RemoteThumbnail: View {
             }
         }, threshold: 0))
         .onDisappear {
-            // Cancel any pending loads
-            loadAttempted = false
-            isLoading = false
             image = nil
             gifData = nil
-            loadingFiles.removeValue(forKey: file.path)
-            // Force view identity change to break closure references
-            viewID = UUID()
         }
     }
 
@@ -170,13 +163,9 @@ struct RemoteThumbnail: View {
     }
 
     private func loadThumbnail() {
-        // Capture current view identity
-        let capturedViewID = viewID
         GlobalThumbnailLoader.shared.load(filePath: file.path, start: {
             // Start actual loading
             DispatchQueue.main.async {
-                // Only proceed if view hasn't disappeared
-                guard capturedViewID == self.viewID else { return }
                 loadingFiles[file.path] = true
                 image = nil
                 gifData = nil
@@ -187,11 +176,6 @@ struct RemoteThumbnail: View {
             }
         }, completion: { image, gifData in
             DispatchQueue.main.async {
-                // Only update if view is still the same instance
-                guard capturedViewID == self.viewID else {
-                    // View disappeared, don't update state
-                    return
-                }
                 if let gif = gifData {
                     self.gifData = gif
                 } else if let img = image {
