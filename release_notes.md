@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+v1.60.0 (02/01/2026)
+--------------------
+- [aaa1fb9](https://github.com/thevickypedia/Filebrowser-iOS/commit/aaa1fb9cb835660d8a8296d7c237392b54623f82) chore: Release ``v1.60.0``
+- [4c56097](https://github.com/thevickypedia/Filebrowser-iOS/commit/4c56097e4c9b710b0f158d8e27f1c195293f03ea) refactor: Move loading thumbnail actions on appear/modifier to a function
+- [959c5bd](https://github.com/thevickypedia/Filebrowser-iOS/commit/959c5bd5bd6be7e1791a43c7edc5c15900cd7970) fix: Add an ``.onAppear`` step for thumbnails to handle navigation back from detail view
+- [6b34acf](https://github.com/thevickypedia/Filebrowser-iOS/commit/6b34acf22ccb6e0315b85edcde4a99d1b3074177) perf: Clear ``loadingFiles`` dictionary to prevents unbound dictionary growth
+- [c909dc4](https://github.com/thevickypedia/Filebrowser-iOS/commit/c909dc4e0f7940f0a44fca8f740c88b61fdbdb74) perf: Display only a definite number of files at any path
+- [09687de](https://github.com/thevickypedia/Filebrowser-iOS/commit/09687dec87395c9212ee90a438d729c59ab733f8) fix: Set error message on main thread for view list model
+- [f7f8185](https://github.com/thevickypedia/Filebrowser-iOS/commit/f7f8185250e1bb0a6af62861a85b226db3453529) revert: Guarding async callbacks with view identity
+- [4f29f45](https://github.com/thevickypedia/Filebrowser-iOS/commit/4f29f45326d0eb359b68f56cad10cfd0af923273) perf: Guard async callbacks with view identity
+- [8010afe](https://github.com/thevickypedia/Filebrowser-iOS/commit/8010afecac7935d8ddabdbc858b343e3b855ee62) fix: Avoid redundant ``fetchFiles`` action when view is changed
+- [3b31c6b](https://github.com/thevickypedia/Filebrowser-iOS/commit/3b31c6b1a0a6bbaabcf17c9d6f99cc1632be1a49) perf: Set ``thumbnailQueue`` to be a globally shared queue to avoid too much memory consumption
+- [4489bcb](https://github.com/thevickypedia/Filebrowser-iOS/commit/4489bcbf9aecfe8101fe20f564458895d4d1376a) perf: Replace array creation for file list to avoid memory leaks
+- [dfec449](https://github.com/thevickypedia/Filebrowser-iOS/commit/dfec44935500cbcc683d3d4132e17ca9a192aa56) perf: Remove view reset in remote thumbnail when file view changes
+- [69c72c3](https://github.com/thevickypedia/Filebrowser-iOS/commit/69c72c3100723628ebeb2a2baea9083f17fc03fc) perf: Avoid loading file list view in the main thread
+- [0c1c878](https://github.com/thevickypedia/Filebrowser-iOS/commit/0c1c8782aac3379ec421826cf5bf943ce840c36b) chore: Update release notes for v1.59.2
+
 v1.59.2 (01/24/2026)
 --------------------
 - [92b664d](https://github.com/thevickypedia/Filebrowser-iOS/commit/92b664df58af2d72ba76d3e4b3e749630d711833) chore: Release ``v1.59.2``
