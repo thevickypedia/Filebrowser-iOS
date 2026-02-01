@@ -158,6 +158,9 @@ struct FileListView: View {
         // Reset to initial limit on new directory
         displayLimit = Constants.filesDisplayLimit
 
+        // Clear loading states from previous directory
+        loadingFiles.removeAll()
+
         guard auth.isValid else { invalidAuth(); return }
         viewModel.fetchFiles(baseRequest: baseRequest, at: path)
     }
@@ -1052,6 +1055,8 @@ struct FileListView: View {
                 NotificationCenter.default.removeObserver(obs)
                 progressObserver = nil
             }
+            // Clean up when leaving the view entirely
+            loadingFiles.removeAll()
         }
         .sheet(isPresented: $isSharing) {
             if let filePath = sharePath ?? selectedItems.first {
