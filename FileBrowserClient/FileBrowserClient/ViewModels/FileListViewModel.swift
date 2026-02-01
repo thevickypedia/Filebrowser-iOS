@@ -145,51 +145,27 @@ class FileListViewModel: ObservableObject {
         }
 
         preparedRequest.session.dataTask(with: preparedRequest.request) { data, response, error in
-            DispatchQueue.main.async {
-                guard let httpResponse = response as? HTTPURLResponse else {
+            guard let data = data else {
+                self.errorMessage = "No data received"
+                return
+            }
+
+            do {
+                let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
+
+                DispatchQueue.main.async {
                     setLoading(false)
-                    self.errorMessage = "Server error: Invalid response"
-                    Log.error("❌ Server error: Response was not HTTPURLResponse")
-                    return
-                }
-
-                let responseText = formatHttpResponse(httpResponse)
-                guard httpResponse.statusCode == 200 else {
-                    setLoading(false)
-                    self.errorMessage = "Server error: \(responseText)"
-                    Log.error("❌ Server error: \(responseText)")
-                    return
-                }
-
-                setLoading(false)
-                if let error = error {
-                    self.errorMessage = error.localizedDescription
-                    return
-                }
-
-                guard let data = data else {
-                    self.errorMessage = "No data received"
-                    return
-                }
-
-                do {
-                    let result = try JSONDecoder().decode(ResourceResponse.self, from: data)
                     let fileItems = result.items
-                    Log.debug("Loaded \(fileItems.count) items at path: \(path)")
-                    // for file in fileItems {
-                    //    Log.debug(" - \(file.name) [\(file.isDir ? "folder" : "file")]")
-                    // }
                     if modifySheet {
                         self.sheetItems = fileItems
                     } else {
+                        Log.debug("Loaded \(fileItems.count) items at path: \(path)")
                         self.files = fileItems
                     }
-                } catch {
+                }
+            } catch {
+                DispatchQueue.main.async {
                     self.errorMessage = "Failed to parse files"
-                    Log.error("Failed to decode JSON: \(error.localizedDescription)")
-                    if let raw = String(data: data, encoding: .utf8) {
-                        Log.error("❌ Raw response: \(raw)")
-                    }
                 }
             }
         }.resume()
