@@ -135,7 +135,6 @@ struct RemoteThumbnail: View {
                 loadThumbnail()
             }
         }, threshold: 0))
-        .id(file.path) // Ensure view resets when file changes
         .onDisappear {
             image = nil
             gifData = nil
@@ -184,7 +183,7 @@ struct RemoteThumbnail: View {
                     // Don't need to do anything special here
                 }
                 self.isLoading = false
-                self.loadingFiles[file.path] = false
+                self.loadingFiles.removeValue(forKey: file.path)
             }
         })
     }
