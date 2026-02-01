@@ -18,6 +18,14 @@ final class GlobalThumbnailLoader {
     private var failedPaths: Set<String> = []
     private let queue = DispatchQueue(label: "GlobalThumbnailLoaderQueue", attributes: .concurrent)
 
+    // MARK: Shared operation queue
+    let thumbnailQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = Constants.maxConcurrentThumbnailRender
+        queue.qualityOfService = .userInitiated
+        return queue
+    }()
+
     func load(filePath: String, start: () -> Void, completion: @escaping (UIImage?, Data?) -> Void) {
         var shouldStart = false
         var shouldSkip = false
@@ -95,12 +103,6 @@ struct RemoteThumbnail: View {
     // Prevent multiple load attempts
     @State private var loadAttempted = false
 
-    private let thumbnailQueue: OperationQueue = {
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = Constants.maxConcurrentThumbnailRender
-        return queue
-    }()
-
     var body: some View {
         Group {
             if let gifData = gifData, advancedSettings.animateGIF {
@@ -169,7 +171,7 @@ struct RemoteThumbnail: View {
                 gifData = nil
                 isLoading = true
             }
-            thumbnailQueue.addOperation {
+            GlobalThumbnailLoader.shared.thumbnailQueue.addOperation {
                 self.actuallyLoadThumbnail()
             }
         }, completion: { image, gifData in
@@ -192,7 +194,7 @@ struct RemoteThumbnail: View {
         if retryCount < Constants.thumbnailRetryLimit {
             Log.warn("⚠️ \(errMsg) — attempt \(retryCount + 1)")
             // Retry by re-adding operation to queue with incremented retry count
-            thumbnailQueue.addOperation {
+            GlobalThumbnailLoader.shared.thumbnailQueue.addOperation {
                 self.actuallyLoadThumbnail(retryCount: retryCount + 1)
             }
         } else {
