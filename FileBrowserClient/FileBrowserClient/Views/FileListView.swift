@@ -1033,13 +1033,6 @@ struct FileListView: View {
                 progressObserver = nil
             }
         }
-       .onChange(of: pathStack) { newStack in
-           if !searchClicked && !searchInProgress {
-               let newPath = newStack.last ?? "/"
-               Log.debug("📂 Path changed: \(newPath)")
-               fetchFiles(at: newPath)
-           }
-       }
         .sheet(isPresented: $isSharing) {
             if let filePath = sharePath ?? selectedItems.first {
                 ShareSheetView(
