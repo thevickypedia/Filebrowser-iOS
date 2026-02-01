@@ -1033,13 +1033,13 @@ struct FileListView: View {
                 progressObserver = nil
             }
         }
-        .onChange(of: pathStack) { newStack in
-            if !searchClicked && !searchInProgress {
-                let newPath = newStack.last ?? "/"
-                Log.debug("📂 Path changed: \(newPath)")
-                fetchFiles(at: newPath)
-            }
-        }
+       .onChange(of: pathStack) { newStack in
+           if !searchClicked && !searchInProgress {
+               let newPath = newStack.last ?? "/"
+               Log.debug("📂 Path changed: \(newPath)")
+               fetchFiles(at: newPath)
+           }
+       }
         .sheet(isPresented: $isSharing) {
             if let filePath = sharePath ?? selectedItems.first {
                 ShareSheetView(
@@ -1597,7 +1597,8 @@ struct FileListView: View {
 
     @ViewBuilder
     func listView(for fileList: [FileItem]) -> some View {
-        ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
+        ForEach(fileList.indices, id: \.self) { index in
+            let file = fileList[index]
             if selectionMode {
                 HStack {
                     Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
@@ -1716,7 +1717,8 @@ struct FileListView: View {
     func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
         ScrollView {
             LazyVGrid(columns: adaptiveColumns(module: module), spacing: 12) {
-                ForEach(Array(fileList.enumerated()), id: \.element.id) { index, file in
+                ForEach(fileList.indices, id: \.self) { index in
+                    let file = fileList[index]
                     gridCell(for: file, at: index, in: fileList, module: module)
                 }
             }
