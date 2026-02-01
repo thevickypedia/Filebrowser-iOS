@@ -137,9 +137,21 @@ struct RemoteThumbnail: View {
                 loadThumbnail()
             }
         }, threshold: 0))
+        .onAppear {
+            // Also check on appear to handle navigation back from detail view
+            // When navigated back, views are already "visible" so ViewVisibilityModifier won't fire
+            if !loadAttempted {
+                loadAttempted = true
+                isLoading = true
+                loadingFiles[file.path] = true
+                loadThumbnail()
+            }
+        }
         .onDisappear {
             image = nil
             gifData = nil
+            loadingFiles.removeValue(forKey: file.path)
+            loadAttempted = false
         }
     }
 
