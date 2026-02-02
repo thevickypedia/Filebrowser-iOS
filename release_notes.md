@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.60.1 (02/01/2026)
+--------------------
+- [fee6c71](https://github.com/thevickypedia/Filebrowser-iOS/commit/fee6c713dd87a46a50fc9c4d9d08fdd62ef125b7) chore: Release ``v1.60.1``
+- [165fd9d](https://github.com/thevickypedia/Filebrowser-iOS/commit/165fd9d2bb85b601e0d9873e86d67f270ca57589) refactor: Change ``RequestMethod`` parameters to contextual lookup
+- [f8592b2](https://github.com/thevickypedia/Filebrowser-iOS/commit/f8592b22a230dc351abc8b6a1cd705cd70c9cf7e) fix: Remove accidental double encoding for URL paths breaking move/copy
+- [6da16ee](https://github.com/thevickypedia/Filebrowser-iOS/commit/6da16ee902fba5e188e7fd3f47e03a25e67f9730) fix: Add missing ``Upload-Length`` header with ``fileSize``
+- [1c358df](https://github.com/thevickypedia/Filebrowser-iOS/commit/1c358dfa6a21bd656d25a5daf7d261fda5f27ec4) chore: Update release notes for v1.60.0
+
 v1.60.0 (02/01/2026)
 --------------------
 - [aaa1fb9](https://github.com/thevickypedia/Filebrowser-iOS/commit/aaa1fb9cb835660d8a8296d7c237392b54623f82) chore: Release ``v1.60.0``
