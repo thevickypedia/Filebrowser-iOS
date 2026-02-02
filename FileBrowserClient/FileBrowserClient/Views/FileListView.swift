@@ -161,6 +161,9 @@ struct FileListView: View {
         // Clear loading states from previous directory
         loadingFiles.removeAll()
 
+        // Clear all failed paths to allow retry
+        GlobalThumbnailLoader.shared.clearFailedPath()
+
         guard auth.isValid else { invalidAuth(); return }
         viewModel.fetchFiles(baseRequest: baseRequest, at: path)
     }
