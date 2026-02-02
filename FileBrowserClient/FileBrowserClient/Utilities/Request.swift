@@ -70,7 +70,7 @@ class Request {
     func prepare(
         pathComponents: [String],
         queryItems: [URLQueryItem]? = nil,
-        method: RequestMethod = RequestMethod.get,
+        method: RequestMethod = .get,
         headers: [RequestHeader]? = nil,
         contentType: ContentType = ContentType.json,
         timeout: RequestTimeout = RequestTimeout(request: 3.0, resource: 5.0)

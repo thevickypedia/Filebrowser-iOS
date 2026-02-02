@@ -145,7 +145,7 @@ struct ShareSheetView: View {
         }
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "share", hash],
-            method: RequestMethod.delete
+            method: .delete
         ) else {
             let msg = "Failed to prepare request for: /api/share/\(hash)"
             Log.error("❌ \(msg)")
@@ -206,7 +206,7 @@ struct ShareSheetView: View {
                 URLQueryItem(name: "expires", value: String(expiryTime)),
                 URLQueryItem(name: "unit", value: shareDuration)
             ],
-            method: RequestMethod.post
+            method: .post
         ) else {
             let msg = "Failed to prepare request for: /api/share/\(file.path)"
             Log.error("❌ \(msg)")

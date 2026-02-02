@@ -2231,7 +2231,7 @@ struct FileListView: View {
 
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "users", String(currentSettings.id)],
-            method: RequestMethod.get
+            method: .get
         ) else {
             let msg = "Failed to prepare request for: /api/users/\(currentSettings.id)"
             Log.error("❌ \(msg)")
@@ -2287,7 +2287,7 @@ struct FileListView: View {
 
         guard var preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "users", String(currentSettings.id)],
-            method: RequestMethod.put
+            method: .put
         ) else {
             let msg = "Failed to prepare request for: /api/users/\(currentSettings.id)"
             Log.error("❌ \(msg)")
@@ -2349,7 +2349,7 @@ struct FileListView: View {
         for item in selectedItems {
             guard let preparedRequest = baseRequest.prepare(
                 pathComponents: ["api", "resources", item.path],
-                method: RequestMethod.delete
+                method: .delete
             ) else {
                 let msg = "Failed to prepare request for: /api/resources/\(item.path)"
                 Log.error("❌ \(msg)")
@@ -2390,7 +2390,7 @@ struct FileListView: View {
                 URLQueryItem(name: "override", value: "false"),
                 URLQueryItem(name: "rename", value: "false")
             ],
-            method: RequestMethod.patch
+            method: .patch
         ) else {
             let msg = "Failed to prepare request for: \(item.name)"
             Log.error("❌ \(msg)")
@@ -2472,7 +2472,7 @@ struct FileListView: View {
         Log.info("📄 Creating \(resourceType) at path: \(fullPath)")
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["/api/resources\(encodedPath)\(separator)override=false"],
-            method: RequestMethod.post
+            method: .post
         ) else {
             let msg = "Failed to prepare request for: /api/resources/\(fullPath)"
             Log.error("❌ \(msg)")

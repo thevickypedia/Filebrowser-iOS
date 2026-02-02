@@ -432,7 +432,7 @@ func getTimeStamp(from date: Date? = nil, as customFormat: String = "MMddyyyy_HH
 func getServerVersion(baseRequest: Request) async -> ServerResponse {
     guard let preparedRequest = baseRequest.prepare(
         pathComponents: ["api", "version"],
-        method: RequestMethod.post
+        method: .post
     ) else {
         return ServerResponse(success: false, text: "Failed to prepare request for: /version")
     }

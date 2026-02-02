@@ -173,11 +173,9 @@ struct ContentView: View {
 
     private func showOtpFaceID(session: StoredSession?) -> Bool {
         guard transitProtection else {
-            Log.info("Transit protection is disabled")
             return false
         }
         guard session?.otpSecret == nil || session?.otpSecret == "" else {
-            Log.info("otpSecret not stored")
             return false
         }
         return showOtpFaceIDJWT(
@@ -396,7 +394,7 @@ struct ContentView: View {
     func terminator(endpoint: String, success: String, failure: String) async -> Bool {
         if let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", endpoint],
-            method: RequestMethod.post
+            method: .post
         ) {
             do {
                 let (_, response) = try await preparedRequest.session.data(for: preparedRequest.request)
@@ -509,7 +507,7 @@ struct ContentView: View {
             return
         }
 
-        guard var preparedRequest = baseRequest.prepare(pathComponents: ["api", "login"], method: RequestMethod.post) else {
+        guard var preparedRequest = baseRequest.prepare(pathComponents: ["api", "login"], method: .post) else {
             let msg = "Failed to prepare request for: /api/login"
             Log.error("❌ \(msg)")
             errorMessage = msg

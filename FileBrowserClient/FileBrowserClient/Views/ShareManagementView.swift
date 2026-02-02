@@ -78,7 +78,7 @@ struct ShareManagementView: View {
         Log.info("Deleting share with hash: \(item.hash)")
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "share", item.hash],
-            method: RequestMethod.delete
+            method: .delete
         ) else {
             let msg = "Failed to prepare request for: /api/share/\(item.hash)"
             Log.error("❌ \(msg)")

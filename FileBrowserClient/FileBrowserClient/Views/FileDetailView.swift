@@ -431,7 +431,7 @@ struct FileDetailView: View {
                 URLQueryItem(name: "override", value: "false"),
                 URLQueryItem(name: "rename", value: "false")
             ],
-            method: RequestMethod.patch
+            method: .patch
         ) else {
             let msg = "Failed to prepare request for: /api/resources/\(fromPath)"
             Log.error("❌ \(msg)")
@@ -466,7 +466,7 @@ struct FileDetailView: View {
     func deleteFile() {
         guard let preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "resources", file.path],
-            method: RequestMethod.delete
+            method: .delete
         ) else {
             let msg = "Failed to prepare request for: /api/resources/\(file.path)"
             Log.error("❌ \(msg)")

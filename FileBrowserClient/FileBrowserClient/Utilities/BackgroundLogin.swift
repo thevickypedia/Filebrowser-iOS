@@ -56,7 +56,7 @@ struct BackgroundLogin {
 
         guard var preparedRequest = baseRequest.prepare(
             pathComponents: ["api", "login"],
-            method: RequestMethod.post,
+            method: .post,
         ) else {
             return loginResponse("Failed to prepare request for: /api/login")
         }
