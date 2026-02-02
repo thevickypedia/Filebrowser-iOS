@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.60.2 (02/02/2026)
+--------------------
+- [4f1ce2a](https://github.com/thevickypedia/Filebrowser-iOS/commit/4f1ce2ab39415d8bd3a21c807621ba2e474c848a) chore: Release ``v1.60.2``
+- [b78a7bc](https://github.com/thevickypedia/Filebrowser-iOS/commit/b78a7bc60ac348a99bcaa723997b812cce990a03) refactor: Move hard coded timeout values to ``Constants`` module
+- [8c17ac7](https://github.com/thevickypedia/Filebrowser-iOS/commit/8c17ac70cefddb2c7afb43175763dd6281712593) perf: Bump request/resource timeouts and retry limits for thumbnail loader
+- [592ae23](https://github.com/thevickypedia/Filebrowser-iOS/commit/592ae2358ff8549944e95ca57fec7a86401b8644) perf: Reset failed thumbnail paths when navigation is changed
+- [602a116](https://github.com/thevickypedia/Filebrowser-iOS/commit/602a1168f073f20ffb7c24f5b6feb598d4b1a765) perf: Add a slight delay to display error when file items fail to retrieve
+- [7afccb8](https://github.com/thevickypedia/Filebrowser-iOS/commit/7afccb8c2085db63748420f801e339f6c5c21756) chore: Update release notes for v1.60.1
+
 v1.60.1 (02/01/2026)
 --------------------
 - [fee6c71](https://github.com/thevickypedia/Filebrowser-iOS/commit/fee6c713dd87a46a50fc9c4d9d08fdd62ef125b7) chore: Release ``v1.60.1``
