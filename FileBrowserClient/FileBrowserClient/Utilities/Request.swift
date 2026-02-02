@@ -73,7 +73,10 @@ class Request {
         method: RequestMethod = .get,
         headers: [RequestHeader]? = nil,
         contentType: ContentType = ContentType.json,
-        timeout: RequestTimeout = RequestTimeout(request: 3.0, resource: 5.0)
+        timeout: RequestTimeout = RequestTimeout(
+            request: Constants.defaultRequestTimeout,
+            resource: Constants.defaultResourceTimeout
+        )
     ) -> PreparedRequest? {
         var requestURL: URL
         // Assumes as a pre-built URL path component

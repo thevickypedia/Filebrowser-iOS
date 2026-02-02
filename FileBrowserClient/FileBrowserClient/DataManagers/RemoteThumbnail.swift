@@ -336,7 +336,7 @@ struct RemoteThumbnail: View {
                 URLQueryItem(name: "inline", value: "true")
             ],
             headers: [RequestHeader(key: "X-Auth", value: token)],
-            timeout: RequestTimeout(request: 5.0, resource: 30.0)
+            timeout: RequestTimeout(request: Constants.thumbnailRequestTimeout, resource: Constants.thumbnailResourceTimeout)
         ) else {
             GlobalThumbnailLoader.shared.finish(filePath: file.path, image: nil, gifData: nil, failed: true)
             return

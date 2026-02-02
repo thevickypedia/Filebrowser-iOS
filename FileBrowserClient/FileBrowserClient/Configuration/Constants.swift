@@ -24,14 +24,20 @@ struct Constants {
 
     static let uploadCleanupDelay: Int = 2
 
-    static let searchRequestTimeout = 30.0
-    static let searchResourceTimeout = 45.0
+    static let searchRequestTimeout: Double = 30.0
+    static let searchResourceTimeout: Double = 45.0
+
+    // Request:
+    static let defaultRequestTimeout: Double = 3.0
+    static let defaultResourceTimeout: Double = 5.0
 
     // RemoteThumbnail:
     // Maximum number of thumbnails to render
     static let maxConcurrentThumbnailRender: Int = 4
     static let thumbnailQuality: CGFloat = 0.1
     static let thumbnailRetryLimit: Int = 10
+    static let thumbnailResourceTimeout: Double = 10.0
+    static let thumbnailRequestTimeout: Double = 60.0
     static let maxThumbnailSize: CGFloat = 320
     // 10 MB is the max GIF filesize that can be rendered as a thumbnail
     static let maxGIFThumbnailBytes: Int = 10_000_000
