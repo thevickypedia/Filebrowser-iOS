@@ -146,9 +146,10 @@ class FileListViewModel: ObservableObject {
 
         preparedRequest.session.dataTask(with: preparedRequest.request) { data, _, _ in
             guard let data = data else {
-                DispatchQueue.main.async {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                    setLoading(false)
                     self.errorMessage = "No data received"
-                }
+                })
                 return
             }
 
