@@ -611,46 +611,6 @@ struct FileListView: View {
         }
     }
 
-    private func checkPathExists(_ fullPath: String) -> Bool {
-        guard auth.isValid else { invalidAuth(); return false }
-
-        guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "resources", fullPath]) else {
-            let msg = "Failed to prepare request for: /api/resources/\(fullPath)"
-            Log.error("❌ \(msg)")
-            errorTitle = "Internal Error"
-            errorMessage = msg
-            return false
-        }
-
-        var exists = false
-        let semaphore = DispatchSemaphore(value: 0)
-
-        preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
-            defer { semaphore.signal() }
-
-            if let error = error {
-                Log.error("❌ Request error: \(error.localizedDescription)")
-                errorMessage = error.localizedDescription
-                return
-            }
-
-            if let http = response as? HTTPURLResponse {
-                if http.statusCode == 200 {
-                    exists = true
-                } else if http.statusCode == 404 {
-                    exists = false
-                } else {
-                    Log.error("❌ Path check failed with status \(http.statusCode)")
-                    errorMessage = "Server returned status \(http.statusCode)"
-                }
-            }
-        }.resume()
-
-        semaphore.wait() // ⚠️ Blocking here
-
-        return exists
-    }
-
     private func modifyItem(to destinationPath: String, action: ModifyItem) {
         let logAction = action.rawValue.lowercased()
         guard !selectedItems.isEmpty else {
@@ -682,7 +642,6 @@ struct FileListView: View {
             dispatchGroup.enter()
 
             let sourcePath = item.path.hasPrefix("/") ? item.path : "/" + item.path
-            let encodedSource = sourcePath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? sourcePath
 
             let destinationFullPath: String
             if destinationPath == "/" {
@@ -690,29 +649,19 @@ struct FileListView: View {
             } else {
                 destinationFullPath = destinationPath + "/" + item.name
             }
-            let encodedDestination = destinationFullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? destinationFullPath
-
-            // Client side issue: Break loop without resetting flags, so sheet is still up
-            if checkPathExists(encodedDestination) {
-                let msg = "⚠️ \(item.name) already exists at \(destinationPath)"
-                Log.error(msg)
-                modifyMessage = ToastMessagePayload(text: msg, color: .yellow, duration: 2)
-                return
-            }
 
             let urlAction = action == ModifyItem.move ? "rename" : "copy"
-            let sourceForURL = encodedSource.hasPrefix("/") ? String(encodedSource.dropFirst()) : encodedSource
-
+            let sourceForURL = sourcePath.hasPrefix("/") ? String(sourcePath.dropFirst()) : sourcePath
             // Client side issue: Break loop without resetting flags, so sheet is still up
             guard let preparedRequest = baseRequest.prepare(
                 pathComponents: ["api", "resources", sourceForURL],
                 queryItems: [
                     URLQueryItem(name: "action", value: urlAction),
-                    URLQueryItem(name: "destination", value: encodedDestination),
+                    URLQueryItem(name: "destination", value: destinationFullPath),
                     URLQueryItem(name: "override", value: "false"),
                     URLQueryItem(name: "rename", value: "false")
                 ],
-                method: RequestMethod.patch
+                method: .patch
             ) else {
                 let msg = "Invalid URL for \(item.name)"
                 modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
