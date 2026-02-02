@@ -31,7 +31,7 @@ struct Constants {
     // Maximum number of thumbnails to render
     static let maxConcurrentThumbnailRender: Int = 4
     static let thumbnailQuality: CGFloat = 0.1
-    static let thumbnailRetryLimit: Int = 5
+    static let thumbnailRetryLimit: Int = 10
     static let maxThumbnailSize: CGFloat = 320
     // 10 MB is the max GIF filesize that can be rendered as a thumbnail
     static let maxGIFThumbnailBytes: Int = 10_000_000
