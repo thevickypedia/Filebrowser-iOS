@@ -1869,10 +1869,12 @@ struct FileListView: View {
             return
         }
 
+        let fileSize = (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int) ?? 0
         var request = URLRequest(url: uploadURL)
         request.httpMethod = "POST"
         request.setValue("1.0.0", forHTTPHeaderField: "Tus-Resumable")
         request.setValue("0", forHTTPHeaderField: "Content-Length")
+        request.setValue("\(fileSize)", forHTTPHeaderField: "Upload-Length")
         request.setValue(auth.token, forHTTPHeaderField: "X-Auth")
 
         URLSession.shared.dataTask(with: request) { _, _, error in
