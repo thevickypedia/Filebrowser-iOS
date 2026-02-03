@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.60.3 (02/02/2026)
+--------------------
+- [1a9cee6](https://github.com/thevickypedia/Filebrowser-iOS/commit/1a9cee645e7d05443bd3cc3162e479236158ecfc) chore: Release ``v1.60.3``
+- [8cb27b5](https://github.com/thevickypedia/Filebrowser-iOS/commit/8cb27b5e3ebbf71e40d52b27d328184041e5d8f5) fix: Remove thumbnail load for ``.onAppear`` to avoid loading entire directory's images at once
+- [76650bf](https://github.com/thevickypedia/Filebrowser-iOS/commit/76650bf96bf55e1750f58e138d5407a09e0ce808) chore: Update release notes for v1.60.2
+
 v1.60.2 (02/02/2026)
 --------------------
 - [4f1ce2a](https://github.com/thevickypedia/Filebrowser-iOS/commit/4f1ce2ab39415d8bd3a21c807621ba2e474c848a) chore: Release ``v1.60.2``
