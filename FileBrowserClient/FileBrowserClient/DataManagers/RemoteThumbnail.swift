@@ -129,28 +129,19 @@ struct RemoteThumbnail: View {
         .modifier(ViewVisibilityModifier(onVisible: {
             // MARK: Only attempt load once per view lifecycle
             // Keep threshold [0] as tight as possible to avoid loading anything outside current view
-            loadThumbnailsOnAppear()
+            if !loadAttempted {
+                loadAttempted = true
+                // Show spinner immediately for first-frame visibility
+                isLoading = true
+                loadingFiles[file.path] = true
+                loadThumbnail()
+            }
         }, threshold: 0))
-        .onAppear {
-            // Check onAppear to handle navigation back from detail view
-            // When navigated back, views are already "visible" so ViewVisibilityModifier won't fire
-            loadThumbnailsOnAppear()
-        }
         .onDisappear {
             image = nil
             gifData = nil
             loadingFiles.removeValue(forKey: file.path)
             loadAttempted = false
-        }
-    }
-
-    private func loadThumbnailsOnAppear() {
-        if !loadAttempted {
-            loadAttempted = true
-            // Show spinner immediately for first-frame visibility
-            isLoading = true
-            loadingFiles[file.path] = true
-            loadThumbnail()
         }
     }
 
