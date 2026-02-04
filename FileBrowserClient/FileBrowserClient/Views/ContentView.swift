@@ -152,8 +152,10 @@ struct ContentView: View {
                 }
         }
 
-        // Show toggle button only when there is no stored session or the stored otpSecret is empty
-        if loadedSession == nil || loadedSession?.otpSecret == "" {
+        // Show toggle button only when there is no stored session with the same serverURL or the stored otpSecret is empty
+        if loadedSession == nil ||
+           loadedSession?.serverURL != serverURL ||
+           loadedSession?.otpSecret == "" {
             Toggle("Store OTP Secret", isOn: $storeOtpSecret)
                 .padding(.top, 8)
         }
