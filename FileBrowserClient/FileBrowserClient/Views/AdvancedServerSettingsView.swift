@@ -384,7 +384,7 @@ struct AdvancedServerSettingsView: View {
                 }
                 Button("Cancel", role: .cancel) { }
             } message: {
-                Text("This will remove the stored cache from all servers.")
+                Text("This will remove the stored cache from \(knownServers.count) servers.")
             }
 
             // Delete Known Servers Section
