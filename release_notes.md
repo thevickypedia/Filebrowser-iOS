@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v1.61.0 (02/03/2026)
+--------------------
+- [431eb1d](https://github.com/thevickypedia/Filebrowser-iOS/commit/431eb1dc4051c417c88d3daddb317319ed5db63b) chore: Release ``v1.61.0``
+- [66541a3](https://github.com/thevickypedia/Filebrowser-iOS/commit/66541a3d90b8bae798483da71ca335625d3f392c) feat: Remove serverURL from file cache path to store/retrieve/clear cache for all servers at once
+- [1a5724b](https://github.com/thevickypedia/Filebrowser-iOS/commit/1a5724bd2687e7e023ef011b89868ee5dee70294) chore: Update release notes for v1.60.3
+
 v1.60.3 (02/02/2026)
 --------------------
 - [1a9cee6](https://github.com/thevickypedia/Filebrowser-iOS/commit/1a9cee645e7d05443bd3cc3162e479236158ecfc) chore: Release ``v1.60.3``
