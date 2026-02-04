@@ -165,10 +165,8 @@ struct ContentView: View {
         guard let tokenPayload = payload else { return true }
         if Date().timeIntervalSince1970 >= tokenPayload.exp {
             // TOKEN EXPIRED
-            Log.info("Session token expired and no otpSecret stored, displaying otp options")
             return true
         } else {
-            Log.info("Token is still valid")
             return false
         }
     }
