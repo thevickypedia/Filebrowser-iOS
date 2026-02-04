@@ -16,6 +16,7 @@ struct AdvancedServerSettingsView: View {
     let backgroundLogin: BackgroundLogin
 
     @State private var fileCacheSize: Int64 = 0
+    @State private var showClearCacheConfirmation = false
 
     @State private var showDeleteOptionsSS = false
     @State private var showDeleteConfirmationSS = false
@@ -312,6 +313,21 @@ struct AdvancedServerSettingsView: View {
         }
     }
 
+    private var shouldConfirmClearCache: Bool {
+        knownServers.count > 1 && fileCacheSize > 0
+    }
+
+    private func clearLocalCache() {
+        GlobalThumbnailLoader.shared.clearFailedPath()
+        FileCache.shared.clearDiskCache(auth.serverURL)
+        fetchClientStorageInfo()
+
+        settingsMessage = ToastMessagePayload(
+            text: "🗑️ Cache cleared",
+            color: .yellow
+        )
+    }
+
     var body: some View {
         Form {
             Section {
@@ -353,13 +369,22 @@ struct AdvancedServerSettingsView: View {
 
             Section {
                 Button(role: .destructive) {
-                    GlobalThumbnailLoader.shared.clearFailedPath()
-                    FileCache.shared.clearDiskCache(auth.serverURL)
-                    fetchClientStorageInfo()
-                    settingsMessage = ToastMessagePayload(text: "🗑️ Cache cleared", color: .yellow)
+                    if shouldConfirmClearCache {
+                        showClearCacheConfirmation = true
+                    } else {
+                        clearLocalCache()
+                    }
                 } label: {
                     Label("Clear Local Cache", systemImage: "trash")
                 }
+            }
+            .alert("Clear Local Cache?", isPresented: $showClearCacheConfirmation) {
+                Button("Proceed", role: .destructive) {
+                    clearLocalCache()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This will remove the stored cache from all servers.")
             }
 
             // Delete Known Servers Section
