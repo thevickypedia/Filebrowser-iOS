@@ -760,7 +760,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.62.0;
+				MARKETING_VERSION = 1.63.0;
 				PRODUCT_BUNDLE_IDENTIFIER = thevickypedia.FileBrowserClient;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -790,7 +790,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.62.0;
+				MARKETING_VERSION = 1.63.0;
 				PRODUCT_BUNDLE_IDENTIFIER = thevickypedia.FileBrowserClient;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
