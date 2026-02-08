@@ -113,11 +113,11 @@ func adaptiveColumns(module: Bool) -> [GridItem] {
 func mosaicColumns() -> [GridItem] {
     let screenWidth = UIScreen.main.bounds.width
     let style = ViewStyle.mosaicStyle()
-    
+
     // Remove spacing completely for true edge-to-edge
     let minItemWidth = style.gridHeight
     let columnsCount = max(2, Int(screenWidth / minItemWidth))
-    
+
     return Array(
         repeating: GridItem(.flexible(), spacing: 0),
         count: columnsCount
