@@ -35,6 +35,8 @@ struct AdvancedServerSettingsView: View {
 
     @State private var showDeviceMetrics: Bool = false
 
+    @State private var showDeviceSettings: Bool = false
+
     // Display as alerts
     @State private var errorTitle: String?
     @State private var errorMessage: String?
@@ -196,6 +198,21 @@ struct AdvancedServerSettingsView: View {
         }
     }
 
+    private var showDeviceSettingsView: some View {
+        NavigationView {
+            DeviceSettingsView()
+                .frame(maxWidth: UIScreen.main.bounds.width * 0.95)
+                .navigationTitle("Device Settings")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close") {
+                            showDeviceSettings = false
+                        }
+                    }
+                }
+        }
+    }
+
     private var localFilesListView: some View {
         NavigationView {
             List {
@@ -350,6 +367,17 @@ struct AdvancedServerSettingsView: View {
             }
             .fullScreenCover(isPresented: $showDeviceMetrics) {
                 showDeviceMetricsView
+            }
+
+            Section {
+                Button {
+                    showDeviceSettings = true
+                } label: {
+                    Label("Device Settings", systemImage: "gear")
+                }
+            }
+            .fullScreenCover(isPresented: $showDeviceSettings) {
+                showDeviceSettingsView
             }
 
             Section {
