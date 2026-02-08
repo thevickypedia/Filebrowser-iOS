@@ -72,34 +72,37 @@ struct ZoomableImageView: View {
                 }
 
                 // Rotate buttons
-                VStack {
-                    Spacer()
-                    HStack(spacing: 24) {
-                        Button {
-                            withAnimation { rotationAngle -= .degrees(90) }
-                        } label: {
-                            Image(systemName: "rotate.left")
-                        }
+                if !isFullScreen {
+                    VStack {
+                        Spacer()
 
-                        Button {
-                            withAnimation { rotationAngle += .degrees(90) }
-                        } label: {
-                            Image(systemName: "rotate.right")
-                        }
+                        HStack(spacing: 24) {
+                            Button {
+                                withAnimation { rotationAngle -= .degrees(90) }
+                            } label: {
+                                Image(systemName: "rotate.left")
+                            }
 
-                        Button {
-                            saveEditedImage()
-                        } label: {
-                            Image(systemName: "square.and.arrow.down")
+                            Button {
+                                withAnimation { rotationAngle += .degrees(90) }
+                            } label: {
+                                Image(systemName: "rotate.right")
+                            }
+
+                            Button {
+                                saveEditedImage()
+                            } label: {
+                                Image(systemName: "square.and.arrow.down")
+                            }
                         }
+                        .padding()
+                        .background(Color.black.opacity(0.6))
+                        .clipShape(Capsule())
+                        .foregroundColor(.white)
+                        .padding(.bottom, 30)
                     }
-                    .padding()
-                    .background(Color.black.opacity(0.6))
-                    .clipShape(Capsule())
-                    .foregroundColor(.white)
-                    .padding(.bottom, 30)
+                    .alert("Saved to Photos", isPresented: $showSaveAlert) {}
                 }
-                .alert("Saved to Photos", isPresented: $showSaveAlert) {}
             }
         }
     }
