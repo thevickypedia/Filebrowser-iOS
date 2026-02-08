@@ -101,36 +101,29 @@ struct ZoomableImageView: View {
     // MARK: - Combined Gestures
     private func combinedGestures() -> some Gesture {
         let pinch = MagnificationGesture()
-            .updating($gestureScale) { value, state, _ in state = value }
+            .updating($gestureScale) { value, state, _ in
+                state = value
+            }
             .onEnded { value in
                 let newScale = max(scale * value, 1.0)
-                // Adjust offset to zoom around gesture center
-                offset = CGSize(
-                    width: offset.width * newScale / scale,
-                    height: offset.height * newScale / scale
-                )
+                // adjust offset proportionally
+                offset.width = offset.width * newScale / scale
+                offset.height = offset.height * newScale / scale
                 scale = newScale
-                dragStartOffset = offset
             }
 
         let drag = DragGesture()
             .updating($gestureOffset) { value, state, _ in
                 if isZoomed { state = value.translation }
             }
-            .onChanged { value in
-                if isZoomed {
-                    // follow finger exactly
-                    offset.width = dragStartOffset.width + value.translation.width
-                    offset.height = dragStartOffset.height + value.translation.height
-                }
-            }
             .onEnded { value in
                 if isZoomed {
-                    dragStartOffset = offset
+                    // commit final translation to offset
+                    offset.width += value.translation.width
+                    offset.height += value.translation.height
                 } else {
                     // swipe when not zoomed
-                    if value.translation.width < -50 { onSwipeLeft() }
-                    else if value.translation.width > 50 { onSwipeRight() }
+                    if value.translation.width < -50 { onSwipeLeft() } else if value.translation.width > 50 { onSwipeRight() }
                 }
             }
 
@@ -140,10 +133,8 @@ struct ZoomableImageView: View {
                     if isZoomed {
                         scale = 1.0
                         offset = .zero
-                        dragStartOffset = .zero
                     } else {
                         scale = 2.5
-                        dragStartOffset = offset
                     }
                 }
             }
