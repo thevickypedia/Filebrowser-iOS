@@ -105,25 +105,32 @@ struct ZoomableImageView: View {
     }
 
     private func saveEditedImage() {
-        let renderer = UIGraphicsImageRenderer(size: image.size)
+        let radians = CGFloat(rotationAngle.radians)
+
+        let originalSize = image.size
+        let rotatedRect = CGRect(
+            origin: .zero,
+            size: originalSize
+        ).applying(CGAffineTransform(rotationAngle: radians))
+
+        let newSize = CGSize(
+            width: abs(rotatedRect.width),
+            height: abs(rotatedRect.height)
+        )
+
+        let renderer = UIGraphicsImageRenderer(size: newSize)
 
         let editedImage = renderer.image { ctx in
-            ctx.cgContext.translateBy(x: image.size.width / 2,
-                                      y: image.size.height / 2)
-            ctx.cgContext.rotate(by: CGFloat(rotationAngle.radians))
-            ctx.cgContext.translateBy(x: -image.size.width / 2,
-                                      y: -image.size.height / 2)
+            ctx.cgContext.translateBy(x: newSize.width / 2,
+                                      y: newSize.height / 2)
+            ctx.cgContext.rotate(by: radians)
+            ctx.cgContext.translateBy(x: -originalSize.width / 2,
+                                      y: -originalSize.height / 2)
 
             image.draw(at: .zero)
         }
 
-        UIImageWriteToSavedPhotosAlbum(
-            editedImage,
-            nil,
-            nil,
-            nil
-        )
-
+        UIImageWriteToSavedPhotosAlbum(editedImage, nil, nil, nil)
         showSaveAlert = true
     }
 
