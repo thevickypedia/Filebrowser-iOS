@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.64.0 (02/08/2026)
+--------------------
+- [e233e07](https://github.com/thevickypedia/Filebrowser-iOS/commit/e233e0718f1346ea62e96bb7c9dfc7951253f614) chore: Release ``v1.64.0``
+- [979316c](https://github.com/thevickypedia/Filebrowser-iOS/commit/979316ce76e9cfeaddeb717150bd7b234b9003d7) style: Update styling for mosaic view
+- [f5afa18](https://github.com/thevickypedia/Filebrowser-iOS/commit/f5afa18ee167872c34a70872332e0d778ad9bc19) feat: Include a new view option called ``mosaic``
+- [38c0405](https://github.com/thevickypedia/Filebrowser-iOS/commit/38c04053caa6f21e52ba29a265fa0fbec9be80e6) chore: Update release notes for v1.63.1
+
 v1.63.1 (02/08/2026)
 --------------------
 - [90b9259](https://github.com/thevickypedia/Filebrowser-iOS/commit/90b9259347f10c71712187a31f4179ad9b53db1e) chore: Release ``v1.63.1``
