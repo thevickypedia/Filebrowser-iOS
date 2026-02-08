@@ -1751,14 +1751,13 @@ struct FileListView: View {
     @ViewBuilder
     func mosaicView(for fileList: [FileItem]) -> some View {
         ScrollView {
-            LazyVGrid(columns: mosaicColumns(), spacing: 4) {
+            LazyVGrid(columns: mosaicColumns(), spacing: 0) {
                 ForEach(fileList.indices, id: \.self) { index in
                     let file = fileList[index]
                     mosaicCell(for: file, at: index, in: fileList)
                 }
             }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 4)
+            .padding(0)
         }
     }
 
