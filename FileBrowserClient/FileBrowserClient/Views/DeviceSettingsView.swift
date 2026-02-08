@@ -5,7 +5,6 @@
 //  Created by Vignesh Rao on 2/8/26.
 //
 
-
 import SwiftUI
 
 struct DeviceSettingsView: View {
