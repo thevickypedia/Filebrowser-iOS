@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.61.2 (02/08/2026)
+--------------------
+- [ca8fb4e](https://github.com/thevickypedia/Filebrowser-iOS/commit/ca8fb4e56f28eb4af58db87ec084ab4fb2c2b466) chore: Release ``v1.61.2``
+- [18a1f1a](https://github.com/thevickypedia/Filebrowser-iOS/commit/18a1f1afc08073f6835b08048f4bd555f6b09332) refactor: Remove logging trivial information for token validity
+- [6d62d81](https://github.com/thevickypedia/Filebrowser-iOS/commit/6d62d818b9c3fec4c67f8e7274b73b1a6a8f8ace) fix: Show "Store OTP Secret" toggle when new servers are added
+- [ddf6d70](https://github.com/thevickypedia/Filebrowser-iOS/commit/ddf6d70feb5c849c1b36dd3bd9090eb9bbbcb085) chore: Update release notes for v1.61.1
+
 v1.61.1 (02/03/2026)
 --------------------
 - [ecb799a](https://github.com/thevickypedia/Filebrowser-iOS/commit/ecb799a9b0344fd294b13ec58c1a67d898072fa2) chore: Release ``v1.61.1``
