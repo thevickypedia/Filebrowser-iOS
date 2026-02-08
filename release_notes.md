@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.62.0 (02/08/2026)
+--------------------
+- [642f77a](https://github.com/thevickypedia/Filebrowser-iOS/commit/642f77ac58b2ee1a6a2dc49f5ed91dbfc54c51ca) chore: Release ``v1.62.0``
+- [6c0cb12](https://github.com/thevickypedia/Filebrowser-iOS/commit/6c0cb12d35d5a5f19d7fd9c364bf9211058fddf8) perf: Replace hard coded constants with default constants struct
+- [d290e23](https://github.com/thevickypedia/Filebrowser-iOS/commit/d290e23c4a05dcc8c83b6ae35621aedbbf6b3b16) feat: Add a new option to update the advanced settings (Constants) during run time
+- [584e51a](https://github.com/thevickypedia/Filebrowser-iOS/commit/584e51aa324893f9a686e27df0a1852c27fe827a) chore: Update release notes for v1.61.2
+
 v1.61.2 (02/08/2026)
 --------------------
 - [ca8fb4e](https://github.com/thevickypedia/Filebrowser-iOS/commit/ca8fb4e56f28eb4af58db87ec084ab4fb2c2b466) chore: Release ``v1.61.2``
