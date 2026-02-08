@@ -33,8 +33,8 @@ struct ZoomableImageView: View {
                     .aspectRatio(contentMode: .fit)
                     .scaleEffect(scale * gestureScale)
                     .rotationEffect(rotationAngle)
-                    .offset(x: offset.width + gestureOffset.width,
-                            y: offset.height + gestureOffset.height)
+                    .offset(x: offset.width + (isZoomed ? gestureOffset.width : 0),
+                            y: offset.height + (isZoomed ? gestureOffset.height : 0))
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .gesture(pinchGesture())
                     .simultaneousGesture(doubleTapGesture())
@@ -155,6 +155,17 @@ struct ZoomableImageView: View {
                         onSwipeLeft()
                     } else if value.translation.width > 50 {
                         onSwipeRight()
+                    }
+                }
+            }
+            .onEnded { value in
+                if isZoomed {
+                    let predicted = CGSize(
+                        width: offset.width + value.predictedEndTranslation.width,
+                        height: offset.height + value.predictedEndTranslation.height
+                    )
+                    withAnimation(.interactiveSpring()) {
+                        offset = predicted
                     }
                 }
             }
