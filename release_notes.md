@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v1.63.1 (02/08/2026)
+--------------------
+- [90b9259](https://github.com/thevickypedia/Filebrowser-iOS/commit/90b9259347f10c71712187a31f4179ad9b53db1e) chore: Release ``v1.63.1``
+- [908f4e6](https://github.com/thevickypedia/Filebrowser-iOS/commit/908f4e629fcf192e6a2a00741fd2241e1da0fd5f) fix: Fix image scaling when rotated
+- [3a27a5f](https://github.com/thevickypedia/Filebrowser-iOS/commit/3a27a5f47a5766c2a9725d379d0470ca8cff0bad) fix: Avoid manually updating offset inside ``.onChanged``
+- [ba2df30](https://github.com/thevickypedia/Filebrowser-iOS/commit/ba2df306c77690a204f678665fdac5462ccb33b6) perf: Re-write ``ZoomableImageView`` to avoid overlapping offsets
+- [fb013ab](https://github.com/thevickypedia/Filebrowser-iOS/commit/fb013ab9fca2dc767f075e8a8cc827669f2e5a01) fix: Make drag gesture even smoother when zoomed in on images
+- [d81b2af](https://github.com/thevickypedia/Filebrowser-iOS/commit/d81b2af2d0d554d0c07d946d9eccc36d578aa30a) fix: Make drag gesture smoother when zoomed in on images
+- [042bf1e](https://github.com/thevickypedia/Filebrowser-iOS/commit/042bf1ee2ec17cde6be63cb43f2c7a45a2ea3023) chore: Update release notes for v1.63.0
+
 v1.63.0 (02/08/2026)
 --------------------
 - [2289182](https://github.com/thevickypedia/Filebrowser-iOS/commit/2289182974ffcb90cef5dc9e297c42151687cdf0) chore: Release ``v1.63.0``
