@@ -17,6 +17,7 @@ struct ZoomableImageView: View {
     @GestureState private var gestureScale: CGFloat = 1.0
 
     @State private var offset: CGSize = .zero
+    @State private var dragStartOffset: CGSize = .zero
     @GestureState private var gestureOffset: CGSize = .zero
 
     @State private var rotationAngle: Angle = .zero
@@ -139,35 +140,31 @@ struct ZoomableImageView: View {
 
     private func dragGesture() -> some Gesture {
         DragGesture()
-            .updating($gestureOffset) { value, state, _ in
-                if isZoomed {
-                    state = value.translation
-                }
+            .onChanged { value in
+                guard isZoomed else { return }
+                // Move image relative to where drag started
+                offset.width = dragStartOffset.width + value.translation.width
+                offset.height = dragStartOffset.height + value.translation.height
             }
             .onEnded { value in
-                if isZoomed {
-                    // Pan behavior
-                    offset.width += value.translation.width
-                    offset.height += value.translation.height
-                } else {
-                    // Swipe behavior
+                guard isZoomed else {
+                    // Swipe logic
                     if value.translation.width < -50 {
                         onSwipeLeft()
                     } else if value.translation.width > 50 {
                         onSwipeRight()
                     }
+                    return
                 }
+                // Commit final position
+                dragStartOffset = offset
             }
-            .onEnded { value in
-                if isZoomed {
-                    let predicted = CGSize(
-                        width: offset.width + value.predictedEndTranslation.width,
-                        height: offset.height + value.predictedEndTranslation.height
-                    )
-                    withAnimation(.interactiveSpring()) {
-                        offset = predicted
-                    }
-                }
+            .onEnded { _ in
+                // Always update the dragStartOffset for next drag
+                dragStartOffset = offset
+            }
+            .onChanged { _ in
+                // nothing needed here beyond above
             }
     }
 
@@ -178,17 +175,10 @@ struct ZoomableImageView: View {
                 state = value
             }
             .onEnded { value in
-                let finalScale = scale * value
-                let clampedScale = max(finalScale, 1.0)
-                let anchorInView = zoomAnchor
-                let scaleDelta = clampedScale / scale
-                let newOffset = CGSize(
-                    width: (offset.width - anchorInView.x) * scaleDelta + anchorInView.x,
-                    height: (offset.height - anchorInView.y) * scaleDelta + anchorInView.y
-                )
-                offset = newOffset
-                scale = clampedScale
-                isZoomed = clampedScale > 1.0
+                let finalScale = max(scale * value, 1.0)
+                scale = finalScale
+                isZoomed = finalScale > 1.0
+                dragStartOffset = offset
             }
     }
 
@@ -214,6 +204,7 @@ struct ZoomableImageView: View {
                     if isZoomed {
                         scale = 1.0
                         offset = .zero
+                        dragStartOffset = .zero
                         isZoomed = false
                     } else {
                         scale = 2.5
@@ -221,6 +212,7 @@ struct ZoomableImageView: View {
                             width: (offset.width - zoomAnchor.x) * 2.5 + zoomAnchor.x,
                             height: (offset.height - zoomAnchor.y) * 2.5 + zoomAnchor.y
                         )
+                        dragStartOffset = offset
                         isZoomed = true
                     }
                 }
