@@ -19,7 +19,10 @@ struct ZoomableImageView: View {
     @State private var offset: CGSize = .zero
     @GestureState private var gestureOffset: CGSize = .zero
 
+    @State private var rotationAngle: Angle = .zero
     @State private var isZoomed: Bool = false
+    @State private var showSaveAlert = false
+
     @Binding var isFullScreen: Bool
 
     var body: some View {
@@ -29,6 +32,7 @@ struct ZoomableImageView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .scaleEffect(scale * gestureScale)
+                    .rotationEffect(rotationAngle)
                     .offset(x: offset.width + gestureOffset.width,
                             y: offset.height + gestureOffset.height)
                     .frame(width: geometry.size.width, height: geometry.size.height)
@@ -66,8 +70,61 @@ struct ZoomableImageView: View {
                     .padding()
                     Spacer()
                 }
+
+                // Rotate buttons
+                VStack {
+                    Spacer()
+                    HStack(spacing: 24) {
+                        Button {
+                            withAnimation { rotationAngle -= .degrees(90) }
+                        } label: {
+                            Image(systemName: "rotate.left")
+                        }
+
+                        Button {
+                            withAnimation { rotationAngle += .degrees(90) }
+                        } label: {
+                            Image(systemName: "rotate.right")
+                        }
+
+                        Button {
+                            saveEditedImage()
+                        } label: {
+                            Image(systemName: "square.and.arrow.down")
+                        }
+                    }
+                    .padding()
+                    .background(Color.black.opacity(0.6))
+                    .clipShape(Capsule())
+                    .foregroundColor(.white)
+                    .padding(.bottom, 30)
+                }
+                .alert("Saved to Photos", isPresented: $showSaveAlert) {}
             }
         }
+    }
+
+    private func saveEditedImage() {
+        let renderer = UIGraphicsImageRenderer(size: image.size)
+
+        let editedImage = renderer.image { ctx in
+            ctx.cgContext.translateBy(x: image.size.width / 2,
+                                      y: image.size.height / 2)
+            ctx.cgContext.rotate(by: CGFloat(rotationAngle.radians))
+            ctx.cgContext.translateBy(x: -image.size.width / 2,
+                                      y: -image.size.height / 2)
+
+            image.draw(at: .zero)
+        }
+
+        UIImageWriteToSavedPhotosAlbum(
+            editedImage,
+            nil,
+            nil,
+            nil
+        )
+
+        showSaveAlert = true
     }
 
     private func dragGesture() -> some Gesture {
