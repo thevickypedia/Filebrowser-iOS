@@ -36,6 +36,7 @@ struct ZoomableImageView: View {
                 // MARK: - Image
                 Image(uiImage: image)
                     .resizable()
+                    .scaledToFit()
                     .aspectRatio(contentMode: .fit)
                     .scaleEffect(scale * gestureScale)
                     .rotationEffect(rotationAngle)
@@ -43,7 +44,10 @@ struct ZoomableImageView: View {
                         x: offset.width + (isZoomed ? gestureOffset.width : 0),
                         y: offset.height + (isZoomed ? gestureOffset.height : 0)
                     )
-                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .frame(
+                        width: rotationAngle.degrees.truncatingRemainder(dividingBy: 180) == 90 ? nil : geometry.size.width,
+                        height: rotationAngle.degrees.truncatingRemainder(dividingBy: 180) == 90 ? nil : geometry.size.height
+                    )
                     .gesture(combinedGestures())
                     .animation(.easeInOut(duration: 0.25), value: scale)
 
