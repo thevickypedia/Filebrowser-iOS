@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.63.0 (02/08/2026)
+--------------------
+- [2289182](https://github.com/thevickypedia/Filebrowser-iOS/commit/2289182974ffcb90cef5dc9e297c42151687cdf0) chore: Release ``v1.63.0``
+- [556dd83](https://github.com/thevickypedia/Filebrowser-iOS/commit/556dd8383826355fdcc0c8e33e7ae1174f4bbf10) style: Hide rotation icons when images are rendered in full screen mode
+- [c7eda2d](https://github.com/thevickypedia/Filebrowser-iOS/commit/c7eda2d935a8c7a4efdd48fa761a19d1943ae6eb) fix: Avoid loosing part of the image during rotation
+- [65c3045](https://github.com/thevickypedia/Filebrowser-iOS/commit/65c304565a0f93b1a14eb390ad43dcc5bcecdfc9) feat: Include a new feature to rotate images
+- [5d3df01](https://github.com/thevickypedia/Filebrowser-iOS/commit/5d3df0166c8c63e1044c9f1f729ccab5d6cf4b90) chore: Update release notes for v1.62.0
+
 v1.62.0 (02/08/2026)
 --------------------
 - [642f77a](https://github.com/thevickypedia/Filebrowser-iOS/commit/642f77ac58b2ee1a6a2dc49f5ed91dbfc54c51ca) chore: Release ``v1.62.0``
