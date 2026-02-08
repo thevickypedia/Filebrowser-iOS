@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.64.1 (02/08/2026)
+--------------------
+- [c58613e](https://github.com/thevickypedia/Filebrowser-iOS/commit/c58613ec3265f4eb7d81bfcf1bfe9afb40a47a9e) chore: Release ``v1.64.1``
+- [a938864](https://github.com/thevickypedia/Filebrowser-iOS/commit/a938864bf7eda5071f43d18b550320257dfa416a) lint: Remove white spaces
+- [d2f1b26](https://github.com/thevickypedia/Filebrowser-iOS/commit/d2f1b267c56595ff2a560dd08e1e67fd0a345de8) style: Increase the base height of thumbnails for mosaic view
+- [25d544d](https://github.com/thevickypedia/Filebrowser-iOS/commit/25d544d5623d6788b4557f18b5f2a1dd9b631bc3) style: Make thumbnails tighter in mosaic view
+- [84583d7](https://github.com/thevickypedia/Filebrowser-iOS/commit/84583d722459a8ba6b13993ee07c35125ee9e6e6) chore: Update release notes for v1.64.0
+
 v1.64.0 (02/08/2026)
 --------------------
 - [e233e07](https://github.com/thevickypedia/Filebrowser-iOS/commit/e233e0718f1346ea62e96bb7c9dfc7951253f614) chore: Release ``v1.64.0``
