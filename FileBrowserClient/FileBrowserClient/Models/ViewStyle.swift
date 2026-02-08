@@ -55,7 +55,7 @@ struct ViewStyle {
 
     // Mosaic size
     static func mosaicStyle() -> GridStyle {
-        let baseHeight: CGFloat = 140  // Larger for mosaic view
+        let baseHeight: CGFloat = 180
         return GridStyle(gridHeight: baseHeight * globalScale, isModule: false, isMosaic: true)
     }
 }
