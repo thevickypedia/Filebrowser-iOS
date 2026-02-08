@@ -767,8 +767,8 @@ struct FileListView: View {
 
     private func notifyTransferState(_ action: TransferType, _ state: TransferStatus) {
         let currentState = action == .upload
-            ? "[\(transferState.currentTransferIndex + 1)/\(uploadQueue.count)]"
-            : "[\(transferState.currentTransferIndex + 1)/\(downloadQueue.count)]"
+        ? "[\(transferState.currentTransferIndex + 1)/\(uploadQueue.count)]"
+        : "[\(transferState.currentTransferIndex + 1)/\(downloadQueue.count)]"
 
         let text = transferState.currentTransferFile.map {
             "\(state.emoji) \(action.rawValue) \(currentState) - \($0) - \(state.rawValue) \(state.prefix) \(transferState.transferProgressPct)%"
@@ -1289,84 +1289,84 @@ struct FileListView: View {
 
         // Kick off the download via DownloadManager
         let taskID = DownloadManager.shared.download(from: url, token: auth.token,
-            progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
-                DispatchQueue.main.async {
-                    // Accumulate bytes downloaded
-                    bytesDownloadedSinceLastUpdate += bytesWritten
-                    // Calculate download speed with 'downloadSpeedUpdateInterval'
-                    let elapsed = Date().timeIntervalSince(downloadStartTime)
-                    if elapsed >= Constants.downloadSpeedUpdateInterval {
-                        let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
-                        transferState.currentTransferSpeed = downloadSpeed
-                        // Reset counters for the next period
-                        downloadStartTime = Date()
-                        bytesDownloadedSinceLastUpdate = 0
-                    }
-                    // Update progress
-                    guard totalBytesExpected > 0 else {
-                        self.transferState.transferProgress = 0
-                        self.transferState.transferProgressPct = 0
-                        return
-                    }
-                    let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
-                    self.transferState.transferProgress = prog
-                    self.transferState.transferProgressPct = Int(prog * 100)
-                    // Optional size strings
-                    self.transferState.currentTransferedFileSize = formatBytes(totalBytesWritten)
-                    self.transferState.currentTransferFileSize = formatBytes(totalBytesExpected)
+                                                     progress: { bytesWritten, totalBytesWritten, totalBytesExpected in
+            DispatchQueue.main.async {
+                // Accumulate bytes downloaded
+                bytesDownloadedSinceLastUpdate += bytesWritten
+                // Calculate download speed with 'downloadSpeedUpdateInterval'
+                let elapsed = Date().timeIntervalSince(downloadStartTime)
+                if elapsed >= Constants.downloadSpeedUpdateInterval {
+                    let downloadSpeed = Double(bytesDownloadedSinceLastUpdate) / elapsed / (1024 * 1024)
+                    transferState.currentTransferSpeed = downloadSpeed
+                    // Reset counters for the next period
+                    downloadStartTime = Date()
+                    bytesDownloadedSinceLastUpdate = 0
                 }
-            },
-            completion: { result in
-                DispatchQueue.main.async {
-                    // Invalidate the timer once the download is complete
-                    speedUpdateTimer?.invalidate()
-                    switch result {
-                    case .failure(let error) where error.isNetworkError:
-                        // Network error
-                        Log.warn("⚠️ Network error during download: \(error.localizedDescription)")
-                        pauseDownload(networkFailure: true)
-                        return
-                    case .failure(let err):
-                        // Non-network error
-                        Log.error("❌ Download failed: \(err.localizedDescription)")
-                        downloadStatus[file.path] = .failed
-                    case .success(let localURL):
-                        Log.info("✅ Download finished: \(file.name)")
-                        downloadStatus[file.path] = .success
-                        FileDownloadHelper.handleDownloadCompletion(
-                            file: file,
-                            localURL: localURL,
-                            toastMessage: $toastMessage,
-                            errorTitle: $errorTitle,
-                            errorMessage: $errorMessage
-                        )
-                    }
+                // Update progress
+                guard totalBytesExpected > 0 else {
+                    self.transferState.transferProgress = 0
+                    self.transferState.transferProgressPct = 0
+                    return
+                }
+                let prog = Double(totalBytesWritten) / Double(totalBytesExpected)
+                self.transferState.transferProgress = prog
+                self.transferState.transferProgressPct = Int(prog * 100)
+                // Optional size strings
+                self.transferState.currentTransferedFileSize = formatBytes(totalBytesWritten)
+                self.transferState.currentTransferFileSize = formatBytes(totalBytesExpected)
+            }
+        },
+                                                     completion: { result in
+            DispatchQueue.main.async {
+                // Invalidate the timer once the download is complete
+                speedUpdateTimer?.invalidate()
+                switch result {
+                case .failure(let error) where error.isNetworkError:
+                    // Network error
+                    Log.warn("⚠️ Network error during download: \(error.localizedDescription)")
+                    pauseDownload(networkFailure: true)
+                    return
+                case .failure(let err):
+                    // Non-network error
+                    Log.error("❌ Download failed: \(err.localizedDescription)")
+                    downloadStatus[file.path] = .failed
+                case .success(let localURL):
+                    Log.info("✅ Download finished: \(file.name)")
+                    downloadStatus[file.path] = .success
+                    FileDownloadHelper.handleDownloadCompletion(
+                        file: file,
+                        localURL: localURL,
+                        toastMessage: $toastMessage,
+                        errorTitle: $errorTitle,
+                        errorMessage: $errorMessage
+                    )
+                }
 
-                    // Move to next item
-                    self.transferState.currentTransferIndex += 1
-                    if self.transferState.currentTransferIndex >= self.downloadQueue.count {
-                        // Finished all
-                        self.downloadQueue.removeAll()
-                        self.transferState.currentTransferIndex = 0
-                        self.transferState.transferType = nil
-                        self.currentDownloadTaskID = nil
-                        self.showDownload = false
-                        self.transferState.transferProgress = 0
-                        let status = downloadStatus
-                        guard !status.isEmpty else {
-                            Log.error("Download status not registered")
-                            return
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            showTransferStatus(status, .download)
-                        }
-                        downloadStatus = [:]
-                    } else {
-                        // Start next
-                        self.startNextDownload()
+                // Move to next item
+                self.transferState.currentTransferIndex += 1
+                if self.transferState.currentTransferIndex >= self.downloadQueue.count {
+                    // Finished all
+                    self.downloadQueue.removeAll()
+                    self.transferState.currentTransferIndex = 0
+                    self.transferState.transferType = nil
+                    self.currentDownloadTaskID = nil
+                    self.showDownload = false
+                    self.transferState.transferProgress = 0
+                    let status = downloadStatus
+                    guard !status.isEmpty else {
+                        Log.error("Download status not registered")
+                        return
                     }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        showTransferStatus(status, .download)
+                    }
+                    downloadStatus = [:]
+                } else {
+                    // Start next
+                    self.startNextDownload()
                 }
-            })
+            }
+        })
 
         // Store task ID so it can be cancelled
         currentDownloadTaskID = taskID
@@ -1538,25 +1538,47 @@ struct FileListView: View {
         let iconSize = style?.iconSize ?? ViewStyle.listIconSize
 
         if useThumbnail {
-            RemoteThumbnail(
-                file: file,
-                serverURL: auth.serverURL,
-                token: auth.token,
-                advancedSettings: advancedSettings,
-                extensionTypes: extensionTypes,
-                width: style?.gridHeight ?? ViewStyle.listIconSize,
-                height: style?.gridHeight ?? ViewStyle.listIconSize,
-                loadingFiles: $loadingFiles,
-                iconSize: iconSize,
-                baseRequest: baseRequest
-            )
-            .scaledToFill()
-            .frame(
-                width: style?.gridHeight ?? ViewStyle.listIconSize,
-                height: style?.gridHeight ?? ViewStyle.listIconSize
-            )
-            .clipped()
-            .id(file.path)
+            // Check if we're in mosaic mode
+            if style?.isMosaic == true {
+                // MOSAIC MODE: Fill entire cell, crop to fit
+                RemoteThumbnail(
+                    file: file,
+                    serverURL: auth.serverURL,
+                    token: auth.token,
+                    advancedSettings: advancedSettings,
+                    extensionTypes: extensionTypes,
+                    width: style?.gridHeight ?? ViewStyle.listIconSize,
+                    height: style?.gridHeight ?? ViewStyle.listIconSize,
+                    loadingFiles: $loadingFiles,
+                    iconSize: iconSize,
+                    baseRequest: baseRequest
+                )
+                .scaledToFill()
+                .frame(width: style?.gridHeight, height: style?.gridHeight)
+                .clipped()
+                .id(file.path)
+            } else {
+                // GRID/MODULE MODE: Original behavior
+                RemoteThumbnail(
+                    file: file,
+                    serverURL: auth.serverURL,
+                    token: auth.token,
+                    advancedSettings: advancedSettings,
+                    extensionTypes: extensionTypes,
+                    width: style?.gridHeight ?? ViewStyle.listIconSize,
+                    height: style?.gridHeight ?? ViewStyle.listIconSize,
+                    loadingFiles: $loadingFiles,
+                    iconSize: iconSize,
+                    baseRequest: baseRequest
+                )
+                .scaledToFill()
+                .frame(
+                    width: style?.gridHeight ?? ViewStyle.listIconSize,
+                    height: style?.gridHeight ?? ViewStyle.listIconSize
+                )
+                .clipped()
+                .id(file.path)
+            }
         } else {
             Image(systemName: file.isDir
                   ? Icons.folder
@@ -1662,17 +1684,15 @@ struct FileListView: View {
     func gridContent(file: FileItem, style: GridStyle, module: Bool) -> some View {
         let fileName = file.name.lowercased()
         let hasThumbnail = advancedSettings.displayThumbnail &&
-            extensionTypes.thumbnailExtensions.contains(where: fileName.hasSuffix)
+        extensionTypes.thumbnailExtensions.contains(where: fileName.hasSuffix)
 
         // MOSAIC MODE: Show only thumbnail for photos/videos, full info for others
         if style.isMosaic {
             if hasThumbnail && !file.isDir {
-                // Photo/Video: Full thumbnail, no text
-                ZStack {
-                    thumbnailOrIcon(for: file, style: style)
-                }
-                .frame(height: style.gridHeight)
-                .clipped()
+                // Photo/Video: Full thumbnail, no text, no background, fills entire space
+                thumbnailOrIcon(for: file, style: style)
+                    .frame(width: style.gridHeight, height: style.gridHeight)
+                    .clipped()
             } else {
                 // Folder/File without thumbnail: Show like grid view
                 VStack(spacing: 2) {
