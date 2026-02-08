@@ -309,6 +309,7 @@ struct FileListView: View {
                     Label("List", systemImage: "list.bullet").tag(ViewMode.list.rawValue)
                     Label("Grid", systemImage: "square.grid.2x2").tag(ViewMode.grid.rawValue)
                     Label("Module", systemImage: "square.grid.3x3").tag(ViewMode.module.rawValue)
+                    Label("Mosaic", systemImage: "square.grid.3x2").tag(ViewMode.mosaic.rawValue)
                 }
             } label: {
                 Label("View Options", systemImage: "arrow.up.arrow.down.square")
@@ -873,6 +874,8 @@ struct FileListView: View {
                         Group {
                             if viewMode == .list {
                                 listView(for: filesToDisplay)
+                            } else if viewMode == .mosaic {
+                                mosaicView(for: filesToDisplay)  // ADD THIS
                             } else {
                                 gridView(for: filesToDisplay, module: viewMode == .module)
                             }
@@ -1657,32 +1660,136 @@ struct FileListView: View {
 
     @ViewBuilder
     func gridContent(file: FileItem, style: GridStyle, module: Bool) -> some View {
-        VStack(spacing: 2) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemGray6))
-                    .frame(height: style.gridHeight)
+        let fileName = file.name.lowercased()
+        let hasThumbnail = advancedSettings.displayThumbnail &&
+            extensionTypes.thumbnailExtensions.contains(where: fileName.hasSuffix)
 
-                thumbnailOrIcon(for: file, style: style)
+        // MOSAIC MODE: Show only thumbnail for photos/videos, full info for others
+        if style.isMosaic {
+            if hasThumbnail && !file.isDir {
+                // Photo/Video: Full thumbnail, no text
+                ZStack {
+                    thumbnailOrIcon(for: file, style: style)
+                }
+                .frame(height: style.gridHeight)
+                .clipped()
+            } else {
+                // Folder/File without thumbnail: Show like grid view
+                VStack(spacing: 2) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray6))
+                            .frame(height: style.gridHeight)
+
+                        thumbnailOrIcon(for: file, style: style)
+                    }
+
+                    Text(file.name)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
+                        .padding(.horizontal, 2)
+                        .foregroundColor(.primary)
+
+                    Text(parseGridSize(from: file.isDir ? nil : file.size) ?? "—")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                    Text(parseGridDate(from: file.modified))
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
             }
+        } else {
+            // GRID/MODULE MODE: Original behavior
+            VStack(spacing: 2) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray6))
+                        .frame(height: style.gridHeight)
 
-            Text(file.name)
-                .font(module ? .caption2 : .caption)
-                .multilineTextAlignment(.center)
-                .lineLimit(style.lineLimit)
-                .padding(.horizontal, 2)
-                .foregroundColor(.primary)
-            if !module {
-                Text(parseGridSize(from: file.isDir ? nil : file.size) ?? "—")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-                Text(parseGridDate(from: file.modified))
-                    .font(.caption2)
-                    .foregroundColor(.gray)
+                    thumbnailOrIcon(for: file, style: style)
+                }
+
+                Text(file.name)
+                    .font(module ? .caption2 : .caption)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(style.lineLimit)
+                    .padding(.horizontal, 2)
+                    .foregroundColor(.primary)
+                if !module {
+                    Text(parseGridSize(from: file.isDir ? nil : file.size) ?? "—")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                    Text(parseGridDate(from: file.modified))
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
             }
         }
     }
 
+    @ViewBuilder
+    func mosaicView(for fileList: [FileItem]) -> some View {
+        ScrollView {
+            LazyVGrid(columns: mosaicColumns(), spacing: 4) {
+                ForEach(fileList.indices, id: \.self) { index in
+                    let file = fileList[index]
+                    mosaicCell(for: file, at: index, in: fileList)
+                }
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 4)
+        }
+    }
+
+    @ViewBuilder
+    func mosaicCell(for file: FileItem, at index: Int, in fileList: [FileItem]) -> some View {
+        let style = ViewStyle.mosaicStyle()
+
+        let handleFileTap = {
+            if selectionMode {
+                toggleSelection(for: file)
+            } else {
+                selectedFileIndex = index
+                selectedFileList = fileList
+            }
+        }
+
+        let handleFolderTap = {
+            if selectionMode {
+                toggleSelection(for: file)
+            }
+        }
+
+        ZStack(alignment: .topTrailing) {
+            if file.isDir {
+                if selectionMode {
+                    Button(action: handleFolderTap) {
+                        gridContent(file: file, style: style, module: false)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    NavigationLink(value: fullPath(for: file, with: currentPath)) {
+                        gridContent(file: file, style: style, module: false)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                Button(action: handleFileTap) {
+                    gridContent(file: file, style: style, module: false)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if selectionMode {
+                Image(systemName: selectedItems.contains(file) ? "checkmark.circle.fill" : "circle")
+                    .resizable()
+                    .frame(width: style.selectionSize, height: style.selectionSize)
+                    .foregroundColor(selectedItems.contains(file) ? .blue : .gray)
+                    .padding(6)
+            }
+        }
+    }
     @ViewBuilder
     func gridView(for fileList: [FileItem], module: Bool = false) -> some View {
         ScrollView {

@@ -10,8 +10,8 @@ import SwiftUI
 struct ViewStyle {
     // Global scale is now calculated, not hard-coded
     /* To handle scaling globally:
-        - ViewStyle.globalScale = 1.2 // 20% bigger
-        - ViewStyle.globalScale = 0.9 // 10% smaller
+     - ViewStyle.globalScale = 1.2 // 20% bigger
+     - ViewStyle.globalScale = 0.9 // 10% smaller
      */
     static var globalScale: CGFloat {
         let device = UIDevice.current.userInterfaceIdiom
@@ -52,11 +52,25 @@ struct ViewStyle {
         let baseHeight: CGFloat = module ? 70 : 100
         return GridStyle(gridHeight: baseHeight * globalScale, isModule: module)
     }
+
+    // Mosaic size
+    static func mosaicStyle() -> GridStyle {
+        let baseHeight: CGFloat = 140  // Larger for mosaic view
+        return GridStyle(gridHeight: baseHeight * globalScale, isModule: false, isMosaic: true)
+    }
 }
 
 struct GridStyle {
     let gridHeight: CGFloat
     let isModule: Bool
+    let isMosaic: Bool
+
+    // Initialize grid style
+    init(gridHeight: CGFloat, isModule: Bool, isMosaic: Bool = false) {
+        self.gridHeight = gridHeight
+        self.isModule = isModule
+        self.isMosaic = isMosaic
+    }
 
     var iconSize: CGFloat {
         isModule ? gridHeight * 0.45 : gridHeight * 0.4
@@ -76,8 +90,8 @@ struct Icons {
 
 func adaptiveColumns(module: Bool) -> [GridItem] {
     /*
-     On iPhone portrait, you’ll get ~3–4 columns depending on module/grid mode.
-     On iPhone landscape, you’ll see 5–6 columns.
+     On iPhone portrait, you'll get ~3–4 columns depending on module/grid mode.
+     On iPhone landscape, you'll see 5–6 columns.
      On iPad portrait, possibly 6–8 columns.
      On iPad landscape, 10+ columns.
     */
@@ -96,8 +110,22 @@ func adaptiveColumns(module: Bool) -> [GridItem] {
     )
 }
 
+func mosaicColumns() -> [GridItem] {
+    let screenWidth = UIScreen.main.bounds.width
+    let style = ViewStyle.mosaicStyle()
+
+    // Tighter spacing for mosaic to maximize photo display
+    let minItemWidth = style.gridHeight + 8
+    let columnsCount = max(2, Int(screenWidth / minItemWidth))
+
+    return Array(
+        repeating: GridItem(.flexible(), spacing: 4),
+        count: columnsCount
+    )
+}
+
 enum ViewMode: String {
-    case list, grid, module
+    case list, grid, module, mosaic
 }
 
 enum SortOption {
