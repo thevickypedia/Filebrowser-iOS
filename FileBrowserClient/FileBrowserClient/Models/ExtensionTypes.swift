@@ -7,7 +7,9 @@
 
 struct ExtensionTypes {
     let imageExtensions: [String] = [
-        ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic", ".gif"
+        ".png", ".jpg", ".jpeg", ".webp", ".avif", ".heif", ".heic", ".gif",  // common
+        ".cr2", ".raf", ".dng", ".nef", ".orf",  // raw
+        ".tiff", ".bmp", ".ico"  // raster
     ]
     let textExtensions: [String] = [
         ".txt", ".log", ".json", ".yaml", ".xml", ".yml", ".csv", ".tsv", ".ini", ".properties", ".sh",
