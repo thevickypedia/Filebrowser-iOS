@@ -617,6 +617,8 @@ struct FileListView: View {
 
     private func modifyItem(to destinationPath: String, action: ModifyItem) {
         let logAction = action.rawValue.lowercased()
+        let urlAction = action == .move ? "rename" : "copy"
+
         guard !selectedItems.isEmpty else {
             Log.warn("No items selected to \(logAction)")
             return
@@ -628,35 +630,12 @@ struct FileListView: View {
             toastMessage = ToastMessagePayload(text: "Invalid destination path", color: .red, duration: 3)
             return
         }
-
-        let selectedNames = selectedItems.map { $0.name }
-        let selectedCount = selectedItems.count
-        Log.info("Selected items [\(selectedCount)] for \(logAction): \(selectedNames)")
-        Log.info("\(action.rawValue.capitalized) to path: \(destinationPath)")
-
-        let statusActionPost = action == ModifyItem.copy ? "Copied" : "Moved"
-
-        // Create a DispatchGroup to track completion
-        let dispatchGroup = DispatchGroup()
-        var successCount = 0
-        var errorCount = 0
-
-        // MARK: Loop ends even if one item fails to move/copy
+        var transferCount = 0
         for item in selectedItems {
-            dispatchGroup.enter()
-
             let sourcePath = item.path.hasPrefix("/") ? item.path : "/" + item.path
-
-            let destinationFullPath: String
-            if destinationPath == "/" {
-                destinationFullPath = "/" + item.name
-            } else {
-                destinationFullPath = destinationPath + "/" + item.name
-            }
-
-            let urlAction = action == ModifyItem.move ? "rename" : "copy"
+            let destinationFullPath = destinationPath == "/" ? "/" + item.name : destinationPath + "/" + item.name
             let sourceForURL = sourcePath.hasPrefix("/") ? String(sourcePath.dropFirst()) : sourcePath
-            // Client side issue: Break loop without resetting flags, so sheet is still up
+
             guard let preparedRequest = baseRequest.prepare(
                 pathComponents: ["api", "resources", sourceForURL],
                 queryItems: [
@@ -667,84 +646,30 @@ struct FileListView: View {
                 ],
                 method: .patch
             ) else {
-                let msg = "Invalid URL for \(item.name)"
+                let msg = "Invalid URL: Skipping \(item.name)"
                 modifyMessage = ToastMessagePayload(text: msg, color: .primary, duration: 2)
                 Log.error(msg)
-                errorCount += 1
-                dispatchGroup.leave()
-                return
+                continue
             }
-
-            let task = preparedRequest.session.dataTask(with: preparedRequest.request) { _, response, error in
-                defer { dispatchGroup.leave() }
-
-                // Server side issue: Continue to next item and display errors at last in list view
-                if let error = error {
-                    let msg = "Failed to \(logAction) \(item.name): \(error.localizedDescription)"
-                    Log.error(msg)
-                    DispatchQueue.main.async {
-                        errorCount += 1
-                    }
-                    return
-                }
-
-                // Server side issue: Continue to next item and display errors at last in list view
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    let msg = "Invalid response received when trying to \(logAction) \(item.name)"
-                    Log.error(msg)
-                    DispatchQueue.main.async {
-                        errorCount += 1
-                    }
-                    return
-                }
-
-                if httpResponse.statusCode == 200 {
-                    Log.info("\(item.name) \(logAction)d successfully to \(destinationPath)")
-                    DispatchQueue.main.async {
-                        successCount += 1
-                    }
-                } else {
-                    // Server side issue: Continue to next item and display errors at last in list view
-                    let msg = "Failed to \(logAction) \(item.name). HTTP Status: \(httpResponse.statusCode)"
-                    Log.error(msg)
-                    DispatchQueue.main.async {
-                        errorCount += 1
-                    }
-                }
-            }
-            task.resume()
+            transferCount += 1
+            // Fire request but ignore result
+            preparedRequest.session.dataTask(with: preparedRequest.request).resume()
         }
 
-        // Wait for all tasks to complete
-        dispatchGroup.notify(queue: .main) {
-            Log.info("\(successCount) items successfully \(statusActionPost), \(errorCount) failed")
+        // Immediately update UI
+        toastMessage = ToastMessagePayload(
+            text: "⏳ \(transferCount)/\(selectedItems.count) item(s) queued for \(logAction)",
+            color: transferCount == 0 ? .red : transferCount == selectedItems.count ? .green : .yellow
+        )
 
-            // Show completion message
-            if errorCount == 0 {
-                toastMessage = ToastMessagePayload(
-                    text: "✅ \(statusActionPost) \(successCount) item\(successCount == 1 ? "" : "s")",
-                    color: .green,
-                    duration: 3
-                )
-            } else if successCount > 0 {
-                toastMessage = ToastMessagePayload(
-                    text: "⚠️ \(statusActionPost) \(successCount), \(errorCount) failed",
-                    color: .yellow,
-                    duration: 4
-                )
-            } else {
-                toastMessage = ToastMessagePayload(
-                    text: "❌ Failed to \(logAction) items",
-                    color: .red,
-                    duration: 3
-                )
-            }
+        // Close the sheet and refresh the current directory
+        showCopy = false
+        showMove = false
+        selectedItems.removeAll()
+        selectionMode = false
 
-            // Close the sheet and refresh the current directory
-            showCopy = false
-            showMove = false
-            selectedItems.removeAll()
-            selectionMode = false
+        // refresh directory after small delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             fetchFiles(at: currentPath)
         }
     }
