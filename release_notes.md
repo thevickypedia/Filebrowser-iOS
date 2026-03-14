@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.64.2 (03/13/2026)
+--------------------
+- [5109e22](https://github.com/thevickypedia/Filebrowser-iOS/commit/5109e22422d8c70f89287f1dd3a2f0bb38dcdf7d) chore: Release ``v1.64.2``
+- [e69ca02](https://github.com/thevickypedia/Filebrowser-iOS/commit/e69ca02ccbe50d5db5c9ce9e9d14f3f5b44095fc) perf: Queue item move/copy operations instead of using a blocking call
+- [a02012c](https://github.com/thevickypedia/Filebrowser-iOS/commit/a02012cfe5aa441e956b5603e471b27c1ad9e7f4) feat: Support more image types
+- [c4a2ba8](https://github.com/thevickypedia/Filebrowser-iOS/commit/c4a2ba8e57e1ad9ec77bafa265b04841eafd7335) chore: Update release notes for v1.64.1
+
 v1.64.1 (02/08/2026)
 --------------------
 - [c58613e](https://github.com/thevickypedia/Filebrowser-iOS/commit/c58613ec3265f4eb7d81bfcf1bfe9afb40a47a9e) chore: Release ``v1.64.1``
