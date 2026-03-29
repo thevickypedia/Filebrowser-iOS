@@ -480,7 +480,6 @@ struct FileListView: View {
         }
     }
 
-    // Fixed modifySheet implementation
     private var currentSheetPath: String {
         // Build path from sheetPathStack, starting from root
         if sheetPathStack.isEmpty {
@@ -1817,7 +1816,11 @@ struct FileListView: View {
     func fetchUsageInfo() {
         guard auth.isValid else { invalidAuth(); return }
 
-        guard let preparedRequest = baseRequest.prepare(pathComponents: ["api", "usage"]) else {
+        var pathComponents = ["api", "usage"]
+        if currentPath != "/" {
+            pathComponents.append(currentPath)
+        }
+        guard let preparedRequest = baseRequest.prepare(pathComponents: pathComponents) else {
             let msg = "Failed to prepare request for: /api/usage"
             Log.error("❌ \(msg)")
             errorTitle = "Internal Error"
