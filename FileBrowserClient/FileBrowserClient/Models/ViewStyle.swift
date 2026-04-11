@@ -88,16 +88,16 @@ struct Icons {
     static let doc: String = "doc"
 }
 
-struct SymlinkBadgeModifier: ViewModifier {
-    let iconSize: CGFloat
+struct SymlinkOverlayModifier: ViewModifier {
     let isSymlink: Bool
+    let iconSize: CGFloat
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .bottomTrailing) {
                 if isSymlink {
-                    let badgeSize = max(7, iconSize * 0.22)
-                    let offset = iconSize * 0.08
+                    let badgeSize = max(8, iconSize * 0.18)
+                    let offset = iconSize * 0.06
 
                     Image(systemName: "arrowshape.turn.up.right")
                         .font(.system(size: badgeSize, weight: .regular))
@@ -109,8 +109,8 @@ struct SymlinkBadgeModifier: ViewModifier {
 }
 
 extension View {
-    func symlinkBadge(iconSize: CGFloat, isSymlink: Bool) -> some View {
-        self.modifier(SymlinkBadgeModifier(iconSize: iconSize, isSymlink: isSymlink))
+    func symlinkOverlay(isSymlink: Bool, iconSize: CGFloat) -> some View {
+        modifier(SymlinkOverlayModifier(isSymlink: isSymlink, iconSize: iconSize))
     }
 }
 
@@ -131,7 +131,6 @@ func iconView(for file: FileItem, size: CGFloat, extensionTypes: ExtensionTypes)
         .scaledToFit()
         .frame(width: size, height: size)
         .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
-        .symlinkBadge(iconSize: size, isSymlink: file.isSymlink)
 }
 
 func adaptiveColumns(module: Bool) -> [GridItem] {
