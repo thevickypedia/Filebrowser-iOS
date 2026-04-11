@@ -88,6 +88,52 @@ struct Icons {
     static let doc: String = "doc"
 }
 
+struct SymlinkBadgeModifier: ViewModifier {
+    let iconSize: CGFloat
+    let isSymlink: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottomTrailing) {
+                if isSymlink {
+                    let badgeSize = max(7, iconSize * 0.22)
+                    let offset = iconSize * 0.08
+
+                    Image(systemName: "arrowshape.turn.up.right")
+                        .font(.system(size: badgeSize, weight: .regular))
+                        .foregroundStyle(.primary.opacity(0.45))
+                        .offset(x: offset, y: offset)
+                }
+            }
+    }
+}
+
+extension View {
+    func symlinkBadge(iconSize: CGFloat, isSymlink: Bool) -> some View {
+        self.modifier(SymlinkBadgeModifier(iconSize: iconSize, isSymlink: isSymlink))
+    }
+}
+
+func baseIcon(for file: FileItem, fileName: String, extensionTypes: ExtensionTypes) -> String {
+    if file.isDir {
+        return Icons.folder
+    }
+    return systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc
+}
+
+@ViewBuilder
+func iconView(for file: FileItem, size: CGFloat, extensionTypes: ExtensionTypes) -> some View {
+    let fileName = file.name.lowercased()
+    let iconName = baseIcon(for: file, fileName: fileName, extensionTypes: extensionTypes)
+
+    Image(systemName: iconName)
+        .resizable()
+        .scaledToFit()
+        .frame(width: size, height: size)
+        .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+        .symlinkBadge(iconSize: size, isSymlink: file.isSymlink)
+}
+
 func adaptiveColumns(module: Bool) -> [GridItem] {
     /*
      On iPhone portrait, you'll get ~3–4 columns depending on module/grid mode.

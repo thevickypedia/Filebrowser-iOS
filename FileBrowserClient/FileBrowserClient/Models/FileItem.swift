@@ -10,12 +10,15 @@ import Foundation
 struct FileItem: Codable, Identifiable, Hashable {
     var id: String { path }
 
-    let name: String
     let path: String
+    let name: String
+    let size: Int
+    let `extension`: String
+    let modified: String
+    let mode: Int  // File mode (mod)
     let isDir: Bool
-    let modified: String?
-    let size: Int?
-    let `extension`: String?
+    let isSymlink: Bool
+    let type: String
 }
 
 struct FileItemSearch: Decodable {

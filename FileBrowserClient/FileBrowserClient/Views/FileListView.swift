@@ -602,12 +602,15 @@ struct FileListView: View {
             for component in pathComponents {
                 buildingPath += "/" + component
                 let fileItem = FileItem(
-                    name: component,
                     path: buildingPath,
+                    name: component,
+                    size: 0,
+                    extension: "",
+                    modified: "",
+                    mode: 0,
                     isDir: true,
-                    modified: nil,
-                    size: nil,
-                    extension: nil
+                    isSymlink: false,
+                    type: ""
                 )
                 sheetPathStack.append(fileItem)
             }
@@ -1504,13 +1507,7 @@ struct FileListView: View {
                 .id(file.path)
             }
         } else {
-            Image(systemName: file.isDir
-                  ? Icons.folder
-                  : systemIcon(for: fileName, extensionTypes: extensionTypes) ?? Icons.doc)
-                .resizable()
-                .scaledToFit()
-                .frame(width: iconSize, height: iconSize)
-                .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+            iconView(for: file, size: iconSize, extensionTypes: extensionTypes)
         }
     }
 
@@ -1770,12 +1767,15 @@ struct FileListView: View {
                 NavigationLink(destination: {
                     // Minimal FileItem for detail view
                     let fileItem = FileItem(
-                        name: name,
                         path: result.path,
+                        name: name,
+                        size: 0,
+                        extension: name.split(separator: ".").last.map(String.init) ?? "",
+                        modified: "",
+                        mode: 0,
                         isDir: false,
-                        modified: nil,
-                        size: nil,
-                        extension: name.split(separator: ".").last.map(String.init)
+                        isSymlink: false,
+                        type: ""
                     )
                     detailView(for: fileItem, index: 0, sortedFiles: [fileItem])
                 }) {
@@ -2507,12 +2507,15 @@ struct FileListView: View {
         let isoString = formatter.string(from: Date())
 
         let fileItem = FileItem(
-            name: newResourceName,
             path: newResourceName,
-            isDir: isDirectory,
-            modified: isoString,
+            name: newResourceName,
             size: 0,
-            extension: isDirectory ? nil : newResourceName.split(separator: ".").last.map(String.init)
+            extension: isDirectory ? "" : newResourceName.split(separator: ".").last.map(String.init) ?? "",
+            modified: isoString,
+            mode: 0,
+            isDir: isDirectory,
+            isSymlink: false,
+            type: ""
         )
         let fullPath = fullPath(for: fileItem, with: currentPath)
 
