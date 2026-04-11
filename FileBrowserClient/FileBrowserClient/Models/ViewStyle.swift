@@ -97,12 +97,14 @@ struct SymlinkOverlayModifier: ViewModifier {
             .overlay(alignment: .bottomTrailing) {
                 if isSymlink {
                     let badgeSize = max(8, iconSize * 0.18)
-                    let offset = iconSize * 0.06
+                    let inset = iconSize * 0.04
 
                     Image(systemName: "arrowshape.turn.up.right")
                         .font(.system(size: badgeSize, weight: .regular))
                         .foregroundStyle(.primary.opacity(0.45))
-                        .offset(x: offset, y: offset)
+                        .padding(2)
+                        .background(.ultraThinMaterial, in: Circle())
+                        .padding(inset)
                 }
             }
     }
