@@ -66,7 +66,7 @@ struct FileListView: View {
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
 
-    @State private var usageInfo: (used: Int64, total: Int64)?
+    @State private var usageInfo: (path: String, used: Int64, total: Int64)?
 
     @State private var sortOption: SortOption = .nameAsc
     @AppStorage("viewMode") private var viewModeRawValue: String = ViewMode.list.rawValue
@@ -421,7 +421,7 @@ struct FileListView: View {
             Toggle("Redirect to destination after copy/move", isOn: $redirectAfterCopyMove)
             Button("Save", action: saveSettings)
             if let usage = usageInfo {
-                Section(header: Text("Server Capacity")) {
+                Section(header: Text("Server Capacity: \(usage.path)")) {
                     VStack(alignment: .leading) {
                         SelectableTextView(text: "Used: \(formatBytes(usage.used))")
                         SelectableTextView(text: "Total: \(formatBytes(usage.total))")
@@ -1836,9 +1836,10 @@ struct FileListView: View {
 
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                       let path = json["path"] as? String,
                        let used = json["used"] as? Int64,
                        let total = json["total"] as? Int64 {
-                        usageInfo = (used, total)
+                        usageInfo = (path, used, total)
                         Log.info("💽 Usage — Used: \(used), Total: \(total)")
                     } else {
                         Log.error("❌ Malformed /api/usage/ response")
