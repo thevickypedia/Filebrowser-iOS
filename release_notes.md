@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.65.0 (04/11/2026)
+--------------------
+- [571510d](https://github.com/thevickypedia/Filebrowser-iOS/commit/571510d8f22c12ede50093cc8af35d60f3f982a4) chore: Release ``v1.65.0``
+- [8c5da2d](https://github.com/thevickypedia/Filebrowser-iOS/commit/8c5da2d97b23d8d80262307e5b0cb2a239410d6a) refactor: Remove nil-coalescing default value for ``FileItem``
+- [ab0c422](https://github.com/thevickypedia/Filebrowser-iOS/commit/ab0c4227558c340d1a0c2b9413c2f87c0de2a97b) style: Keep symlink overlay within thumbnails
+- [f3959b9](https://github.com/thevickypedia/Filebrowser-iOS/commit/f3959b9ff6993b6d430fa773cc75499a157aaec8) feat: Include symlink overlay for thumbnails
+- [6159614](https://github.com/thevickypedia/Filebrowser-iOS/commit/61596145e43a211fea1473a3fb0342274df263d8) feat: Include a tiny shortcut icon overlay for symlinks
+- [8da180f](https://github.com/thevickypedia/Filebrowser-iOS/commit/8da180f4b391600f02cc7fd124e6862ef1f99dcc) feat: Include path retrieved from `/usage` response to display server capacity
+- [896e828](https://github.com/thevickypedia/Filebrowser-iOS/commit/896e828232801e7ba4b48ec9e05bab9023c06e0c) feat: Get usage info for current path
+- [4ee8f17](https://github.com/thevickypedia/Filebrowser-iOS/commit/4ee8f17adf065fc432a025a81f7aab0ff60de221) chore: Update release notes for v1.64.2
+
 v1.64.2 (03/13/2026)
 --------------------
 - [5109e22](https://github.com/thevickypedia/Filebrowser-iOS/commit/5109e22422d8c70f89287f1dd3a2f0bb38dcdf7d) chore: Release ``v1.64.2``
