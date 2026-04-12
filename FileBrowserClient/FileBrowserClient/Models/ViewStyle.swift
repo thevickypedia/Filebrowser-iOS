@@ -80,6 +80,20 @@ struct GridStyle {
     }
     var selectionSize: CGFloat { gridHeight * 0.2 }
     var lineLimit: Int { isModule ? 2 : 1 }
+
+    var symlinkOverlaySize: CGFloat {
+        if isMosaic {
+            return gridHeight * 0.10   // 👈 smaller for big thumbnails
+        } else if isModule {
+            return gridHeight * 0.16   // 👈 slightly larger, module is more spacious
+        } else {
+            return gridHeight * 0.14   // 👈 standard grid
+        }
+    }
+
+    var symlinkOverlayInset: CGFloat {
+        gridHeight * 0.04
+    }
 }
 
 struct Icons {
@@ -90,15 +104,13 @@ struct Icons {
 
 struct SymlinkOverlayModifier: ViewModifier {
     let isSymlink: Bool
-    let iconSize: CGFloat
+    let badgeSize: CGFloat
+    let inset: CGFloat
 
     func body(content: Content) -> some View {
         content
             .overlay(alignment: .bottomTrailing) {
                 if isSymlink {
-                    let badgeSize = max(8, iconSize * 0.18)
-                    let inset = iconSize * 0.04
-
                     Image(systemName: "arrowshape.turn.up.right")
                         .font(.system(size: badgeSize, weight: .regular))
                         .foregroundStyle(.primary.opacity(0.45))
@@ -111,8 +123,17 @@ struct SymlinkOverlayModifier: ViewModifier {
 }
 
 extension View {
-    func symlinkOverlay(isSymlink: Bool, iconSize: CGFloat) -> some View {
-        modifier(SymlinkOverlayModifier(isSymlink: isSymlink, iconSize: iconSize))
+    func symlinkOverlay(isSymlink: Bool, style: GridStyle?, iconSize: CGFloat) -> some View {
+        let badgeSize = style?.symlinkOverlaySize ?? iconSize * 0.28
+        let inset = style?.symlinkOverlayInset ?? iconSize * 0.1
+
+        return modifier(
+            SymlinkOverlayModifier(
+                isSymlink: isSymlink,
+                badgeSize: badgeSize,
+                inset: inset
+            )
+        )
     }
 }
 
