@@ -27,7 +27,7 @@ jobs:
       release_exists: ${{ steps.check_release.outputs.release_exists }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Clean Project Version
         run: |
