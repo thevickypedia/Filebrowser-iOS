@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.65.3 (04/12/2026)
+--------------------
+- [02e7c50](https://github.com/thevickypedia/Filebrowser-iOS/commit/02e7c507a9b4c06ee4f0653397a239836e171af4) chore: Release ``v1.65.3``
+- [e94af3d](https://github.com/thevickypedia/Filebrowser-iOS/commit/e94af3da94ea2f746f66b62f590b12f9472cc271) refactor: Change ``UsageInfo`` from a tuple to a struct
+- [5570b27](https://github.com/thevickypedia/Filebrowser-iOS/commit/5570b27dc95372fb7951ed99596db8310f5977f7) perf: Extend ``ResourceResponse`` to include all the retrievable keys
+- [08f247c](https://github.com/thevickypedia/Filebrowser-iOS/commit/08f247c62eaea630634b5a0e4e6e568fb4b0331a) style: Update text formatting for share link password warning
+- [25e4878](https://github.com/thevickypedia/Filebrowser-iOS/commit/25e487809fbd66695d783a7e97b308ad896d689e) feat: Add ``free`` size under server capacity label
+- [57fbaa4](https://github.com/thevickypedia/Filebrowser-iOS/commit/57fbaa4be622aa039e5c5ab5800c8b9e100eb2c6) chore: Update release notes for v1.65.2
+
 v1.65.2 (04/11/2026)
 --------------------
 - [e01eb2d](https://github.com/thevickypedia/Filebrowser-iOS/commit/e01eb2d6f078cd30a085d1f5b6179751581db642) chore: Release ``v1.65.2``
