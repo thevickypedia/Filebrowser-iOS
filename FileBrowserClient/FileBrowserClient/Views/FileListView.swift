@@ -1483,7 +1483,12 @@ struct FileListView: View {
                 .scaledToFill()
                 .frame(width: style?.gridHeight, height: style?.gridHeight)
                 .clipped()
-                .symlinkOverlay(isSymlink: file.isSymlink, style: style, iconSize: iconSize)
+                .symlinkOverlay(
+                    isSymlink: file.isSymlink,
+                    style: style,
+                    iconSize: style?.gridHeight ?? iconSize,
+                    isSymbol: false
+                )
                 .id(file.path)
             } else {
                 // GRID/MODULE MODE: Original behavior
@@ -1505,12 +1510,16 @@ struct FileListView: View {
                     height: style?.gridHeight ?? ViewStyle.listIconSize
                 )
                 .clipped()
-                .symlinkOverlay(isSymlink: file.isSymlink, style: style, iconSize: iconSize)
+                .symlinkOverlay(
+                    isSymlink: file.isSymlink,
+                    style: style,
+                    iconSize: style?.gridHeight ?? iconSize,
+                    isSymbol: false
+                )
                 .id(file.path)
             }
         } else {
-            iconView(for: file, size: iconSize, extensionTypes: extensionTypes)
-                .symlinkOverlay(isSymlink: file.isSymlink, style: style, iconSize: iconSize)
+            iconView(for: file, style: style, size: iconSize, extensionTypes: extensionTypes)
         }
     }
 

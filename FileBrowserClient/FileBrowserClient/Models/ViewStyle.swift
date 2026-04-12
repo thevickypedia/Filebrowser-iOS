@@ -106,6 +106,7 @@ struct SymlinkOverlayModifier: ViewModifier {
     let isSymlink: Bool
     let badgeSize: CGFloat
     let inset: CGFloat
+    let isSymbol: Bool
 
     func body(content: Content) -> some View {
         content
@@ -117,13 +118,22 @@ struct SymlinkOverlayModifier: ViewModifier {
                         .padding(2)
                         .background(.ultraThinMaterial, in: Circle())
                         .padding(inset)
+                        .offset(
+                            x: isSymbol ? inset * 1.2 : 0,
+                            y: isSymbol ? inset * 1.2 : 0
+                        )
                 }
             }
     }
 }
 
 extension View {
-    func symlinkOverlay(isSymlink: Bool, style: GridStyle?, iconSize: CGFloat) -> some View {
+    func symlinkOverlay(
+        isSymlink: Bool,
+        style: GridStyle?,
+        iconSize: CGFloat,
+        isSymbol: Bool
+    ) -> some View {
         let badgeSize = style?.symlinkOverlaySize ?? iconSize * 0.28
         let inset = style?.symlinkOverlayInset ?? iconSize * 0.1
 
@@ -131,7 +141,8 @@ extension View {
             SymlinkOverlayModifier(
                 isSymlink: isSymlink,
                 badgeSize: badgeSize,
-                inset: inset
+                inset: inset,
+                isSymbol: isSymbol
             )
         )
     }
@@ -145,7 +156,7 @@ func baseIcon(for file: FileItem, fileName: String, extensionTypes: ExtensionTyp
 }
 
 @ViewBuilder
-func iconView(for file: FileItem, size: CGFloat, extensionTypes: ExtensionTypes) -> some View {
+func iconView(for file: FileItem, style: GridStyle?, size: CGFloat, extensionTypes: ExtensionTypes) -> some View {
     let fileName = file.name.lowercased()
     let iconName = baseIcon(for: file, fileName: fileName, extensionTypes: extensionTypes)
 
@@ -154,6 +165,12 @@ func iconView(for file: FileItem, size: CGFloat, extensionTypes: ExtensionTypes)
         .scaledToFit()
         .frame(width: size, height: size)
         .foregroundColor(Color(red: 0.2, green: 0.6, blue: 0.9))
+        .symlinkOverlay(
+            isSymlink: file.isSymlink,
+            style: style,
+            iconSize: size,
+            isSymbol: true
+        )
 }
 
 func adaptiveColumns(module: Bool) -> [GridItem] {
