@@ -66,7 +66,7 @@ struct FileListView: View {
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
 
-    @State private var usageInfo: (path: String, used: Int64, total: Int64, free: Int64)?
+    @State private var usageInfo: UsageInfo?
 
     @State private var sortOption: SortOption = .nameAsc
     @AppStorage("viewMode") private var viewModeRawValue: String = ViewMode.list.rawValue
@@ -1823,7 +1823,7 @@ struct FileListView: View {
                        let total = json["total"] as? Int64 {
                         let free = (total - used) as Int64
                         let path = (json["path"] as? String) ?? currentPath
-                        usageInfo = (path, used, total, free)
+                        usageInfo = UsageInfo(path: path, used: used, total: total, free: free)
                         Log.info("💽 Usage — Used: \(used), Total: \(total)")
                     } else {
                         Log.error("❌ Malformed /api/usage/ response")

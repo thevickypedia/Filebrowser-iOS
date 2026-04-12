@@ -54,3 +54,10 @@ struct ResourceResponse: Codable {
     let isSymlink: Bool
     let type: String
 }
+
+struct UsageInfo: Codable {
+    let path: String
+    let used: Int64
+    let total: Int64
+    let free: Int64
+}
