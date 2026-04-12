@@ -1847,9 +1847,9 @@ struct FileListView: View {
 
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                       let path = json["path"] as? String,
                        let used = json["used"] as? Int64,
                        let total = json["total"] as? Int64 {
+                        let path = (json["path"] as? String) ?? currentPath
                         usageInfo = (path, used, total)
                         Log.info("💽 Usage — Used: \(used), Total: \(total)")
                     } else {
