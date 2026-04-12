@@ -581,39 +581,10 @@ struct FileListView: View {
             .navigationTitle(getSheetNavigationTitle(sheetPathStack))
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                // Initialize sheetPathStack based on currentPath when sheet appears
-                initializeSheetPath()
                 viewModel.getFiles(baseRequest: baseRequest, at: currentSheetPath, modifySheet: true)
             }
         }
         .modifier(ToastMessage(payload: $modifyMessage))
-    }
-
-    private func initializeSheetPath() {
-        // Initialize sheetPathStack to represent the current path
-        sheetPathStack.removeAll()
-
-        if currentPath != "/" {
-            let pathComponents = currentPath.components(separatedBy: "/").filter { !$0.isEmpty }
-
-            // Build FileItem objects for each path component
-            var buildingPath = ""
-            for component in pathComponents {
-                buildingPath += "/" + component
-                let fileItem = FileItem(
-                    path: buildingPath,
-                    name: component,
-                    size: 0,
-                    extension: "",
-                    modified: "",
-                    mode: 0,
-                    isDir: true,
-                    isSymlink: false,
-                    type: ""
-                )
-                sheetPathStack.append(fileItem)
-            }
-        }
     }
 
     private func modifyItem(to destinationPath: String, action: ModifyItem) {
