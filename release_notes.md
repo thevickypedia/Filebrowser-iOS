@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v1.65.2 (04/11/2026)
+--------------------
+- [e01eb2d](https://github.com/thevickypedia/Filebrowser-iOS/commit/e01eb2d6f078cd30a085d1f5b6179751581db642) chore: Release ``v1.65.2``
+- [30ae77e](https://github.com/thevickypedia/Filebrowser-iOS/commit/30ae77e7c6ceeecd22b300706288eec046fd062c) refactor: Avoid initializing sheet path after a move/copy
+- [012fc84](https://github.com/thevickypedia/Filebrowser-iOS/commit/012fc849d51b97e9141989788b3014ac47f19b1c) refactor: Remove unnecessary ``FileItem`` creation when creating a new resource
+- [9b4216d](https://github.com/thevickypedia/Filebrowser-iOS/commit/9b4216db5487376d560ba7c313e16d6201a9dff4) refactor: Treat ``path`` as an optional value in JSON response for ``/usage`` endpoint
+- [bc211c0](https://github.com/thevickypedia/Filebrowser-iOS/commit/bc211c0f88c79bfebc6cb4ffa3069b8ea798e286) style: Change styling to display server capacity in settings
+- [834cb7c](https://github.com/thevickypedia/Filebrowser-iOS/commit/834cb7cb16ffbfab7269161626b6779e27705892) chore: Update release notes for v1.65.1
+
 v1.65.1 (04/11/2026)
 --------------------
 - [1bed4fd](https://github.com/thevickypedia/Filebrowser-iOS/commit/1bed4fda5ef00ed4fe8a04844685ebe1093e30b2) chore: Release ``v1.65.1``
