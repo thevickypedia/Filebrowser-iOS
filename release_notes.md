@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v1.65.1 (04/11/2026)
+--------------------
+- [1bed4fd](https://github.com/thevickypedia/Filebrowser-iOS/commit/1bed4fda5ef00ed4fe8a04844685ebe1093e30b2) chore: Release ``v1.65.1``
+- [2e594ad](https://github.com/thevickypedia/Filebrowser-iOS/commit/2e594ad547762086e448602572ae6f685a5a3b35) style: Update overlay specific to style and symbol selection
+- [17d707d](https://github.com/thevickypedia/Filebrowser-iOS/commit/17d707ddc7b66ea2bf51c6fb7e8a6a7942618665) ci: Update GHAs to use ``checkout@v6``
+- [d4de8aa](https://github.com/thevickypedia/Filebrowser-iOS/commit/d4de8aae9d1d294d5b0aa1654f551f05cf398106) refactor: Use propotional values for overlay icons
+- [fb21ee6](https://github.com/thevickypedia/Filebrowser-iOS/commit/fb21ee64781849068461a60c199f646cd1317377) chore: Update release notes for v1.65.0
+
 v1.65.0 (04/11/2026)
 --------------------
 - [571510d](https://github.com/thevickypedia/Filebrowser-iOS/commit/571510d8f22c12ede50093cc8af35d60f3f982a4) chore: Release ``v1.65.0``
