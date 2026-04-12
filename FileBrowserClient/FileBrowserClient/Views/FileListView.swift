@@ -2513,22 +2513,9 @@ struct FileListView: View {
     func createResource(isDirectory: Bool) {
         guard auth.isValid else { invalidAuth(); return }
 
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withColonSeparatorInTimeZone]
-        let isoString = formatter.string(from: Date())
-
-        let fileItem = FileItem(
-            path: newResourceName,
-            name: newResourceName,
-            size: 0,
-            extension: isDirectory ? "" : newResourceName.split(separator: ".").last.map(String.init) ?? "",
-            modified: isoString,
-            mode: 0,
-            isDir: isDirectory,
-            isSymlink: false,
-            type: ""
-        )
-        let fullPath = fullPath(for: fileItem, with: currentPath)
+        let fullPath = currentPath.hasSuffix("/")
+            ? "\(currentPath)\(newResourceName)"
+            : "\(currentPath)/\(newResourceName)"
 
         guard let encodedPath = fullPath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else {
             Log.error("❌ Failed to encode path")
