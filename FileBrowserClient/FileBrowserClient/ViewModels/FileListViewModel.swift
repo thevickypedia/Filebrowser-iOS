@@ -108,10 +108,10 @@ class FileListViewModel: ObservableObject {
             switch sortOption {
             case .nameAsc: return firstFile.name.localizedStandardCompare(secondFile.name) == .orderedAscending
             case .nameDesc: return firstFile.name.localizedStandardCompare(secondFile.name) == .orderedDescending
-            case .sizeAsc: return (firstFile.size ?? 0) < (secondFile.size ?? 0)
-            case .sizeDesc: return (firstFile.size ?? 0) > (secondFile.size ?? 0)
-            case .modifiedAsc: return (firstFile.modified ?? "") < (secondFile.modified ?? "")
-            case .modifiedDesc: return (firstFile.modified ?? "") > (secondFile.modified ?? "")
+            case .sizeAsc: return (firstFile.size) < (secondFile.size)
+            case .sizeDesc: return (firstFile.size) > (secondFile.size)
+            case .modifiedAsc: return (firstFile.modified) < (secondFile.modified)
+            case .modifiedDesc: return (firstFile.modified) > (secondFile.modified)
             }
         }
     }

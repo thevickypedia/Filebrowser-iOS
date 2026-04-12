@@ -228,13 +228,10 @@ func getFileInfo(metadata: ResourceMetadata?, file: FileItem, auth: AuthManager)
     let filePathMeta = metadata?.path ?? file.path
     let modified = metadata?.modified ?? file.modified
     let dateFormatExact = auth.tokenPayload?.user.dateFormat ?? false
-    let fileModifiedMeta = dateFormatExact
-        ? (modified ?? "Unknown")
+    let fileModifiedMeta = dateFormatExact ? modified
         : timeAgoString(from: calculateTimeDifference(dateString: modified))
     let fileSizeMeta = sizeConverter(metadata?.size ?? file.size)
-    let fileExtnRaw = metadata?.fileExtension
-        ?? file.extension
-        ?? URL(fileURLWithPath: file.name).pathExtension
+    let fileExtnRaw = metadata?.fileExtension ?? file.extension
     let fileExtnMeta = fileExtnRaw.trimmingCharacters(in: CharacterSet(charactersIn: ".")).uppercased()
     return FileInfo(
         name: fileNameMeta,

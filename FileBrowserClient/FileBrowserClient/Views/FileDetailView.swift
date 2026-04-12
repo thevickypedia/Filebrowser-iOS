@@ -405,7 +405,7 @@ struct FileDetailView: View {
         fetchMetadata()
 
         if extensionTypes.previewExtensions.contains(where: fileName.hasSuffix) {
-            if let warning = unsafeFileSize(byteSize: file.size ?? metadata?.size) {
+            if let warning = unsafeFileSize(byteSize: file.size) {
                 self.previewError = PreviewErrorPayload(text: warning)
                 return
             }
