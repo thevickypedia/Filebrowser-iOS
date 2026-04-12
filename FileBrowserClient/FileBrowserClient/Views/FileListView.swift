@@ -420,16 +420,15 @@ struct FileListView: View {
             Toggle("Set exact date format", isOn: $dateFormatExact)
             Toggle("Redirect to destination after copy/move", isOn: $redirectAfterCopyMove)
             Button("Save", action: saveSettings)
-            if let usage = usageInfo {
-                Section(header: Text("Server Capacity: \(usage.path)")) {
+            Section(header: Text("Server Capacity")) {
+                if let usage = usageInfo {
+                    LabeledContent("📁", value: usage.path)
                     VStack(alignment: .leading) {
                         SelectableTextView(text: "Used: \(formatBytes(usage.used))")
                         SelectableTextView(text: "Total: \(formatBytes(usage.total))")
                         ProgressView(value: Double(usage.used), total: Double(usage.total))
                     }
-                }
-            } else {
-                Section(header: Text("Server Capacity")) {
+                } else {
                     Text("Loading...")
                 }
             }
