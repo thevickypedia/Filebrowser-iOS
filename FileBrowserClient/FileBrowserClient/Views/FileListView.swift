@@ -66,7 +66,7 @@ struct FileListView: View {
     @State private var showFileImporter = false
     @State private var showPhotoPicker = false
 
-    @State private var usageInfo: (path: String, used: Int64, total: Int64)?
+    @State private var usageInfo: (path: String, used: Int64, total: Int64, free: Int64)?
 
     @State private var sortOption: SortOption = .nameAsc
     @AppStorage("viewMode") private var viewModeRawValue: String = ViewMode.list.rawValue
@@ -424,6 +424,7 @@ struct FileListView: View {
                 if let usage = usageInfo {
                     LabeledContent("📁", value: usage.path)
                     VStack(alignment: .leading) {
+                        SelectableTextView(text: "Free: \(formatBytes(usage.free))")
                         SelectableTextView(text: "Used: \(formatBytes(usage.used))")
                         SelectableTextView(text: "Total: \(formatBytes(usage.total))")
                         ProgressView(value: Double(usage.used), total: Double(usage.total))
@@ -1820,8 +1821,9 @@ struct FileListView: View {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                        let used = json["used"] as? Int64,
                        let total = json["total"] as? Int64 {
+                        let free = (total - used) as Int64
                         let path = (json["path"] as? String) ?? currentPath
-                        usageInfo = (path, used, total)
+                        usageInfo = (path, used, total, free)
                         Log.info("💽 Usage — Used: \(used), Total: \(total)")
                     } else {
                         Log.error("❌ Malformed /api/usage/ response")
