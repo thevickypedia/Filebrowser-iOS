@@ -39,17 +39,6 @@ struct JWTPayload: Codable {
     var user: UserAccount
 }
 
-enum SortBy: String, Codable {
-    case name
-    case modified
-    case size
-}
-
-struct Sorting: Codable {
-    let by: SortBy
-    let asc: Bool
-}
-
 struct UserAccount: Codable {
     let id: Int
     let username: String?
